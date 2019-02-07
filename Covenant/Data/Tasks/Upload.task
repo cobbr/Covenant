@@ -1,0 +1,12 @@
+﻿using System;
+using System.IO;
+
+public static class Task
+{
+    public static string Execute(string FileName, string FileContents)
+    {
+        string FilePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + FileName;
+        File.WriteAllBytes(FilePath, Convert.FromBase64String(FileContents));
+        return FilePath;
+    }
+}

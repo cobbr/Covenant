@@ -1,0 +1,42 @@
+# Author: Ryan Cobb (@cobbr_io)
+# Project: Covenant (https://github.com/cobbr/Covenant)
+# License: GNU GPLv3
+
+Name: DefaultHttpProfile.yaml
+HttpUrls:
+    - /index.html
+    - /home/index
+    - /login.aspx
+    - /home/login.aspx
+HttpCookies:
+    - ASPSESSIONID
+    - SESSIONID
+HttpMessageTransform: 'public static class HttpMessageTransform { public static string Transform(byte[] bytes) { return System.Convert.ToBase64String(bytes); } public static byte[] Invert(string str) { return System.Convert.FromBase64String(str); } }'
+HttpRequestHeaders:
+    - Name: User-Agent
+      Value: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36
+HttpPostRequest: |
+    i=a19ea23062db990386a3a478cb89d52e&data={0}&session=75db-99b1-25fe4e9afbe58696-320bea73
+HttpResponseHeaders:
+    - Name: Server
+      Value: Microsoft-IIS/7.5
+HttpGetResponse: |
+    <html>
+        <head>
+            <title>Hello World!</title>
+        </head>
+        <body>
+            <p>Hello World!</p>
+            // Hello World! {0}
+        </body>
+    </html>
+HttpPostResponse: |
+    <html>
+        <head>
+            <title>Hello World!</title>
+        </head>
+        <body>
+            <p>Hello World!</p>
+            // Hello World! {0}
+        </body>
+    </html>

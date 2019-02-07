@@ -1,0 +1,12 @@
+﻿using System.IO;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+    public static string Execute(string AppendDirectory)
+    {
+        Host.ChangeCurrentDirectory(AppendDirectory);
+        return Host.GetCurrentDirectory();
+    }
+}
