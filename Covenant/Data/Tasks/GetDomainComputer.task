@@ -1,0 +1,30 @@
+﻿using System;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+    public static string Execute(string Identities = "")
+    {
+        List<Domain.DomainObject> domainComputers = new List<Domain.DomainObject>();
+        if (Identities.Trim() != "")
+        {
+            List<string> identityList = Identities.Split(',').ToList();
+            domainComputers = new Domain.DomainSearcher().GetDomainComputers(identityList);
+        }
+        else
+        {
+            domainComputers = new Domain.DomainSearcher().GetDomainComputers();
+        }
+        StringBuilder results = new StringBuilder();
+        foreach (Domain.DomainObject domainComputer in domainComputers)
+        {
+            results.Append(domainComputer.ToString());
+            results.AppendLine("------");
+        }
+        return results.ToString();
+    }
+}

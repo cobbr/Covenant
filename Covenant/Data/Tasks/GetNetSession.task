@@ -1,0 +1,23 @@
+﻿using System;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+    public static string Execute(string ComputerNames = "")
+    {
+        List<string> computerList = ComputerNames.Split(',').ToList();
+        List<Net.SessionInfo> sessionInfos = Net.GetNetSessions(computerList);
+
+        StringBuilder results = new StringBuilder();
+        foreach (Net.SessionInfo sessionInfo in sessionInfos)
+        {
+            results.Append(sessionInfo.ToString());
+            results.AppendLine("------");
+        }
+        return results.ToString();
+    }
+}

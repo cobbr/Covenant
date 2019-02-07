@@ -1,0 +1,11 @@
+﻿using System;
+using System.IO;
+
+public static class Task
+{
+    public static string Execute(string FileName)
+    {
+        string FilePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + FileName;
+        return Convert.ToBase64String(File.ReadAllBytes(FilePath));
+    }
+}

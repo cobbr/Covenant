@@ -1,0 +1,16 @@
+- Name: SharpSploit.Resources.powerkatz_x86.dll
+  File: powerkatz_x86.dll
+  Platform: x86
+  Enabled: true
+- Name: SharpSploit.Resources.powerkatz_x64.dll
+  File: powerkatz_x64.dll
+  Platform: x64
+  Enabled: true
+- Name: SharpSploit.Resources.powerkatz_x86.dll.comp
+  File: powerkatz_x86.dll.comp
+  Platform: x86
+  Enabled: false
+- Name: SharpSploit.Resources.powerkatz_x64.dll.comp
+  File: powerkatz_x64.dll.comp
+  Platform: x64
+  Enabled: false

@@ -1,0 +1,18 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+
+using SharpSploit.Enumeration;
+using SharpSploit.Generic;
+
+public static class Task
+{
+    public static string Execute(string ComputerNames, string Ports, string Ping)
+    {
+        List<int> portList = Ports.Split(',').Select(P => int.Parse(P)).ToList();
+        List<string> computerList = ComputerNames.Split(',').ToList();
+        bool pingB = (Ping.ToLower() == "true" ? true : false);
+        SharpSploitResultList<Network.PortScanResult> results = Network.PortScan(computerList, portList, pingB);
+        return results.ToString();
+    }
+}

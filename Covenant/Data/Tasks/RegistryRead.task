@@ -1,0 +1,11 @@
+﻿using System;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+    public static string Execute(string RegPath)
+    {
+        return Host.RegistryRead(RegPath);
+    }
+}
