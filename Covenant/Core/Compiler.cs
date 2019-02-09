@@ -123,7 +123,7 @@ namespace Covenant.Core
                 // SharpGenConsole.PrintInfoLine("usedNamespaces: " + String.Join(",", usedNamespaceNames));
                 List<SyntaxNode> unusedUsingDirectives = sourceTree.GetRoot().DescendantNodes().Where(N =>
                 {
-                    return N.Kind() == SyntaxKind.UsingDirective && !usedNamespaceNames.Contains(((UsingDirectiveSyntax)N).Name.ToFullString());
+                    return N.Kind() == SyntaxKind.UsingDirective && !((UsingDirectiveSyntax)N).Name.ToFullString().StartsWith("System.") && !usedNamespaceNames.Contains(((UsingDirectiveSyntax)N).Name.ToFullString());
                 }).ToList();
                 sourceTree = sourceTree.GetRoot().RemoveNodes(unusedUsingDirectives, SyntaxRemoveOptions.KeepNoTrivia).SyntaxTree;
 
