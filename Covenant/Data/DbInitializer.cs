@@ -761,8 +761,75 @@ namespace Covenant.Data
                                 Value = ""
                             }
                         }
+                    },
+                    new GruntTask
+                    {
+                        Id = 31,
+                        Name = "PrivExchange",
+                        Description = "Performs the PrivExchange attack by sending a push notification to EWS",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.XML.dll" }),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PrivExchange" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 1,
+                                Name = "TargetHost",
+                                Description = "Set the IP of the target's Exchange server.",
+                                Value = ""
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 2,
+                                Name = "AttackerHost",
+                                Description = "Set the attaccker's IP.",
+                                Value = ""
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 3,
+                                Name = "AttackerPort",
+                                Description = "Set the attacker's port.",
+                                Value = ""
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 4,
+                                Name = "AttackerPage",
+                                Description = "Set the attacker's page.",
+                                Value = "SharpPriv"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 5,
+                                Name = "SSL",
+                                Description = "Enable SSL.",
+                                Value = "true"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 6,
+                                Name = "ExchangeVersion",
+                                Description = "Set the Exchange's version.",
+                                Value = "2016"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 7,
+                                Name = "ExchangePort",
+                                Description = "Set the Exchange's target port.",
+                                Value = "443"
+                            }
+                        }
                     }
-                };
+                 };
 
                 foreach (GruntTask task in GruntTasks)
                 {
