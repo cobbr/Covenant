@@ -52,7 +52,7 @@ namespace Covenant.Core
             new Compiler.Reference { File = "mscorlib.dll", Framework = DotNetVersion.Net40, Enabled = true },
             new Compiler.Reference { File = "System.dll", Framework = DotNetVersion.Net40, Enabled = true },
             new Compiler.Reference { File = "System.Core.dll", Framework = DotNetVersion.Net40, Enabled = true },
-            new Compiler.Reference { File = "System.XMLe.dll", Framework = DotNetVersion.Net40, Enabled = true }
+            new Compiler.Reference { File = "System.XML.dll", Framework = DotNetVersion.Net40, Enabled = true }
         };
 
         public static List<Compiler.EmbeddedResource> SharpSploitEmbeddedResources = new List<Compiler.EmbeddedResource>
