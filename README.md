@@ -23,6 +23,8 @@ Covenant has several key features:
 
 ## Users Quick-Start Guide
 
+Be sure to clone Covenant recursively to initialize the git submodules: `git clone --recurse-submodules https://github.com/cobbr/Covenant`
+
 ### Docker
 
 Covenant is easy to deploy with Docker!
