@@ -24,12 +24,14 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), string referenceAssemblies = default(string), IList<GruntTaskOption> options = default(IList<GruntTaskOption>), string code = default(string))
+        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), string referenceAssemblies = default(string), string referenceSourceLibraries = default(string), string embeddedResources = default(string), IList<GruntTaskOption> options = default(IList<GruntTaskOption>), string code = default(string))
         {
             Id = id;
             Name = name;
             Description = description;
             ReferenceAssemblies = referenceAssemblies;
+            ReferenceSourceLibraries = referenceSourceLibraries;
+            EmbeddedResources = embeddedResources;
             Options = options;
             Code = code;
             CustomInit();
@@ -59,6 +61,16 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "referenceAssemblies")]
         public string ReferenceAssemblies { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "referenceSourceLibraries")]
+        public string ReferenceSourceLibraries { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "embeddedResources")]
+        public string EmbeddedResources { get; set; }
 
         /// <summary>
         /// </summary>

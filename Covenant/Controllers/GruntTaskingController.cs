@@ -182,6 +182,8 @@ namespace Covenant.Controllers
                     gruntTasking.Compile(
                         task.Code, parameters,
                         task.GetReferenceAssemblies(),
+                        task.GetReferenceSourceLibraries(),
+                        task.GetEmbeddedResources(),
                         grunt.DotNetFrameworkVersion
                     );
                 }

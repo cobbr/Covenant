@@ -1,0 +1,6 @@
+[submodule "Covenant/Data/Tasks/src/Rubeus"]
+	path = Covenant/Data/Tasks/src/Rubeus
+	url = http://github.com/GhostPack/Rubeus.git
+[submodule "Covenant/Data/Tasks/src/SharpSploit"]
+	path = Covenant/Data/Tasks/src/SharpSploit
+	url = http://github.com/cobbr/SharpSploit.git

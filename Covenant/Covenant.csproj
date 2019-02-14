@@ -16,12 +16,24 @@
   <ItemGroup>
     <Compile Remove="Data\Grunt\*" />
     <Compile Remove="Data\Tasks\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\LateralMovement\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\Credentials\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\Enumeration\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\Execution\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\Generic\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\Misc\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\LateralMovement\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Credentials\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Enumeration\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Execution\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Generic\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Misc\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\LateralMovement\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Credentials\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Enumeration\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Execution\*" />
+    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Properties\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\lib\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\lib\krb_structures\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Asn1\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Commands\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Domain\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Properties\*" />
+    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\*" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +62,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="API\openapi2.json" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -76,5 +91,9 @@
     <Reference Include="dnlib">
       <HintPath>refs\dnlib.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Data\covenant.db-journal" />
+    <None Remove="Data\covenant.db-journal" />
   </ItemGroup>
 </Project>

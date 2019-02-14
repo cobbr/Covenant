@@ -58,7 +58,7 @@ namespace Covenant.Core
         {
             public string FileName { get; set; } = "";
             public SyntaxTree SyntaxTree { get; set; }
-            public List<INamedTypeSymbol> UsedTypes { get; set; } = new List<INamedTypeSymbol>();
+            public List<ITypeSymbol> UsedTypes { get; set; } = new List<ITypeSymbol>();
         }
 
         public static byte[] Compile(CompilationRequest request)
@@ -106,11 +106,10 @@ namespace Covenant.Core
             if (request.Optimize)
             {
                 // Find all Types used by the generated compilation
-                List<INamedTypeSymbol> usedTypes = new List<INamedTypeSymbol>();
+                List<ITypeSymbol> usedTypes = new List<ITypeSymbol>();
                 GetUsedTypesRecursively(compilation, sourceTree, ref usedTypes, ref sourceSyntaxTrees);
                 usedTypes = usedTypes.Distinct().ToList();
                 List<string> usedTypeNames = usedTypes.Select(T => GetFullyQualifiedTypeName(T)).ToList();
-                // SharpGenConsole.PrintInfoLine("usedTypes: " + String.Join(",", usedTypeNames));
 
                 // Filter SyntaxTrees to trees that define a used Type, otherwise the tree is not needed in this compilation
                 compilationTrees = sourceSyntaxTrees.Where(SST => SyntaxTreeDefinesUsedType(compilation, SST.SyntaxTree, usedTypeNames))
@@ -120,12 +119,12 @@ namespace Covenant.Core
                 // Removed unused Using statements from the additional entrypoint source
                 List<string> usedNamespaceNames = GetUsedTypes(compilation, sourceTree)
                     .Select(T => GetFullyQualifiedContainingNamespaceName(T)).Distinct().ToList();
-                // SharpGenConsole.PrintInfoLine("usedNamespaces: " + String.Join(",", usedNamespaceNames));
                 List<SyntaxNode> unusedUsingDirectives = sourceTree.GetRoot().DescendantNodes().Where(N =>
                 {
                     return N.Kind() == SyntaxKind.UsingDirective && !((UsingDirectiveSyntax)N).Name.ToFullString().StartsWith("System.") && !usedNamespaceNames.Contains(((UsingDirectiveSyntax)N).Name.ToFullString());
                 }).ToList();
                 sourceTree = sourceTree.GetRoot().RemoveNodes(unusedUsingDirectives, SyntaxRemoveOptions.KeepNoTrivia).SyntaxTree;
+                // Console.WriteLine("source: " + sourceTree.ToString());
 
                 // Compile again, with unused SyntaxTrees and unused using statements removed
                 compilationTrees.Add(sourceTree);
@@ -242,14 +241,18 @@ namespace Covenant.Core
             return name.Trim('.');
         }
 
-        private static string GetFullyQualifiedContainingNamespaceName(INamedTypeSymbol namedTypeSymbol)
+        private static string GetFullyQualifiedContainingNamespaceName(ITypeSymbol symbol)
         {
-            return GetFullyQualifiedContainingNamespaceName(namedTypeSymbol.ContainingNamespace);
+            if (symbol.ContainingNamespace == null)
+            {
+                return symbol.Name;
+            }
+            return GetFullyQualifiedContainingNamespaceName(symbol.ContainingNamespace);
         }
 
-        private static string GetFullyQualifiedTypeName(INamedTypeSymbol namedTypeSymbol)
+        private static string GetFullyQualifiedTypeName(ITypeSymbol symbol)
         {
-            return GetFullyQualifiedContainingNamespaceName(namedTypeSymbol) + "." + namedTypeSymbol.Name;
+            return GetFullyQualifiedContainingNamespaceName(symbol) + "." + symbol.Name;
         }
 
         private static bool SyntaxTreeDefinesUsedType(CSharpCompilation compilation, SyntaxTree tree, List<string> typeNames)
@@ -261,40 +264,36 @@ namespace Covenant.Core
                 {
                     return false;
                 }
-                INamedTypeSymbol symbol = model.GetDeclaredSymbol(((ClassDeclarationSyntax)SN));
+                ITypeSymbol symbol = model.GetDeclaredSymbol(((ClassDeclarationSyntax)SN));
                 if (symbol == null)
                 {
                     return false;
                 }
-                return typeNames.Contains(
-                             GetFullyQualifiedTypeName(symbol)
-                       );
+                return typeNames.Contains(GetFullyQualifiedTypeName(symbol));
             });
         }
 
-        private static List<INamedTypeSymbol> GetUsedTypes(CSharpCompilation compilation, SyntaxTree sourceTree)
+        private static List<SymbolKind> typeKinds { get; } = new List<SymbolKind> { SymbolKind.ArrayType, SymbolKind.DynamicType, SymbolKind.ErrorType, SymbolKind.NamedType, SymbolKind.PointerType, SymbolKind.TypeParameter };
+        private static List<ITypeSymbol> GetUsedTypes(CSharpCompilation compilation, SyntaxTree sourceTree)
         {
-            return sourceTree.GetRoot().DescendantNodes().Select(N =>
+            SemanticModel sm = compilation.GetSemanticModel(sourceTree);
+
+            return sourceTree.GetRoot().DescendantNodes().Select(N => sm.GetSymbolInfo(N).Symbol).Where(S =>
             {
-                ISymbol symbol = compilation.GetSemanticModel(sourceTree).GetSymbolInfo(N).Symbol;
-                if (symbol != null && symbol.ContainingType != null)
-                {
-                    return symbol.ContainingType;
-                }
-                return null;
-            }).Distinct().Where(T => T != null).ToList();
+                return S != null && typeKinds.Contains(S.Kind);
+            }).Select(T => (ITypeSymbol)T).Distinct().ToList();
         }
 
-        private static List<INamedTypeSymbol> GetUsedTypesRecursively(CSharpCompilation compilation, SyntaxTree sourceTree, ref List<INamedTypeSymbol> currentUsedTypes, ref List<SourceSyntaxTree> sourceSyntaxTrees)
+        private static List<ITypeSymbol> GetUsedTypesRecursively(CSharpCompilation compilation, SyntaxTree sourceTree, ref List<ITypeSymbol> currentUsedTypes, ref List<SourceSyntaxTree> sourceSyntaxTrees)
         {
             List<string> copyCurrentUsedTypes = currentUsedTypes.Select(CT => GetFullyQualifiedTypeName(CT)).ToList();
-            List<INamedTypeSymbol> usedTypes = GetUsedTypes(compilation, sourceTree)
+            List<ITypeSymbol> usedTypes = GetUsedTypes(compilation, sourceTree)
                 .Where(T => !copyCurrentUsedTypes.Contains(GetFullyQualifiedTypeName(T)))
                 .ToList();
             currentUsedTypes.AddRange(usedTypes);
 
             List<SyntaxTree> searchTrees = new List<SyntaxTree>();
-            foreach (INamedTypeSymbol symbol in usedTypes)
+            foreach (ITypeSymbol symbol in usedTypes)
             {
                 SyntaxReference sr = symbol.DeclaringSyntaxReferences.FirstOrDefault();
                 if (sr != null)
@@ -309,7 +308,7 @@ namespace Covenant.Core
             searchTrees = searchTrees.Distinct().ToList();
             foreach (SyntaxTree tree in searchTrees)
             {
-                List<INamedTypeSymbol> newTypes = GetUsedTypesRecursively(compilation, tree, ref currentUsedTypes, ref sourceSyntaxTrees);
+                List<ITypeSymbol> newTypes = GetUsedTypesRecursively(compilation, tree, ref currentUsedTypes, ref sourceSyntaxTrees);
                 currentUsedTypes.AddRange(newTypes);
             }
             return currentUsedTypes;

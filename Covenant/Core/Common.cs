@@ -53,65 +53,6 @@ namespace Covenant.Core
             new Compiler.Reference { File = "System.Core.dll", Framework = DotNetVersion.Net40, Enabled = true },
         };
 
-        public static List<Compiler.EmbeddedResource> SharpSploitEmbeddedResources = new List<Compiler.EmbeddedResource>
-        {
-            new Compiler.EmbeddedResource
-            {
-                Name = "SharpSploit.Resources.powerkatz_x86.dll", File = "powerkatz_x86.dll",
-                Platform = Platform.X86, Enabled = false
-            },
-            new Compiler.EmbeddedResource
-            {
-                Name = "SharpSploit.Resources.powerkatz_x64.dll", File = "powerkatz_x64.dll",
-                Platform = Platform.X64, Enabled = true
-            },
-            new Compiler.EmbeddedResource
-            {
-                Name = "SharpSploit.Resources.powerkatz_x86.dll.comp", File = "powerkatz_x86.dll.comp",
-                Platform = Platform.X86, Enabled = false
-            },
-            new Compiler.EmbeddedResource
-            {
-                Name = "SharpSploit.Resources.powerkatz_x64.dll.comp", File = "powerkatz_x64.dll.comp",
-                Platform = Platform.X64, Enabled = false
-            }
-        };
-        public static List<Compiler.Reference> SharpSploitReferences = new List<Compiler.Reference>
-        {
-            new Compiler.Reference
-            {
-                File = "System.DirectoryServices.dll", Framework = DotNetVersion.Net35, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.IdentityModel.dll", Framework = DotNetVersion.Net35, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.Management.dll", Framework = DotNetVersion.Net35, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.Management.Automation.dll", Framework = DotNetVersion.Net35, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.DirectoryServices.dll", Framework = DotNetVersion.Net40, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.IdentityModel.dll", Framework = DotNetVersion.Net40, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.Management.dll", Framework = DotNetVersion.Net40, Enabled = true
-            },
-            new Compiler.Reference
-            {
-                File = "System.Management.Automation.dll", Framework = DotNetVersion.Net40, Enabled = true
-            }
-        };
-
         public static List<Compiler.Reference> NetCore21References { get; set; } = new List<Compiler.Reference>
         {
             new Compiler.Reference

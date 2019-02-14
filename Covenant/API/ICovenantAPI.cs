@@ -934,7 +934,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<Models.HttpListener>> ApiListenersHttpByIdGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<HttpListener>> ApiListenersHttpByIdGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='httpListener'>
         /// </param>
@@ -944,7 +944,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<Models.HttpListener>> ApiListenersHttpPutWithHttpMessagesAsync(Models.HttpListener httpListener = default(Models.HttpListener), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<HttpListener>> ApiListenersHttpPutWithHttpMessagesAsync(HttpListener httpListener = default(HttpListener), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='listener'>
         /// </param>
@@ -954,7 +954,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<Models.HttpListener>> ApiListenersHttpPostWithHttpMessagesAsync(Models.HttpListener listener = default(Models.HttpListener), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<HttpListener>> ApiListenersHttpPostWithHttpMessagesAsync(HttpListener listener = default(HttpListener), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>

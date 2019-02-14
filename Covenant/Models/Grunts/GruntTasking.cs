@@ -3,6 +3,8 @@
 // License: GNU GPLv3
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
@@ -88,20 +90,39 @@ namespace Covenant.Models.Grunts
 
         // Base64-encoded compressed task assembly bytes
         public string GruntTaskingAssembly { get; private set; } = "";
-        public string Compile(string TaskCode, List<string> Parameters, List<string> ReferenceAssemblies, Common.DotNetVersion dotNetFrameworkVersion)
+        public string Compile(string TaskCode, List<string> Parameters, List<string> ReferenceAssemblies, List<string> ReferenceSourceLibraries, List<string> EmbeddedResources, Common.DotNetVersion dotNetFrameworkVersion)
         {
-            List<Compiler.Reference> references = Common.SharpSploitReferences;
-            references.AddRange(Common.DefaultReferences);
+            List<Compiler.Reference> references = Common.DefaultReferences;
+            ReferenceAssemblies.ForEach(RA =>
+            {
+                references.AddRange(
+                    new List<Compiler.Reference> {
+                        new Compiler.Reference { File = RA, Framework = Common.DotNetVersion.Net35, Enabled = true },
+                        new Compiler.Reference { File = RA, Framework = Common.DotNetVersion.Net40, Enabled = true }
+                    }
+                );
+            });
+            List<Compiler.EmbeddedResource> resources = EmbeddedResources.Select(ER =>
+            {
+                return new Compiler.EmbeddedResource
+                {
+                    Name = ER,
+                    File = ER,
+                    Platform = Platform.X64,
+                    Enabled = true
+                };
+            }).ToList();
             byte[] compiled = Compiler.Compile(new Compiler.CompilationRequest
             {
                 Source = TaskCode,
-                SourceDirectory = Common.CovenantSrcDirectory,
+                SourceDirectory = ReferenceSourceLibraries == null || ReferenceSourceLibraries.Count == 0 ? null : Common.CovenantSrcDirectory + Path.DirectorySeparatorChar + ReferenceSourceLibraries[0],
                 ResourceDirectory = Common.CovenantResourceDirectory,
                 ReferenceDirectory = Common.CovenantReferenceDirectory,
                 TargetDotNetVersion = dotNetFrameworkVersion,
                 References = references,
-                EmbeddedResources = Common.SharpSploitEmbeddedResources,
-                Confuse = true
+                EmbeddedResources = resources,
+                Confuse = true,
+                Optimize = !ReferenceSourceLibraries.Contains("Rubeus") // TODO: Fix optimization to work with Rubeus
             });
 
             this.GruntTaskingAssembly = Convert.ToBase64String(Utilities.Compress(compiled));

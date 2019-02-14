@@ -165,7 +165,9 @@ namespace Grunt
                 TaskCompleted?.Invoke(this, new TaskCompletedArgs(message, output));
             }
             catch (Exception e)
-            { TaskCompleted?.Invoke(this, new TaskCompletedArgs(message, "TaskHandler Exception: " + e.Message + "\n" + e.StackTrace)); }
+            {
+                TaskCompleted?.Invoke(this, new TaskCompletedArgs(message, "TaskHandler Exception: " + e.Message + "\n" + e.StackTrace));
+            }
         }
     }
 

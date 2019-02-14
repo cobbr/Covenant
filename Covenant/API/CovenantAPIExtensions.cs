@@ -2334,7 +2334,7 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static Models.HttpListener ApiListenersHttpByIdGet(this ICovenantAPI operations, int id)
+            public static HttpListener ApiListenersHttpByIdGet(this ICovenantAPI operations, int id)
             {
                 return operations.ApiListenersHttpByIdGetAsync(id).GetAwaiter().GetResult();
             }
@@ -2347,7 +2347,7 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<Models.HttpListener> ApiListenersHttpByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<HttpListener> ApiListenersHttpByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.ApiListenersHttpByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
@@ -2360,7 +2360,7 @@ namespace Covenant.API
             /// </param>
             /// <param name='httpListener'>
             /// </param>
-            public static Models.HttpListener ApiListenersHttpPut(this ICovenantAPI operations, Models.HttpListener httpListener = default(Models.HttpListener))
+            public static HttpListener ApiListenersHttpPut(this ICovenantAPI operations, HttpListener httpListener = default(HttpListener))
             {
                 return operations.ApiListenersHttpPutAsync(httpListener).GetAwaiter().GetResult();
             }
@@ -2373,7 +2373,7 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<Models.HttpListener> ApiListenersHttpPutAsync(this ICovenantAPI operations, Models.HttpListener httpListener = default(Models.HttpListener), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<HttpListener> ApiListenersHttpPutAsync(this ICovenantAPI operations, HttpListener httpListener = default(HttpListener), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.ApiListenersHttpPutWithHttpMessagesAsync(httpListener, null, cancellationToken).ConfigureAwait(false))
                 {
@@ -2386,7 +2386,7 @@ namespace Covenant.API
             /// </param>
             /// <param name='listener'>
             /// </param>
-            public static Models.HttpListener ApiListenersHttpPost(this ICovenantAPI operations, Models.HttpListener listener = default(Models.HttpListener))
+            public static HttpListener ApiListenersHttpPost(this ICovenantAPI operations, HttpListener listener = default(HttpListener))
             {
                 return operations.ApiListenersHttpPostAsync(listener).GetAwaiter().GetResult();
             }
@@ -2399,7 +2399,7 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<Models.HttpListener> ApiListenersHttpPostAsync(this ICovenantAPI operations, Models.HttpListener listener = default(Models.HttpListener), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<HttpListener> ApiListenersHttpPostAsync(this ICovenantAPI operations, HttpListener listener = default(HttpListener), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.ApiListenersHttpPostWithHttpMessagesAsync(listener, null, cancellationToken).ConfigureAwait(false))
                 {

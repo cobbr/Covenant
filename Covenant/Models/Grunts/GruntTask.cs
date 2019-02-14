@@ -22,6 +22,22 @@ namespace Covenant.Models.Grunts
             set { _referenceAssemblies = value.Split(',').Where(V => V.Length > 0).ToList(); }
         }
 
+        private List<String> _referenceSourceLibraries = new List<String> { };
+        // Split into comma-delimited list to easily save as text in the Database
+        public String ReferenceSourceLibraries
+        {
+            get { return String.Join(',', _referenceSourceLibraries); }
+            set { _referenceSourceLibraries = value.Split(',').Where(V => V.Length > 0).ToList(); }
+        }
+
+        private List<String> _embeddedResources = new List<String> { };
+        // Split into comma-delimited list to easily save as text in the Database
+        public String EmbeddedResources
+        {
+            get { return String.Join(',', _embeddedResources); }
+            set { _embeddedResources = value.Split(',').Where(V => V.Length > 0).ToList(); }
+        }
+
         public class GruntTaskOption
         {
             public int Id { get; set; }
@@ -39,6 +55,16 @@ namespace Covenant.Models.Grunts
         public List<String> GetReferenceAssemblies()
         {
             return _referenceAssemblies;
+        }
+
+        public List<String> GetReferenceSourceLibraries()
+        {
+            return _referenceSourceLibraries;
+        }
+
+        public List<String> GetEmbeddedResources()
+        {
+            return _embeddedResources;
         }
     }
 }
