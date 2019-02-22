@@ -945,6 +945,34 @@ namespace Covenant.Data
                                 Value = "443"
                             }
                         }
+                    },
+                    new GruntTask
+                    {
+                        Id = 34,
+                        Name = "ComHijackPersist",
+                        Description = "Achieve persistence via COM hijacking",
+                        ReferenceAssemblies = String.Join(",", new List<string>()),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ComHijackPersist" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 34,
+                                OptionId = 1,
+                                Name = "CLSID",
+                                Description = "Set the missing CLSID.",
+                                Value = ""
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 34,
+                                OptionId = 2,
+                                Name = "Path",
+                                Description = "Set the path to the payload.",
+                                Value = ""
+                            }
+                        }
                     }
                 };
 
