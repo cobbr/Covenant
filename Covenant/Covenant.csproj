@@ -42,6 +42,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\" />
+    <Folder Include="Data\Tasks\" />
     <Folder Include="Models\Indicators\" />
   </ItemGroup>
 
