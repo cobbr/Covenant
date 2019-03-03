@@ -54,7 +54,6 @@ namespace Covenant.Data
                 }
             }
 
-
 			foreach (Listener l in context.Listeners.Where(L => L.Status == Listener.ListenerStatus.Active))
 			{
                 HttpProfile profile = (HttpProfile)context.Profiles.FirstOrDefault(HP => HP.Id == l.ProfileId);

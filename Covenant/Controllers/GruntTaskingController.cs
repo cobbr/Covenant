@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Covenant.Models;
 using Covenant.Models.Grunts;
 using Covenant.Models.Launchers;
+using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
@@ -59,7 +60,7 @@ namespace Covenant.Controllers
         [ProducesResponseType(typeof(GruntTasking), 201)]
         public ActionResult<GruntTasking> CreateGruntTasking(int id, [FromBody] GruntTasking gruntTasking)
         {
-            Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
+            Models.Grunts.Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
             if (grunt == null)
             {
                 return NotFound();
@@ -210,6 +211,20 @@ namespace Covenant.Controllers
             {
                 return NotFound();
             }
+            List<String> credTaskNames = new List<string> { "Mimikatz", "SamDump", "LogonPasswords", "DcSync", "Rubeus", "Kerberoast" };
+            GruntTask gruntTask = _context.GruntTasks.FirstOrDefault(G => G.Id == gruntTasking.TaskId);
+            if (credTaskNames.Contains(gruntTask.Name))
+            {
+                List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(gruntTasking.GruntTaskOutput);
+                foreach (CapturedCredential cred in capturedCredentials)
+                {
+                    if (!ContextContainsCredentials(cred))
+                    {
+                        _context.Credentials.Add(cred);
+                        _context.SaveChanges();
+                    }
+                }
+            }
             updatingGruntTasking.status = gruntTasking.status;
             updatingGruntTasking.GruntTaskOutput = gruntTasking.GruntTaskOutput;
             _context.GruntTaskings.Update(updatingGruntTasking);
@@ -236,6 +251,51 @@ namespace Covenant.Controllers
             _context.SaveChanges();
 
             return new NoContentResult();
+        }
+
+        private bool ContextContainsCredentials(CapturedCredential cred)
+        {
+            switch (cred.Type)
+            {
+                case CapturedCredential.CredentialType.Password:
+                    CapturedPasswordCredential passcred = (CapturedPasswordCredential)cred;
+                    return _context.Credentials.Where(C => C.Type == CapturedCredential.CredentialType.Password)
+                                   .Select(C => (CapturedPasswordCredential)C)
+                                   .FirstOrDefault(PC =>
+                                       PC.Type == passcred.Type &&
+                                       PC.Domain == passcred.Domain &&
+                                       PC.Username == passcred.Username &&
+                                       PC.Password == passcred.Password
+                                   ) != null;
+                case CapturedCredential.CredentialType.Hash:
+                    CapturedHashCredential hashcred = (CapturedHashCredential)cred;
+                    return _context.Credentials.Where(C => C.Type == CapturedCredential.CredentialType.Hash)
+                                   .Select(C => (CapturedHashCredential)C)
+                                   .FirstOrDefault(PC =>
+                                       PC.Type == hashcred.Type &&
+                                       PC.Domain == hashcred.Domain &&
+                                       PC.Username == hashcred.Username &&
+                                       PC.Hash == hashcred.Hash &&
+                                       PC.HashCredentialType == hashcred.HashCredentialType
+                                   ) != null;
+                case CapturedCredential.CredentialType.Ticket:
+                    CapturedTicketCredential ticketcred = (CapturedTicketCredential)cred;
+                    return _context.Credentials.Where(C => C.Type == CapturedCredential.CredentialType.Ticket)
+                                   .Select(C => (CapturedTicketCredential)C)
+                                   .FirstOrDefault(PC =>
+                                       PC.Type == ticketcred.Type &&
+                                       PC.Domain == ticketcred.Domain &&
+                                       PC.Username == ticketcred.Username &&
+                                       PC.Ticket == ticketcred.Ticket &&
+                                       PC.TicketCredentialType == ticketcred.TicketCredentialType
+                                   ) != null;
+                default:
+                    return _context.Credentials.FirstOrDefault(P =>
+                                       P.Type == cred.Type &&
+                                       P.Domain == cred.Domain &&
+                                       P.Username == cred.Username
+                                   ) != null;
+            }
         }
     }
 }

@@ -352,6 +352,377 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            public static IList<CapturedCredential> ApiCredentialsGet(this ICovenantAPI operations)
+            {
+                return operations.ApiCredentialsGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<CapturedCredential>> ApiCredentialsGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<CapturedPasswordCredential> ApiCredentialsPasswordsGet(this ICovenantAPI operations)
+            {
+                return operations.ApiCredentialsPasswordsGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<CapturedPasswordCredential>> ApiCredentialsPasswordsGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsPasswordsGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='passwordCredential'>
+            /// </param>
+            public static CapturedPasswordCredential ApiCredentialsPasswordsPut(this ICovenantAPI operations, CapturedPasswordCredential passwordCredential = default(CapturedPasswordCredential))
+            {
+                return operations.ApiCredentialsPasswordsPutAsync(passwordCredential).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='passwordCredential'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedPasswordCredential> ApiCredentialsPasswordsPutAsync(this ICovenantAPI operations, CapturedPasswordCredential passwordCredential = default(CapturedPasswordCredential), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsPasswordsPutWithHttpMessagesAsync(passwordCredential, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='passwordCredential'>
+            /// </param>
+            public static CapturedPasswordCredential ApiCredentialsPasswordsPost(this ICovenantAPI operations, CapturedPasswordCredential passwordCredential = default(CapturedPasswordCredential))
+            {
+                return operations.ApiCredentialsPasswordsPostAsync(passwordCredential).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='passwordCredential'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedPasswordCredential> ApiCredentialsPasswordsPostAsync(this ICovenantAPI operations, CapturedPasswordCredential passwordCredential = default(CapturedPasswordCredential), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsPasswordsPostWithHttpMessagesAsync(passwordCredential, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<CapturedHashCredential> ApiCredentialsHashesGet(this ICovenantAPI operations)
+            {
+                return operations.ApiCredentialsHashesGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<CapturedHashCredential>> ApiCredentialsHashesGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsHashesGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='hashCredential'>
+            /// </param>
+            public static CapturedHashCredential ApiCredentialsHashesPut(this ICovenantAPI operations, CapturedHashCredential hashCredential = default(CapturedHashCredential))
+            {
+                return operations.ApiCredentialsHashesPutAsync(hashCredential).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='hashCredential'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedHashCredential> ApiCredentialsHashesPutAsync(this ICovenantAPI operations, CapturedHashCredential hashCredential = default(CapturedHashCredential), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsHashesPutWithHttpMessagesAsync(hashCredential, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='hashCredential'>
+            /// </param>
+            public static CapturedHashCredential ApiCredentialsHashesPost(this ICovenantAPI operations, CapturedHashCredential hashCredential = default(CapturedHashCredential))
+            {
+                return operations.ApiCredentialsHashesPostAsync(hashCredential).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='hashCredential'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedHashCredential> ApiCredentialsHashesPostAsync(this ICovenantAPI operations, CapturedHashCredential hashCredential = default(CapturedHashCredential), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsHashesPostWithHttpMessagesAsync(hashCredential, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<CapturedTicketCredential> ApiCredentialsTicketsGet(this ICovenantAPI operations)
+            {
+                return operations.ApiCredentialsTicketsGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<CapturedTicketCredential>> ApiCredentialsTicketsGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsTicketsGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='ticketCredential'>
+            /// </param>
+            public static CapturedTicketCredential ApiCredentialsTicketsPut(this ICovenantAPI operations, CapturedTicketCredential ticketCredential = default(CapturedTicketCredential))
+            {
+                return operations.ApiCredentialsTicketsPutAsync(ticketCredential).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='ticketCredential'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedTicketCredential> ApiCredentialsTicketsPutAsync(this ICovenantAPI operations, CapturedTicketCredential ticketCredential = default(CapturedTicketCredential), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsTicketsPutWithHttpMessagesAsync(ticketCredential, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='ticketCredential'>
+            /// </param>
+            public static CapturedTicketCredential ApiCredentialsTicketsPost(this ICovenantAPI operations, CapturedTicketCredential ticketCredential = default(CapturedTicketCredential))
+            {
+                return operations.ApiCredentialsTicketsPostAsync(ticketCredential).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='ticketCredential'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedTicketCredential> ApiCredentialsTicketsPostAsync(this ICovenantAPI operations, CapturedTicketCredential ticketCredential = default(CapturedTicketCredential), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsTicketsPostWithHttpMessagesAsync(ticketCredential, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static CapturedCredential ApiCredentialsByIdGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiCredentialsByIdGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedCredential> ApiCredentialsByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static void ApiCredentialsByIdDelete(this ICovenantAPI operations, int id)
+            {
+                operations.ApiCredentialsByIdDeleteAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task ApiCredentialsByIdDeleteAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.ApiCredentialsByIdDeleteWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static CapturedPasswordCredential ApiCredentialsPasswordsByIdGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiCredentialsPasswordsByIdGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedPasswordCredential> ApiCredentialsPasswordsByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsPasswordsByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static CapturedHashCredential ApiCredentialsHashesByIdGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiCredentialsHashesByIdGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedHashCredential> ApiCredentialsHashesByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsHashesByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static CapturedTicketCredential ApiCredentialsTicketsByIdGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiCredentialsTicketsByIdGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CapturedTicketCredential> ApiCredentialsTicketsByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiCredentialsTicketsByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static IList<EventModel> ApiEventsGet(this ICovenantAPI operations)
             {
                 return operations.ApiEventsGetAsync().GetAwaiter().GetResult();

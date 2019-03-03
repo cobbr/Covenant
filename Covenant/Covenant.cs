@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.Security.Authentication;
@@ -53,6 +54,15 @@ namespace Covenant
 
             app.OnExecute(() =>
             {
+                if (!File.Exists(Path.Combine(Common.CovenantSharpSploitDirectory, "README.md")) ||
+                    !File.Exists(Path.Combine(Common.CovenantRubeusDirectory, "README.md")))
+                {
+                    Console.Error.WriteLine("Error: git submodules have not been initialized");
+                    Console.Error.WriteLine("Covenant's submodules can be cloned with: git clone --recurse-submodules https://github.com/cobbr/Covenant");
+                    Console.Error.WriteLine("Or initialized after cloning with: git submodule update --init --recursive");
+                    return -1;
+                }
+
                 string username = UserNameOption.Value();
                 string password = PasswordOption.Value();
                 if (!UserNameOption.HasValue())
@@ -68,7 +78,16 @@ namespace Covenant
                 }
 
                 string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : "0.0.0.0";
-                IPEndPoint CovenantEndpoint = new IPEndPoint(IPAddress.Parse(CovenantBindUrl), Common.CovenantHTTPSPort);
+                IPAddress address = null;
+                try
+                {
+                    address = IPAddress.Parse(CovenantBindUrl);
+                }
+                catch (FormatException)
+                {
+                    address = Dns.GetHostAddresses(CovenantBindUrl).FirstOrDefault();
+                }
+                IPEndPoint CovenantEndpoint = new IPEndPoint(address, Common.CovenantHTTPSPort);
                 string CovenantUri = (CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + Common.CovenantHTTPSPort : "https://" + CovenantEndpoint);
                 var host = BuildWebHost(
                     CovenantEndpoint,
@@ -95,8 +114,8 @@ namespace Covenant
                 consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
                 fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
                 fileTarget.FileName = Common.CovenantLogDirectory + "covenant.log";
-                loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "console");
-                loggingConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, "file");
+                loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "console");
+                loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "file");
 
                 var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
                 try
@@ -156,7 +175,7 @@ namespace Covenant
                         File.WriteAllText(Common.CovenantAppSettingsFile, appsettingscontents.Replace(Common.CovenantJwtKeyReplaceMessage, Utilities.GenerateJwtKey()));
                     }
                     var env = hostingContext.HostingEnvironment;
-                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+                    config.AddJsonFile(Common.CovenantAppSettingsFile, optional: false, reloadOnChange: false);
                     config.AddEnvironmentVariables();
                 })
                 .ConfigureLogging((hostingContext, logging) =>

