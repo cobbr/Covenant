@@ -527,8 +527,8 @@ namespace Covenant.Data
                     new GruntTask
                     {
                         Id = 20,
-                        Name = "WMI",
-                        Description = "Execute a process on a remote system using Win32_Process Create with specified credentials.",
+                        Name = "WMICommand",
+                        Description = "Execute a process on a remote system using Win32_Process Create, optionally with alternate credentials.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
                         ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
                         EmbeddedResources = String.Join(",", new List<string>()),
@@ -540,39 +540,31 @@ namespace Covenant.Data
                                 TaskId = 20,
                                 OptionId = 1,
                                 Name = "ComputerName",
-                                Description = "Username to authenticate as.",
-                                Value = "192.168.1.1"
+                                Description = "ComputerName to create the process on.",
+                                Value = "localhost"
                             },
                             new GruntTask.GruntTaskOption
                             {
                                 TaskId = 20,
                                 OptionId = 2,
-                                Name = "Username",
-                                Description = "Username to authenticate as.",
-                                Value = "DOMAIN\\Username"
+                                Name = "Command",
+                                Description = "Command line to execute on the remote system.",
+                                Value = ""
                             },
                             new GruntTask.GruntTaskOption
                             {
                                 TaskId = 20,
                                 OptionId = 3,
-                                Name = "Password",
-                                Description = "Password to authenticate the user.",
-                                Value = "Password123"
+                                Name = "Username",
+                                Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
+                                Value = ""
                             },
                             new GruntTask.GruntTaskOption
                             {
                                 TaskId = 20,
                                 OptionId = 4,
-                                Name = "Launcher",
-                                Description = "Launcher to execute on the remote system.",
-                                Value = "PowerShell"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 20,
-                                OptionId = 5,
-                                Name = "Command",
-                                Description = "Command line to execute on the remote system.",
+                                Name = "Password",
+                                Description = "Password to authenticate the user. (optional)",
                                 Value = ""
                             }
                         }
@@ -580,7 +572,52 @@ namespace Covenant.Data
                     new GruntTask
                     {
                         Id = 21,
-                        Name = "DCOM",
+                        Name = "WMIGrunt",
+                        Description = "Execute a Grunt Launcher on a remote system using Win32_Process Create, optionally with alternate credentials.",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WMI" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 21,
+                                OptionId = 1,
+                                Name = "ComputerName",
+                                Description = "ComputerName to launch the Grunt on.",
+                                Value = "localhost"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 21,
+                                OptionId = 2,
+                                Name = "Launcher",
+                                Description = "Grunt Launcher to execute on the remote system.",
+                                Value = "PowerShell"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 21,
+                                OptionId = 3,
+                                Name = "Username",
+                                Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
+                                Value = ""
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 21,
+                                OptionId = 4,
+                                Name = "Password",
+                                Description = "Password to authenticate the user. (optional)",
+                                Value = ""
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Id = 22,
+                        Name = "DCOMCommand",
                         Description = "Execute a process on a remote system using various DCOM methods.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
                         ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
@@ -590,32 +627,24 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 21,
+                                TaskId = 22,
                                 OptionId = 1,
                                 Name = "ComputerName",
-                                Description = "Username to authenticate as.",
-                                Value = "192.168.1.1"
+                                Description = "ComputerName to execute the process on.",
+                                Value = "localhost"
                             },
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 21,
+                                TaskId = 22,
                                 OptionId = 2,
-                                Name = "Launcher",
-                                Description = "Launcher to execute on the remote system.",
-                                Value = "PowerShell"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 21,
-                                OptionId = 3,
                                 Name = "Command",
                                 Description = "Command line to execute on the remote system.",
                                 Value = ""
                             },
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 21,
-                                OptionId = 4,
+                                TaskId = 22,
+                                OptionId = 3,
                                 Name = "Method",
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application"
@@ -624,9 +653,46 @@ namespace Covenant.Data
                     },
                     new GruntTask
                     {
-                        Id = 22,
-                        Name = "BypassUAC",
-                        Description = "Bypasses UAC through token duplication and spawns a specified process with high integrity.",
+                        Id = 23,
+                        Name = "DCOMGrunt",
+                        Description = "Execute a Grunt Launcher on a remote system using various DCOM methods.",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "DCOM" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 23,
+                                OptionId = 1,
+                                Name = "ComputerName",
+                                Description = "ComputerName to execute the process on.",
+                                Value = "locate"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 23,
+                                OptionId = 2,
+                                Name = "Launcher",
+                                Description = "Grunt Launcher to execute on the remote system.",
+                                Value = "PowerShell"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 23,
+                                OptionId = 3,
+                                Name = "Method",
+                                Description = "DCOM method to use for execution.",
+                                Value = "MMC20.Application"
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Id = 24,
+                        Name = "BypassUACCommand",
+                        Description = "Bypasses UAC through token duplication and executes a command with high integrity.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
                         ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
                         EmbeddedResources = String.Join(",", new List<string>()),
@@ -635,25 +701,38 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 22,
+                                TaskId = 24,
                                 OptionId = 1,
-                                Name = "Launcher",
-                                Description = "Launcher to execute on the remote system.",
-                                Value = "PowerShell"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 22,
-                                OptionId = 2,
                                 Name = "Command",
-                                Description = "Launcher to execute on the remote system.",
+                                Description = "Command to execute with high integrity.",
                                 Value = ""
                             }
                         }
                     },
                     new GruntTask
                     {
-                        Id = 23,
+                        Id = 25,
+                        Name = "BypassUACGrunt",
+                        Description = "Bypasses UAC through token duplication and executes a Grunt Launcher with high integrity.",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "BypassUAC" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 25,
+                                OptionId = 1,
+                                Name = "Launcher",
+                                Description = "Launcher to execute with high integrity.",
+                                Value = "PowerShell"
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Id = 26,
                         Name = "GetDomainUser",
                         Description = "Gets a list of specified (or all) user `DomainObject`s in the current Domain.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
@@ -664,7 +743,7 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 23,
+                                TaskId = 26,
                                 OptionId = 1,
                                 Name = "Identities",
                                 Description = "List of comma-delimited usernames to retrieve.",
@@ -674,7 +753,7 @@ namespace Covenant.Data
                     },
                     new GruntTask
                     {
-                        Id = 24,
+                        Id = 27,
                         Name = "GetDomainGroup",
                         Description = "Gets a list of specified (or all) group `DomainObject`s in the current Domain.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
@@ -685,7 +764,7 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 24,
+                                TaskId = 27,
                                 OptionId = 1,
                                 Name = "Identities",
                                 Description = "List of comma-delimited groups to retrieve.",
@@ -695,7 +774,7 @@ namespace Covenant.Data
                     },
                     new GruntTask
                     {
-                        Id = 25,
+                        Id = 28,
                         Name = "GetDomainComputer",
                         Description = "Gets a list of specified (or all) computer `DomainObject`s in the current Domain.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
@@ -706,7 +785,7 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 25,
+                                TaskId = 28,
                                 OptionId = 1,
                                 Name = "Identities",
                                 Description = "List of comma-delimited computers to retrieve.",
@@ -716,84 +795,13 @@ namespace Covenant.Data
                     },
                     new GruntTask
                     {
-                        Id = 26,
+                        Id = 29,
                         Name = "GetNetLocalGroup",
                         Description = "Gets a list of `LocalGroup`s from specified remote computer(s).",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
                         ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
                         EmbeddedResources = String.Join(",", new List<string>()),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroup" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
-                        {
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 26,
-                                OptionId = 1,
-                                Name = "ComputerNames",
-                                Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Id = 27,
-                        Name = "GetNetLocalGroupMember",
-                        Description = "Gets a list of `LocalGroupMember`s from specified remote computer(s).",
-                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
-                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
-                        EmbeddedResources = String.Join(",", new List<string>()),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroupMember" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
-                        {
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 27,
-                                OptionId = 1,
-                                Name = "ComputerNames",
-                                Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 27,
-                                OptionId = 2,
-                                Name = "LocalGroup",
-                                Description = "LocalGroup name to query for members.",
-                                Value = "Administrators"
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Id = 28,
-                        Name = "GetNetLoggedOnUser",
-                        Description = "Gets a list of `LoggedOnUser`s from specified remote computer(s).",
-                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
-                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
-                        EmbeddedResources = String.Join(",", new List<string>()),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLoggedOnUser" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
-                        {
-                            new GruntTask.GruntTaskOption
-                            {
-                                TaskId = 28,
-                                OptionId = 1,
-                                Name = "ComputerNames",
-                                Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Id = 29,
-                        Name = "GetNetSession",
-                        Description = "Gets a list of `SessionInfo`s from specified remote computer(s).",
-                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
-                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
-                        EmbeddedResources = String.Join(",", new List<string>()),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetSession" + ".task")),
                         Options = new List<GruntTask.GruntTaskOption>
                         {
                             new GruntTask.GruntTaskOption
@@ -809,6 +817,77 @@ namespace Covenant.Data
                     new GruntTask
                     {
                         Id = 30,
+                        Name = "GetNetLocalGroupMember",
+                        Description = "Gets a list of `LocalGroupMember`s from specified remote computer(s).",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroupMember" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 30,
+                                OptionId = 1,
+                                Name = "ComputerNames",
+                                Description = "List of comma-delimited ComputerNames to query.",
+                                Value = "DC01"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 30,
+                                OptionId = 2,
+                                Name = "LocalGroup",
+                                Description = "LocalGroup name to query for members.",
+                                Value = "Administrators"
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Id = 31,
+                        Name = "GetNetLoggedOnUser",
+                        Description = "Gets a list of `LoggedOnUser`s from specified remote computer(s).",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLoggedOnUser" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 31,
+                                OptionId = 1,
+                                Name = "ComputerNames",
+                                Description = "List of comma-delimited ComputerNames to query.",
+                                Value = "DC01"
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Id = 32,
+                        Name = "GetNetSession",
+                        Description = "Gets a list of `SessionInfo`s from specified remote computer(s).",
+                        ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetSession" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                TaskId = 32,
+                                OptionId = 1,
+                                Name = "ComputerNames",
+                                Description = "List of comma-delimited ComputerNames to query.",
+                                Value = "DC01"
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Id = 33,
                         Name = "RegistryRead",
                         Description = "Reads a value stored in registry.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
@@ -819,7 +898,7 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 30,
+                                TaskId = 33,
                                 OptionId = 1,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
@@ -829,7 +908,7 @@ namespace Covenant.Data
                     },
                     new GruntTask
                     {
-                        Id = 31,
+                        Id = 34,
                         Name = "RegistryWrite",
                         Description = "Writes a value into the registry.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
@@ -840,7 +919,7 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 31,
+                                TaskId = 34,
                                 OptionId = 1,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
@@ -848,7 +927,7 @@ namespace Covenant.Data
                             },
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 31,
+                                TaskId = 34,
                                 OptionId = 2,
                                 Name = "Value",
                                 Description = "The value to write to the registry key.",
@@ -858,7 +937,7 @@ namespace Covenant.Data
                     },
                     new GruntTask
                     {
-                        Id = 32,
+                        Id = 35,
                         Name = "ShellCode",
                         Description = "Executes a specified shellcode byte array by copying it to pinned memory, modifying the memory permissions, and executing.",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
@@ -869,7 +948,7 @@ namespace Covenant.Data
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 32,
+                                TaskId = 35,
                                 OptionId = 1,
                                 Name = "Hex",
                                 Description = "Hex string representing the Shellcode bytes to execute.",
