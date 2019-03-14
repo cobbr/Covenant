@@ -145,7 +145,6 @@ namespace Covenant.Controllers
                         if (parameters[0].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
                         else if (parameters[0].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
 
-                        parameters[0] = split.FirstOrDefault();
                         parameters.Add(ArgParams);
                         parameters.Add(Directory);
                         parameters.Add("0");
@@ -163,7 +162,6 @@ namespace Covenant.Controllers
                     if (parameters[0].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
                     else if (parameters[0].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
 
-                    parameters[0] = split.FirstOrDefault();
                     parameters.Add(ArgParams);
                     parameters.Add(Directory);
                     parameters.Add("0");
