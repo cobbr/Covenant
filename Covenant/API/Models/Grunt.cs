@@ -28,13 +28,18 @@ namespace Covenant.API.Models
         /// 'Stage0', 'Stage1', 'Stage2', 'Active', 'Lost', 'Killed'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(int? id = default(int?), string name = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), int? listenerId = default(int?), string covenantIPAddress = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string lastCheckIn = default(string), GruntStatus? status = default(GruntStatus?), IntegrityLevel? integrity = default(IntegrityLevel?), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string))
+        public Grunt(int? id = default(int?), string name = default(string), string originalServerGuid = default(string), string guid = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), int? listenerId = default(int?), string covenantIPAddress = default(string), string childGrunts = default(string), bool? usePipes = default(bool?), string pipeName = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string lastCheckIn = default(string), GruntStatus? status = default(GruntStatus?), IntegrityLevel? integrity = default(IntegrityLevel?), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string))
         {
             Id = id;
             Name = name;
+            OriginalServerGuid = originalServerGuid;
+            Guid = guid;
             DotNetFrameworkVersion = dotNetFrameworkVersion;
             ListenerId = listenerId;
             CovenantIPAddress = covenantIPAddress;
+            ChildGrunts = childGrunts;
+            UsePipes = usePipes;
+            PipeName = pipeName;
             Delay = delay;
             Jitter = jitter;
             ConnectAttempts = connectAttempts;
@@ -70,6 +75,16 @@ namespace Covenant.API.Models
         public string Name { get; set; }
 
         /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "originalServerGuid")]
+        public string OriginalServerGuid { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "guid")]
+        public string Guid { get; set; }
+
+        /// <summary>
         /// Gets or sets possible values include: 'Net40', 'Net35', 'NetCore21'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetFrameworkVersion")]
@@ -84,6 +99,21 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "covenantIPAddress")]
         public string CovenantIPAddress { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "childGrunts")]
+        public string ChildGrunts { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "usePipes")]
+        public bool? UsePipes { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "pipeName")]
+        public string PipeName { get; set; }
 
         /// <summary>
         /// </summary>

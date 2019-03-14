@@ -26,7 +26,8 @@ namespace Covenant.Models.Grunts
         {
             Assembly,
             Set,
-            Kill
+            Kill,
+            Connect
         }
 
         public class GruntTaskingMessage
@@ -82,6 +83,15 @@ namespace Covenant.Models.Grunts
                         type = GruntTaskingType.Kill,
                         Name = this.Name,
                         message = "kill"
+                    };
+                }
+                else if (this.type == GruntTaskingType.Connect)
+                {
+                    return new GruntTaskingMessage
+                    {
+                        type = GruntTaskingType.Connect,
+                        Name = this.Name,
+                        message = this.Value
                     };
                 }
                 return null;

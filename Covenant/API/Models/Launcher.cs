@@ -27,7 +27,7 @@ namespace Covenant.API.Models
         /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil'</param>
-        public Launcher(int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), string launcherString = default(string), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string stagerCode = default(string), string base64ILByteString = default(string))
+        public Launcher(int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), string launcherString = default(string), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), bool? usePipes = default(bool?), string pipeName = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string stagerCode = default(string), string base64ILByteString = default(string))
         {
             Id = id;
             ListenerId = listenerId;
@@ -36,6 +36,8 @@ namespace Covenant.API.Models
             Type = type;
             Name = name;
             Description = description;
+            UsePipes = usePipes;
+            PipeName = pipeName;
             Delay = delay;
             Jitter = jitter;
             ConnectAttempts = connectAttempts;
@@ -87,6 +89,16 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "usePipes")]
+        public bool? UsePipes { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "pipeName")]
+        public string PipeName { get; set; }
 
         /// <summary>
         /// </summary>

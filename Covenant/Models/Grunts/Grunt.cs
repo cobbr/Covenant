@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using Covenant.Core;
 using Encrypt = Covenant.Core.Encryption;
@@ -34,13 +35,25 @@ namespace Covenant.Models.Grunts
 
         public int Id { get; set; }
         public string Name { get; set; } = GenerateName();
+        public string OriginalServerGuid { get; set; } = GenerateName();
+        public string GUID { get; set; }
         public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
 
         public int ListenerId { get; set; }
         public string CovenantIPAddress { get; set; }
 
+        private List<string> _ChildGrunts = new List<string>();
+        // Split into comma-delimited list to easily save as text in the Database
+        public string ChildGrunts
+        {
+            get { return String.Join(',', this._ChildGrunts); }
+            set { this._ChildGrunts = value.Split(',').Where(V => V.Length > 0).ToList(); }
+        }
+        public bool UsePipes { get; set; } = false;
+        public string PipeName { get; set; } = "gruntsvc";
+
         public int Delay { get; set; } = 5;
-        public int Jitter { get; set; } = 0;
+        public int Jitter { get; set; } = 3;
         public int ConnectAttempts { get; set; } = 1000;
 
         public string LastCheckIn { get; set; } = DateTime.MinValue.ToString();
@@ -65,8 +78,13 @@ namespace Covenant.Models.Grunts
                 Id = gruntModel.Id ?? default,
                 ListenerId = gruntModel.ListenerId ?? default,
                 Name = gruntModel.Name ?? default,
+                GUID = gruntModel.Guid ?? default,
+                OriginalServerGuid = gruntModel.OriginalServerGuid ?? default,
                 DotNetFrameworkVersion = (Common.DotNetVersion)Enum.Parse(typeof(Common.DotNetVersion), gruntModel.DotNetFrameworkVersion.ToString()),
                 CovenantIPAddress = gruntModel.CovenantIPAddress ?? default,
+                ChildGrunts = gruntModel.ChildGrunts,
+                UsePipes = gruntModel.UsePipes ?? default,
+                PipeName = gruntModel.PipeName,
                 Delay = gruntModel.Delay ?? default,
                 Jitter = gruntModel.Jitter ?? default,
                 ConnectAttempts = gruntModel.ConnectAttempts ?? default,
@@ -93,8 +111,13 @@ namespace Covenant.Models.Grunts
                 Id = this.Id,
                 ListenerId = this.ListenerId,
                 Name = this.Name,
+                Guid = this.GUID,
+                OriginalServerGuid = this.OriginalServerGuid,
                 DotNetFrameworkVersion = (API.Models.DotNetVersion)Enum.Parse(typeof(API.Models.DotNetVersion), this.DotNetFrameworkVersion.ToString()),
                 CovenantIPAddress = this.CovenantIPAddress,
+                ChildGrunts = this.ChildGrunts,
+                UsePipes = this.UsePipes,
+                PipeName = this.PipeName,
                 Delay = this.Delay,
                 Jitter = this.Jitter,
                 ConnectAttempts = this.ConnectAttempts,
@@ -112,6 +135,11 @@ namespace Covenant.Models.Grunts
                 OperatingSystem = this.OperatingSystem,
                 CookieAuthKey = this.CookieAuthKey
             };
+        }
+
+        public List<string> GetChildren()
+        {
+            return this._ChildGrunts;
         }
 
         public byte[] RSAEncrypt(byte[] toEncrypt)
@@ -148,25 +176,23 @@ namespace Covenant.Models.Grunts
         }
     }
 
-    public class GruntEncryptedMessage : Encrypt.EncryptedMessagePacket
+    public class GruntEncryptedMessage
     {
-		public enum GruntEncryptedMessageType
-		{
-			Stage0,
-            Stage1,
-            Stage2,
-            Register,
-            GetTask,
-            PostTask,
-            Deliver
-		}
+        public enum GruntEncryptedMessageType
+        {
+            Routing,
+            Tasking
+        }
 
-        public int Id { get; set; }
-        public string Name { get; set; }
-		public GruntEncryptedMessageType Type { get; set; } = GruntEncryptedMessageType.GetTask;
+        public string GUID { get; set; }
+        public GruntEncryptedMessageType Type { get; set; }
         public string Meta { get; set; } = "";
 
-		private static GruntEncryptedMessage Create(int gruntId, string gruntName, byte[] message, byte[] key)
+        public string IV { get; set; }
+        public string EncryptedMessage { get; set; }
+        public string HMAC { get; set; }
+
+        private static GruntEncryptedMessage Create(string GUID, byte[] message, byte[] key, GruntEncryptedMessageType Type = GruntEncryptedMessageType.Tasking)
         {
             byte[] encryptedMessagePacket = Encrypt.Utilities.AesEncrypt(message, key);
             byte[] encryptionIV = encryptedMessagePacket.Take(Common.AesIVLength).ToArray();
@@ -174,23 +200,35 @@ namespace Covenant.Models.Grunts
             byte[] hmac = Encrypt.Utilities.ComputeHMAC(encryptedMessage, key);
             return new GruntEncryptedMessage
             {
-                Id = gruntId,
-                Name = gruntName,
-				Type = GruntEncryptedMessageType.Deliver,
+                GUID = GUID,
+                Type = Type,
                 EncryptedMessage = Convert.ToBase64String(encryptedMessage),
                 IV = Convert.ToBase64String(encryptionIV),
                 HMAC = Convert.ToBase64String(hmac)
             };
         }
 
-        public static GruntEncryptedMessage Create(Grunt grunt, byte[] message, byte[] key)
+        public static GruntEncryptedMessage Create(Grunt grunt, byte[] message, GruntEncryptedMessageType Type = GruntEncryptedMessageType.Tasking)
         {
-            return Create(grunt.Id, grunt.Name, message, key);
+            if (grunt.Status == Grunt.GruntStatus.Uninitialized || grunt.Status == Grunt.GruntStatus.Stage0)
+            {
+                return Create(grunt.GUID, message, Convert.FromBase64String(grunt.GruntSharedSecretPassword), Type);
+            }
+            return Create(grunt.GUID, message, Convert.FromBase64String(grunt.GruntNegotiatedSessionKey), Type);
         }
 
-        public static GruntEncryptedMessage Create(Grunt grunt, byte[] message)
+        public bool VerifyHMAC(byte[] Key)
         {
-            return Create(grunt, message, Convert.FromBase64String(grunt.GruntNegotiatedSessionKey));
+            if (IV == "" || EncryptedMessage == "" || HMAC == "" || Key.Length == 0) { return false; }
+            try
+            {
+                var hashedBytes = Convert.FromBase64String(this.EncryptedMessage);
+                return Encrypt.Utilities.VerifyHMAC(hashedBytes, Convert.FromBase64String(this.HMAC), Key);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
     }

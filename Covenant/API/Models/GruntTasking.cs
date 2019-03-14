@@ -25,7 +25,7 @@ namespace Covenant.API.Models
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Tasked', 'Progressed', 'Completed'</param>
         /// <param name="type">Possible values include: 'Assembly', 'Set',
-        /// 'Kill'</param>
+        /// 'Kill', 'Connect'</param>
         /// <param name="setType">Possible values include: 'Delay', 'Jitter',
         /// 'ConnectAttempts'</param>
         public GruntTasking(int? id = default(int?), string name = default(string), int? taskId = default(int?), int? gruntId = default(int?), GruntTaskingStatus? status = default(GruntTaskingStatus?), GruntTaskingType? type = default(GruntTaskingType?), string gruntTaskOutput = default(string), GruntTaskingMessage taskingMessage = default(GruntTaskingMessage), string gruntTaskingAssembly = default(string), GruntSetTaskingType? setType = default(GruntSetTaskingType?), string value = default(string))
@@ -77,7 +77,8 @@ namespace Covenant.API.Models
         public GruntTaskingStatus? Status { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Assembly', 'Set', 'Kill'
+        /// Gets or sets possible values include: 'Assembly', 'Set', 'Kill',
+        /// 'Connect'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public GruntTaskingType? Type { get; set; }

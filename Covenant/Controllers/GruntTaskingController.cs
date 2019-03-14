@@ -17,7 +17,7 @@ namespace Covenant.Controllers
 {
     [Authorize]
 	[ApiController]
-    [Route("api/grunts/{id}/taskings")]
+    [Route("api")]
     public class GruntTaskingController : Controller
     {
         private readonly CovenantContext _context;
@@ -27,21 +27,80 @@ namespace Covenant.Controllers
             _context = context;
         }
 
+        // GET: api/grunttaskings
+        // <summary>
+        // Get GruntTaskings
+        // </summary>
+        [HttpGet("grunttaskings", Name = "GetAllGruntTaskings")]
+        public IEnumerable<GruntTasking> GetAllGruntTaskings()
+        {
+            return _context.GruntTaskings.ToList();
+        }
+
         // GET: api/grunts/{id}/taskings
         // <summary>
         // Get GruntTaskings
         // </summary>
-        [HttpGet(Name = "GetGruntTaskings")]
+        [HttpGet("grunts/{id}/taskings", Name = "GetGruntTaskings")]
         public IEnumerable<GruntTasking> GetGruntTaskings(int id)
         {
             return _context.GruntTaskings.Where(GT => GT.GruntId == id).ToList();
         }
 
-        // GET api/grunts/{id}/taskings/{task_name}
+        // GET: api/grunts/{id}/taskings/search
+        // <summary>
+        // Get GruntTaskings for Grunt or any child Grunt
+        // </summary>
+        [HttpGet("grunts/{id}/taskings/search", Name = "GetSearchGruntTaskings")]
+        public IEnumerable<GruntTasking> GetSearchGruntTaskings(int id)
+        {
+            List<GruntTasking> search = new List<GruntTasking>();
+            foreach (GruntTasking task in _context.GruntTaskings)
+            {
+                if (this.IsChildGrunt(id, task.GruntId))
+                {
+                    search.Add(task);
+                }
+            }
+            return search;
+        }
+
+        // GET: api/grunts/{id}/taskings/uninitialized
+        // <summary>
+        // Get uninitialized GruntTaskings for Grunt
+        // </summary>
+        [HttpGet("grunts/{id}/taskings/uninitialized", Name = "GetUninitializedGruntTaskings")]
+        public IEnumerable<GruntTasking> GetUninitializedGruntTaskings(int id)
+        {
+            return _context.GruntTaskings
+                .Where(GT => GT.GruntId == id && GT.status == GruntTasking.GruntTaskingStatus.Uninitialized)
+                .ToList();
+        }
+
+        // GET: api/grunts/{id}/taskings/search/uninitialized
+        // <summary>
+        // Get uninitialized GruntTaskings for Grunt or any child Grunt
+        // </summary>
+        [HttpGet("grunts/{id}/taskings/search/uninitialized", Name = "GetSearchUninitializedGruntTaskings")]
+        public IEnumerable<GruntTasking> GetSearchUninitializedGruntTaskings(int id)
+        {
+            List<GruntTasking> uninitializedTasks = _context.GruntTaskings.Where(GT => GT.status == GruntTasking.GruntTaskingStatus.Uninitialized).ToList();
+            List<GruntTasking> search = new List<GruntTasking>();
+            foreach (GruntTasking task in uninitializedTasks)
+            {
+                if (this.IsChildGrunt(id, task.GruntId))
+                {
+                    search.Add(task);
+                }
+            }
+            return search;
+        }
+
+        // GET api/grunts/{id}/taskings/{taskname}
         // <summary>
         // Get a GruntTasking
         // </summary>
-        [HttpGet("{taskname}", Name = "GetGruntTasking")]
+        [HttpGet("grunts/{id}/taskings/{taskname}", Name = "GetGruntTasking")]
         public ActionResult<GruntTasking> GetGruntTasking(int id, string taskname)
         {
             GruntTasking gruntTasking = _context.GruntTaskings.FirstOrDefault(GT => GT.GruntId == id && GT.Name == taskname);
@@ -56,7 +115,7 @@ namespace Covenant.Controllers
         // <summary>
         // Create a GruntTasking
         // </summary>
-        [HttpPost(Name = "CreateGruntTasking")]
+        [HttpPost("grunts/{id}/taskings", Name = "CreateGruntTasking")]
         [ProducesResponseType(typeof(GruntTasking), 201)]
         public ActionResult<GruntTasking> CreateGruntTasking(int id, [FromBody] GruntTasking gruntTasking)
         {
@@ -199,11 +258,11 @@ namespace Covenant.Controllers
             return CreatedAtRoute(nameof(GetGruntTasking), new { id = id, taskname = gruntTasking.Name }, gruntTasking);
         }
 
-        // PUT api/grunts/{id}/taskings/{task_name}
+        // PUT api/grunts/{id}/taskings/{taskname}
         // <summary>
         // Edit a GruntTasking
         // </summary>
-        [HttpPut("{taskname}", Name = "EditGruntTasking")]
+        [HttpPut("grunts/{id}/taskings/{taskname}", Name = "EditGruntTasking")]
         public ActionResult<GruntTasking> EditGruntTasking(int id, string taskname, [FromBody] GruntTasking gruntTasking)
         {
             GruntTasking updatingGruntTasking = _context.GruntTaskings.FirstOrDefault(GT => id == GT.GruntId && taskname == GT.Name);
@@ -237,7 +296,7 @@ namespace Covenant.Controllers
         // <summary>
         // Delete a GruntTasking
         // </summary>
-        [HttpDelete("{taskname}", Name = "DeleteGruntTasking")]
+        [HttpDelete("grunts/{id}/taskings/{taskname}", Name = "DeleteGruntTasking")]
         [ProducesResponseType(204)]
         public ActionResult DeleteGruntTasking(int id, string taskname)
         {
@@ -251,6 +310,29 @@ namespace Covenant.Controllers
             _context.SaveChanges();
 
             return new NoContentResult();
+        }
+
+        private bool IsChildGrunt(int ParentId, int ChildId)
+        {
+            if (ParentId == ChildId)
+            {
+                return true;
+            }
+            Models.Grunts.Grunt parentGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ParentId);
+            Models.Grunts.Grunt childGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ChildId);
+            if (parentGrunt.GetChildren().Contains(childGrunt.GUID))
+            {
+                return true;
+            }
+            foreach (string child in parentGrunt.GetChildren())
+            {
+                Models.Grunts.Grunt directChild = _context.Grunts.FirstOrDefault(G => G.Name == child);
+                if (IsChildGrunt(directChild.Id, ChildId))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private bool ContextContainsCredentials(CapturedCredential cred)

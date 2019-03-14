@@ -50,6 +50,44 @@ namespace Covenant.Controllers
             return Ok(grunt);
         }
 
+        // GET api/grunts/guid/{guid}
+        // <summary>
+        // Get a Grunt by GUID
+        // </summary>
+        [HttpGet("guid/{guid}", Name = "GetGruntByGUID")]
+        public ActionResult<Grunt> GetGruntByGUID(string guid)
+        {
+            var grunt = _context.Grunts.FirstOrDefault(g => g.GUID == guid);
+            if (grunt == null)
+            {
+                return NotFound();
+            }
+            return Ok(grunt);
+        }
+
+        // GET api/grunts/{id}/path/{tid}
+        // <summary>
+        // Get a path to a child Grunt by id
+        // </summary>
+        [HttpGet("{id}/path/{tid}", Name = "GetPathToChildGrunt")]
+        public ActionResult<List<string>> GetPathToChildGrunt(int id, int tid)
+        {
+            var grunt = _context.Grunts.FirstOrDefault(g => g.Id == id);
+            if (grunt == null)
+            {
+                return NotFound();
+            }
+            List<string> path = new List<string>();
+            bool found = GetPathToChildGrunt(id, tid, ref path);
+            if (!found)
+            {
+                return NotFound();
+            }
+            path.Add(grunt.GUID);
+            path.Reverse();
+            return Ok(path);
+        }
+
         // POST api/grunts
         // <summary>
         // Create a Grunt
@@ -119,6 +157,8 @@ namespace Covenant.Controllers
                     });
                 }
             }
+            matching_grunt.GUID = grunt.GUID;
+            matching_grunt.OriginalServerGuid = grunt.OriginalServerGuid;
             matching_grunt.Name = grunt.Name;
             matching_grunt.UserDomainName = grunt.UserDomainName;
             matching_grunt.UserName = grunt.UserName;
@@ -128,6 +168,10 @@ namespace Covenant.Controllers
             matching_grunt.LastCheckIn = grunt.LastCheckIn;
             matching_grunt.IPAddress = grunt.IPAddress;
             matching_grunt.OperatingSystem = grunt.OperatingSystem;
+
+            matching_grunt.ChildGrunts = grunt.ChildGrunts;
+            matching_grunt.UsePipes = grunt.UsePipes;
+            matching_grunt.PipeName = grunt.PipeName;
 
             matching_grunt.ConnectAttempts = grunt.ConnectAttempts;
             matching_grunt.Delay = grunt.Delay;
@@ -177,6 +221,33 @@ namespace Covenant.Controllers
             _context.Grunts.Remove(grunt);
             _context.SaveChanges();
             return new NoContentResult();
+        }
+
+        private bool GetPathToChildGrunt(int ParentId, int ChildId, ref List<string> GruntPath)
+        {
+            if (ParentId == ChildId)
+            {
+                return true;
+            }
+
+            Models.Grunts.Grunt parentGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ParentId);
+            Models.Grunts.Grunt childGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ChildId);
+            List<string> children = parentGrunt.GetChildren();
+            if (children.Contains(childGrunt.GUID))
+            {
+                GruntPath.Add(childGrunt.GUID);
+                return true;
+            }
+            foreach (string child in parentGrunt.GetChildren())
+            {
+                Models.Grunts.Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
+                if (GetPathToChildGrunt(directChild.Id, ChildId, ref GruntPath))
+                {
+                    GruntPath.Add(directChild.GUID);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

