@@ -4,11 +4,11 @@ using SharpSploit.LateralMovement;
 
 public static class Task
 {
-    public static string Execute(string ComputerName, string Username, string Password, string Command)
+    public static string Execute(string ComputerName, string Command, string Username = "", string Password = "")
     {
         if (WMI.WMIExecute(ComputerName, Command, Username, Password))
         {
-            return "WMI execution successful. Executed: \"" + Command + "\" on: " + ComputerName + " as: " + Username;
+            return "WMI execution successful. Executed: \"" + Command + "\" on: " + ComputerName;
         }
         else
         {
