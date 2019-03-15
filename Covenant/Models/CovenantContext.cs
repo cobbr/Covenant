@@ -25,6 +25,7 @@ namespace Covenant.Models
         public DbSet<GruntTask.GruntTaskOption> GruntTaskOptions { get; set; }
         public DbSet<HostedFile> HostedFiles { get; set; }
 
+        public DbSet<CapturedCredential> Credentials { get; set; }
         public DbSet<GruntTasking> GruntTaskings { get; set; }
         public DbSet<Event> Events { get; set; }
 
@@ -50,6 +51,10 @@ namespace Covenant.Models
             builder.Entity<MSBuildLauncher>().ToTable("MSBuildLauncher");
             builder.Entity<PowerShellLauncher>().ToTable("PowerShellLauncher");
             builder.Entity<BinaryLauncher>().ToTable("BinaryLauncher");
+
+            builder.Entity<CapturedPasswordCredential>().ToTable("CapturedPasswordCredential");
+            builder.Entity<CapturedHashCredential>().ToTable("CapturedHashCredential");
+            builder.Entity<CapturedTicketCredential>().ToTable("CapturedTicketCredential");
 
             builder.Entity<DownloadEvent>().ToTable("DownloadEvent");
 
