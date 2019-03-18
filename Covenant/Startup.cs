@@ -75,6 +75,7 @@ namespace Covenant
 			});
 
             services.AddMvc();
+            services.AddRouting(options => options.LowercaseUrls = true);
 
 			services.AddAuthorization(options =>
 			{

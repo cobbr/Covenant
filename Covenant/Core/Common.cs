@@ -39,8 +39,10 @@ namespace Covenant.Core
         public static string Net35Directory = CovenantReferenceDirectory + "net35" + Path.DirectorySeparatorChar;
         public static string Net40Directory = CovenantReferenceDirectory + "net40" + Path.DirectorySeparatorChar;
         public static string CovenantSrcDirectory = CovenantTaskDirectory + "src" + Path.DirectorySeparatorChar;
+        public static string CovenantSharpSploitDirectory = CovenantSrcDirectory + "SharpSploit" + Path.DirectorySeparatorChar;
+        public static string CovenantRubeusDirectory = CovenantSrcDirectory + "Rubeus" + Path.DirectorySeparatorChar;
 
-        public static string CovenantAppSettingsFile = CovenantDirectory + "appsettings.json";
+        public static string CovenantAppSettingsFile = CovenantDataDirectory + "appsettings.json";
         public static string CovenantJwtKeyReplaceMessage = "[KEY USED TO SIGN/VERIFY JWT TOKENS, ALWAYS REPLACE THIS VALUE]";
 
         public static List<Compiler.Reference> DefaultReferences = new List<Compiler.Reference>

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Covenant.Models;
 using Covenant.Models.Grunts;
 using Covenant.Models.Launchers;
+using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
@@ -59,7 +60,7 @@ namespace Covenant.Controllers
         [ProducesResponseType(typeof(GruntTasking), 201)]
         public ActionResult<GruntTasking> CreateGruntTasking(int id, [FromBody] GruntTasking gruntTasking)
         {
-            Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
+            Models.Grunts.Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
             if (grunt == null)
             {
                 return NotFound();
@@ -73,109 +74,97 @@ namespace Covenant.Controllers
                 }
                 task.Options = _context.GruntTaskOptions.Where(O => O.TaskId == task.Id).ToList();
                 List<string> parameters = task.Options.OrderBy(O => O.OptionId).Select(O => O.Value).ToList();
-                if (task.Name.ToLower() == "wmi")
-                {
-                    Launcher l = _context.Launchers.FirstOrDefault(L => L.Name.ToLower() == parameters[3].ToLower());
-                    if ((parameters[4] != null && parameters[4] != "") || l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                    {
-                        // If using custom command
-                        // Remove the "Launcher" parameter
-                        parameters.RemoveAt(3);
-                    }
-                    else
-                    {
-                        // If using Launcher
-                        // Remove the "Command" parameter
-                        parameters.RemoveAt(4);
-
-                        // Set LauncherString to WMI command parameter
-                        parameters[3] = l.LauncherString;
-                    }
-                }
-                else if (task.Name.ToLower() == "dcom")
+                if (task.Name.ToLower() == "wmigrunt")
                 {
                     Launcher l = _context.Launchers.FirstOrDefault(L => L.Name.ToLower() == parameters[1].ToLower());
-                    if ((parameters[2] != null && parameters[2] != "") || l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                    if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                     {
-                        // If using custom command
-                        // Remove the "Launcher" parameter
-                        parameters.RemoveAt(1);
-
-                        // Add .exe exetension if needed
-                        List<string> split = parameters[1].Split(" ").ToList();
-                        parameters[1] = split[0];
-                        if (!parameters[1].EndsWith(".exe")) { parameters[1] += ".exe"; }
-
-                        split.RemoveAt(0);
-                        parameters.Insert(2, String.Join(" ", split.ToArray()));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[1].ToLower().Contains("powershell.exe")) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[1].ToLower().Contains("wmic.exe")) { Directory += "wbem\\"; }
-
-                        parameters.Insert(3, Directory);
+                        return NotFound();
                     }
                     else
                     {
-                        // If using Launcher
-                        // Remove the "Command" parameter
-                        parameters.RemoveAt(2);
-
-                        // Set LauncherString to DCOM command parameter
                         parameters[1] = l.LauncherString;
-
+                    }
+                }
+                else if (task.Name.ToLower() == "dcomgrunt")
+                {
+                    Launcher l = _context.Launchers.FirstOrDefault(L => L.Name.ToLower() == parameters[1].ToLower());
+                    if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
                         // Add .exe exetension if needed
-                        List<string> split = parameters[1].Split(" ").ToList();
-                        parameters[1] = split[0];
+                        List<string> split = l.LauncherString.Split(" ").ToList();
+                        parameters[1] = split.FirstOrDefault();
                         if (!parameters[1].EndsWith(".exe")) { parameters[1] += ".exe"; }
 
+                        // Add command parameters
                         split.RemoveAt(0);
                         parameters.Insert(2, String.Join(" ", split.ToArray()));
                         string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[1].ToLower().Contains("powershell.exe")) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[1].ToLower().Contains("wmic.exe")) { Directory += "wbem\\"; }
+                        if (parameters[1].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
+                        else if (parameters[1].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
 
                         parameters.Insert(3, Directory);
                     }
                 }
-                else if (task.Name.ToLower() == "bypassuac")
+                else if (task.Name.ToLower() == "dcomcommand")
+                {
+                    // Add .exe exetension if needed
+                    List<string> split = parameters[1].Split(" ").ToList();
+                    parameters[1] = split[0];
+                    if (!parameters[1].EndsWith(".exe")) { parameters[1] += ".exe"; }
+
+                    // Add command parameters
+                    split.RemoveAt(0);
+                    parameters.Insert(2, String.Join(" ", split.ToArray()));
+                    string Directory = "C:\\WINDOWS\\System32\\";
+                    if (parameters[1].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
+                    else if (parameters[1].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
+
+                    parameters.Insert(3, Directory);
+                }
+                else if (task.Name.ToLower() == "bypassuacgrunt")
                 {
                     Launcher l = _context.Launchers.FirstOrDefault(L => L.Name.ToLower() == parameters[0].ToLower());
-                    if ((parameters[1] != null && parameters[1] != "") || l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                    if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                     {
-                        // If using custom command
-                        // Remove the "Launcher" parameter
-                        parameters.RemoveAt(0);
-
-                        // Add .exe exetension if needed
-                        string[] split = parameters[0].Split(" ");
-                        parameters[0] = split.FirstOrDefault();
-                        if (!parameters[0].EndsWith(".exe")) { parameters[0] += ".exe"; }
-
-                        // Add parameters needed for BypassUAC Task
-                        parameters.Add(String.Join(" ", split.ToList().GetRange(1, split.Count() - 1)));
-                        parameters.Add("C:\\WINDOWS\\System32\\");
-                        if (parameters[0].ToLower().Contains("powershell.exe")) { parameters[2] += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[0].ToLower().Contains("wmic.exe")) { parameters[2] += "wbem\\"; }
-                        parameters.Add("0");
+                        return NotFound();
                     }
                     else
                     {
-                        // If using Launcher
-                        // Remove the "Command" parameter
-                        parameters.RemoveAt(1);
-
                         // Add .exe exetension if needed
                         string[] split = l.LauncherString.Split(" ");
-                        parameters[0] = split.FirstOrDefault();
                         if (!parameters[0].EndsWith(".exe")) { parameters[0] += ".exe"; }
 
                         // Add parameters need for BypassUAC Task
-                        parameters.Add(String.Join(" ", split.ToList().GetRange(1, split.Count() - 1)));
-                        parameters.Add("C:\\WINDOWS\\System32\\");
-                        if (l.Name.ToLower() == "powershell") { parameters[2] += "WindowsPowerShell\\v1.0\\"; }
-                        else if (l.Name.ToLower() == "wmic") { parameters[2] += "wbem\\"; }
+                        string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
+                        string Directory = "C:\\WINDOWS\\System32\\";
+                        if (parameters[0].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
+                        else if (parameters[0].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
+
+                        parameters.Add(ArgParams);
+                        parameters.Add(Directory);
                         parameters.Add("0");
                     }
+                }
+                else if (task.Name.ToLower() == "bypassuaccommand")
+                {
+                    // Add .exe exetension if needed
+                    string[] split = parameters[0].Split(" ");
+                    if (!parameters[0].EndsWith(".exe")) { parameters[0] += ".exe"; }
+
+                    // Add parameters need for BypassUAC Task
+                    string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
+                    string Directory = "C:\\WINDOWS\\System32\\";
+                    if (parameters[0].ToLower() == "powershell.exe") { Directory += "WindowsPowerShell\\v1.0\\"; }
+                    else if (parameters[0].ToLower() == "wmic.exe") { Directory += "wbem\\"; }
+
+                    parameters.Add(ArgParams);
+                    parameters.Add(Directory);
+                    parameters.Add("0");
                 }
                 try
                 {
@@ -210,6 +199,20 @@ namespace Covenant.Controllers
             {
                 return NotFound();
             }
+            List<String> credTaskNames = new List<string> { "Mimikatz", "SamDump", "LogonPasswords", "DcSync", "Rubeus", "Kerberoast" };
+            GruntTask gruntTask = _context.GruntTasks.FirstOrDefault(G => G.Id == gruntTasking.TaskId);
+            if (credTaskNames.Contains(gruntTask.Name))
+            {
+                List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(gruntTasking.GruntTaskOutput);
+                foreach (CapturedCredential cred in capturedCredentials)
+                {
+                    if (!ContextContainsCredentials(cred))
+                    {
+                        _context.Credentials.Add(cred);
+                        _context.SaveChanges();
+                    }
+                }
+            }
             updatingGruntTasking.status = gruntTasking.status;
             updatingGruntTasking.GruntTaskOutput = gruntTasking.GruntTaskOutput;
             _context.GruntTaskings.Update(updatingGruntTasking);
@@ -236,6 +239,51 @@ namespace Covenant.Controllers
             _context.SaveChanges();
 
             return new NoContentResult();
+        }
+
+        private bool ContextContainsCredentials(CapturedCredential cred)
+        {
+            switch (cred.Type)
+            {
+                case CapturedCredential.CredentialType.Password:
+                    CapturedPasswordCredential passcred = (CapturedPasswordCredential)cred;
+                    return _context.Credentials.Where(C => C.Type == CapturedCredential.CredentialType.Password)
+                                   .Select(C => (CapturedPasswordCredential)C)
+                                   .FirstOrDefault(PC =>
+                                       PC.Type == passcred.Type &&
+                                       PC.Domain == passcred.Domain &&
+                                       PC.Username == passcred.Username &&
+                                       PC.Password == passcred.Password
+                                   ) != null;
+                case CapturedCredential.CredentialType.Hash:
+                    CapturedHashCredential hashcred = (CapturedHashCredential)cred;
+                    return _context.Credentials.Where(C => C.Type == CapturedCredential.CredentialType.Hash)
+                                   .Select(C => (CapturedHashCredential)C)
+                                   .FirstOrDefault(PC =>
+                                       PC.Type == hashcred.Type &&
+                                       PC.Domain == hashcred.Domain &&
+                                       PC.Username == hashcred.Username &&
+                                       PC.Hash == hashcred.Hash &&
+                                       PC.HashCredentialType == hashcred.HashCredentialType
+                                   ) != null;
+                case CapturedCredential.CredentialType.Ticket:
+                    CapturedTicketCredential ticketcred = (CapturedTicketCredential)cred;
+                    return _context.Credentials.Where(C => C.Type == CapturedCredential.CredentialType.Ticket)
+                                   .Select(C => (CapturedTicketCredential)C)
+                                   .FirstOrDefault(PC =>
+                                       PC.Type == ticketcred.Type &&
+                                       PC.Domain == ticketcred.Domain &&
+                                       PC.Username == ticketcred.Username &&
+                                       PC.Ticket == ticketcred.Ticket &&
+                                       PC.TicketCredentialType == ticketcred.TicketCredentialType
+                                   ) != null;
+                default:
+                    return _context.Credentials.FirstOrDefault(P =>
+                                       P.Type == cred.Type &&
+                                       P.Domain == cred.Domain &&
+                                       P.Username == cred.Username
+                                   ) != null;
+            }
         }
     }
 }
