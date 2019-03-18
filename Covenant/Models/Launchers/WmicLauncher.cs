@@ -21,7 +21,7 @@ namespace Covenant.Models.Launchers
         }
         protected override String GetLauncher(string code)
         {
-            string launcher = "wmic os get /format:\"" + "file.xls" + "\"";
+            string launcher = "wmic os get /format:\"" + "file.xsl" + "\"";
             this.LauncherString = launcher;
             return this.LauncherString;
         }
