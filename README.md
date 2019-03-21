@@ -36,13 +36,15 @@ $ ~/Covenant/Covenant > docker build -t covenant .
 
 Now we can run Covenant in a Docker container:
 ```
-$ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --name covenant covenant --username AdminUser --computername 0.0.0.0
+$ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --name covenant -v /absolute/path/to/Covenant/Covenant/Data:/app/Data covenant --username AdminUser --computername 0.0.0.0
 ```
 The `--username user` and `--computername 0.0.0.0` are arguments being passed to Covenant. This creates a Covenant admin user named `AdminUser`, and binds the Covenant API to `0.0.0.0`, which is important when using Docker (we won't have access to bind to the docker container's IP address).
 
 The `-it` parameter is a Docker parameter that indicates that we should begin Covenant in an interactive tty. This is important, as you will be prompted to set a password for the `AdminUser` user. Alternatively, you can set this non-interactively with the `--password` parameter to Covenant, but this will leave your password in plaintext in command history, not ideal.
 
 The `-p` parameters expose ports to the Covenant Docker container. You must expose port 7443 and any other ports you would like to start listeners on.
+
+The `-v` parameter creates a shared Data directory between the host and the container. Be sure to specify an absolute path to your data directory, a relative path will not work.
 
 Once Covanant has been started and you have set the admin password, you can disconnect from the interactive interface, if you would like, by pressing `Ctrl+p` and `Ctrl+q` consecutively.
 
@@ -58,12 +60,12 @@ $ ~/Covenant/Covenant > docker start covenant -ai
 Alternatively, to remove all Covenant data and restart fresh, you can remove and run again:
 ```
 $ ~/Covenant/Covenant > docker rm covenant
-$ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --name covenant covenant --username AdminUser --computername 0.0.0.0
+$ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --name covenant -v /absolute/path/to/Covenant/Covenant/Data:/app/Data covenant --username AdminUser --computername 0.0.0.0
 ```
 
 Finally, want to develop and hack on Covenant? Awesome, Covenant has a Swagger UI, built for exactly this purpose! Just start Covenant in Development mode as seen below and navigate to `https://localhost:7443/swagger`:
 ```
-$ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --env ASPNETCORE_ENVIRONMENT=Development --name covenant covenant --username AdminUser --computername 0.0.0.0
+$ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --env ASPNETCORE_ENVIRONMENT=Development --name covenant -v /absolute/path/to/Covenant/Covenant/Data:/app/Data covenant --username AdminUser --computername 0.0.0.0
 ```
 
 ### Without Docker
