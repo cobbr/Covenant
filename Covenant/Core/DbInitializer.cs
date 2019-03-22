@@ -12,9 +12,8 @@ using Covenant.Models.Covenant;
 using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
-using Covenant.Core;
 
-namespace Covenant.Data
+namespace Covenant.Core
 {
     public static class DbInitializer
     {

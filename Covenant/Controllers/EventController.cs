@@ -59,7 +59,7 @@ namespace Covenant.Controllers
         [HttpGet("time", Name = "GetTime")]
         public ActionResult<long> GetTime()
         {
-            return Ok(DateTime.Now.ToBinary());
+            return Ok(DateTime.UtcNow.ToBinary());
         }
 
         // GET: api/events/range/{fromdate}
@@ -93,7 +93,7 @@ namespace Covenant.Controllers
 		[ProducesResponseType(typeof(Event), 201)]
 		public ActionResult<Event> CreateEvent([FromBody]Event anEvent)
 		{
-			anEvent.Time = DateTime.Now;
+			anEvent.Time = DateTime.UtcNow;
 			_context.Events.Add(anEvent);
 			_context.SaveChanges();
 			return CreatedAtRoute(nameof(GetEvent), new { id = anEvent.Id }, anEvent);
@@ -132,22 +132,8 @@ namespace Covenant.Controllers
         [ProducesResponseType(typeof(Event), 201)]
         public ActionResult CreateDownloadEvent([FromBody]DownloadEvent downloadEvent)
         {
-            downloadEvent.Time = DateTime.Now;
-            byte[] contents = Convert.FromBase64String(downloadEvent.FileContents);
-            if (downloadEvent.Progress == DownloadEvent.DownloadProgress.Complete)
-            {
-                System.IO.File.WriteAllBytes(
-                    Path.Combine(Common.CovenantDownloadDirectory, downloadEvent.FileName),
-                    contents
-                );
-            }
-            else
-            {
-                using (var stream = new FileStream(Path.Combine(Common.CovenantDownloadDirectory, downloadEvent.FileName), FileMode.Append))
-                {
-                    stream.Write(contents, 0, contents.Length);
-                }
-            }
+            downloadEvent.Time = DateTime.UtcNow;
+            downloadEvent.WriteToDisk();
             _context.Events.Add(downloadEvent);
             _context.SaveChanges();
             return CreatedAtRoute(nameof(GetEvent), new { id = downloadEvent.Id }, downloadEvent);

@@ -24,7 +24,6 @@ using NLog.Config;
 using NLog.Targets;
 
 using Covenant.Models;
-using Covenant.Data;
 using Covenant.Core;
 using Covenant.Models.Covenant;
 

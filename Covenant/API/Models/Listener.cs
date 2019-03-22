@@ -24,18 +24,19 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Active', 'Stopped'</param>
-        public Listener(int? id = default(int?), int? profileId = default(int?), string name = default(string), string description = default(string), string bindAddress = default(string), int? bindPort = default(int?), string connectAddress = default(string), int? listenerTypeId = default(int?), ListenerStatus? status = default(ListenerStatus?), string covenantToken = default(string))
+        public Listener(int? id = default(int?), string name = default(string), string description = default(string), string bindAddress = default(string), int? bindPort = default(int?), string connectAddress = default(string), int? profileId = default(int?), int? listenerTypeId = default(int?), ListenerStatus? status = default(ListenerStatus?), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             Id = id;
-            ProfileId = profileId;
             Name = name;
             Description = description;
             BindAddress = bindAddress;
             BindPort = bindPort;
             ConnectAddress = connectAddress;
+            ProfileId = profileId;
             ListenerTypeId = listenerTypeId;
             Status = status;
             CovenantToken = covenantToken;
+            StartTime = startTime;
             CustomInit();
         }
 
@@ -48,11 +49,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "id")]
         public int? Id { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "profileId")]
-        public int? ProfileId { get; set; }
 
         /// <summary>
         /// </summary>
@@ -81,6 +77,11 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "profileId")]
+        public int? ProfileId { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "listenerTypeId")]
         public int? ListenerTypeId { get; set; }
 
@@ -95,6 +96,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "covenantToken")]
         public string CovenantToken { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "startTime")]
+        public System.DateTime? StartTime { get; set; }
 
     }
 }

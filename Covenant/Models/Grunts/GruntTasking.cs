@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 using Covenant.Core;
+using Covenant.Models.Covenant;
 
 namespace Covenant.Models.Grunts
 {
@@ -27,7 +28,15 @@ namespace Covenant.Models.Grunts
             Assembly,
             Set,
             Kill,
-            Connect
+            Connect,
+            Disconnect
+        }
+
+        public enum GruntSetTaskingType
+        {
+            Delay,
+            Jitter,
+            ConnectAttempts
         }
 
         public class GruntTaskingMessage
@@ -42,9 +51,18 @@ namespace Covenant.Models.Grunts
         public int TaskId { get; set; }
         public int GruntId { get; set; }
 
+        public string TaskingCommand { get; set; } = "";
+        public string TaskingUser { get; set; }
+
         public GruntTaskingStatus status { get; set; } = GruntTaskingStatus.Uninitialized;
         public GruntTaskingType type { get; set; } = GruntTaskingType.Assembly;
         public string GruntTaskOutput { get; set; } = "";
+
+        public DateTime TaskingTime { get; set; } = DateTime.MinValue;
+        public DateTime CompletionTime { get; set; } = DateTime.MinValue;
+
+        public GruntSetTaskingType SetType { get; set; } = GruntSetTaskingType.Delay;
+        public string Value { get; set; } = "";
 
         public GruntTaskingMessage TaskingMessage
         {
@@ -90,6 +108,15 @@ namespace Covenant.Models.Grunts
                     return new GruntTaskingMessage
                     {
                         type = GruntTaskingType.Connect,
+                        Name = this.Name,
+                        message = this.Value
+                    };
+                }
+                else if (this.type == GruntTaskingType.Disconnect)
+                {
+                    return new GruntTaskingMessage
+                    {
+                        type = GruntTaskingType.Disconnect,
                         Name = this.Name,
                         message = this.Value
                     };
@@ -142,14 +169,5 @@ namespace Covenant.Models.Grunts
             }
             return this.GruntTaskingAssembly;
         }
-
-        public enum GruntSetTaskingType
-        {
-            Delay,
-            Jitter,
-            ConnectAttempts
-        }
-        public GruntSetTaskingType SetType { get; set; } = GruntSetTaskingType.Delay;
-        public string Value { get; set; } = "";
     }
 }

@@ -5,9 +5,13 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Grunts;
 using Covenant.Models.Launchers;
@@ -21,10 +25,19 @@ namespace Covenant.Controllers
     public class GruntTaskingController : Controller
     {
         private readonly CovenantContext _context;
+        private readonly UserManager<CovenantUser> _userManager;
 
-        public GruntTaskingController(CovenantContext context)
+        public GruntTaskingController(CovenantContext context, UserManager<CovenantUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
+        }
+
+        private CovenantUser GetCurrentUser()
+        {
+            Task<CovenantUser> task = _userManager.GetUserAsync(HttpContext.User);
+            task.Wait();
+            return task.Result;
         }
 
         // GET: api/grunttaskings
@@ -119,11 +132,14 @@ namespace Covenant.Controllers
         [ProducesResponseType(typeof(GruntTasking), 201)]
         public ActionResult<GruntTasking> CreateGruntTasking(int id, [FromBody] GruntTasking gruntTasking)
         {
-            Models.Grunts.Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
-            if (grunt == null)
+            Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
+            CovenantUser taskingUser = this.GetCurrentUser();
+            if (grunt == null || taskingUser == null)
             {
                 return NotFound();
             }
+            gruntTasking.TaskingUser = taskingUser.UserName;
+            gruntTasking.TaskingTime = DateTime.UtcNow;
             if (gruntTasking.type == GruntTasking.GruntTaskingType.Assembly)
             {
                 GruntTask task = _context.GruntTasks.FirstOrDefault(T => T.Id == gruntTasking.TaskId);
@@ -241,6 +257,16 @@ namespace Covenant.Controllers
                     return BadRequest("Task returned compilation errors:" + e.Message + e.StackTrace);
                 }
             }
+            else if (gruntTasking.type == GruntTasking.GruntTaskingType.Connect)
+            {
+                string hostname = gruntTasking.TaskingMessage.message.Split(",")[0];
+                string pipename = gruntTasking.TaskingMessage.message.Split(",")[1];
+                if (hostname == "localhost" || hostname == "127.0.0.1")
+                {
+                    hostname = grunt.Hostname;
+                }
+                gruntTasking.Value = hostname + "," + pipename;
+            }
             _context.GruntTaskings.Add(gruntTasking);
             _context.SaveChanges();
             return CreatedAtRoute(nameof(GetGruntTasking), new { id = id, taskname = gruntTasking.Name }, gruntTasking);
@@ -254,12 +280,14 @@ namespace Covenant.Controllers
         public ActionResult<GruntTasking> EditGruntTasking(int id, string taskname, [FromBody] GruntTasking gruntTasking)
         {
             GruntTasking updatingGruntTasking = _context.GruntTaskings.FirstOrDefault(GT => id == GT.GruntId && taskname == GT.Name);
-            if (updatingGruntTasking == null)
+            Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == gruntTasking.GruntId);
+            GruntTask gruntTask = _context.GruntTasks.FirstOrDefault(G => G.Id == gruntTasking.TaskId);
+            GruntTask DownloadTask = _context.GruntTasks.FirstOrDefault(GT => GT.Name == "Download");
+            if (updatingGruntTasking == null || grunt == null || gruntTask == null || DownloadTask == null)
             {
                 return NotFound();
             }
             List<String> credTaskNames = new List<string> { "Mimikatz", "SamDump", "LogonPasswords", "DcSync", "Rubeus", "Kerberoast" };
-            GruntTask gruntTask = _context.GruntTasks.FirstOrDefault(G => G.Id == gruntTasking.TaskId);
             if (credTaskNames.Contains(gruntTask.Name))
             {
                 List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(gruntTasking.GruntTaskOutput);
@@ -272,9 +300,138 @@ namespace Covenant.Controllers
                     }
                 }
             }
-            updatingGruntTasking.status = gruntTasking.status;
+            GruntTasking.GruntTaskingStatus newStatus = gruntTasking.status;
+            GruntTasking.GruntTaskingStatus originalStatus = updatingGruntTasking.status;
+            if ((originalStatus == GruntTasking.GruntTaskingStatus.Tasked || originalStatus == GruntTasking.GruntTaskingStatus.Progressed) &&
+                newStatus == GruntTasking.GruntTaskingStatus.Completed)
+            {
+                if (gruntTasking.type == GruntTasking.GruntTaskingType.Kill)
+                {
+                    grunt.Status = Grunt.GruntStatus.Killed;
+                }
+                else if (gruntTasking.type == GruntTasking.GruntTaskingType.Connect)
+                {
+                    if (originalStatus == GruntTasking.GruntTaskingStatus.Tasked)
+                    {
+                        // Check if this Grunt was already connected
+                        string hostname = gruntTasking.TaskingMessage.message.Split(",")[0];
+                        string pipename = gruntTasking.TaskingMessage.message.Split(",")[1];
+                        Grunt previouslyConnectedGrunt = _context.Grunts.FirstOrDefault(G =>
+                            G.CommType == Grunt.CommunicationType.SMB &&
+                            (G.IPAddress == hostname || G.Hostname == hostname) &&
+                            G.SMBPipeName == pipename &&
+                            (G.Status == Grunt.GruntStatus.Disconnected || G.Status == Grunt.GruntStatus.Lost || G.Status == Grunt.GruntStatus.Active)
+                        );
+                        if (previouslyConnectedGrunt != null)
+                        {
+                            if (previouslyConnectedGrunt.Status != Grunt.GruntStatus.Disconnected)
+                            {
+                                // If already connected, disconnect to avoid cycles
+                                Grunt previouslyConnectedGruntPrevParent = null; 
+                                foreach (Grunt g in _context.Grunts)
+                                {
+                                    if (g.GetChildren().Contains(previouslyConnectedGrunt.GUID))
+                                    {
+                                        previouslyConnectedGruntPrevParent = g;
+                                    }
+                                }
+                                if (previouslyConnectedGruntPrevParent != null)
+                                {
+                                    previouslyConnectedGruntPrevParent.RemoveChild(previouslyConnectedGrunt);
+                                    _context.Grunts.Update(previouslyConnectedGruntPrevParent);
+                                }
+                            }
+
+                            // Connect to tasked Grunt, no need to "Progress", as Grunt is already staged
+                            grunt.AddChild(previouslyConnectedGrunt);
+                            previouslyConnectedGrunt.Status = Grunt.GruntStatus.Active;
+                            _context.Grunts.Update(previouslyConnectedGrunt);
+                        }
+                        else
+                        {
+                            // If not already connected, the Grunt is going to stage, set status to Progressed
+                            newStatus = GruntTasking.GruntTaskingStatus.Progressed;
+                        }
+                    }
+                    else if (originalStatus == GruntTasking.GruntTaskingStatus.Progressed)
+                    {
+                        // Connecting Grunt has staged, add as Child
+                        string hostname = gruntTasking.TaskingMessage.message.Split(",")[0];
+                        string pipename = gruntTasking.TaskingMessage.message.Split(",")[1];
+                        Grunt stagingGrunt = _context.Grunts.FirstOrDefault(G =>
+                            G.CommType == Grunt.CommunicationType.SMB &&
+                            ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
+                            G.SMBPipeName == pipename &&
+                            G.Status == Grunt.GruntStatus.Stage0
+                        );
+                        if (stagingGrunt == null)
+                        {
+                            return NotFound();
+                        }
+                        grunt.AddChild(stagingGrunt);
+                    }
+                }
+                else if (gruntTasking.type == GruntTasking.GruntTaskingType.Disconnect)
+                {
+                    Grunt disconnectFromGrunt = _context.Grunts.FirstOrDefault(G => G.GUID == gruntTasking.TaskingMessage.message);
+                    if (disconnectFromGrunt == null)
+                    {
+                        return NotFound();
+                    }
+
+                    disconnectFromGrunt.Status = Grunt.GruntStatus.Disconnected;
+                    _context.Grunts.Update(disconnectFromGrunt);
+                    grunt.RemoveChild(disconnectFromGrunt);
+                }
+            }
+
+            if ((newStatus == GruntTasking.GruntTaskingStatus.Completed || newStatus == GruntTasking.GruntTaskingStatus.Progressed) && originalStatus != newStatus)
+            {
+                if (newStatus == GruntTasking.GruntTaskingStatus.Completed)
+                {
+                    updatingGruntTasking.CompletionTime = DateTime.UtcNow;
+                }
+                string verb = newStatus == GruntTasking.GruntTaskingStatus.Completed ? "completed" : "progressed";
+                if (gruntTasking.TaskId == DownloadTask.Id)
+                {
+                    _context.Events.Add(new Event
+                    {
+                        Time = updatingGruntTasking.CompletionTime,
+                        MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] Grunt: " + grunt.Name + " has " + verb + " GruntTasking: " + gruntTasking.Name,
+                        Level = Event.EventLevel.Highlight,
+                        Context = grunt.Name
+                    });
+                    string FileName = Common.CovenantEncoding.GetString(Convert.FromBase64String(gruntTasking.GruntTaskingAssembly.Split(",")[1]));
+                    DownloadEvent downloadEvent = new DownloadEvent
+                    {
+                        Time = updatingGruntTasking.CompletionTime,
+                        MessageHeader = "Downloaded: " + FileName + "\r\n" + "Syncing to Elite...",
+                        Level = Event.EventLevel.Highlight,
+                        Context = grunt.Name,
+                        FileName = FileName,
+                        FileContents = gruntTasking.GruntTaskOutput,
+                        Progress = DownloadEvent.DownloadProgress.Complete
+                    };
+                    downloadEvent.WriteToDisk();
+                    _context.Events.Add(downloadEvent);
+                }
+                else
+                {
+                    _context.Events.Add(new Event
+                    {
+                        Time = updatingGruntTasking.CompletionTime,
+                        MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] Grunt: " + grunt.Name + " has " + verb + " GruntTasking: " + gruntTasking.Name,
+                        MessageBody = "(" + gruntTasking.TaskingUser + ") > " + gruntTasking.TaskingCommand + Environment.NewLine + gruntTasking.GruntTaskOutput,
+                        Level = Event.EventLevel.Highlight,
+                        Context = grunt.Name
+                    });
+                }
+            }
+
+            updatingGruntTasking.status = newStatus;
             updatingGruntTasking.GruntTaskOutput = gruntTasking.GruntTaskOutput;
             _context.GruntTaskings.Update(updatingGruntTasking);
+            _context.Grunts.Update(grunt);
             _context.SaveChanges();
 
             return Ok(updatingGruntTasking);
@@ -306,15 +463,19 @@ namespace Covenant.Controllers
             {
                 return true;
             }
-            Models.Grunts.Grunt parentGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ParentId);
-            Models.Grunts.Grunt childGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ChildId);
+            Grunt parentGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ParentId);
+            Grunt childGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ChildId);
+            if (parentGrunt == null || childGrunt == null)
+            {
+                return false;
+            }
             if (parentGrunt.GetChildren().Contains(childGrunt.GUID))
             {
                 return true;
             }
             foreach (string child in parentGrunt.GetChildren())
             {
-                Models.Grunts.Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
+                Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
                 if (IsChildGrunt(directChild.Id, ChildId))
                 {
                     return true;

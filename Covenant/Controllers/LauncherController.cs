@@ -77,8 +77,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts,
@@ -137,8 +137,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = binaryLauncher.ListenerId;
             }
-            launcher.UsePipes = binaryLauncher.UsePipes;
-            launcher.PipeName = binaryLauncher.PipeName;
+            launcher.CommType = binaryLauncher.CommType;
+            launcher.SMBPipeName = binaryLauncher.SMBPipeName;
             launcher.Delay = binaryLauncher.Delay;
             launcher.Jitter = binaryLauncher.Jitter;
             launcher.ConnectAttempts = binaryLauncher.ConnectAttempts;
@@ -192,8 +192,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -252,8 +252,8 @@ namespace Covenant.Controllers
                 launcher.ListenerId = powerShellLauncher.ListenerId;
             }
 
-            launcher.UsePipes = powerShellLauncher.UsePipes;
-            launcher.PipeName = powerShellLauncher.PipeName;
+            launcher.CommType = powerShellLauncher.CommType;
+            launcher.SMBPipeName = powerShellLauncher.SMBPipeName;
             launcher.Delay = powerShellLauncher.Delay;
             launcher.Jitter = powerShellLauncher.Jitter;
             launcher.ConnectAttempts = powerShellLauncher.ConnectAttempts;
@@ -309,8 +309,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -367,8 +367,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = msbuildLauncher.ListenerId;
             }
-            launcher.UsePipes = msbuildLauncher.UsePipes;
-            launcher.PipeName = msbuildLauncher.PipeName;
+            launcher.CommType = msbuildLauncher.CommType;
+            launcher.SMBPipeName = msbuildLauncher.SMBPipeName;
             launcher.Delay = msbuildLauncher.Delay;
             launcher.Jitter = msbuildLauncher.Jitter;
             launcher.ConnectAttempts = msbuildLauncher.ConnectAttempts;
@@ -427,8 +427,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -485,8 +485,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = installutilLauncher.ListenerId;
             }
-            launcher.UsePipes = installutilLauncher.UsePipes;
-            launcher.PipeName = installutilLauncher.PipeName;
+            launcher.CommType = installutilLauncher.CommType;
+            launcher.SMBPipeName = installutilLauncher.SMBPipeName;
             launcher.Delay = installutilLauncher.Delay;
             launcher.Jitter = installutilLauncher.Jitter;
             launcher.ConnectAttempts = installutilLauncher.ConnectAttempts;
@@ -543,8 +543,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -601,8 +601,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = wmicLauncher.ListenerId;
             }
-            launcher.UsePipes = wmicLauncher.UsePipes;
-            launcher.PipeName = wmicLauncher.PipeName;
+            launcher.CommType = wmicLauncher.CommType;
+            launcher.SMBPipeName = wmicLauncher.SMBPipeName;
             launcher.Delay = wmicLauncher.Delay;
             launcher.Jitter = wmicLauncher.Jitter;
             launcher.ConnectAttempts = wmicLauncher.ConnectAttempts;
@@ -660,8 +660,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -718,8 +718,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = regsvr32Launcher.ListenerId;
             }
-            launcher.UsePipes = regsvr32Launcher.UsePipes;
-            launcher.PipeName = regsvr32Launcher.PipeName;
+            launcher.CommType = regsvr32Launcher.CommType;
+            launcher.SMBPipeName = regsvr32Launcher.SMBPipeName;
             launcher.Delay = regsvr32Launcher.Delay;
             launcher.Jitter = regsvr32Launcher.Jitter;
             launcher.ConnectAttempts = regsvr32Launcher.ConnectAttempts;
@@ -779,8 +779,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -837,8 +837,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = mshtaLauncher.ListenerId;
             }
-            launcher.UsePipes = mshtaLauncher.UsePipes;
-            launcher.PipeName = mshtaLauncher.PipeName;
+            launcher.CommType = mshtaLauncher.CommType;
+            launcher.SMBPipeName = mshtaLauncher.SMBPipeName;
             launcher.Delay = mshtaLauncher.Delay;
             launcher.Jitter = mshtaLauncher.Jitter;
             launcher.ConnectAttempts = mshtaLauncher.ConnectAttempts;
@@ -896,8 +896,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -954,8 +954,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = cscriptLauncher.ListenerId;
             }
-            launcher.PipeName = cscriptLauncher.PipeName;
-            launcher.UsePipes = cscriptLauncher.UsePipes;
+            launcher.CommType = cscriptLauncher.CommType;
+            launcher.SMBPipeName = cscriptLauncher.SMBPipeName;
             launcher.Delay = cscriptLauncher.Delay;
             launcher.Jitter = cscriptLauncher.Jitter;
             launcher.ConnectAttempts = cscriptLauncher.ConnectAttempts;
@@ -1013,8 +1013,8 @@ namespace Covenant.Controllers
             {
                 ListenerId = listener.Id,
                 CovenantIPAddress = listener.BindAddress,
-                UsePipes = launcher.UsePipes,
-                PipeName = launcher.PipeName,
+                CommType = launcher.CommType,
+                SMBPipeName = launcher.SMBPipeName,
                 Delay = launcher.Delay,
                 Jitter = launcher.Jitter,
                 ConnectAttempts = launcher.ConnectAttempts
@@ -1071,8 +1071,8 @@ namespace Covenant.Controllers
             {
                 launcher.ListenerId = wscriptLauncher.ListenerId;
             }
-            launcher.UsePipes = wscriptLauncher.UsePipes;
-            launcher.PipeName = wscriptLauncher.PipeName;
+            launcher.CommType = wscriptLauncher.CommType;
+            launcher.SMBPipeName = wscriptLauncher.SMBPipeName;
             launcher.Delay = wscriptLauncher.Delay;
             launcher.Jitter = wscriptLauncher.Jitter;
             launcher.ConnectAttempts = wscriptLauncher.ConnectAttempts;

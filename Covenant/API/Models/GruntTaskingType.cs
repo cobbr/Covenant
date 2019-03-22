@@ -24,7 +24,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "Kill")]
         Kill,
         [EnumMember(Value = "Connect")]
-        Connect
+        Connect,
+        [EnumMember(Value = "Disconnect")]
+        Disconnect
     }
     internal static class GruntTaskingTypeEnumExtension
     {
@@ -45,6 +47,8 @@ namespace Covenant.API.Models
                     return "Kill";
                 case GruntTaskingType.Connect:
                     return "Connect";
+                case GruntTaskingType.Disconnect:
+                    return "Disconnect";
             }
             return null;
         }
@@ -61,6 +65,8 @@ namespace Covenant.API.Models
                     return GruntTaskingType.Kill;
                 case "Connect":
                     return GruntTaskingType.Connect;
+                case "Disconnect":
+                    return GruntTaskingType.Disconnect;
             }
             return null;
         }

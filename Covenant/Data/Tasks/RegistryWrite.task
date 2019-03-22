@@ -6,6 +6,13 @@ public static class Task
 {
     public static string Execute(string RegPath, string Value)
     {
-        return Host.RegistryWrite(RegPath, Value);
+        if(Host.RegistryWrite(RegPath, Value))
+        {
+            return "Successfully wrote: \"" + Value + "\" to registry: " + RegPath;
+        }
+        else
+        {
+            return "Failed to write: \"" + Value + "\" to registry: " + RegPath;
+        }
     }
 }

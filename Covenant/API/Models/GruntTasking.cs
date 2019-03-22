@@ -25,22 +25,26 @@ namespace Covenant.API.Models
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Tasked', 'Progressed', 'Completed'</param>
         /// <param name="type">Possible values include: 'Assembly', 'Set',
-        /// 'Kill', 'Connect'</param>
+        /// 'Kill', 'Connect', 'Disconnect'</param>
         /// <param name="setType">Possible values include: 'Delay', 'Jitter',
         /// 'ConnectAttempts'</param>
-        public GruntTasking(int? id = default(int?), string name = default(string), int? taskId = default(int?), int? gruntId = default(int?), GruntTaskingStatus? status = default(GruntTaskingStatus?), GruntTaskingType? type = default(GruntTaskingType?), string gruntTaskOutput = default(string), GruntTaskingMessage taskingMessage = default(GruntTaskingMessage), string gruntTaskingAssembly = default(string), GruntSetTaskingType? setType = default(GruntSetTaskingType?), string value = default(string))
+        public GruntTasking(int? id = default(int?), string name = default(string), int? taskId = default(int?), int? gruntId = default(int?), string taskingCommand = default(string), string taskingUser = default(string), GruntTaskingStatus? status = default(GruntTaskingStatus?), GruntTaskingType? type = default(GruntTaskingType?), string gruntTaskOutput = default(string), System.DateTime? taskingTime = default(System.DateTime?), System.DateTime? completionTime = default(System.DateTime?), GruntSetTaskingType? setType = default(GruntSetTaskingType?), string value = default(string), GruntTaskingMessage taskingMessage = default(GruntTaskingMessage), string gruntTaskingAssembly = default(string))
         {
             Id = id;
             Name = name;
             TaskId = taskId;
             GruntId = gruntId;
+            TaskingCommand = taskingCommand;
+            TaskingUser = taskingUser;
             Status = status;
             Type = type;
             GruntTaskOutput = gruntTaskOutput;
-            TaskingMessage = taskingMessage;
-            GruntTaskingAssembly = gruntTaskingAssembly;
+            TaskingTime = taskingTime;
+            CompletionTime = completionTime;
             SetType = setType;
             Value = value;
+            TaskingMessage = taskingMessage;
+            GruntTaskingAssembly = gruntTaskingAssembly;
             CustomInit();
         }
 
@@ -70,6 +74,16 @@ namespace Covenant.API.Models
         public int? GruntId { get; set; }
 
         /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "taskingCommand")]
+        public string TaskingCommand { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "taskingUser")]
+        public string TaskingUser { get; set; }
+
+        /// <summary>
         /// Gets or sets possible values include: 'Uninitialized', 'Tasked',
         /// 'Progressed', 'Completed'
         /// </summary>
@@ -78,7 +92,7 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// Gets or sets possible values include: 'Assembly', 'Set', 'Kill',
-        /// 'Connect'
+        /// 'Connect', 'Disconnect'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public GruntTaskingType? Type { get; set; }
@@ -90,13 +104,13 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "taskingMessage")]
-        public GruntTaskingMessage TaskingMessage { get; private set; }
+        [JsonProperty(PropertyName = "taskingTime")]
+        public System.DateTime? TaskingTime { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "gruntTaskingAssembly")]
-        public string GruntTaskingAssembly { get; private set; }
+        [JsonProperty(PropertyName = "completionTime")]
+        public System.DateTime? CompletionTime { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'Delay', 'Jitter',
@@ -109,6 +123,16 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "value")]
         public string Value { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "taskingMessage")]
+        public GruntTaskingMessage TaskingMessage { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntTaskingAssembly")]
+        public string GruntTaskingAssembly { get; private set; }
 
     }
 }

@@ -27,7 +27,9 @@ namespace Covenant.API.Models
         /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil'</param>
-        public PowerShellLauncher(string parameterString = default(string), string powerShellCode = default(string), string encodedLauncherString = default(string), int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), string launcherString = default(string), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), bool? usePipes = default(bool?), string pipeName = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string stagerCode = default(string), string base64ILByteString = default(string))
+        /// <param name="commType">Possible values include: 'HTTP',
+        /// 'SMB'</param>
+        public PowerShellLauncher(string parameterString = default(string), string powerShellCode = default(string), string encodedLauncherString = default(string), int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), string launcherString = default(string), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), CommunicationType? commType = default(CommunicationType?), string smbPipeName = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string stagerCode = default(string), string base64ILByteString = default(string))
         {
             ParameterString = parameterString;
             PowerShellCode = powerShellCode;
@@ -39,8 +41,8 @@ namespace Covenant.API.Models
             Type = type;
             Name = name;
             Description = description;
-            UsePipes = usePipes;
-            PipeName = pipeName;
+            CommType = commType;
+            SmbPipeName = smbPipeName;
             Delay = delay;
             Jitter = jitter;
             ConnectAttempts = connectAttempts;
@@ -109,14 +111,15 @@ namespace Covenant.API.Models
         public string Description { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'HTTP', 'SMB'
         /// </summary>
-        [JsonProperty(PropertyName = "usePipes")]
-        public bool? UsePipes { get; set; }
+        [JsonProperty(PropertyName = "commType")]
+        public CommunicationType? CommType { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "pipeName")]
-        public string PipeName { get; set; }
+        [JsonProperty(PropertyName = "smbPipeName")]
+        public string SmbPipeName { get; set; }
 
         /// <summary>
         /// </summary>

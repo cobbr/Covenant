@@ -13,6 +13,12 @@ namespace Covenant.Models.Grunts
 {
     public class Grunt
     {
+        public enum CommunicationType
+        {
+            HTTP,
+            SMB
+        }
+
         public enum GruntStatus
         {
             Uninitialized,
@@ -21,7 +27,8 @@ namespace Covenant.Models.Grunts
             Stage2,
             Active,
             Lost,
-            Killed
+            Killed,
+            Disconnected
         }
 
         public enum IntegrityLevel
@@ -33,43 +40,55 @@ namespace Covenant.Models.Grunts
             System
         }
 
+        // Information to uniquely identify this Grunt
         public int Id { get; set; }
         public string Name { get; set; } = GenerateName();
         public string OriginalServerGuid { get; set; } = GenerateName();
         public string GUID { get; set; }
-        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
 
-        public int ListenerId { get; set; }
-        public string CovenantIPAddress { get; set; }
-
+        // Downstream Grunt GUIDs
         private List<string> _ChildGrunts = new List<string>();
         // Split into comma-delimited list to easily save as text in the Database
         public string ChildGrunts
         {
             get { return String.Join(',', this._ChildGrunts); }
-            set { this._ChildGrunts = value.Split(',').Where(V => V.Length > 0).ToList(); }
+            set { this._ChildGrunts = value.Split(',').Where(V => !string.IsNullOrWhiteSpace(V)).ToList(); }
         }
-        public bool UsePipes { get; set; } = false;
-        public string PipeName { get; set; } = "gruntsvc";
 
+        // Communication information
+        public CommunicationType CommType { get; set; } = CommunicationType.HTTP;
+        public string SMBPipeName { get; set; } = "gruntsvc";
+
+        // Information about the Listener
+        public int ListenerId { get; set; }
+        public string CovenantIPAddress { get; set; }
+
+        // Settings that can be configured
         public int Delay { get; set; } = 5;
         public int Jitter { get; set; } = 3;
         public int ConnectAttempts { get; set; } = 1000;
 
-        public string LastCheckIn { get; set; } = DateTime.MinValue.ToString();
+        // Attributes of the remote Grunt
+        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
         public GruntStatus Status { get; set; } = GruntStatus.Uninitialized;
         public IntegrityLevel Integrity { get; set; } = IntegrityLevel.Untrusted;
         public string Process { get; set; } = "";
         public string UserDomainName { get; set; } = "";
         public string UserName { get; set; } = "";
         public string IPAddress { get; set; } = "";
+        public string Hostname { get; set; } = "";
         public string OperatingSystem { get; set; } = "";
 
+        // Information used for authentication or encrypted key exchange
         public string GruntSharedSecretPassword { get; set; } = Utilities.CreateSecretPassword();
         public string GruntRSAPublicKey { get; set; } = "";
         public string GruntNegotiatedSessionKey { get; set; } = "";
         public string GruntChallenge { get; set; } = "";
         public string CookieAuthKey { get; set; } = Utilities.CreateSecretPassword();
+
+        // Time information
+        public DateTime ActivationTime { get; set; } = DateTime.MinValue;
+        public DateTime LastCheckIn { get; set; } = DateTime.MinValue;
 
         public static Grunt Create(API.Models.Grunt gruntModel)
         {
@@ -83,11 +102,12 @@ namespace Covenant.Models.Grunts
                 DotNetFrameworkVersion = (Common.DotNetVersion)Enum.Parse(typeof(Common.DotNetVersion), gruntModel.DotNetFrameworkVersion.ToString()),
                 CovenantIPAddress = gruntModel.CovenantIPAddress ?? default,
                 ChildGrunts = gruntModel.ChildGrunts,
-                UsePipes = gruntModel.UsePipes ?? default,
-                PipeName = gruntModel.PipeName,
+                CommType = (Grunt.CommunicationType)Enum.Parse(typeof(Grunt.CommunicationType), gruntModel.CommType.ToString()),
+                SMBPipeName = gruntModel.SmbPipeName,
                 Delay = gruntModel.Delay ?? default,
                 Jitter = gruntModel.Jitter ?? default,
                 ConnectAttempts = gruntModel.ConnectAttempts ?? default,
+                ActivationTime = gruntModel.ActivationTime ?? default,
                 LastCheckIn = gruntModel.LastCheckIn ?? default,
                 Status = (GruntStatus)Enum.Parse(typeof(GruntStatus), gruntModel.Status.ToString()),
                 Integrity = (IntegrityLevel)Enum.Parse(typeof(IntegrityLevel), gruntModel.Integrity.ToString()),
@@ -99,6 +119,7 @@ namespace Covenant.Models.Grunts
                 GruntNegotiatedSessionKey = gruntModel.GruntNegotiatedSessionKey,
                 GruntChallenge = gruntModel.GruntChallenge,
                 IPAddress = gruntModel.IpAddress,
+                Hostname = gruntModel.Hostname,
                 OperatingSystem = gruntModel.OperatingSystem,
                 CookieAuthKey = gruntModel.CookieAuthKey
             };
@@ -116,11 +137,12 @@ namespace Covenant.Models.Grunts
                 DotNetFrameworkVersion = (API.Models.DotNetVersion)Enum.Parse(typeof(API.Models.DotNetVersion), this.DotNetFrameworkVersion.ToString()),
                 CovenantIPAddress = this.CovenantIPAddress,
                 ChildGrunts = this.ChildGrunts,
-                UsePipes = this.UsePipes,
-                PipeName = this.PipeName,
+                CommType = (API.Models.CommunicationType)Enum.Parse(typeof(API.Models.CommunicationType), this.CommType.ToString()),
+                SmbPipeName = this.SMBPipeName,
                 Delay = this.Delay,
                 Jitter = this.Jitter,
                 ConnectAttempts = this.ConnectAttempts,
+                ActivationTime = this.ActivationTime,
                 LastCheckIn = this.LastCheckIn,
                 Status = (API.Models.GruntStatus)Enum.Parse(typeof(API.Models.GruntStatus), this.Status.ToString()),
                 Integrity = (API.Models.IntegrityLevel)Enum.Parse(typeof(API.Models.IntegrityLevel), this.Integrity.ToString()),
@@ -132,6 +154,7 @@ namespace Covenant.Models.Grunts
                 GruntNegotiatedSessionKey = this.GruntNegotiatedSessionKey,
                 GruntChallenge = this.GruntChallenge,
                 IpAddress = this.IPAddress,
+                Hostname = this.Hostname,
                 OperatingSystem = this.OperatingSystem,
                 CookieAuthKey = this.CookieAuthKey
             };
@@ -140,6 +163,32 @@ namespace Covenant.Models.Grunts
         public List<string> GetChildren()
         {
             return this._ChildGrunts;
+        }
+
+        public void AddChild(Grunt grunt)
+        {
+            if (!string.IsNullOrWhiteSpace(grunt.GUID))
+            {
+                this._ChildGrunts.Add(grunt.GUID);
+            }
+        }
+
+        public void AddChild(string GUID)
+        {
+            if (!string.IsNullOrWhiteSpace(GUID))
+            {
+                this._ChildGrunts.Add(GUID);
+            }
+        }
+
+        public bool RemoveChild(Grunt grunt)
+        {
+            return this._ChildGrunts.Remove(grunt.GUID);
+        }
+
+        public bool RemoveChild(string GUID)
+        {
+            return this._ChildGrunts.Remove(GUID);
         }
 
         public byte[] RSAEncrypt(byte[] toEncrypt)
@@ -158,6 +207,7 @@ namespace Covenant.Models.Grunts
         {
             return Encrypt.Utilities.AesDecrypt(data, Convert.FromBase64String(this.GruntNegotiatedSessionKey));
         }
+
         // Convenience method for decrypting a GruntEncryptedMessage
         public byte[] SessionDecrypt(GruntEncryptedMessage gruntEncryptedMessage)
         {

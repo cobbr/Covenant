@@ -3,6 +3,9 @@
 // License: GNU GPLv3
 
 using System;
+using System.IO;
+
+using Covenant.Core;
 
 namespace Covenant.Models.Covenant
 {
@@ -24,9 +27,10 @@ namespace Covenant.Models.Covenant
         }
 
         public int Id { get; set; }
-        public DateTime Time { get; set; } = DateTime.Now;
-        public string Message { get; set; }
-		public EventLevel Level { get; set; } = EventLevel.Highlight;
+        public DateTime Time { get; set; } = DateTime.UtcNow;
+        public string MessageHeader { get; set; }
+        public string MessageBody { get; set; }
+        public EventLevel Level { get; set; } = EventLevel.Highlight;
         public EventType Type { get; set; } = EventType.Normal;
 		public string Context { get; set; } = "*";
     }
@@ -46,6 +50,26 @@ namespace Covenant.Models.Covenant
         public DownloadEvent()
         {
             this.Type = EventType.Download;
+        }
+
+        public bool WriteToDisk()
+        {
+            byte[] contents = Convert.FromBase64String(this.FileContents);
+            if (this.Progress == DownloadProgress.Complete)
+            {
+                File.WriteAllBytes(
+                    Path.Combine(Common.CovenantDownloadDirectory, this.FileName),
+                    contents
+                );
+            }
+            else
+            {
+                using (var stream = new FileStream(Path.Combine(Common.CovenantDownloadDirectory, this.FileName), FileMode.Append))
+                {
+                    stream.Write(contents, 0, contents.Length);
+                }
+            }
+            return true;
         }
     }
 }

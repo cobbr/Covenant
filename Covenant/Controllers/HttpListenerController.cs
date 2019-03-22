@@ -38,6 +38,7 @@ namespace Covenant.Controllers
         {
             get
             {
+                // TODO: This will be a problem given more than one listener
                 return _context.listener.FirstOrDefault();
             }
         }
@@ -119,7 +120,7 @@ namespace Covenant.Controllers
                 // Invalid CookieAuthKey. May not be legitimate Grunt request, respond Ok
                 return Ok();
 			}
-            gruntModel.LastCheckIn = DateTime.Now.ToString();
+            gruntModel.LastCheckIn = DateTime.UtcNow;
             this.CovenantClient.ApiGruntsPut(gruntModel);
             GruntTasking gruntTasking = this.CovenantClient.ApiGruntsByIdTaskingsSearchUninitializedGet(gruntModel.Id ?? default)
                                                       .FirstOrDefault();
@@ -138,7 +139,7 @@ namespace Covenant.Controllers
                 }
             }
             gruntTasking.Status = GruntTaskingStatus.Tasked;
-            CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
+            this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
 
             API.Models.Grunt targetGruntModel = this.CovenantClient.ApiGruntsByIdGet(gruntTasking.GruntId ?? default);
             Models.Grunts.GruntEncryptedMessage message = null;
@@ -259,48 +260,10 @@ namespace Covenant.Controllers
             string taskOutput = Common.CovenantEncoding.GetString(realGrunt.SessionDecrypt(outputMessage));
             gruntTasking.GruntTaskOutput = taskOutput;
             gruntTasking.Status = GruntTaskingStatus.Completed;
-            if (gruntTasking.Type == GruntTaskingType.Kill)
-            {
-                targetGrunt.Status = GruntStatus.Killed;
-                CovenantClient.ApiGruntsPut(targetGrunt);
-            }
-            CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
+            this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
+            targetGrunt.LastCheckIn = DateTime.UtcNow;
+            this.CovenantClient.ApiGruntsPut(targetGrunt);
 
-            GruntTask DownloadTask = CovenantClient.ApiGruntTasksGet().FirstOrDefault(GT => GT.Name == "Download");
-            if (gruntTasking.TaskId == DownloadTask.Id)
-            {
-                CovenantClient.ApiEventsPost(new EventModel
-                {
-                    Message = "Grunt: " + realGrunt.Name + " has completed GruntTasking: " + gruntTasking.Name,
-                    Level = EventLevel.Highlight,
-                    Context = realGrunt.Name
-                });
-                string FileName = Common.CovenantEncoding.GetString(Convert.FromBase64String(gruntTasking.GruntTaskingAssembly.Split(",")[1]));
-                CovenantClient.ApiEventsDownloadPost(new DownloadEvent
-                {
-                    Message = "Downloaded: " + FileName + "\r\n" + "Syncing to Elite...",
-                    Level = EventLevel.Info,
-                    Context = realGrunt.Name,
-                    FileName = FileName,
-                    FileContents = gruntTasking.GruntTaskOutput,
-                    Progress = DownloadProgress.Complete
-                });
-            }
-            else
-            {
-                CovenantClient.ApiEventsPost(new EventModel
-                {
-                    Message = "Grunt: " + realGrunt.Name + " has completed GruntTasking: " + gruntTasking.Name,
-                    Level = EventLevel.Highlight,
-                    Context = realGrunt.Name
-                });
-                CovenantClient.ApiEventsPost(new EventModel
-                {
-                    Message = gruntTasking.GruntTaskOutput,
-                    Level = EventLevel.Info,
-                    Context = realGrunt.Name
-                });
-            }
 			return Ok();
         }
 
@@ -311,6 +274,8 @@ namespace Covenant.Controllers
                 // Always return NotFound, don't give away unnecessary info
                 return NotFound();
             }
+            bool egressGruntExists = (egressGrunt != null);
+
             Covenant.Models.Grunts.Grunt realTargetGrunt = null;
             string guid = gruntStage0Response.GUID.Substring(10);
             if (targetGrunt.Status != GruntStatus.Uninitialized)
@@ -324,11 +289,12 @@ namespace Covenant.Controllers
                     ListenerId = targetGrunt.ListenerId,
                     CovenantIPAddress = targetGrunt.CovenantIPAddress,
                     GruntSharedSecretPassword = targetGrunt.GruntSharedSecretPassword,
-                    UsePipes = targetGrunt.UsePipes,
-                    PipeName = targetGrunt.PipeName,
+                    CommType = targetGrunt.CommType,
+                    SmbPipeName = targetGrunt.SmbPipeName,
                     Delay = targetGrunt.Delay, Jitter = targetGrunt.Jitter,
                     ConnectAttempts = targetGrunt.ConnectAttempts,
-                    DotNetFrameworkVersion = targetGrunt.DotNetFrameworkVersion
+                    DotNetFrameworkVersion = targetGrunt.DotNetFrameworkVersion,
+                    LastCheckIn = DateTime.UtcNow
                 };
                 API.Models.Grunt tempGrunt = CovenantClient.ApiGruntsPost(tempModel);
                 realTargetGrunt = Covenant.Models.Grunts.Grunt.Create(tempGrunt);
@@ -337,32 +303,13 @@ namespace Covenant.Controllers
             {
                 targetGrunt.Status = GruntStatus.Stage0;
                 targetGrunt.Guid = guid;
+                targetGrunt.LastCheckIn = DateTime.UtcNow;
                 API.Models.Grunt tempGrunt = CovenantClient.ApiGruntsPut(targetGrunt);
                 realTargetGrunt = Covenant.Models.Grunts.Grunt.Create(tempGrunt);
             }
-            if (egressGrunt == null)
+            if (!egressGruntExists)
             {
                 egressGrunt = realTargetGrunt.ToModel();
-            }
-            else
-            {
-                // Add this as Child grunt to Grunt that connects it
-                List<GruntTasking> taskings = this.CovenantClient.ApiGrunttaskingsGet().ToList();
-                // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
-                GruntTasking connectTasking = taskings.Where(GT => GT.Type == GruntTaskingType.Connect && GT.Status == GruntTaskingStatus.Tasked).Reverse().FirstOrDefault();
-                if (connectTasking == null)
-                {
-                    return NotFound();
-                }
-                API.Models.Grunt taskedGrunt = this.CovenantClient.ApiGruntsByIdGet(connectTasking.GruntId ?? default);
-                if (taskedGrunt == null)
-                {
-                    return NotFound();
-                }
-                taskedGrunt.ChildGrunts = String.Join(",", taskedGrunt.ChildGrunts.Split(",").Append(realTargetGrunt.GUID).ToList());
-                this.CovenantClient.ApiGruntsPut(taskedGrunt);
-                connectTasking.Status = GruntTaskingStatus.Completed;
-                this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(taskedGrunt.Id ?? default, connectTasking.Name, connectTasking);
             }
 
             // EncryptedMessage is the RSA Public Key
@@ -374,7 +321,24 @@ namespace Covenant.Controllers
             Aes newAesKey = Aes.Create();
             newAesKey.GenerateKey();
             realTargetGrunt.GruntNegotiatedSessionKey = Convert.ToBase64String(newAesKey.Key);
-            CovenantClient.ApiGruntsPut(realTargetGrunt.ToModel());
+            this.CovenantClient.ApiGruntsPut(realTargetGrunt.ToModel());
+
+            if (egressGruntExists)
+            {
+                // Add this as Child grunt to Grunt that connects it
+                List<GruntTasking> taskings = this.CovenantClient.ApiGrunttaskingsGet().ToList();
+                // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
+                GruntTasking connectTasking = taskings.Where(GT => GT.Type == GruntTaskingType.Connect && GT.Status == GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
+                if (connectTasking == null)
+                {
+                    return NotFound();
+                }
+                realTargetGrunt.Hostname = connectTasking.TaskingMessage.Message.Split(",")[0];
+                this.CovenantClient.ApiGruntsPut(realTargetGrunt.ToModel());
+                connectTasking.Status = GruntTaskingStatus.Completed;
+                this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(connectTasking.GruntId ?? default, connectTasking.Name, connectTasking);
+            }
+
 
             byte[] rsaEncryptedBytes = realTargetGrunt.RSAEncrypt(Convert.FromBase64String(realTargetGrunt.GruntNegotiatedSessionKey));
             Covenant.Models.Grunts.GruntEncryptedMessage message = null;
@@ -416,6 +380,7 @@ namespace Covenant.Controllers
             // Save challenge to compare on response
             realGrunt.GruntChallenge = Convert.ToBase64String(challenge2);
             realGrunt.Status = Covenant.Models.Grunts.Grunt.GruntStatus.Stage1;
+            realGrunt.LastCheckIn = DateTime.UtcNow;
             CovenantClient.ApiGruntsPut(realGrunt.ToModel());
 
             Covenant.Models.Grunts.GruntEncryptedMessage message = null;
@@ -456,6 +421,7 @@ namespace Covenant.Controllers
                 return NotFound();
             }
             realGrunt.Status = Covenant.Models.Grunts.Grunt.GruntStatus.Stage2;
+            realGrunt.LastCheckIn = DateTime.UtcNow;
             this.CovenantClient.ApiGruntsPut(realGrunt.ToModel());
             API.Models.HttpListener listenerModel = this.CovenantClient.ApiListenersHttpByIdGet(realGrunt.ListenerId);
             API.Models.HttpProfile profileModel = this.CovenantClient.ApiListenersByIdProfileGet(realGrunt.ListenerId);
@@ -498,20 +464,16 @@ namespace Covenant.Controllers
 			Covenant.Models.Grunts.Grunt grunt = JsonConvert.DeserializeObject<Covenant.Models.Grunts.Grunt>(message);
 
 			targetGrunt.IpAddress = grunt.IPAddress;
+            targetGrunt.Hostname = grunt.Hostname;
 			targetGrunt.OperatingSystem = grunt.OperatingSystem;
 			targetGrunt.UserDomainName = grunt.UserDomainName;
 			targetGrunt.UserName = grunt.UserName;
 			targetGrunt.Status = GruntStatus.Active;
 			targetGrunt.Integrity = (API.Models.IntegrityLevel)Enum.Parse(typeof(API.Models.IntegrityLevel), grunt.Integrity.ToString());
 			targetGrunt.Process = grunt.Process;
+            realGrunt.LastCheckIn = DateTime.UtcNow;
 
-			CovenantClient.ApiGruntsPut(targetGrunt);
-			CovenantClient.ApiEventsPost(new EventModel
-			{
-				Message = "Grunt: " + grunt.Name + " from: " + grunt.IPAddress + " has been activated!",
-				Level = EventLevel.Highlight,
-				Context = "*"
-			});
+            CovenantClient.ApiGruntsPut(targetGrunt);
 
             GruntTaskingMessage tasking = new GruntTaskingMessage
             {

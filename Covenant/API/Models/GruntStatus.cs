@@ -30,7 +30,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "Lost")]
         Lost,
         [EnumMember(Value = "Killed")]
-        Killed
+        Killed,
+        [EnumMember(Value = "Disconnected")]
+        Disconnected
     }
     internal static class GruntStatusEnumExtension
     {
@@ -57,6 +59,8 @@ namespace Covenant.API.Models
                     return "Lost";
                 case GruntStatus.Killed:
                     return "Killed";
+                case GruntStatus.Disconnected:
+                    return "Disconnected";
             }
             return null;
         }
@@ -79,6 +83,8 @@ namespace Covenant.API.Models
                     return GruntStatus.Lost;
                 case "Killed":
                     return GruntStatus.Killed;
+                case "Disconnected":
+                    return GruntStatus.Disconnected;
             }
             return null;
         }

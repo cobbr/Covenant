@@ -2,6 +2,7 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -114,9 +115,19 @@ namespace Covenant.Controllers
             {
                 savedListener.Stop(_cancellationTokens[savedListener.Id]);
                 savedListener.Status = listener.Status;
+                savedListener.StartTime = DateTime.MinValue;
+                DateTime eventTime = DateTime.UtcNow;
+                _context.Events.Add(new Event
+                {
+                    Time = eventTime,
+                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + savedListener.Name,
+                    Level = Event.EventLevel.Warning,
+                    Context = "*"
+                });
             }
             else if (savedListener.Status != Listener.ListenerStatus.Active && listener.Status == Listener.ListenerStatus.Active)
             {
+                savedListener.StartTime = DateTime.UtcNow;
                 HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(HP => savedListener.ProfileId == HP.Id);
                 if (profile == null)
                 {
@@ -128,6 +139,13 @@ namespace Covenant.Controllers
                     return BadRequest();
                 }
                 _cancellationTokens[savedListener.Id] = listenerCancellationToken;
+                _context.Events.Add(new Event
+                {
+                    Time = savedListener.StartTime,
+                    MessageHeader = "[" + savedListener.StartTime + " UTC] Started Listener: " + savedListener.Name,
+                    Level = Event.EventLevel.Highlight,
+                    Context = "*"
+                });
             }
 
             _context.Listeners.Update(savedListener);
@@ -263,9 +281,19 @@ namespace Covenant.Controllers
             {
                 savedhttpListener.Stop(_cancellationTokens[savedhttpListener.Id]);
                 savedhttpListener.Status = httpListener.Status;
+                savedhttpListener.StartTime = DateTime.MinValue;
+                DateTime eventTime = DateTime.UtcNow;
+                _context.Events.Add(new Event
+                {
+                    Time = eventTime,
+                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + savedhttpListener.Name + " at: " + savedhttpListener.Url,
+                    Level = Event.EventLevel.Warning,
+                    Context = "*"
+                });
             }
             else if(savedhttpListener.Status != Listener.ListenerStatus.Active && httpListener.Status == Listener.ListenerStatus.Active)
             {
+                savedhttpListener.StartTime = DateTime.UtcNow;
                 if (savedhttpListener.UseSSL && (savedhttpListener.SSLCertHash == "" || savedhttpListener.SSLCertificate == ""))
                 {
                     return BadRequest();
@@ -295,6 +323,13 @@ namespace Covenant.Controllers
                     _context.Indicators.Add(httpIndicator);
                 }
                 _cancellationTokens[savedhttpListener.Id] = listenerCancellationToken;
+                _context.Events.Add(new Event
+                {
+                    Time = savedhttpListener.StartTime,
+                    MessageHeader = "[" + savedhttpListener.StartTime + " UTC] Started Listener: " + savedhttpListener.Name + " at: " + savedhttpListener.Url,
+                    Level = Event.EventLevel.Highlight,
+                    Context = "*"
+                });
             }
 
             _context.Listeners.Update(savedhttpListener);

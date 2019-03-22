@@ -2,6 +2,7 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -12,10 +13,9 @@ using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.Extensions.Configuration;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Covenant;
-using Covenant.Core;
-using Covenant.Data;
 
 namespace Covenant.Controllers
 {
@@ -91,8 +91,20 @@ namespace Covenant.Controllers
 		{
 			CovenantUser user = new CovenantUser { UserName = login.UserName };
 			_userManager.CreateAsync(user, login.Password).Wait();
+
 			CovenantUser savedUser = _context.Users.FirstOrDefault(U => U.UserName == user.UserName);
-			return CreatedAtRoute(nameof(GetUser), new { uid = savedUser.Id }, savedUser);
+            List<IdentityUserRole<string>> savedRoles = _context.UserRoles.Where(UR => UR.UserId == savedUser.Id).ToList();
+
+            DateTime eventTime = DateTime.UtcNow;
+            _context.Events.Add(new Event
+            {
+                Time = eventTime,
+                MessageHeader = "[" + eventTime + " UTC] User: " + savedUser.UserName + " with roles: " + String.Join(",", savedRoles) + " has been created!",
+                Level = Event.EventLevel.Highlight,
+                Context = "Users"
+            });
+
+            return CreatedAtRoute(nameof(GetUser), new { uid = savedUser.Id }, savedUser);
 		}
 
         // PUT api/users

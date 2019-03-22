@@ -2,6 +2,7 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Models;
 using Covenant.Models.Grunts;
+using Covenant.Models.Covenant;
 using Covenant.Models.Indicators;
 
 namespace Covenant.Controllers
@@ -157,21 +159,34 @@ namespace Covenant.Controllers
                     });
                 }
             }
+            if (matching_grunt.Status != Grunt.GruntStatus.Active && grunt.Status == Grunt.GruntStatus.Active)
+            {
+                grunt.ActivationTime = DateTime.UtcNow;
+                _context.Events.Add(new Event
+                {
+                    Time = DateTime.UtcNow,
+                    MessageHeader = "[" + grunt.ActivationTime + " UTC] Grunt: " + grunt.Name + " from: " + grunt.Hostname + " has been activated!",
+                    Level = Event.EventLevel.Highlight,
+                    Context = "*"
+                });
+            }
+            matching_grunt.Name = grunt.Name;
             matching_grunt.GUID = grunt.GUID;
             matching_grunt.OriginalServerGuid = grunt.OriginalServerGuid;
-            matching_grunt.Name = grunt.Name;
             matching_grunt.UserDomainName = grunt.UserDomainName;
             matching_grunt.UserName = grunt.UserName;
             matching_grunt.Status = grunt.Status;
             matching_grunt.Integrity = grunt.Integrity;
             matching_grunt.Process = grunt.Process;
             matching_grunt.LastCheckIn = grunt.LastCheckIn;
+            matching_grunt.ActivationTime = grunt.ActivationTime;
             matching_grunt.IPAddress = grunt.IPAddress;
+            matching_grunt.Hostname = grunt.Hostname;
             matching_grunt.OperatingSystem = grunt.OperatingSystem;
 
             matching_grunt.ChildGrunts = grunt.ChildGrunts;
-            matching_grunt.UsePipes = grunt.UsePipes;
-            matching_grunt.PipeName = grunt.PipeName;
+            matching_grunt.CommType = grunt.CommType;
+            matching_grunt.SMBPipeName = grunt.SMBPipeName;
 
             matching_grunt.ConnectAttempts = grunt.ConnectAttempts;
             matching_grunt.Delay = grunt.Delay;
@@ -189,13 +204,13 @@ namespace Covenant.Controllers
 
             TargetIndicator indicator = _context.Indicators.Where(I => I.Name == "TargetIndicator")
                 .Select(T => (TargetIndicator)T)
-                .FirstOrDefault(T => T.ComputerName == matching_grunt.IPAddress && T.UserName == matching_grunt.UserDomainName + "\\" + matching_grunt.UserName);
+                .FirstOrDefault(T => T.ComputerName == grunt.Hostname && T.UserName == grunt.UserDomainName + "\\" + grunt.UserName);
 
-            if (indicator == null && grunt.IPAddress != null && grunt.IPAddress != "")
+            if (indicator == null && !string.IsNullOrWhiteSpace(grunt.Hostname))
             {
                 _context.Indicators.Add(new TargetIndicator
                 {
-                    ComputerName = grunt.IPAddress,
+                    ComputerName = grunt.Hostname,
                     UserName = grunt.UserDomainName + "\\" + grunt.UserName
                 });
             }
@@ -230,8 +245,12 @@ namespace Covenant.Controllers
                 return true;
             }
 
-            Models.Grunts.Grunt parentGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ParentId);
-            Models.Grunts.Grunt childGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ChildId);
+            Grunt parentGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ParentId);
+            Grunt childGrunt = _context.Grunts.FirstOrDefault(G => G.Id == ChildId);
+            if (parentGrunt == null || childGrunt == null)
+            {
+                return false;
+            }
             List<string> children = parentGrunt.GetChildren();
             if (children.Contains(childGrunt.GUID))
             {
@@ -240,7 +259,11 @@ namespace Covenant.Controllers
             }
             foreach (string child in parentGrunt.GetChildren())
             {
-                Models.Grunts.Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
+                Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
+                if (directChild == null)
+                {
+                    return false;
+                }
                 if (GetPathToChildGrunt(directChild.Id, ChildId, ref GruntPath))
                 {
                     GruntPath.Add(directChild.GUID);
