@@ -465,6 +465,8 @@ namespace Covenant.Data
                         Name = "GetSystem",
                         Description = "Impersonate the SYSTEM user. Equates to ImpersonateUser(\"NT AUTHORITY\\SYSTEM\").",
                         ReferenceAssemblies = String.Join(",", new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" }),
+                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        EmbeddedResources = String.Join(",", new List<string>()),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetSystem" + ".task")),
                         Options = new List<GruntTask.GruntTaskOption>()
                     },

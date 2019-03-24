@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Fixed
 - Fixed docker check for git submodules
+- Fixed GetSystem missing reference source library
 
 ## [v0.1.3] - 2019-03-18
 ### Added
