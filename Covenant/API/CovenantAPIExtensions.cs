@@ -1031,7 +1031,14 @@ namespace Covenant.API
             /// </param>
             public static Grunt ApiGruntsByIdGet(this ICovenantAPI operations, int id)
             {
-                return operations.ApiGruntsByIdGetAsync(id).GetAwaiter().GetResult();
+                try
+                {
+                    return operations.ApiGruntsByIdGetAsync(id).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                    return null;
+                }
             }
 
             /// <param name='operations'>
