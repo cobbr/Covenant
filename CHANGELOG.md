@@ -4,18 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.1.4] - 2019-03-22
+## Unreleased
 ### Added
 - Added p2p communications over SMB named pipes
 - Added TaskingUser and TaskingCommand to GruntTaskings
+- Added Elite display events on user tasking (prior to completed)
+- Added better Elite error messages
+- Added forked version of ReadLine, with better tab-complete
+- Added change user password
+- Added shellcmd task
+- Added sharpdpapi task
+- Added sharpup task
+- Added sharpdump task
+- Added sharpwmi task
 
 ### Changed
 - Moved Eventing from Listeners/Elite to Covenant Controllers
+- AdminPassword no longer encrypts certificate file, can be changed
+- TaskMenu now displays full task description, detailed parameter info
 
 ### Fixed
 - Fixed RegistryWrite Task
-
-### Added
+- Fixed Create user error message
 
 ## [v0.1.3] - 2019-03-14
 ### Added
