@@ -31,6 +31,7 @@ namespace Covenant.Core
             public Common.DotNetVersion TargetDotNetVersion { get; set; } = Common.DotNetVersion.Net35;
             public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
             public Platform Platform { get; set; } = Platform.AnyCpu;
+            public bool UnsafeCompile { get; set; } = false;
             public bool Optimize { get; set; } = true;
             public bool Confuse { get; set; } = false;
 
@@ -93,7 +94,7 @@ namespace Covenant.Core
             }).ToList();
 
             // Use specified OutputKind and Platform
-            CSharpCompilationOptions options = new CSharpCompilationOptions(outputKind: request.OutputKind, optimizationLevel: OptimizationLevel.Release, platform: request.Platform);
+            CSharpCompilationOptions options = new CSharpCompilationOptions(outputKind: request.OutputKind, optimizationLevel: OptimizationLevel.Release, platform: request.Platform, allowUnsafe: request.UnsafeCompile);
             // Compile to obtain SemanticModel
             CSharpCompilation compilation = CSharpCompilation.Create(
                 request.AssemblyName == null ? Path.GetRandomFileName() : request.AssemblyName,

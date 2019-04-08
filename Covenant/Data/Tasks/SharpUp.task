@@ -1,0 +1,40 @@
+﻿using System;
+using System.IO;
+using System.Linq;
+
+using SharpUp;
+
+public static class Task
+{
+    public static string Execute(string Command)
+    {
+        TextWriter realStdOut = Console.Out;
+        TextWriter realStdErr = Console.Error;
+        TextWriter stdOutWriter = new StringWriter();
+        TextWriter stdErrWriter = new StringWriter();
+        Console.SetOut(stdOutWriter);
+        Console.SetError(stdErrWriter);
+        
+        string[] args = Command.Split(' ');
+        bool auditMode = args.Contains("audit", StringComparer.CurrentCultureIgnoreCase);
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
+        Console.WriteLine("\r\n=== SharpUp: Running Privilege Escalation Checks ===");
+
+        Program.PrivescChecks(auditMode);
+
+        watch.Stop();
+        Console.WriteLine(String.Format("\r\n\r\n[*] Completed Privesc Checks in {0} seconds\r\n", watch.ElapsedMilliseconds / 1000));
+        
+        Console.Out.Flush();
+        Console.Error.Flush();
+        Console.SetOut(realStdOut);
+        Console.SetError(realStdErr);
+        
+        string output = stdOutWriter.ToString();
+        output += stdErrWriter.ToString();
+        
+        return output;
+    }
+}

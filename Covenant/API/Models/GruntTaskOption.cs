@@ -22,14 +22,12 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTaskOption class.
         /// </summary>
-        public GruntTaskOption(int? id = default(int?), int? taskId = default(int?), int? optionId = default(int?), string name = default(string), string description = default(string), string value = default(string))
+        public GruntTaskOption(int? id = default(int?), string name = default(string), string value = default(string), string description = default(string))
         {
             Id = id;
-            TaskId = taskId;
-            OptionId = optionId;
             Name = name;
-            Description = description;
             Value = value;
+            Description = description;
             CustomInit();
         }
 
@@ -45,28 +43,18 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "taskId")]
-        public int? TaskId { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "optionId")]
-        public int? OptionId { get; set; }
-
-        /// <summary>
-        /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "description")]
-        public string Description { get; set; }
+        [JsonProperty(PropertyName = "value")]
+        public string Value { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "value")]
-        public string Value { get; set; }
+        [JsonProperty(PropertyName = "description")]
+        public string Description { get; set; }
 
     }
 }

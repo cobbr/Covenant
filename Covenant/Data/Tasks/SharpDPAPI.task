@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-using Rubeus.Domain;
+using SharpDPAPI.Domain;
 
 public static class Task
 {
@@ -17,14 +17,12 @@ public static class Task
         string[] args = Command.Split(' ');
         try
         {
-            Info.ShowLogo();
+            Info.Logo();
 
             // try to parse the command line arguments, show usage on failure and then bail
             var parsed = ArgumentParser.Parse(args);
             if (parsed.ParsedOk == false)
-            {
                 Info.ShowUsage();
-            }
             else
             {
                 // Try to execute the command using the arguments passed in
@@ -40,9 +38,10 @@ public static class Task
         }
         catch (Exception e)
         {
-            Console.WriteLine("\r\n[!] Unhandled Rubeus exception:\r\n");
+            Console.WriteLine("\r\n[!] Unhandled SharpDPAPI exception:\r\n");
             Console.WriteLine(e);
         }
+
         
         Console.Out.Flush();
         Console.Error.Flush();

@@ -4,9 +4,14 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 using Covenant.Models;
 using Covenant.Models.Grunts;
@@ -21,10 +26,12 @@ namespace Covenant.Controllers
     public class GruntController : Controller
     {
         private readonly CovenantContext _context;
+        private readonly UserManager<CovenantUser> _userManager;
 
-        public GruntController(CovenantContext context)
+        public GruntController(CovenantContext context, UserManager<CovenantUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/grunts
@@ -32,7 +39,7 @@ namespace Covenant.Controllers
         // Get a list of Grunts
         // </summary>
         [HttpGet(Name = "GetGrunts")]
-        public IEnumerable<Grunt> GetGrunts()
+        public ActionResult<IEnumerable<Grunt>> GetGrunts()
         {
             return _context.Grunts.ToList();
         }
@@ -47,9 +54,9 @@ namespace Covenant.Controllers
             var grunt = _context.Grunts.FirstOrDefault(g => g.Id == id);
             if (grunt == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Grunt with id: {id}");
             }
-            return Ok(grunt);
+            return grunt;
         }
 
         // GET api/grunts/guid/{guid}
@@ -62,9 +69,9 @@ namespace Covenant.Controllers
             var grunt = _context.Grunts.FirstOrDefault(g => g.GUID == guid);
             if (grunt == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Grunt with GUID: {guid}");
             }
-            return Ok(grunt);
+            return grunt;
         }
 
         // GET api/grunts/{id}/path/{tid}
@@ -77,17 +84,17 @@ namespace Covenant.Controllers
             var grunt = _context.Grunts.FirstOrDefault(g => g.Id == id);
             if (grunt == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Grunt with id: {id}");
             }
             List<string> path = new List<string>();
             bool found = GetPathToChildGrunt(id, tid, ref path);
             if (!found)
             {
-                return NotFound();
+                return NotFound($"NotFound - Path from Grunt with id: {id} to Grunt with id: {tid}");
             }
             path.Add(grunt.GUID);
             path.Reverse();
-            return Ok(path);
+            return path;
         }
 
         // POST api/grunts
@@ -100,12 +107,12 @@ namespace Covenant.Controllers
         {
             TargetIndicator indicator = _context.Indicators.Where(I => I.Name == "TargetIndicator")
                 .Select(T => (TargetIndicator)T)
-                .FirstOrDefault(T => T.ComputerName == grunt.IPAddress && T.UserName == grunt.UserDomainName + "\\" + grunt.UserName);
-            if (indicator == null && grunt.IPAddress != null && grunt.IPAddress != "")
+                .FirstOrDefault(T => T.ComputerName == grunt.Hostname && T.UserName == grunt.UserDomainName + "\\" + grunt.UserName);
+            if (indicator == null && !string.IsNullOrWhiteSpace(grunt.Hostname))
             {
                 _context.Indicators.Add(new TargetIndicator
                 {
-                    ComputerName = grunt.IPAddress,
+                    ComputerName = grunt.Hostname,
                     UserName = grunt.UserName,
                 });
             }
@@ -124,41 +131,9 @@ namespace Covenant.Controllers
             var matching_grunt = _context.Grunts.FirstOrDefault(g => grunt.Id == g.Id);
             if (matching_grunt == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Grunt with id: {grunt.Id}");
             }
 
-            if (matching_grunt.Status == Grunt.GruntStatus.Active && grunt.Status == Grunt.GruntStatus.Active)
-            {
-                if (matching_grunt.Delay != grunt.Delay)
-                {
-                    _context.GruntTaskings.Add(new GruntTasking {
-                            GruntId = grunt.Id,
-                            type = GruntTasking.GruntTaskingType.Set,
-                            SetType = GruntTasking.GruntSetTaskingType.Delay,
-                            Value = grunt.Delay.ToString()
-                    });
-                }
-                else if(matching_grunt.Jitter != grunt.Jitter)
-                {
-                    _context.GruntTaskings.Add(new GruntTasking
-                    {
-                        GruntId = grunt.Id,
-                        type = GruntTasking.GruntTaskingType.Set,
-                        SetType = GruntTasking.GruntSetTaskingType.Jitter,
-                        Value = grunt.Jitter.ToString()
-                    });
-                }
-                else if(matching_grunt.ConnectAttempts != grunt.ConnectAttempts)
-                {
-                    _context.GruntTaskings.Add(new GruntTasking
-                    {
-                        GruntId = grunt.Id,
-                        type = GruntTasking.GruntTaskingType.Set,
-                        SetType = GruntTasking.GruntSetTaskingType.ConnectAttempts,
-                        Value = grunt.ConnectAttempts.ToString()
-                    });
-                }
-            }
             if (matching_grunt.Status != Grunt.GruntStatus.Active && grunt.Status == Grunt.GruntStatus.Active)
             {
                 grunt.ActivationTime = DateTime.UtcNow;
@@ -184,7 +159,7 @@ namespace Covenant.Controllers
             matching_grunt.Hostname = grunt.Hostname;
             matching_grunt.OperatingSystem = grunt.OperatingSystem;
 
-            matching_grunt.ChildGrunts = grunt.ChildGrunts;
+            matching_grunt.Children = grunt.Children;
             matching_grunt.CommType = grunt.CommType;
             matching_grunt.SMBPipeName = grunt.SMBPipeName;
 
@@ -216,7 +191,7 @@ namespace Covenant.Controllers
             }
             _context.SaveChanges();
 
-            return Ok(matching_grunt);
+            return matching_grunt;
         }
 
         // DELETE api/grunts/{id}
@@ -230,7 +205,7 @@ namespace Covenant.Controllers
             var grunt = _context.Grunts.FirstOrDefault(g => g.Id == id);
             if (grunt == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Grunt with id: {id}");
             }
 
             _context.Grunts.Remove(grunt);
@@ -251,13 +226,12 @@ namespace Covenant.Controllers
             {
                 return false;
             }
-            List<string> children = parentGrunt.GetChildren();
-            if (children.Contains(childGrunt.GUID))
+            if (parentGrunt.Children.Contains(childGrunt.GUID))
             {
                 GruntPath.Add(childGrunt.GUID);
                 return true;
             }
-            foreach (string child in parentGrunt.GetChildren())
+            foreach (string child in parentGrunt.Children)
             {
                 Grunt directChild = _context.Grunts.FirstOrDefault(G => G.GUID == child);
                 if (directChild == null)

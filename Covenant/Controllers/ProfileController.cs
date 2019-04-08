@@ -29,7 +29,7 @@ namespace Covenant.Controllers
         // Get a list of Profiles
         // </summary>
         [HttpGet(Name = "GetProfiles")]
-        public IEnumerable<Profile> GetProfiles()
+        public ActionResult<IEnumerable<Profile>> GetProfiles()
         {
             return _context.Profiles.ToList();
         }
@@ -44,9 +44,9 @@ namespace Covenant.Controllers
             var profile = _context.Profiles.FirstOrDefault(p => p.Id == id);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Profile with id: {id}");
             }
-            return Ok(profile);
+            return profile;
         }
 
         // POST api/profiles
@@ -72,14 +72,14 @@ namespace Covenant.Controllers
             var matching_profile = _context.Profiles.FirstOrDefault(p => profile.Id == p.Id);
             if (matching_profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Profile with id: {profile.Id}");
             }
             matching_profile.Id = profile.Id;
 
             _context.Profiles.Update(matching_profile);
             _context.SaveChanges();
 
-            return Ok(matching_profile);
+            return matching_profile;
         }
 
         // DELETE api/profiles/{id}
@@ -93,7 +93,7 @@ namespace Covenant.Controllers
             var profile = _context.Profiles.FirstOrDefault(p => p.Id == id);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Profile with id: {id}");
             }
 
             _context.Profiles.Remove(profile);
@@ -101,14 +101,12 @@ namespace Covenant.Controllers
             return new NoContentResult();
         }
 
-
-
         // GET: api/profiles/http
         // <summary>
         // Get a list of HttpProfiles
         // </summary>
         [HttpGet("http", Name = "GetHttpProfiles")]
-        public IEnumerable<HttpProfile> GetHttpProfiles()
+        public ActionResult<IEnumerable<HttpProfile>> GetHttpProfiles()
         {
             List<HttpProfile> httpProfiles = new List<HttpProfile>();
             foreach (Profile profile in _context.Profiles.ToList())
@@ -128,9 +126,9 @@ namespace Covenant.Controllers
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(p => p.Id == id);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {id}");
             }
-            return Ok(profile);
+            return profile;
         }
 
         // POST api/profiles/http
@@ -156,7 +154,7 @@ namespace Covenant.Controllers
             HttpProfile matching_profile = (HttpProfile)_context.Profiles.FirstOrDefault(p => profile.Id == p.Id);
             if (matching_profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {profile.Id}");
             }
 
             matching_profile.HttpRequestHeaders = profile.HttpRequestHeaders;
@@ -169,7 +167,7 @@ namespace Covenant.Controllers
             _context.Profiles.Update(matching_profile);
             _context.SaveChanges();
 
-            return Ok(matching_profile);
+            return matching_profile;
         }
 
         // DELETE api/profiles/http/{id}
@@ -183,7 +181,7 @@ namespace Covenant.Controllers
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(p => p.Id == id);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {id}");
             }
 
             _context.Profiles.Remove(profile);

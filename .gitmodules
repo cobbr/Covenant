@@ -4,3 +4,21 @@
 [submodule "Covenant/Data/Tasks/src/SharpSploit"]
 	path = Covenant/Data/Tasks/src/SharpSploit
 	url = https://github.com/cobbr/SharpSploit
+[submodule "Covenant/Data/Tasks/src/SharpDPAPI"]
+	path = Covenant/Data/Tasks/src/SharpDPAPI
+	url = https://github.com/GhostPack/SharpDPAPI
+[submodule "Covenant/Data/Tasks/src/SharpUp"]
+	path = Covenant/Data/Tasks/src/SharpUp
+	url = https://github.com/GhostPack/SharpUp
+[submodule "Covenant/Data/Tasks/src/SafetyKatz"]
+	path = Covenant/Data/Tasks/src/SafetyKatz
+	url = https://github.com/GhostPack/SafetyKatz
+[submodule "Covenant/Data/Tasks/src/Seatbelt"]
+	path = Covenant/Data/Tasks/src/Seatbelt
+	url = https://github.com/GhostPack/Seatbelt
+[submodule "Covenant/Data/Tasks/src/SharpDump"]
+	path = Covenant/Data/Tasks/src/SharpDump
+	url = https://github.com/GhostPack/SharpDump
+[submodule "Covenant/Data/Tasks/src/SharpWMI"]
+	path = Covenant/Data/Tasks/src/SharpWMI
+	url = https://github.com/GhostPack/SharpWMI

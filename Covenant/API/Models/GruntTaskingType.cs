@@ -19,14 +19,20 @@ namespace Covenant.API.Models
     {
         [EnumMember(Value = "Assembly")]
         Assembly,
-        [EnumMember(Value = "Set")]
-        Set,
+        [EnumMember(Value = "SetDelay")]
+        SetDelay,
+        [EnumMember(Value = "SetJitter")]
+        SetJitter,
+        [EnumMember(Value = "SetConnectAttempts")]
+        SetConnectAttempts,
         [EnumMember(Value = "Kill")]
         Kill,
         [EnumMember(Value = "Connect")]
         Connect,
         [EnumMember(Value = "Disconnect")]
-        Disconnect
+        Disconnect,
+        [EnumMember(Value = "Jobs")]
+        Jobs
     }
     internal static class GruntTaskingTypeEnumExtension
     {
@@ -41,14 +47,20 @@ namespace Covenant.API.Models
             {
                 case GruntTaskingType.Assembly:
                     return "Assembly";
-                case GruntTaskingType.Set:
-                    return "Set";
+                case GruntTaskingType.SetDelay:
+                    return "SetDelay";
+                case GruntTaskingType.SetJitter:
+                    return "SetJitter";
+                case GruntTaskingType.SetConnectAttempts:
+                    return "SetConnectAttempts";
                 case GruntTaskingType.Kill:
                     return "Kill";
                 case GruntTaskingType.Connect:
                     return "Connect";
                 case GruntTaskingType.Disconnect:
                     return "Disconnect";
+                case GruntTaskingType.Jobs:
+                    return "Jobs";
             }
             return null;
         }
@@ -59,14 +71,20 @@ namespace Covenant.API.Models
             {
                 case "Assembly":
                     return GruntTaskingType.Assembly;
-                case "Set":
-                    return GruntTaskingType.Set;
+                case "SetDelay":
+                    return GruntTaskingType.SetDelay;
+                case "SetJitter":
+                    return GruntTaskingType.SetJitter;
+                case "SetConnectAttempts":
+                    return GruntTaskingType.SetConnectAttempts;
                 case "Kill":
                     return GruntTaskingType.Kill;
                 case "Connect":
                     return GruntTaskingType.Connect;
                 case "Disconnect":
                     return GruntTaskingType.Disconnect;
+                case "Jobs":
+                    return GruntTaskingType.Jobs;
             }
             return null;
         }

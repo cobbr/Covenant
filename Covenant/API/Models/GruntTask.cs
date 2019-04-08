@@ -24,16 +24,17 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), string referenceAssemblies = default(string), string referenceSourceLibraries = default(string), string embeddedResources = default(string), IList<GruntTaskOption> options = default(IList<GruntTaskOption>), string code = default(string))
+        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), bool? tokenTask = default(bool?), string code = default(string), IList<string> referenceAssemblies = default(IList<string>), IList<string> referenceSourceLibraries = default(IList<string>), IList<string> embeddedResources = default(IList<string>), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
             Description = description;
+            TokenTask = tokenTask;
+            Code = code;
             ReferenceAssemblies = referenceAssemblies;
             ReferenceSourceLibraries = referenceSourceLibraries;
             EmbeddedResources = embeddedResources;
             Options = options;
-            Code = code;
             CustomInit();
         }
 
@@ -59,28 +60,33 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "referenceAssemblies")]
-        public string ReferenceAssemblies { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "referenceSourceLibraries")]
-        public string ReferenceSourceLibraries { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "embeddedResources")]
-        public string EmbeddedResources { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "options")]
-        public IList<GruntTaskOption> Options { get; set; }
+        [JsonProperty(PropertyName = "tokenTask")]
+        public bool? TokenTask { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "code")]
         public string Code { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "referenceAssemblies")]
+        public IList<string> ReferenceAssemblies { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "referenceSourceLibraries")]
+        public IList<string> ReferenceSourceLibraries { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "embeddedResources")]
+        public IList<string> EmbeddedResources { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "options")]
+        public IList<GruntTaskOption> Options { get; set; }
 
     }
 }

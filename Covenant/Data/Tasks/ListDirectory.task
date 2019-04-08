@@ -4,8 +4,8 @@ using SharpSploit.Enumeration;
 
 public static class Task
 {
-    public static string Execute()
+    public static string Execute(string Path = "")
     {
-        return Host.GetDirectoryListing().ToString();
+        return Path == "" ? Host.GetDirectoryListing().ToString() : Host.GetDirectoryListing(Path).ToString();
     }
 }

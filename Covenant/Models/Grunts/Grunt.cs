@@ -47,14 +47,8 @@ namespace Covenant.Models.Grunts
         public string GUID { get; set; }
 
         // Downstream Grunt GUIDs
-        private List<string> _ChildGrunts = new List<string>();
-        // Split into comma-delimited list to easily save as text in the Database
-        public string ChildGrunts
-        {
-            get { return String.Join(',', this._ChildGrunts); }
-            set { this._ChildGrunts = value.Split(',').Where(V => !string.IsNullOrWhiteSpace(V)).ToList(); }
-        }
-
+        public List<string> Children { get; set; } = new List<string>();
+        
         // Communication information
         public CommunicationType CommType { get; set; } = CommunicationType.HTTP;
         public string SMBPipeName { get; set; } = "gruntsvc";
@@ -101,7 +95,7 @@ namespace Covenant.Models.Grunts
                 OriginalServerGuid = gruntModel.OriginalServerGuid ?? default,
                 DotNetFrameworkVersion = (Common.DotNetVersion)Enum.Parse(typeof(Common.DotNetVersion), gruntModel.DotNetFrameworkVersion.ToString()),
                 CovenantIPAddress = gruntModel.CovenantIPAddress ?? default,
-                ChildGrunts = gruntModel.ChildGrunts,
+                Children = gruntModel.Children.ToList(),
                 CommType = (Grunt.CommunicationType)Enum.Parse(typeof(Grunt.CommunicationType), gruntModel.CommType.ToString()),
                 SMBPipeName = gruntModel.SmbPipeName,
                 Delay = gruntModel.Delay ?? default,
@@ -136,7 +130,7 @@ namespace Covenant.Models.Grunts
                 OriginalServerGuid = this.OriginalServerGuid,
                 DotNetFrameworkVersion = (API.Models.DotNetVersion)Enum.Parse(typeof(API.Models.DotNetVersion), this.DotNetFrameworkVersion.ToString()),
                 CovenantIPAddress = this.CovenantIPAddress,
-                ChildGrunts = this.ChildGrunts,
+                Children = this.Children,
                 CommType = (API.Models.CommunicationType)Enum.Parse(typeof(API.Models.CommunicationType), this.CommType.ToString()),
                 SmbPipeName = this.SMBPipeName,
                 Delay = this.Delay,
@@ -160,35 +154,17 @@ namespace Covenant.Models.Grunts
             };
         }
 
-        public List<string> GetChildren()
-        {
-            return this._ChildGrunts;
-        }
-
         public void AddChild(Grunt grunt)
         {
             if (!string.IsNullOrWhiteSpace(grunt.GUID))
             {
-                this._ChildGrunts.Add(grunt.GUID);
-            }
-        }
-
-        public void AddChild(string GUID)
-        {
-            if (!string.IsNullOrWhiteSpace(GUID))
-            {
-                this._ChildGrunts.Add(GUID);
+                this.Children.Add(grunt.GUID);
             }
         }
 
         public bool RemoveChild(Grunt grunt)
         {
-            return this._ChildGrunts.Remove(grunt.GUID);
-        }
-
-        public bool RemoveChild(string GUID)
-        {
-            return this._ChildGrunts.Remove(GUID);
+            return this.Children.Remove(grunt.GUID);
         }
 
         public byte[] RSAEncrypt(byte[] toEncrypt)

@@ -22,13 +22,15 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTaskingMessage class.
         /// </summary>
-        /// <param name="type">Possible values include: 'Assembly', 'Set',
-        /// 'Kill', 'Connect', 'Disconnect'</param>
-        public GruntTaskingMessage(GruntTaskingType? type = default(GruntTaskingType?), string name = default(string), string message = default(string))
+        /// <param name="type">Possible values include: 'Assembly', 'SetDelay',
+        /// 'SetJitter', 'SetConnectAttempts', 'Kill', 'Connect', 'Disconnect',
+        /// 'Jobs'</param>
+        public GruntTaskingMessage(GruntTaskingType? type = default(GruntTaskingType?), string name = default(string), string message = default(string), bool? token = default(bool?))
         {
             Type = type;
             Name = name;
             Message = message;
+            Token = token;
             CustomInit();
         }
 
@@ -38,8 +40,9 @@ namespace Covenant.API.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets or sets possible values include: 'Assembly', 'Set', 'Kill',
-        /// 'Connect', 'Disconnect'
+        /// Gets or sets possible values include: 'Assembly', 'SetDelay',
+        /// 'SetJitter', 'SetConnectAttempts', 'Kill', 'Connect', 'Disconnect',
+        /// 'Jobs'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public GruntTaskingType? Type { get; set; }
@@ -53,6 +56,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "message")]
         public string Message { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "token")]
+        public bool? Token { get; set; }
 
     }
 }

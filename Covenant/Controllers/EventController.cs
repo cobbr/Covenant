@@ -32,7 +32,7 @@ namespace Covenant.Controllers
         // Get a list of Events
         // </summary>
         [HttpGet(Name = "GetEvents")]
-        public IEnumerable<Event> GetEvents()
+        public ActionResult<IEnumerable<Event>> GetEvents()
         {
             return _context.Events.ToList();
         }
@@ -47,7 +47,7 @@ namespace Covenant.Controllers
             var anEvent = _context.Events.FirstOrDefault(E => E.Id == id);
             if (anEvent == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Event with id: {id}");
             }
             return Ok(anEvent);
         }
@@ -67,7 +67,7 @@ namespace Covenant.Controllers
         // Get a list of Events that occurred after the specified DateTime
         // </summary>
         [HttpGet("range/{fromdate}", Name = "GetEventsAfter")]
-        public IEnumerable<Event> GetEventsAfter(long fromdate)
+        public ActionResult<IEnumerable<Event>> GetEventsAfter(long fromdate)
         {
             DateTime start = DateTime.FromBinary(fromdate);
             return _context.Events.Where(E => E.Time.CompareTo(start) >= 0).ToList();
@@ -78,7 +78,7 @@ namespace Covenant.Controllers
         // Get a list of Events that occurred between the range of specified DateTimes
         // </summary>
         [HttpGet("range/{fromdate}/{todate}", Name = "GetEventsRange")]
-        public IEnumerable<Event> GetEventsRange(long fromdate, long todate)
+        public ActionResult<IEnumerable<Event>> GetEventsRange(long fromdate, long todate)
         {
             DateTime start = DateTime.FromBinary(fromdate);
             DateTime end = DateTime.FromBinary(todate);
@@ -119,9 +119,14 @@ namespace Covenant.Controllers
             DownloadEvent theEvent = ((DownloadEvent)_context.Events.FirstOrDefault(E => E.Id == id));
             if (theEvent == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - DownloadEvent with id: {id}"); ;
             }
-            return Ok(Convert.ToBase64String(System.IO.File.ReadAllBytes(Path.Combine(Common.CovenantDownloadDirectory, theEvent.FileName))));
+            string filename = Path.Combine(Common.CovenantDownloadDirectory, theEvent.FileName);
+            if (!System.IO.File.Exists(filename))
+            {
+                return BadRequest($"BadRequest - Path does not exist on disk: {filename}");
+            }
+            return Convert.ToBase64String(System.IO.File.ReadAllBytes(filename));
         }
 
         // POST api/events/download

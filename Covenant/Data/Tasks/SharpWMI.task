@@ -1,0 +1,31 @@
+﻿using System;
+using System.IO;
+using System.Reflection;
+
+using SharpWMI;
+
+public static class Task
+{
+    public static string Execute(string Command)
+    {
+        TextWriter realStdOut = Console.Out;
+        TextWriter realStdErr = Console.Error;
+        TextWriter stdOutWriter = new StringWriter();
+        TextWriter stdErrWriter = new StringWriter();
+        Console.SetOut(stdOutWriter);
+        Console.SetError(stdErrWriter);
+        
+        string[] args = Command.Split(' ');
+        typeof(Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
+        
+        Console.Out.Flush();
+        Console.Error.Flush();
+        Console.SetOut(realStdOut);
+        Console.SetError(realStdErr);
+        
+        string output = stdOutWriter.ToString();
+        output += stdErrWriter.ToString();
+        
+        return output;
+    }
+}

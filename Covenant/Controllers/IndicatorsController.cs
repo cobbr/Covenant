@@ -40,7 +40,7 @@ namespace Covenant.Controllers
         // Get a list of Indicators
         // </summary>
         [HttpGet(Name = "GetIndicators")]
-        public IEnumerable<Indicator> GetIndicators()
+        public ActionResult<IEnumerable<Indicator>> GetIndicators()
         {
             return _context.Indicators.ToList();
         }
@@ -50,7 +50,7 @@ namespace Covenant.Controllers
         // Get a list of FileIndicators
         // </summary>
         [HttpGet("files", Name = "GetFileIndicators")]
-        public IEnumerable<FileIndicator> GetFileIndicators()
+        public ActionResult<IEnumerable<FileIndicator>> GetFileIndicators()
         {
             return _context.Indicators.Where(I => I.Name == "FileIndicator").Select(I => (FileIndicator)I).ToList();
         }
@@ -60,7 +60,7 @@ namespace Covenant.Controllers
         // Get a list of NetworksIndicators
         // </summary>
         [HttpGet("networks", Name = "GetNetworkIndicators")]
-        public IEnumerable<NetworkIndicator> GetNetworkIndicators()
+        public ActionResult<IEnumerable<NetworkIndicator>> GetNetworkIndicators()
         {
             return _context.Indicators.Where(I => I.Name == "NetworkIndicator").Select(I => (NetworkIndicator)I).ToList();
         }
@@ -70,7 +70,7 @@ namespace Covenant.Controllers
         // Get a list of TargetIndicators
         // </summary>
         [HttpGet("targets", Name = "GetTargetIndicators")]
-        public IEnumerable<TargetIndicator> GetTargetIndicators()
+        public ActionResult<IEnumerable<TargetIndicator>> GetTargetIndicators()
         {
             return _context.Indicators.Where(I => I.Name == "TargetIndicator").Select(I => (TargetIndicator)I).ToList();
         }
@@ -85,9 +85,9 @@ namespace Covenant.Controllers
             var indicator = _context.Indicators.FirstOrDefault(i => i.Id == id);
             if (indicator == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Indicator with id: {id}");
             }
-            return Ok(indicator);
+            return indicator;
         }
 
         // GET: api/indicators/files/{id}
@@ -97,8 +97,13 @@ namespace Covenant.Controllers
         [HttpGet("files/{id}", Name = "GetFileIndicator")]
         public ActionResult<FileIndicator> GetFileIndicator(int id)
         {
-            return _context.Indicators.Where(I => I.Name == "FileIndicator").Select(I => (FileIndicator)I)
+            var indicator = _context.Indicators.Where(I => I.Name == "FileIndicator").Select(I => (FileIndicator)I)
             .FirstOrDefault(i => i.Id == id);
+            if (indicator == null)
+            {
+                return NotFound($"NotFound - FileIndicator with id: {id}");
+            }
+            return indicator;
         }
 
         // GET: api/indicators/networks/{id}
@@ -108,8 +113,13 @@ namespace Covenant.Controllers
         [HttpGet("networks/{id}", Name = "GetNetworkIndicator")]
         public ActionResult<NetworkIndicator> GetNetworkIndicator(int id)
         {
-            return _context.Indicators.Where(I => I.Name == "NetworkIndicator").Select(I => (NetworkIndicator)I)
+            var indicator = _context.Indicators.Where(I => I.Name == "NetworkIndicator").Select(I => (NetworkIndicator)I)
             .FirstOrDefault(i => i.Id == id);
+            if (indicator == null)
+            {
+                return NotFound($"NotFound - NetworkIndicator with id: {id}");
+            }
+            return indicator;
         }
 
         // GET: api/indicators/targets/{id}
@@ -119,8 +129,13 @@ namespace Covenant.Controllers
         [HttpGet("targets/{id}", Name = "GetTargetIndicator")]
         public ActionResult<TargetIndicator> GetTargetIndicator(int id)
         {
-            return _context.Indicators.Where(I => I.Name == "TargetIndicator").Select(I => (TargetIndicator)I)
+            var indicator = _context.Indicators.Where(I => I.Name == "TargetIndicator").Select(I => (TargetIndicator)I)
             .FirstOrDefault(i => i.Id == id);
+            if (indicator == null)
+            {
+                return NotFound($"NotFound - TargetIndicator with id: {id}");
+            }
+            return indicator;
         }
 
         // POST api/indicators
@@ -146,7 +161,7 @@ namespace Covenant.Controllers
             var matching_indicator = _context.Indicators.FirstOrDefault(i => indicator.Id == i.Id);
             if (matching_indicator == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Indicator with id: {indicator.Id}");
             }
 
             matching_indicator.Name = indicator.Name;
@@ -154,7 +169,7 @@ namespace Covenant.Controllers
             _context.Indicators.Update(matching_indicator);
             _context.SaveChanges();
 
-            return Ok(matching_indicator);
+            return matching_indicator;
         }
 
         // DELETE api/indicators/{id}
@@ -168,7 +183,7 @@ namespace Covenant.Controllers
             var indicator = _context.Indicators.FirstOrDefault(i => i.Id == id);
             if (indicator == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Indicator with id: {id}");
             }
 
             _context.Indicators.Remove(indicator);

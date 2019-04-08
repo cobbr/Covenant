@@ -31,7 +31,7 @@ namespace Covenant.Controllers
         // Get PowerShellLauncher
         // </summary>
         [HttpGet(Name = "GetLaunchers")]
-        public IEnumerable<Launcher> Get()
+        public ActionResult<IEnumerable<Launcher>> Get()
         {
             return _context.Launchers.ToList();
         }
@@ -46,9 +46,9 @@ namespace Covenant.Controllers
             BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - BinaryLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/stagers/launcher
@@ -61,17 +61,17 @@ namespace Covenant.Controllers
             BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - BinaryLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Launcher with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
             Grunt grunt = new Grunt
             {
@@ -92,7 +92,7 @@ namespace Covenant.Controllers
 
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/binary/hosted
@@ -105,19 +105,23 @@ namespace Covenant.Controllers
             BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - BinaryLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/powershell
@@ -130,7 +134,7 @@ namespace Covenant.Controllers
             BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
             if (launcher == null || launcher.Id != binaryLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - BinaryLauncher with id: {binaryLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == binaryLauncher.ListenerId);
             if (listener != null)
@@ -147,7 +151,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/powershell
@@ -160,9 +164,9 @@ namespace Covenant.Controllers
             PowerShellLauncher launcher = (PowerShellLauncher) _context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - PowerShellLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/powershell
@@ -175,17 +179,17 @@ namespace Covenant.Controllers
             PowerShellLauncher launcher = (PowerShellLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - PowerShellLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -205,7 +209,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/powershell/hosted
@@ -218,19 +222,23 @@ namespace Covenant.Controllers
             PowerShellLauncher launcher = (PowerShellLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - PowerShellLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/powershell
@@ -243,7 +251,7 @@ namespace Covenant.Controllers
             PowerShellLauncher launcher = (PowerShellLauncher) _context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
             if (launcher == null || launcher.Id != powerShellLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - PowerShellLauncher with id: {powerShellLauncher.Id}");
             }
 
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == powerShellLauncher.ListenerId);
@@ -264,7 +272,7 @@ namespace Covenant.Controllers
 
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/msbuild
@@ -277,9 +285,9 @@ namespace Covenant.Controllers
             MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - MSBuildLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/msbuild
@@ -292,17 +300,17 @@ namespace Covenant.Controllers
             MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - MSBuildLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -322,7 +330,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/msbuild/hosted
@@ -335,19 +343,23 @@ namespace Covenant.Controllers
             MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - MSBuildLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/msbuild
@@ -360,7 +372,7 @@ namespace Covenant.Controllers
             MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
             if (launcher == null || launcher.Id != msbuildLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - MSBuildLauncher wiht id: {msbuildLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == msbuildLauncher.ListenerId);
             if (listener != null)
@@ -382,7 +394,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/installutil
@@ -395,9 +407,9 @@ namespace Covenant.Controllers
             InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - InstallUtilLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/installutil
@@ -410,17 +422,17 @@ namespace Covenant.Controllers
             InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - InstallUtilLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -440,7 +452,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/installutil/hosted
@@ -453,19 +465,23 @@ namespace Covenant.Controllers
             InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - InstallUtilLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/installutil
@@ -478,7 +494,7 @@ namespace Covenant.Controllers
             InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
             if (launcher == null || launcher.Id != installutilLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - InstallUtilLauncher with id: {installutilLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == installutilLauncher.ListenerId);
             if (listener != null)
@@ -498,7 +514,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/wmic
@@ -511,9 +527,9 @@ namespace Covenant.Controllers
             WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - WmicLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/wmic
@@ -526,17 +542,17 @@ namespace Covenant.Controllers
             WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - WmicLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -556,7 +572,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/wmic/hosted
@@ -569,19 +585,23 @@ namespace Covenant.Controllers
             WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - WmicLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/wmic
@@ -594,7 +614,7 @@ namespace Covenant.Controllers
             WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
             if (launcher == null || launcher.Id != wmicLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - WmicLauncher with id: {wmicLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == wmicLauncher.ListenerId);
             if (listener != null)
@@ -615,7 +635,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/regsvr32
@@ -628,9 +648,9 @@ namespace Covenant.Controllers
             Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Regsvr32Launcher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launcher/regsvr32
@@ -643,17 +663,17 @@ namespace Covenant.Controllers
             Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Regsvr32Launcher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -673,7 +693,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/regsvr32/hosted
@@ -686,19 +706,23 @@ namespace Covenant.Controllers
             Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Regsvr32Launcher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/regsvr32
@@ -711,7 +735,7 @@ namespace Covenant.Controllers
             Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
             if (launcher == null || launcher.Id != regsvr32Launcher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - Regsvr32Launcher with id: {regsvr32Launcher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == regsvr32Launcher.ListenerId);
             if (listener != null)
@@ -734,7 +758,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/mshta
@@ -747,9 +771,9 @@ namespace Covenant.Controllers
             MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Regsvr32Launcher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/mshta
@@ -762,17 +786,17 @@ namespace Covenant.Controllers
             MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - MshtaLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -792,7 +816,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/mshta/hosted
@@ -805,19 +829,23 @@ namespace Covenant.Controllers
             MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - MshtaLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/mshta
@@ -830,7 +858,7 @@ namespace Covenant.Controllers
             MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
             if (launcher == null || launcher.Id != mshtaLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - MshtaLauncher with id: {mshtaLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == mshtaLauncher.ListenerId);
             if (listener != null)
@@ -851,7 +879,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/cscript
@@ -864,9 +892,9 @@ namespace Covenant.Controllers
             CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - CscriptLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/cscript
@@ -879,17 +907,17 @@ namespace Covenant.Controllers
             CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - CscriptLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -909,7 +937,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/cscript/hosted
@@ -922,19 +950,23 @@ namespace Covenant.Controllers
             CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - CscriptLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/cscript
@@ -947,7 +979,7 @@ namespace Covenant.Controllers
             CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
             if (launcher == null || launcher.Id != cscriptLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - CscriptLauncher with id: {cscriptLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == cscriptLauncher.ListenerId);
             if (listener != null)
@@ -968,7 +1000,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // GET api/launchers/wscript
@@ -981,9 +1013,9 @@ namespace Covenant.Controllers
             WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - WscriptLauncher");
             }
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/wscript
@@ -996,17 +1028,17 @@ namespace Covenant.Controllers
             WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - WscriptLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
             }
             HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
 
             Grunt grunt = new Grunt
@@ -1026,7 +1058,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // POST api/launchers/wscript/hosted
@@ -1039,19 +1071,23 @@ namespace Covenant.Controllers
             WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
             if (launcher == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - WscriptLauncher");
             }
             Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (listener == null || savedHostedFile == null)
+            if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+            }
+            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
+            if (savedHostedFile == null)
+            {
+                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
             }
             string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
 
         // PUT api/launchers/wscript
@@ -1064,7 +1100,7 @@ namespace Covenant.Controllers
             WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
             if (launcher == null || launcher.Id != wscriptLauncher.Id)
             {
-                return NotFound();
+                return NotFound($"NotFound - WscriptLauncher with id: {wscriptLauncher.Id}");
             }
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == wscriptLauncher.ListenerId);
             if (listener != null)
@@ -1085,7 +1121,7 @@ namespace Covenant.Controllers
             _context.Launchers.Update(launcher);
             _context.SaveChanges();
 
-            return Ok(launcher);
+            return launcher;
         }
     }
 }

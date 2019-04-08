@@ -46,6 +46,14 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
+        Task<HttpOperationResponse<CovenantUser>> ApiUsersCurrentGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
         Task<HttpOperationResponse<IList<CovenantUser>>> ApiUsersGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='user'>
@@ -56,7 +64,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<CovenantUser>> ApiUsersPutWithHttpMessagesAsync(CovenantUser user = default(CovenantUser), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<CovenantUser>> ApiUsersPutWithHttpMessagesAsync(CovenantUserLogin user = default(CovenantUserLogin), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='login'>
         /// </param>
@@ -68,7 +76,7 @@ namespace Covenant.API
         /// </param>
         Task<HttpOperationResponse<CovenantUser>> ApiUsersPostWithHttpMessagesAsync(CovenantUserLogin login = default(CovenantUserLogin), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='uid'>
+        /// <param name='id'>
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -76,9 +84,9 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<CovenantUser>> ApiUsersByUidGetWithHttpMessagesAsync(string uid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<CovenantUser>> ApiUsersByIdGetWithHttpMessagesAsync(string id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='uid'>
+        /// <param name='id'>
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -86,7 +94,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse> ApiUsersByUidDeleteWithHttpMessagesAsync(string uid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse> ApiUsersByIdDeleteWithHttpMessagesAsync(string id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='login'>
         /// </param>
@@ -106,7 +114,7 @@ namespace Covenant.API
         /// </param>
         Task<HttpOperationResponse<IList<IdentityUserRoleString>>> ApiUsersRolesGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='uid'>
+        /// <param name='id'>
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -114,9 +122,9 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IList<IdentityUserRoleString>>> ApiUsersByUidRolesGetWithHttpMessagesAsync(string uid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IList<IdentityUserRoleString>>> ApiUsersByIdRolesGetWithHttpMessagesAsync(string id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='uid'>
+        /// <param name='id'>
         /// </param>
         /// <param name='rid'>
         /// </param>
@@ -126,9 +134,9 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IdentityUserRoleString>> ApiUsersByUidRolesByRidGetWithHttpMessagesAsync(string uid, string rid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IdentityUserRoleString>> ApiUsersByIdRolesByRidGetWithHttpMessagesAsync(string id, string rid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='uid'>
+        /// <param name='id'>
         /// </param>
         /// <param name='rid'>
         /// </param>
@@ -138,9 +146,9 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IdentityUserRoleString>> ApiUsersByUidRolesByRidPostWithHttpMessagesAsync(string uid, string rid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IdentityUserRoleString>> ApiUsersByIdRolesByRidPostWithHttpMessagesAsync(string id, string rid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='uid'>
+        /// <param name='id'>
         /// </param>
         /// <param name='rid'>
         /// </param>
@@ -150,7 +158,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse> ApiUsersByUidRolesByRidDeleteWithHttpMessagesAsync(string uid, string rid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse> ApiUsersByIdRolesByRidDeleteWithHttpMessagesAsync(string id, string rid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -476,20 +484,8 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IList<GruntTask>>> ApiGruntTasksGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IList<GruntTask>>> ApiGrunttasksGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='id'>
-        /// </param>
-        /// <param name='customHeaders'>
-        /// The headers that will be added to request.
-        /// </param>
-        /// <param name='cancellationToken'>
-        /// The cancellation token.
-        /// </param>
-        Task<HttpOperationResponse<GruntTask>> ApiGruntTasksByIdGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
-
-        /// <param name='id'>
-        /// </param>
         /// <param name='task'>
         /// </param>
         /// <param name='customHeaders'>
@@ -498,10 +494,8 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<GruntTask>> ApiGruntTasksByIdPutWithHttpMessagesAsync(int id, GruntTask task = default(GruntTask), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<GruntTask>> ApiGrunttasksPutWithHttpMessagesAsync(GruntTask task = default(GruntTask), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='id'>
-        /// </param>
         /// <param name='task'>
         /// </param>
         /// <param name='customHeaders'>
@@ -510,7 +504,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<GruntTask>> ApiGruntTasksByIdPostWithHttpMessagesAsync(int id, GruntTask task = default(GruntTask), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<GruntTask>> ApiGrunttasksPostWithHttpMessagesAsync(GruntTask task = default(GruntTask), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
@@ -520,7 +514,17 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse> ApiGruntTasksByIdDeleteWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<GruntTask>> ApiGrunttasksByIdGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <param name='id'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse> ApiGrunttasksByIdDeleteWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='taskname'>
         /// </param>
@@ -530,7 +534,7 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<GruntTask>> ApiGruntTasksByTasknameGetWithHttpMessagesAsync(string taskname, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<GruntTask>> ApiGrunttasksByTasknameGetWithHttpMessagesAsync(string taskname, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='customHeaders'>
         /// The headers that will be added to request.

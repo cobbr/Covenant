@@ -7,6 +7,8 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class Grunt
@@ -31,13 +33,13 @@ namespace Covenant.API.Models
         /// 'Disconnected'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(int? id = default(int?), string name = default(string), string originalServerGuid = default(string), string guid = default(string), string childGrunts = default(string), CommunicationType? commType = default(CommunicationType?), string smbPipeName = default(string), int? listenerId = default(int?), string covenantIPAddress = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), GruntStatus? status = default(GruntStatus?), IntegrityLevel? integrity = default(IntegrityLevel?), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?))
+        public Grunt(int? id = default(int?), string name = default(string), string originalServerGuid = default(string), string guid = default(string), IList<string> children = default(IList<string>), CommunicationType? commType = default(CommunicationType?), string smbPipeName = default(string), int? listenerId = default(int?), string covenantIPAddress = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), GruntStatus? status = default(GruntStatus?), IntegrityLevel? integrity = default(IntegrityLevel?), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?))
         {
             Id = id;
             Name = name;
             OriginalServerGuid = originalServerGuid;
             Guid = guid;
-            ChildGrunts = childGrunts;
+            Children = children;
             CommType = commType;
             SmbPipeName = smbPipeName;
             ListenerId = listenerId;
@@ -91,8 +93,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "childGrunts")]
-        public string ChildGrunts { get; set; }
+        [JsonProperty(PropertyName = "children")]
+        public IList<string> Children { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'HTTP', 'SMB'
