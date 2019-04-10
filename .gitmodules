@@ -10,9 +10,6 @@
 [submodule "Covenant/Data/Tasks/src/SharpUp"]
 	path = Covenant/Data/Tasks/src/SharpUp
 	url = https://github.com/GhostPack/SharpUp
-[submodule "Covenant/Data/Tasks/src/SafetyKatz"]
-	path = Covenant/Data/Tasks/src/SafetyKatz
-	url = https://github.com/GhostPack/SafetyKatz
 [submodule "Covenant/Data/Tasks/src/Seatbelt"]
 	path = Covenant/Data/Tasks/src/Seatbelt
 	url = https://github.com/GhostPack/Seatbelt
