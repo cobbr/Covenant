@@ -33,7 +33,7 @@ namespace Covenant.API.Models
         /// 'Disconnected'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(int? id = default(int?), string name = default(string), string originalServerGuid = default(string), string guid = default(string), IList<string> children = default(IList<string>), CommunicationType? commType = default(CommunicationType?), string smbPipeName = default(string), int? listenerId = default(int?), string covenantIPAddress = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), GruntStatus? status = default(GruntStatus?), IntegrityLevel? integrity = default(IntegrityLevel?), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?))
+        public Grunt(int? id = default(int?), string name = default(string), string originalServerGuid = default(string), string guid = default(string), IList<string> children = default(IList<string>), CommunicationType? commType = default(CommunicationType?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? listenerId = default(int?), string covenantIPAddress = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), GruntStatus? status = default(GruntStatus?), IntegrityLevel? integrity = default(IntegrityLevel?), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?))
         {
             Id = id;
             Name = name;
@@ -41,12 +41,15 @@ namespace Covenant.API.Models
             Guid = guid;
             Children = children;
             CommType = commType;
+            ValidateCert = validateCert;
+            UseCertPinning = useCertPinning;
             SmbPipeName = smbPipeName;
             ListenerId = listenerId;
             CovenantIPAddress = covenantIPAddress;
             Delay = delay;
-            Jitter = jitter;
+            JitterPercent = jitterPercent;
             ConnectAttempts = connectAttempts;
+            KillDate = killDate;
             DotNetFrameworkVersion = dotNetFrameworkVersion;
             Status = status;
             Integrity = integrity;
@@ -104,6 +107,16 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "validateCert")]
+        public bool? ValidateCert { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "useCertPinning")]
+        public bool? UseCertPinning { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "smbPipeName")]
         public string SmbPipeName { get; set; }
 
@@ -124,13 +137,18 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "jitter")]
-        public int? Jitter { get; set; }
+        [JsonProperty(PropertyName = "jitterPercent")]
+        public int? JitterPercent { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "connectAttempts")]
         public int? ConnectAttempts { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "killDate")]
+        public System.DateTime? KillDate { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'Net40', 'Net35', 'NetCore21'

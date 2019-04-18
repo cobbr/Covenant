@@ -9,22 +9,26 @@ public static class Task
 {
     public static string Execute(string Identities = "")
     {
-        List<Domain.DomainObject> domainComputers = new List<Domain.DomainObject>();
-        if (Identities.Trim() != "")
+        try
         {
-            List<string> identityList = Identities.Split(',').ToList();
-            domainComputers = new Domain.DomainSearcher().GetDomainComputers(identityList);
+            List<Domain.DomainObject> domainComputers = new List<Domain.DomainObject>();
+            if (Identities.Trim() != "")
+            {
+                List<string> identityList = Identities.Split(',').ToList();
+                domainComputers = new Domain.DomainSearcher().GetDomainComputers(identityList);
+            }
+            else
+            {
+                domainComputers = new Domain.DomainSearcher().GetDomainComputers();
+            }
+            StringBuilder results = new StringBuilder();
+            foreach (Domain.DomainObject domainComputer in domainComputers)
+            {
+                results.Append(domainComputer.ToString());
+                results.AppendLine("------");
+            }
+            return results.ToString();
         }
-        else
-        {
-            domainComputers = new Domain.DomainSearcher().GetDomainComputers();
-        }
-        StringBuilder results = new StringBuilder();
-        foreach (Domain.DomainObject domainComputer in domainComputers)
-        {
-            results.Append(domainComputer.ToString());
-            results.AppendLine("------");
-        }
-        return results.ToString();
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

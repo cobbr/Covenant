@@ -456,6 +456,16 @@ namespace Covenant.API
         /// </param>
         Task<HttpOperationResponse> ApiGruntsByIdDeleteWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <param name='name'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<Grunt>> ApiGruntsByNameGetWithHttpMessagesAsync(string name, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
         /// <param name='guid'>
         /// </param>
         /// <param name='customHeaders'>
@@ -542,7 +552,15 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<IList<GruntTasking>>> ApiGrunttaskingsGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IList<GruntTasking>>> ApiTaskingsGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<IList<GruntTasking>>> ApiTaskingsDetailGetWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
@@ -565,6 +583,16 @@ namespace Covenant.API
         /// The cancellation token.
         /// </param>
         Task<HttpOperationResponse<GruntTasking>> ApiGruntsByIdTaskingsPostWithHttpMessagesAsync(int id, GruntTasking gruntTasking = default(GruntTasking), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <param name='id'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<IList<GruntTasking>>> ApiGruntsByIdTaskingsDetailGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
@@ -598,7 +626,7 @@ namespace Covenant.API
 
         /// <param name='id'>
         /// </param>
-        /// <param name='taskname'>
+        /// <param name='tid'>
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -606,11 +634,11 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<GruntTasking>> ApiGruntsByIdTaskingsByTasknameGetWithHttpMessagesAsync(int id, string taskname, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<GruntTasking>> ApiGruntsByIdTaskingsByTidGetWithHttpMessagesAsync(int id, int tid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
-        /// <param name='taskname'>
+        /// <param name='tid'>
         /// </param>
         /// <param name='gruntTasking'>
         /// </param>
@@ -620,11 +648,11 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<GruntTasking>> ApiGruntsByIdTaskingsByTasknamePutWithHttpMessagesAsync(int id, string taskname, GruntTasking gruntTasking = default(GruntTasking), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<GruntTasking>> ApiGruntsByIdTaskingsByTidPutWithHttpMessagesAsync(int id, int tid, GruntTasking gruntTasking = default(GruntTasking), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='id'>
         /// </param>
-        /// <param name='taskname'>
+        /// <param name='tid'>
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -632,7 +660,19 @@ namespace Covenant.API
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse> ApiGruntsByIdTaskingsByTasknameDeleteWithHttpMessagesAsync(int id, string taskname, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse> ApiGruntsByIdTaskingsByTidDeleteWithHttpMessagesAsync(int id, int tid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <param name='id'>
+        /// </param>
+        /// <param name='tid'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<GruntTasking>> ApiGruntsByIdTaskingsByTidDetailGetWithHttpMessagesAsync(int id, int tid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='customHeaders'>
         /// The headers that will be added to request.

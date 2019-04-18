@@ -24,16 +24,18 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), bool? tokenTask = default(bool?), string code = default(string), IList<string> referenceAssemblies = default(IList<string>), IList<string> referenceSourceLibraries = default(IList<string>), IList<string> embeddedResources = default(IList<string>), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
+        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), string help = default(string), bool? tokenTask = default(bool?), string code = default(string), IList<string> referenceAssemblies = default(IList<string>), IList<string> referenceSourceLibraries = default(IList<string>), IList<string> embeddedResources = default(IList<string>), bool? unsafeCompile = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
             Description = description;
+            Help = help;
             TokenTask = tokenTask;
             Code = code;
             ReferenceAssemblies = referenceAssemblies;
             ReferenceSourceLibraries = referenceSourceLibraries;
             EmbeddedResources = embeddedResources;
+            UnsafeCompile = unsafeCompile;
             Options = options;
             CustomInit();
         }
@@ -60,6 +62,11 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "help")]
+        public string Help { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "tokenTask")]
         public bool? TokenTask { get; set; }
 
@@ -82,6 +89,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "embeddedResources")]
         public IList<string> EmbeddedResources { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "unsafeCompile")]
+        public bool? UnsafeCompile { get; set; }
 
         /// <summary>
         /// </summary>

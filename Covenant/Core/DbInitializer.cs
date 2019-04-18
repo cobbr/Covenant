@@ -233,7 +233,7 @@ namespace Covenant.Core
 						{
 							new GruntTask.GruntTaskOption
 							{
-								Name = "AppendDirectory",
+								Name = "Directory",
 								Description = "Directory to change to.",
 								Value = "."
 							}
@@ -380,17 +380,16 @@ namespace Covenant.Core
                             }
                         }
                     },
-                    // new GruntTask
-                    // {
-                    //     Name = "SafetyKatz",
-                    //     Description = "Use SafetyKatz.",
-                    //     ReferenceAssemblies = new List<string>(),
-                    //     ReferenceSourceLibraries = new List<string> { "SafetyKatz" },
-                    //     EmbeddedResources = new List<string>(),
-                    //     UnsafeCompile = true,
-                    //     Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SafetyKatz" + ".task")),
-                    //     Options = new List<GruntTask.GruntTaskOption>()
-                    // },
+                    new GruntTask
+                    {
+                        Name = "SafetyKatz",
+                        Description = "Use SafetyKatz.",
+                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
+                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
+                        EmbeddedResources = new List<string> { "SharpSploit.Resources.powerkatz_x64.dll" },
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SafetyKatz" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>()
+                    },
                     new GruntTask
                     {
                         Name = "SharpDPAPI",
@@ -449,7 +448,7 @@ namespace Covenant.Core
                     {
                         Name = "Seatbelt",
                         Description = "Use a Seatbelt command.",
-                        ReferenceAssemblies = new List<string>(),
+                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.Management.dll", "System.ServiceProcess.dll", "System.XML.dll", "System.Web.Extensions.dll" },
                         ReferenceSourceLibraries = new List<string> { "Seatbelt" },
                         EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Seatbelt" + ".task")),
@@ -890,12 +889,12 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
-                        Name = "RegistryRead",
-                        Description = "Reads a value stored in registry.",
+                        Name = "GetRegistryKey",
+                        Description = "Gets a value stored in registry.",
                         ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
                         ReferenceSourceLibraries = new List<string> { "SharpSploit" },
                         EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "RegistryRead" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetRegistryKey" + ".task")),
                         Options = new List<GruntTask.GruntTaskOption>
                         {
                             new GruntTask.GruntTaskOption
@@ -908,14 +907,68 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
-                        Name = "RegistryWrite",
-                        Description = "Writes a value into the registry.",
+                        Name = "SetRegistryKey",
+                        Description = "Sets a value into the registry.",
                         ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
                         ReferenceSourceLibraries = new List<string> { "SharpSploit" },
                         EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "RegistryWrite" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SetRegistryKey" + ".task")),
                         Options = new List<GruntTask.GruntTaskOption>
                         {
+                            new GruntTask.GruntTaskOption
+                            {
+                                Name = "RegPath",
+                                Description = "The full path to the registry value to be read.",
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path"
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                Name = "Value",
+                                Description = "The value to write to the registry key.",
+                                Value = ""
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "GetRemoteRegistryKey",
+                        Description = "Gets a value stored in registry on a remote system.",
+                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
+                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
+                        EmbeddedResources = new List<string>(),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetRemoteRegistryKey" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                Name = "Hostname",
+                                Description = "The Hostname of the remote system to query.",
+                                Value = ""
+                            },
+                            new GruntTask.GruntTaskOption
+                            {
+                                Name = "RegPath",
+                                Description = "The full path to the registry value to be read.",
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path"
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "SetRemoteRegistryKey",
+                        Description = "Sets a value into the registry on a remote system.",
+                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
+                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
+                        EmbeddedResources = new List<string>(),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SetRemoteRegistryKey" + ".task")),
+                        Options = new List<GruntTask.GruntTaskOption>
+                        {
+                            new GruntTask.GruntTaskOption
+                            {
+                                Name = "Hostname",
+                                Description = "The Hostname of the remote system to write to.",
+                                Value = ""
+                            },
                             new GruntTask.GruntTaskOption
                             {
                                 Name = "RegPath",

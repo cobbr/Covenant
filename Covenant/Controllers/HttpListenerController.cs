@@ -40,7 +40,7 @@ namespace Covenant.Controllers
             get
             {
                 // TODO: This will be a problem given more than one listener
-                return _context.listener.FirstOrDefault();
+                return _context.Listener.FirstOrDefault();
             }
         }
 
@@ -142,7 +142,7 @@ namespace Covenant.Controllers
                     }
                 }
                 gruntTasking.Status = GruntTaskingStatus.Tasked;
-                this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
+                this.CovenantClient.ApiGruntsByIdTaskingsByTidPut(gruntTasking.GruntId ?? default, gruntTasking.Id ?? default, gruntTasking);
 
                 API.Models.Grunt targetGruntModel = this.CovenantClient.ApiGruntsByIdGet(gruntTasking.GruntId ?? default);
                 Models.Grunts.GruntEncryptedMessage message = null;
@@ -150,12 +150,11 @@ namespace Covenant.Controllers
                 {
                     message = this.CreateMessageForGrunt(gruntModel, targetGruntModel, gruntTasking.GruntTaskingMessage);
                 }
-                catch (HttpOperationException e)
+                catch (HttpOperationException)
                 {
-                    Console.Error.WriteLine("Error Creating Grunt Message: " + e.Message + Environment.NewLine + e.StackTrace);
                     // Change to new Status: Aborted?
                     gruntTasking.Status = GruntTaskingStatus.Completed;
-                    this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
+                    this.CovenantClient.ApiGruntsByIdTaskingsByTidPut(gruntTasking.GruntId ?? default, gruntTasking.Id ?? default, gruntTasking);
                     return NotFound();
                 }
                 // Transform response
@@ -164,9 +163,8 @@ namespace Covenant.Controllers
                 string response = String.Format(this.Profile.HttpPostResponse, transformed);
                 return Ok(response);
             }
-            catch (HttpOperationException e)
+            catch (HttpOperationException)
             {
-                Console.Error.WriteLine("Error Handling Get: " + e.Message + Environment.NewLine + e.StackTrace);
                 return NotFound();
             }
         }
@@ -247,7 +245,7 @@ namespace Covenant.Controllers
                 // Invalid task response. This happens on post-register write
                 return NotFound();
             }
-            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsByTasknameGet(targetGrunt.Id ?? default, TaskName);
+            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsGet(targetGrunt.Id ?? default).FirstOrDefault(T => T.Name == TaskName);
             if (gruntTasking == null || targetGrunt.Id != gruntTasking.GruntId)
             {
 				// Invalid taskname. May not be legitimate Grunt request, respond NotFound
@@ -268,7 +266,7 @@ namespace Covenant.Controllers
             string taskOutput = Common.CovenantEncoding.GetString(realGrunt.SessionDecrypt(outputMessage));
             gruntTasking.GruntTaskOutput = taskOutput;
             gruntTasking.Status = GruntTaskingStatus.Completed;
-            this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(gruntTasking.GruntId ?? default, gruntTasking.Name, gruntTasking);
+            this.CovenantClient.ApiGruntsByIdTaskingsByTidPut(gruntTasking.GruntId ?? default, gruntTasking.Id ?? default, gruntTasking);
             targetGrunt = this.CovenantClient.ApiGruntsByIdGet(targetGrunt.Id ?? default);
             targetGrunt.LastCheckIn = DateTime.UtcNow;
             this.CovenantClient.ApiGruntsPut(targetGrunt);
@@ -300,7 +298,7 @@ namespace Covenant.Controllers
                     GruntSharedSecretPassword = targetGrunt.GruntSharedSecretPassword,
                     CommType = targetGrunt.CommType,
                     SmbPipeName = targetGrunt.SmbPipeName,
-                    Delay = targetGrunt.Delay, Jitter = targetGrunt.Jitter,
+                    Delay = targetGrunt.Delay, JitterPercent = targetGrunt.JitterPercent, KillDate = targetGrunt.KillDate,
                     ConnectAttempts = targetGrunt.ConnectAttempts,
                     DotNetFrameworkVersion = targetGrunt.DotNetFrameworkVersion,
                     LastCheckIn = DateTime.UtcNow
@@ -335,7 +333,7 @@ namespace Covenant.Controllers
             if (egressGruntExists)
             {
                 // Add this as Child grunt to Grunt that connects it
-                List<GruntTasking> taskings = this.CovenantClient.ApiGrunttaskingsGet().ToList();
+                List<GruntTasking> taskings = this.CovenantClient.ApiTaskingsGet().ToList();
                 // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
                 GruntTasking connectTasking = taskings.Where(GT => GT.Type == GruntTaskingType.Connect && GT.Status == GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
                 if (connectTasking == null)
@@ -345,7 +343,7 @@ namespace Covenant.Controllers
                 realTargetGrunt.Hostname = connectTasking.GruntTaskingMessage.Message.Split(",")[0];
                 this.CovenantClient.ApiGruntsPut(realTargetGrunt.ToModel());
                 connectTasking.Status = GruntTaskingStatus.Completed;
-                this.CovenantClient.ApiGruntsByIdTaskingsByTasknamePut(connectTasking.GruntId ?? default, connectTasking.Name, connectTasking);
+                this.CovenantClient.ApiGruntsByIdTaskingsByTidPut(connectTasking.GruntId ?? default, connectTasking.Id ?? default, connectTasking);
             }
 
             byte[] rsaEncryptedBytes = realTargetGrunt.RSAEncrypt(Convert.FromBase64String(realTargetGrunt.GruntNegotiatedSessionKey));
@@ -354,9 +352,8 @@ namespace Covenant.Controllers
             {
                 message = this.CreateMessageForGrunt(egressGrunt, realTargetGrunt.ToModel(), rsaEncryptedBytes);
             }
-            catch (HttpOperationException e)
+            catch (HttpOperationException)
             {
-                Console.Error.WriteLine("Error Creating Grunt Message: " + e.Message + Environment.NewLine + e.StackTrace);
                 return NotFound();
             }
             // Transform response
@@ -396,9 +393,8 @@ namespace Covenant.Controllers
             {
                 message = this.CreateMessageForGrunt(egressGrunt, targetGrunt, challenge1.Concat(challenge2).ToArray());
             }
-            catch (HttpOperationException e)
+            catch (HttpOperationException)
             {
-                Console.Error.WriteLine("Error Creating Grunt Message: " + e.Message + Environment.NewLine + e.StackTrace);
                 return NotFound();
             }
 
@@ -441,9 +437,8 @@ namespace Covenant.Controllers
             {
                 message = this.CreateMessageForGrunt(egressGrunt, targetGrunt, Convert.FromBase64String(GruntExecutorAssembly));
             }
-            catch (HttpOperationException e)
+            catch (HttpOperationException)
             {
-                Console.Error.WriteLine("Error Creating Grunt Message: " + e.Message + Environment.NewLine + e.StackTrace);
                 return NotFound();
             }
 
@@ -496,9 +491,8 @@ namespace Covenant.Controllers
             {
                 responseMessage = this.CreateMessageForGrunt(egressGrunt, targetGrunt, tasking);
             }
-            catch (HttpOperationException e)
+            catch (HttpOperationException)
             {
-                Console.Error.WriteLine("Error Creating Grunt Message: " + e.Message + Environment.NewLine + e.StackTrace);
                 return NotFound();
             }
 

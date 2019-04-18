@@ -5,6 +5,10 @@ public static class Task
 {
     public static string Execute()
     {
-        return WindowsIdentity.GetCurrent().Name;
+        try
+        {
+            return WindowsIdentity.GetCurrent().Name;
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

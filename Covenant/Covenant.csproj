@@ -78,6 +78,7 @@
 
   <ItemGroup>
     <Content Remove="API\openapi4.json" />
+    <Content Remove="API\openapi5.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">

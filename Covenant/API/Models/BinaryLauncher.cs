@@ -29,20 +29,23 @@ namespace Covenant.API.Models
         /// 'InstallUtil'</param>
         /// <param name="commType">Possible values include: 'HTTP',
         /// 'SMB'</param>
-        public BinaryLauncher(int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), string launcherString = default(string), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), CommunicationType? commType = default(CommunicationType?), string smbPipeName = default(string), int? delay = default(int?), int? jitter = default(int?), int? connectAttempts = default(int?), string stagerCode = default(string), string base64ILByteString = default(string))
+        public BinaryLauncher(int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), CommunicationType? commType = default(CommunicationType?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string))
         {
             Id = id;
             ListenerId = listenerId;
             DotNetFrameworkVersion = dotNetFrameworkVersion;
-            LauncherString = launcherString;
             Type = type;
             Name = name;
             Description = description;
             CommType = commType;
+            ValidateCert = validateCert;
+            UseCertPinning = useCertPinning;
             SmbPipeName = smbPipeName;
             Delay = delay;
-            Jitter = jitter;
+            JitterPercent = jitterPercent;
             ConnectAttempts = connectAttempts;
+            KillDate = killDate;
+            LauncherString = launcherString;
             StagerCode = stagerCode;
             Base64ILByteString = base64ILByteString;
             CustomInit();
@@ -70,11 +73,6 @@ namespace Covenant.API.Models
         public DotNetVersion? DotNetFrameworkVersion { get; set; }
 
         /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "launcherString")]
-        public string LauncherString { get; set; }
-
-        /// <summary>
         /// Gets or sets possible values include: 'Wmic', 'Regsvr32', 'Mshta',
         /// 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil'
@@ -100,6 +98,16 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "validateCert")]
+        public bool? ValidateCert { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "useCertPinning")]
+        public bool? UseCertPinning { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "smbPipeName")]
         public string SmbPipeName { get; set; }
 
@@ -110,13 +118,23 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "jitter")]
-        public int? Jitter { get; set; }
+        [JsonProperty(PropertyName = "jitterPercent")]
+        public int? JitterPercent { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "connectAttempts")]
         public int? ConnectAttempts { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "killDate")]
+        public System.DateTime? KillDate { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "launcherString")]
+        public string LauncherString { get; set; }
 
         /// <summary>
         /// </summary>

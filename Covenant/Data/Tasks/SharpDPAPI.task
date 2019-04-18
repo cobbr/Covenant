@@ -7,16 +7,17 @@ public static class Task
 {
     public static string Execute(string Command)
     {
-        TextWriter realStdOut = Console.Out;
-        TextWriter realStdErr = Console.Error;
-        TextWriter stdOutWriter = new StringWriter();
-        TextWriter stdErrWriter = new StringWriter();
-        Console.SetOut(stdOutWriter);
-        Console.SetError(stdErrWriter);
-        
-        string[] args = Command.Split(' ');
+        string output = "";
         try
         {
+            TextWriter realStdOut = Console.Out;
+            TextWriter realStdErr = Console.Error;
+            TextWriter stdOutWriter = new StringWriter();
+            TextWriter stdErrWriter = new StringWriter();
+            Console.SetOut(stdOutWriter);
+            Console.SetError(stdErrWriter);
+            
+            string[] args = Command.Split(' ');
             Info.Logo();
 
             // try to parse the command line arguments, show usage on failure and then bail
@@ -35,22 +36,16 @@ public static class Task
                 if (commandFound == false)
                     Info.ShowUsage();
             }
+            
+            Console.Out.Flush();
+            Console.Error.Flush();
+            Console.SetOut(realStdOut);
+            Console.SetError(realStdErr);
+            
+            output += stdOutWriter.ToString();
+            output += stdErrWriter.ToString();
         }
-        catch (Exception e)
-        {
-            Console.WriteLine("\r\n[!] Unhandled SharpDPAPI exception:\r\n");
-            Console.WriteLine(e);
-        }
-
-        
-        Console.Out.Flush();
-        Console.Error.Flush();
-        Console.SetOut(realStdOut);
-        Console.SetError(realStdErr);
-        
-        string output = stdOutWriter.ToString();
-        output += stdErrWriter.ToString();
-        
+        catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         return output;
     }
 }

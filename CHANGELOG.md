@@ -17,15 +17,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added sharpup task
 - Added sharpdump task
 - Added sharpwmi task
+- Added safetykatz task
+- Added Seatbelt task
+- Added remote registry tasks
+- Added KillDate to launchers and grunts
 
 ### Changed
 - Moved Eventing from Listeners/Elite to Covenant Controllers
 - AdminPassword no longer encrypts certificate file, can be changed
 - TaskMenu now displays full task description, detailed parameter info
+- Updated SharpSploit code
+- Tasks now catch Exceptions, return better error messages
 
 ### Fixed
 - Fixed RegistryWrite Task
 - Fixed Create user error message
+- Fixed ssl certificate password error, no longer need to use CovenantDev
 
 ## [v0.1.3] - 2019-03-14
 ### Added

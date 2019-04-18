@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 using Seatbelt;
 
@@ -7,130 +8,28 @@ public static class Task
 {
     public static string Execute(string Command)
     {
-        TextWriter realStdOut = Console.Out;
-        TextWriter realStdErr = Console.Error;
-        TextWriter stdOutWriter = new StringWriter();
-        TextWriter stdErrWriter = new StringWriter();
-        Console.SetOut(stdOutWriter);
-        Console.SetError(stdErrWriter);
-        
-        string[] args = Command.Split(' ');
-        
-        PrintLogo();
-
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-
-        if (args.Length != 0)
+        string output = "";
+        try
         {
-            foreach (string arg in args)
-            {
-                if (string.Equals(arg, "full", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    FilterResults.filter = false;
-                }
-            }
-
-            foreach (string arg in args)
-            {
-                if (string.Equals(arg, "full", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    FilterResults.filter = false;
-                    if (args.Length == 1)
-                    {
-                        // if "full" is the only argument, run System and User triage
-                        SystemChecks();
-                        ListKerberosTickets();
-                        UserChecks();
-                        ListIETabs();
-                        ListPatches();
-                        ListRecycleBin();
-
-                        watch.Stop();
-                        Console.WriteLine("\r\n\r\n[*] Completed All Safety Checks with no filtering in {0} seconds\r\n", (watch.ElapsedMilliseconds / 1000));
-                        return;
-                    }
-                }
-                if (string.Equals(arg, "all", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    SystemChecks();
-                    ListKerberosTickets();
-                    UserChecks();
-                    ListIETabs();
-                    ListPatches();
-                    TriageChrome();
-                    TriageFirefox();
-                    ListRecycleBin();
-                    ListInterestingFiles();
-
-                    watch.Stop();
-                    Console.WriteLine("\r\n\r\n[*] Completed All Safety Checks in {0} seconds\r\n", (watch.ElapsedMilliseconds / 1000));
-                    return;
-                }
-            }
-
-            foreach (string arg in args)
-            {
-                if (string.Equals(arg, "full", StringComparison.CurrentCultureIgnoreCase)) { }
-                else if (string.Equals(arg, "system", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    SystemChecks();
-                }
-                else if (string.Equals(arg, "user", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    UserChecks();
-                }
-                else
-                {
-                    Type type = typeof(Program);
-
-                    MethodInfo info = null;
-
-                    // try to grab the function name via reflection
-                    if (Regex.IsMatch(arg, @"^Triage.*"))
-                    {
-                        // if TriageX(), all good
-                        info = type.GetMethod(arg);
-                    }
-                    else if (Regex.IsMatch(arg, @"^Dump.*"))
-                    {
-                        // if DumpX, all good
-                        info = type.GetMethod(arg);
-                    }
-                    else
-                    {
-                        // build List<name>()
-                        info = type.GetMethod(String.Format("List{0}", arg));
-                    }
-
-                    if (info == null)
-                    {
-                        Console.WriteLine("[X] Check \"{0}\" not found!", arg);
-                    }
-                    else
-                    {
-                        info.Invoke(null, new object[] { });
-                    }
-                }
-            }
+            TextWriter realStdOut = Console.Out;
+            TextWriter realStdErr = Console.Error;
+            TextWriter stdOutWriter = new StringWriter();
+            TextWriter stdErrWriter = new StringWriter();
+            Console.SetOut(stdOutWriter);
+            Console.SetError(stdErrWriter);
+            
+            string[] args = Command.Split(' ');
+            typeof(Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
+            
+            Console.Out.Flush();
+            Console.Error.Flush();
+            Console.SetOut(realStdOut);
+            Console.SetError(realStdErr);
+            
+            output += stdOutWriter.ToString();
+            output += stdErrWriter.ToString();
         }
-        else
-        {
-            Usage();
-            return;
-        }
-
-        watch.Stop();
-        Console.WriteLine("\r\n\r\n[*] Completed Safety Checks in {0} seconds\r\n", (watch.ElapsedMilliseconds / 1000));
-        
-        
-        Console.Out.Flush();
-        Console.Error.Flush();
-        Console.SetOut(realStdOut);
-        Console.SetError(realStdErr);
-        
-        string output = stdOutWriter.ToString();
-        output += stdErrWriter.ToString();
-        
+        catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         return output;
     }
 }

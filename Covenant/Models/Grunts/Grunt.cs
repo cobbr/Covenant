@@ -51,6 +51,8 @@ namespace Covenant.Models.Grunts
         
         // Communication information
         public CommunicationType CommType { get; set; } = CommunicationType.HTTP;
+        public bool ValidateCert { get; set; } = true;
+        public bool UseCertPinning { get; set; } = true;
         public string SMBPipeName { get; set; } = "gruntsvc";
 
         // Information about the Listener
@@ -59,8 +61,9 @@ namespace Covenant.Models.Grunts
 
         // Settings that can be configured
         public int Delay { get; set; } = 5;
-        public int Jitter { get; set; } = 3;
-        public int ConnectAttempts { get; set; } = 1000;
+        public int JitterPercent { get; set; } = 10;
+        public int ConnectAttempts { get; set; } = 5000;
+        public DateTime KillDate { get; set; } = DateTime.MaxValue;
 
         // Attributes of the remote Grunt
         public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
@@ -99,8 +102,9 @@ namespace Covenant.Models.Grunts
                 CommType = (Grunt.CommunicationType)Enum.Parse(typeof(Grunt.CommunicationType), gruntModel.CommType.ToString()),
                 SMBPipeName = gruntModel.SmbPipeName,
                 Delay = gruntModel.Delay ?? default,
-                Jitter = gruntModel.Jitter ?? default,
+                JitterPercent = gruntModel.JitterPercent ?? default,
                 ConnectAttempts = gruntModel.ConnectAttempts ?? default,
+                KillDate = gruntModel.KillDate ?? default,
                 ActivationTime = gruntModel.ActivationTime ?? default,
                 LastCheckIn = gruntModel.LastCheckIn ?? default,
                 Status = (GruntStatus)Enum.Parse(typeof(GruntStatus), gruntModel.Status.ToString()),
@@ -134,8 +138,9 @@ namespace Covenant.Models.Grunts
                 CommType = (API.Models.CommunicationType)Enum.Parse(typeof(API.Models.CommunicationType), this.CommType.ToString()),
                 SmbPipeName = this.SMBPipeName,
                 Delay = this.Delay,
-                Jitter = this.Jitter,
+                JitterPercent = this.JitterPercent,
                 ConnectAttempts = this.ConnectAttempts,
+                KillDate = this.KillDate,
                 ActivationTime = this.ActivationTime,
                 LastCheckIn = this.LastCheckIn,
                 Status = (API.Models.GruntStatus)Enum.Parse(typeof(API.Models.GruntStatus), this.Status.ToString()),
