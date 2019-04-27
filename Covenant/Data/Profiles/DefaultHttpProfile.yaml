@@ -11,7 +11,17 @@ HttpUrls:
 HttpCookies:
     - ASPSESSIONID
     - SESSIONID
-HttpMessageTransform: 'public static class HttpMessageTransform { public static string Transform(byte[] bytes) { return System.Convert.ToBase64String(bytes); } public static byte[] Invert(string str) { return System.Convert.FromBase64String(str); } }'
+HttpMessageTransform: |
+    public static class HttpMessageTransform
+    {
+        public static string Transform(byte[] bytes)
+        {
+            return System.Convert.ToBase64String(bytes);
+        }
+        public static byte[] Invert(string str) {
+            return System.Convert.FromBase64String(str);
+        }
+    }
 HttpRequestHeaders:
     - Name: User-Agent
       Value: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36

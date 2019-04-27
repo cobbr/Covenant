@@ -30,11 +30,11 @@ namespace Covenant.Models.Launchers
 
         public int Id { get; set; }
         public int ListenerId { get; set; }
-        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
-        public LauncherType Type { get; set; }
-
         public string Name { get; set; } = "GenericLauncher";
         public string Description { get; set; } = "A generic launcher.";
+
+        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
+        public LauncherType Type { get; set; }
         
         public Grunt.CommunicationType CommType { get; set; } = Grunt.CommunicationType.HTTP;
         public bool ValidateCert { get; set; } = true;

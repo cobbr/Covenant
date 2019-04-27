@@ -1,0 +1,28 @@
+﻿@model IEnumerable<Covenant.API.Models.CovenantUser>
+@{
+    Layout = "_CovenantUserLayout";
+    ViewData["Title"] = "CovenantUsers";
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">CovenantUsers</h1>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.UserName)</th>
+                <th>Roles</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.UserName)</td>
+                <td>Roles</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>

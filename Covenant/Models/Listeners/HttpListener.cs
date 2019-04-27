@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -223,9 +224,9 @@ namespace Covenant.Models.Listeners
         {
             hostFileRequest.Path = hostFileRequest.Path.TrimStart('/').TrimStart('\\');
             string FullPath = Path.GetFullPath(Path.Combine(Common.CovenantStaticHostDirectory, hostFileRequest.Path));
-            if (!FullPath.StartsWith(Common.CovenantStaticHostDirectory)) { throw new CovenantDirectoryTraversalException(); }
+            if (!FullPath.StartsWith(Common.CovenantStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
             FileInfo file = new FileInfo(FullPath);
-            if(!file.Directory.Exists)
+            if (!file.Directory.Exists)
             {
                 file.Directory.Create();
             }
@@ -237,14 +238,13 @@ namespace Covenant.Models.Listeners
             Uri uri = new Uri(this.Url + "/" + uriPath);
             hostFileRequest.Path = uri.AbsolutePath;
             File.WriteAllBytes(file.FullName, Convert.FromBase64String(hostFileRequest.Content));
-
             return hostFileRequest;
         }
 
         public void UnhostFile(HostedFile hostFileRequest)
         {
             string FullPath = Path.GetFullPath(Path.Combine(Common.CovenantStaticHostDirectory, hostFileRequest.Path));
-            if (!FullPath.StartsWith(Common.CovenantStaticHostDirectory)) { throw new CovenantDirectoryTraversalException(); }
+            if (!FullPath.StartsWith(Common.CovenantStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
             FileInfo file = new FileInfo(FullPath);
             if(file.Exists)
             {
@@ -341,10 +341,12 @@ namespace Covenant.Models.Listeners
         {
             services.AddTransient<ICovenantAPI, CovenantAPI>(api => {
                 X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-                HttpClientHandler clientHandler = new HttpClientHandler();
-                clientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
+                HttpClientHandler clientHandler = new HttpClientHandler
                 {
-                    return cert.GetCertHashString() == covenantCert.GetCertHashString();
+                    ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
+                    {
+                        return cert.GetCertHashString() == covenantCert.GetCertHashString();
+                    }
                 };
                 return new CovenantAPI(
                     new Uri("https://localhost:7443"),
@@ -357,8 +359,17 @@ namespace Covenant.Models.Listeners
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
+                options.AddPolicy("RequireJwtBearer", policy =>
+                {
+                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireAuthenticatedUser();
+                });
+                options.AddPolicy("RequireJwtBearerRequireAdministratorRole", policy =>
+                {
+                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireRole("Administrator");
+                });
             });
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

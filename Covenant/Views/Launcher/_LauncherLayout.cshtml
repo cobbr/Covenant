@@ -1,0 +1,91 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Create @ViewBag.Launcher.Name Launcher</h1>
+</div>
+
+<p><b>Description</b>: @ViewBag.Launcher.Description</p>
+<form asp-action="@Model.Name">
+    <input type="hidden" name="Id" value="@ViewBag.Launcher.Id">
+    <input type="hidden" name="Type" value="@ViewBag.Launcher.Type">
+    <div class="form-group">
+        <label for="set-listener">Listener</label>
+        <select class="form-control" id="set-listener" name="ListenerId">
+            @foreach (var item in ViewBag.Listeners)
+            {
+                <option value="@item.Id">@item.Name</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="set-commtype">CommType</label>
+        <select class="form-control" id="set-commtype" name="CommType">
+            <option>HTTP</option>
+            <option>SMB</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="set-validate-cert">ValidateCert</label>
+            <select class="form-control" id="set-validate-cert" name="ValidateCert">
+                <option>True</option>
+                <option>False</option>
+            </select>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="set-use-cert-pinning">UseCertPinning</label>
+            <select class="form-control" id="set-use-cert-pinning" name="UseCertPinning">
+                <option>True</option>
+                <option>False</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="set-smb-pipe-name">SmbPipeName</label>
+        <input type="text" class="form-control" id="set-smb-pipe-name" name="SmbPipeName" placeholder="@ViewBag.Launcher.SmbPipeName">
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="set-delay">Delay</label>
+            <input type="text" class="form-control" id="set-delay" name="Delay" placeholder="@ViewBag.Launcher.Delay">
+        </div>
+        <div class="form-group col-md-6">
+            <label for="set-jitter-percent">JitterPercent</label>
+            <input type="text" class="form-control" id="set-jitter-percent" name="JitterPercent" placeholder="@ViewBag.Launcher.JitterPercent">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="set-connect-attempts">ConnectAttempts</label>
+            <input type="text" class="form-control" id="set-connect-attempts" name="ConnectAttempts" placeholder="@ViewBag.Launcher.ConnectAttempts">
+        </div>
+        <div class="form-group col-md-6">
+            <label for="set-kill-date">KillDate</label>
+            <input type="text" class="form-control" id="set-kill-date" name="KillDate" placeholder="@ViewBag.Launcher.KillDate">
+            <script type="text/javascript">setTimeout(function () {
+                    $('#set-kill-date').datetimepicker();
+                }, 1000);</script>
+        </div>
+    </div>
+    <div class="btn-group" role="group">
+        <button type="submit" class="btn btn-primary mr-5" id="generate">Generate</button>
+        <button type="button" class="btn btn-outline-primary ml-5" id="download">Download  <span data-feather="download"></span></button>
+    </div>
+</form>
+
+@RenderBody()
+
+@RenderSection("Scripts", required: false)
+@section Scripts {
+    <script src="~/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/dist/clipboard.min.js"></script>
+    <script type="text/javascript">
+        var clipboard = new ClipboardJS('.btn');
+        $(".nav-link").removeClass("active");
+        $("#nav-launchers").addClass("active");
+        $('#set-kill-date').datetimepicker();
+    </script>
+
+}

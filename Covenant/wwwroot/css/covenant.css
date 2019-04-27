@@ -1,0 +1,28 @@
+﻿.grunt-interact::-webkit-scrollbar {
+    width: 6px;
+    background-color: #343a40;
+}
+
+.grunt-interact::-webkit-scrollbar-track {
+    background-color: #343a40;
+}
+
+.grunt-interact::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #F5F5F5
+}
+
+.grunt-interact::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: white;
+    opacity: 0.8; /* Firefox */
+}
+
+.grunt-interact::-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: white;
+    opacity: 0.8;
+}
+
+.grunt-interact::-ms-input-placeholder { /* Microsoft Edge */
+    color: white;
+    opacity: 0.8;
+}

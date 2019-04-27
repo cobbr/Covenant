@@ -1,0 +1,49 @@
+﻿@model IEnumerable<Covenant.API.Models.Grunt>
+@{
+    Layout = "_GruntLayout";
+    ViewData["Title"] = "Grunts";
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Grunts</h1>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Name)</th>
+                <th>@Html.DisplayNameFor(model => model.CommType)</th>
+                <th>@Html.DisplayNameFor(model => model.Hostname)</th>
+                <th>@Html.DisplayNameFor(model => model.UserName)</th>
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
+                <th>@Html.DisplayNameFor(model => model.LastCheckIn)</th>
+                <th>@Html.DisplayNameFor(model => model.Integrity)</th>
+                <th>@Html.DisplayNameFor(model => model.OperatingSystem)</th>
+                <th>@Html.DisplayNameFor(model => model.Process)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                @if (item.Status != API.Models.GruntStatus.Uninitialized)
+                {
+                    <tr>
+                        <td>
+                            <a asp-action="interact" asp-route-id="@item.Id">
+                                @Html.DisplayFor(modelItem => item.Name)
+                            </a>
+                        </td>
+                        <td>@Html.DisplayFor(modelItem => item.CommType)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
+                        <td>@Html.DisplayFor(modelItem => item.UserName)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                        <td>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Integrity)</td>
+                        <td>@Html.DisplayFor(modelItem => item.OperatingSystem)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Process)</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

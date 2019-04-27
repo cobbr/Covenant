@@ -1,0 +1,58 @@
+﻿@model Covenant.API.Models.HttpListener
+@{
+    Layout = "_ListenerLayout";
+    ViewData["Title"] = "HTTP Listener";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Create @ViewBag.ListenerType.Name Listener</h1>
+</div>
+
+<form asp-action="Create">
+    <p>@Html.DisplayNameFor(model => model.Description): @Html.DisplayFor(model => model.Description)</p>
+    <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
+    <input type="hidden" name="@Html.DisplayNameFor(model => model.ListenerTypeId)" value="@Html.DisplayFor(model => model.ListenerTypeId)">
+    <input type="hidden" name="@Html.DisplayNameFor(model => model.Status)" value="Active">
+    <input type="hidden" name="@Html.DisplayNameFor(model => model.CovenantToken)" value="@Html.DisplayFor(model => model.CovenantToken)">
+    <div class="form-group">
+        <label for="set-name">@Html.DisplayNameFor(model => model.Name)</label>
+        <input type="text" class="form-control" id="set-name" name="@Html.DisplayNameFor(model => model.Name)" placeholder="@Html.DisplayFor(model => model.Name)">
+    </div>
+    <div class="form-group">
+        <label for="set-url">@Html.DisplayNameFor(model => model.Url)</label>
+        <input type="text" class="form-control" id="set-url" name="@Html.DisplayNameFor(model => model.Url)" placeholder="@Html.DisplayFor(model => model.Url)">
+    </div>
+    <div class="form-group">
+        <label for="set-connect-address">@Html.DisplayNameFor(model => model.ConnectAddress)</label>
+        <input type="text" class="form-control" id="set-connect-address" name="@Html.DisplayNameFor(model => model.ConnectAddress)" placeholder="@Html.DisplayFor(model => model.ConnectAddress)">
+    </div>
+    <div class="form-group">
+        <label for="set-bind-address">@Html.DisplayNameFor(model => model.BindAddress)</label>
+        <input type="text" class="form-control" id="set-bind-address" name="@Html.DisplayNameFor(model => model.BindAddress)" placeholder="@Html.DisplayFor(model => model.BindAddress)">
+    </div>
+    <div class="form-group">
+        <label for="set-bind-port">@Html.DisplayNameFor(model => model.BindPort)</label>
+        <input type="text" class="form-control" id="set-bind-port" name="@Html.DisplayNameFor(model => model.BindPort)" placeholder="@Html.DisplayFor(model => model.BindPort)">
+    </div>
+    <div class="form-group">
+        <label for="set-http-profile">HttpProfile</label>
+        <select class="form-control" id="set-http-profile" name="@Html.DisplayNameFor(model => model.ProfileId)">
+            @foreach (var item in ViewBag.Profiles)
+            {
+            <option>@item.Name</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="set-use-ssl">@Html.DisplayNameFor(model => model.UseSSL)</label>
+        <select class="form-control" id="set-use-ssl" name="@Html.DisplayNameFor(model => model.UseSSL)">
+            <option>False</option>
+            <option>True</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="set-ssl-cert-path">@Html.DisplayNameFor(model => model.SslCertificate)</label>
+        <input type="file" class="form-control-file" id="set-ssl-cert-path" name="@Html.DisplayNameFor(model => model.SslCertificate)" />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

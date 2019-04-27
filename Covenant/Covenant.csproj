@@ -53,12 +53,30 @@
 
   <ItemGroup>
     <None Include="Data\Grunt\*" />
+    <None Include="wwwroot\css\bootstrap-datetimepicker.css" />
+    <None Include="wwwroot\css\bootstrap-datetimepicker.min.css" />
+    <None Include="wwwroot\js\bootstrap-datetimepicker.min.js" />
+    <None Include="wwwroot\js\bootstrap-datetimepicker.js" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\" />
     <Folder Include="Data\Tasks\" />
     <Folder Include="Models\Indicators\" />
+    <Folder Include="Views\" />
+    <Folder Include="Views\Grunt\" />
+    <Folder Include="Views\Shared\" />
+    <Folder Include="Views\Indicator\" />
+    <Folder Include="Views\Launcher\" />
+    <Folder Include="Views\Listener\" />
+    <Folder Include="Views\Credential\" />
+    <Folder Include="Views\CovenantUser\" />
+    <Folder Include="Hubs\" />
+    <Folder Include="Controllers\ApiControllers\" />
+    <Folder Include="Controllers\ListenerControllers\" />
+    <Folder Include="Controllers\ViewControllers\" />
+    <Folder Include="Views\Login\" />
+    <Folder Include="Views\Home\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,6 +97,11 @@
   <ItemGroup>
     <Content Remove="API\openapi4.json" />
     <Content Remove="API\openapi5.json" />
+    <Content Remove="wwwroot\lib\signalr\dist\browser\signalr.js" />
+    <Content Remove="wwwroot\css\bootstrap-datetimepicker.css" />
+    <Content Remove="wwwroot\css\bootstrap-datetimepicker.min.css" />
+    <Content Remove="wwwroot\js\bootstrap-datetimepicker.min.js" />
+    <Content Remove="wwwroot\js\bootstrap-datetimepicker.js" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">

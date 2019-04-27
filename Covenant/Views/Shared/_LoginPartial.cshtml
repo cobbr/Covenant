@@ -1,0 +1,20 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<Covenant.Models.Covenant.CovenantUser> SignInManager
+
+<ul class="navbar-nav px-3">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item text-nowrap">
+            <a class="nav-link" asp-controller="CovenantUser" asp-action="Index">Welcome, @User.Identity.Name!</a>
+        </li>
+        <li class="nav-item text-nowrap">
+            <a class="nav-link" asp-controller="Login" asp-action="Logout">Logout</a>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item text-nowrap">
+            <a class="nav-link" asp-controller="Login" asp-action="Index">Login</a>
+        </li>
+    }
+</ul>

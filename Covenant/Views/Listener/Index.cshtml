@@ -1,0 +1,70 @@
+﻿@model IEnumerable<Covenant.API.Models.Listener>
+@{
+    Layout = "_ListenerLayout";
+    ViewData["Title"] = "Listeners";
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Listener Types</h1>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>ListenerName</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in ViewBag.ListenerTypes)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="http">
+                            @item.Name
+                        </a>
+                    </td>
+                    <td>@item.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Listeners</h1>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Name)</th>
+                <th>TypeName</th>
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
+                <th>@Html.DisplayNameFor(model => model.StartTime)</th>
+                <th>@Html.DisplayNameFor(model => model.BindAddress)</th>
+                <th>@Html.DisplayNameFor(model => model.BindPort)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model) {
+                @if (item.Status != API.Models.ListenerStatus.Uninitialized)
+                {
+            <tr>
+                <td>
+                    <a asp-action="interact" asp-route-id="@item.Id">
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </a>
+                </td>
+                <td>HTTP</td>
+                <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                <td>@Html.DisplayFor(modelItem => item.StartTime)</td>
+                <td>@Html.DisplayFor(modelItem => item.BindAddress)</td>
+                <td>@Html.DisplayFor(modelItem => item.BindPort)</td>
+            </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

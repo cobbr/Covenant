@@ -1,0 +1,35 @@
+﻿@model Covenant.API.Models.Grunt
+@{
+    Layout = "_GruntLayout";
+    ViewData["Title"] = "Grunts";
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3 border-bottom">
+    <h1 class="h2">Grunt: <span class="text-primary">@Html.DisplayFor(model => model.Name)</span></h1>
+</div>
+
+<div class="d-flex flex-column rounded-lg border border-primary bg-dark p-0 mb-3" style="height: 650px;">
+    <div id="interact-scroll" class="ml-2 mt-2 mr-2 mb-0 overflow-auto bg-dark grunt-interact" style="height: 600px;">
+        @foreach (var tasking in ViewBag.GruntTaskings)
+        {
+            <div class="m-0 p-0 w-100">
+                @if (tasking.Status == Covenant.API.Models.GruntTaskingStatus.Completed)
+                {
+                    <p class="text-primary p-0 m-0">[@tasking.CompletionTime] Grunt: @Html.DisplayFor(model => model.Name) GruntTasking: @tasking.Name</p>
+                    <p class="text-white p-0 m-0">(<b>@tasking.TaskingUser</b>) > @tasking.TaskingCommand</p>
+                    <p class="text-white p-0 m-0" style="white-space:pre-line">@tasking.GruntTaskOutput</p>
+                }
+            </div>
+        }
+        <br />
+    </div>
+    <div class="w-100 border border-primary p-0 m-0">
+        <input class="form-control form-control-dark bg-dark text-white grunt-interact" type="text" placeholder="Interact..." aria-label="Interact">
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        var interactScroll = document.getElementById('interact-scroll');
+        interactScroll.scrollTop = interactScroll.scrollHeight;
+    </script>
+}

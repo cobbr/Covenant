@@ -1,0 +1,13 @@
+﻿@{
+    Layout = "_Layout";
+}
+
+@RenderBody()
+
+@section Scripts {
+    <script type="text/javascript">
+        $(".nav-link").removeClass("active");
+        $("#nav-listeners").addClass("active");
+    </script>
+}
+@RenderSection("Scripts", required: false)

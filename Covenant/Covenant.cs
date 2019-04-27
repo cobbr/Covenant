@@ -102,6 +102,8 @@ namespace Covenant
                     var context = services.GetRequiredService<CovenantContext>();
                     var userManager = services.GetRequiredService<UserManager<CovenantUser>>();
                     var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
+                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                    var configuration = services.GetRequiredService<IConfiguration>();
                     context.Database.EnsureCreated();
                     if (context.Users.Any())
                     {
@@ -114,10 +116,26 @@ namespace Covenant
                             return -2;
                         }
                     }
-                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                    var configuration = services.GetRequiredService<IConfiguration>();
 					var cancellationTokens = services.GetRequiredService<Dictionary<int, CancellationTokenSource>>();
                     DbInitializer.Initialize(context, userManager, roleManager, configuration, cancellationTokens);
+
+                    // Append capital letter to appease Password complexity requirements, get rid of warning output
+                    string covenantUsername = Utilities.CreateSecureGuid().ToString();
+                    string covenantPassword = Utilities.CreateSecureGuid().ToString() + "A";
+                    CovenantUser covenantUser = new CovenantUser { UserName = covenantUsername };
+                    userManager.CreateAsync(covenantUser, covenantPassword).Wait();
+                    covenantUser = context.Users.FirstOrDefault(U => U.UserName == covenantUsername);
+                    userManager.AddToRoleAsync(covenantUser, "Listener").Wait();
+                    userManager.AddToRoleAsync(covenantUser, "User").Wait();
+                    List<string> userRoles = context.UserRoles.Where(UR => UR.UserId == covenantUser.Id).Select(UR => UR.RoleId).ToList();
+                    List<string> roles = context.Roles.Where(R => userRoles.Contains(R.Id)).Select(R => R.Name).ToList();
+
+                    var token = Utilities.GenerateJwtToken(
+                        covenantUser.UserName, covenantUser.Id, roles.ToArray(),
+                        configuration["JwtKey"], configuration["JwtIssuer"],
+                        configuration["JwtAudience"], configuration["JwtExpireDays"]
+                    );
+                    configuration["CovenantToken"] = token;
                 }
                 
                 LoggingConfiguration loggingConfig = new LoggingConfiguration();
