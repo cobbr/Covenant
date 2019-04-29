@@ -3,25 +3,24 @@
 // License: GNU GPLv3
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using System.Security.Cryptography;
-
-using Microsoft.Rest;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
-using Newtonsoft.Json;
-
 using Covenant.API;
 using Covenant.API.Models;
 using Covenant.Core;
-using Encrypt = Covenant.Core.Encryption;
 using Covenant.Models.Listeners;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Rest;
+using Newtonsoft.Json;
+using Encrypt = Covenant.Core.Encryption;
 
 namespace Covenant.Controllers
 {
+    [AllowAnonymous]
     public class HttpListenerController : Controller
     {
 		private readonly HttpListenerContext _context;
@@ -245,7 +244,7 @@ namespace Covenant.Controllers
                 // Invalid task response. This happens on post-register write
                 return NotFound();
             }
-            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsGet(targetGrunt.Id ?? default).FirstOrDefault(T => T.Name == TaskName);
+            GruntTasking gruntTasking = CovenantClient.ApiGruntsByIdTaskingsDetailGet(targetGrunt.Id ?? default).FirstOrDefault(T => T.Name == TaskName);
             if (gruntTasking == null || targetGrunt.Id != gruntTasking.GruntId)
             {
 				// Invalid taskname. May not be legitimate Grunt request, respond NotFound
@@ -340,6 +339,7 @@ namespace Covenant.Controllers
                 {
                     return NotFound();
                 }
+                connectTasking = this.CovenantClient.ApiGruntsByIdTaskingsByTidDetailGet(connectTasking.GruntId ?? default, connectTasking.Id ?? default);
                 realTargetGrunt.Hostname = connectTasking.GruntTaskingMessage.Message.Split(",")[0];
                 this.CovenantClient.ApiGruntsPut(realTargetGrunt.ToModel());
                 connectTasking.Status = GruntTaskingStatus.Completed;
