@@ -344,35 +344,26 @@ namespace Covenant.Controllers
         [HttpPut("grunts/{id}/taskings/{tid}", Name = "EditGruntTasking")]
         public ActionResult<GruntTasking> EditGruntTasking(int id, int tid, [FromBody] GruntTasking gruntTasking)
         {
-            Console.WriteLine("EditGruntTasking");
             Grunt grunt = _context.Grunts.FirstOrDefault(G => G.Id == id);
             if (grunt == null)
             {
-                Console.WriteLine($"NotFound - Grunt with id: {id}");
                 return NotFound($"NotFound - Grunt with id: {id}");
             }
-            Console.WriteLine("1");
             GruntTasking updatingGruntTasking = _context.GruntTaskings.FirstOrDefault(GT => grunt.Id == GT.GruntId && tid == GT.Id);
             if (updatingGruntTasking == null)
             {
-                Console.WriteLine($"NotFound - GruntTasking with id: {tid}");
                 return NotFound($"NotFound - GruntTasking with id: {tid}");
             }
-            Console.WriteLine("2");
             GruntTask gruntTask = _context.GruntTasks.FirstOrDefault(G => G.Id == gruntTasking.TaskId);
             if (gruntTask == null)
             {
-                Console.WriteLine($"NotFound - GruntTask with id: {gruntTasking.TaskId}");
                 return NotFound($"NotFound - GruntTask with id: {gruntTasking.TaskId}");
             }
-            Console.WriteLine("3");
             GruntTask DownloadTask = _context.GruntTasks.FirstOrDefault(GT => GT.Name == "Download");
             if (DownloadTask == null)
             {
-                Console.WriteLine($"NotFound - GruntTask DownloadTask");
                 return NotFound($"NotFound - GruntTask DownloadTask");
             }
-            Console.WriteLine("4");
             List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(gruntTasking.GruntTaskOutput);
             foreach (CapturedCredential cred in capturedCredentials)
             {
@@ -413,10 +404,8 @@ namespace Covenant.Controllers
                 }
                 else if (gruntTasking.Type == GruntTaskingType.Connect)
                 {
-                    Console.WriteLine("Connect Type");
                     if (originalStatus == GruntTaskingStatus.Tasked)
                     {
-                        Console.WriteLine("og tasked");
                         // Check if this Grunt was already connected
                         string hostname = gruntTasking.GruntTaskingMessage.Message.Split(",")[0];
                         string pipename = gruntTasking.GruntTaskingMessage.Message.Split(",")[1];
@@ -453,14 +442,12 @@ namespace Covenant.Controllers
                         }
                         else
                         {
-                            Console.WriteLine("change to progressed");
                             // If not already connected, the Grunt is going to stage, set status to Progressed
                             newStatus = GruntTaskingStatus.Progressed;
                         }
                     }
                     else if (originalStatus == GruntTaskingStatus.Progressed)
                     {
-                        Console.WriteLine("og progressed");
                         // Connecting Grunt has staged, add as Child
                         string hostname = gruntTasking.GruntTaskingMessage.Message.Split(",")[0];
                         string pipename = gruntTasking.GruntTaskingMessage.Message.Split(",")[1];
