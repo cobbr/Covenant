@@ -405,10 +405,7 @@ namespace GruntExecutor
                                 downstream.Identifier = message.GUID;
                             }
                         }
-                        lock (this._UpstreamLock)
-                        {
-                            this.UpstreamMessenger.Write(read);
-                        }
+                        this.UpstreamMessenger.Write(read);
                     }
                     catch (ThreadAbortException)
                     {
@@ -483,13 +480,10 @@ namespace GruntExecutor
         {
             this.Hostname = Hostname;
             this.PipeName = PipeName;
-            lock (this._WritePipeLock)
-            {
-                NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, this.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-                ClientPipe.Connect(Timeout);
-                ClientPipe.ReadMode = PipeTransmissionMode.Byte;
-                this.Pipe = ClientPipe;
-            }
+            NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, this.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            ClientPipe.Connect(Timeout);
+            ClientPipe.ReadMode = PipeTransmissionMode.Byte;
+            this.Pipe = ClientPipe;
         }
 
         public string Read()
