@@ -191,6 +191,7 @@ namespace Covenant.Controllers
                 string cookie = this.GetCookie();
                 API.Models.Grunt egressGrunt = this.CovenantClient.ApiGruntsGet().FirstOrDefault(G => G.CookieAuthKey == cookie);
                 API.Models.Grunt targetGrunt = null;
+
                 try
                 {
                     targetGrunt = this.CovenantClient.ApiGruntsGuidByGuidGet(message.GUID);
