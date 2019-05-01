@@ -27,184 +27,146 @@ namespace Covenant.Models.Covenant
         // Adapted from https://github.com/EmpireProject/Empire
         public static List<CapturedCredential> ParseCredentials(string input)
         {
-            List<string> regexes = new List<string> { "(?s)(?<=msv :).*?(?=tspkg :)", "(?s)(?<=tspkg :).*?(?=wdigest :)", "(?s)(?<=wdigest :).*?(?=kerberos :)", "(?s)(?<=kerberos :).*?(?=ssp :)", "(?s)(?<=ssp :).*?(?=credman :)", "(?s)(?<=credman :).*?(?=Authentication Id :)", "(?s)(?<=credman :).*?(?=mimikatz)" };
-
-            string hostDomain = "";
-            string domainSid = "";
-            string hostName = "";
-
-            List<string> lines = input.Split('\n').ToList();
-            foreach (string line in lines.Take(2))
-            {
-                if (line.StartsWith("Hostname:"))
-                {
-                    try
-                    {
-                        string domain = line.Split(":")[1].Trim();
-                        string temp = domain.Split("/")[0].Trim();
-                        domainSid = domain.Split("/")[1].Trim();
-
-                        hostName = temp.Split(".")[0];
-                        hostDomain = String.Join(".", temp.Split(".").TakeLast(temp.Split(".").Length - 1));
-                    }
-                    catch (Exception) { continue; }
-                }
-            }
             List<CapturedCredential> credentials = new List<CapturedCredential>();
-            foreach (string regex in regexes)
+            // Mimikatz
+            if (input.Contains("mimikatz"))
             {
-                MatchCollection matches = Regex.Matches(input, regex);
-                foreach (Match match in matches)
-                {
-                    List<string> lines2 = match.Groups[0].Value.Split('\n').ToList();
-                    string username = "";
-                    string domain = "";
-                    string password = "";
-                    string credType = "";
+                string hostDomain = "";
+                string domainSid = "";
+                string hostName = "";
 
-                    foreach (string line in lines2)
+                List<string> lines = input.Split('\n').ToList();
+                foreach (string line in lines.Take(2))
+                {
+                    if (line.StartsWith("Hostname:"))
                     {
                         try
                         {
-                            if (line.Contains("Username"))
-                            {
-                                username = line.Split(":")[1].Trim();
-                            }
-                            else if (line.Contains("Domain"))
-                            {
-                                domain = line.Split(":")[1].Trim();
-                            }
-                            else if (line.Contains("NTLM") || line.Contains("Password"))
-                            {
-                                password = line.Split(":")[1].Trim();
-                            }
+                            string domain = line.Split(":")[1].Trim();
+                            string temp = domain.Split("/")[0].Trim();
+                            domainSid = domain.Split("/")[1].Trim();
+
+                            hostName = temp.Split(".")[0];
+                            hostDomain = String.Join(".", temp.Split(".").TakeLast(temp.Split(".").Length - 1));
                         }
                         catch (Exception) { continue; }
                     }
-
-                    if (username != "" && password != "" && password != "(null)")
-                    {
-                        string sid = "";
-                        if (hostDomain.StartsWith(domain.ToLower()))
-                        {
-                            domain = hostDomain;
-                            sid = domainSid;
-                        }
-
-                        if (IsNTLM(password))
-                        {
-                            credType = "hash";
-                        }
-                        else
-                        {
-                            credType = "plaintext";
-                        }
-                        if (!(credType == "plaintext" && username.EndsWith("$")))
-                        {
-                            if (IsNTLM(password))
-                            {
-                                credentials.Add(new CapturedHashCredential
-                                {
-                                    Domain = domain,
-                                    Username = username,
-                                    Hash = password,
-                                    HashCredentialType = CapturedHashCredential.HashType.NTLM
-                                });
-                            }
-                            else
-                            {
-                                credentials.Add(new CapturedPasswordCredential
-                                {
-                                    Domain = domain,
-                                    Username = username,
-                                    Password = password
-                                });
-                            }
-                        }
-                    }
                 }
-            }
 
-            if (credentials.Count == 0)
-            {
-                for (int x = 8; x < 13; x++)
+                // Mimikatz sekurlsa::logonpasswords
+                List<string> regexes = new List<string> { "(?s)(?<=msv :).*?(?=tspkg :)", "(?s)(?<=tspkg :).*?(?=wdigest :)", "(?s)(?<=wdigest :).*?(?=kerberos :)", "(?s)(?<=kerberos :).*?(?=ssp :)", "(?s)(?<=ssp :).*?(?=credman :)", "(?s)(?<=credman :).*?(?=Authentication Id :)", "(?s)(?<=credman :).*?(?=mimikatz)" };
+                foreach (string regex in regexes)
                 {
-                    if (lines.Count > (x-1) && lines[x].StartsWith("Domain : "))
+                    MatchCollection matches = Regex.Matches(input, regex);
+                    foreach (Match match in matches)
                     {
+                        List<string> lines2 = match.Groups[0].Value.Split('\n').ToList();
+                        string username = "";
                         string domain = "";
-                        string sid = "";
-                        string krbtgtHash = "";
+                        string password = "";
+                        string credType = "";
 
-                        try
+                        foreach (string line in lines2)
                         {
-                            string domainParts = lines[x].Split(":")[1];
-                            domain = domainParts.Split("/")[0].Trim();
-                            sid = domainParts.Split("/")[1].Trim();
+                            try
+                            {
+                                if (line.Contains("Username"))
+                                {
+                                    username = line.Split(":")[1].Trim();
+                                }
+                                else if (line.Contains("Domain"))
+                                {
+                                    domain = line.Split(":")[1].Trim();
+                                }
+                                else if (line.Contains("NTLM") || line.Contains("Password"))
+                                {
+                                    password = line.Split(":")[1].Trim();
+                                }
+                            }
+                            catch (Exception) { continue; }
+                        }
 
+                        if (username != "" && password != "" && password != "(null)")
+                        {
+                            string sid = "";
                             if (hostDomain.StartsWith(domain.ToLower()))
                             {
                                 domain = hostDomain;
                                 sid = domainSid;
                             }
-                            for (int y = 9; y < lines.Count; y++)
+
+                            if (IsNTLM(password))
                             {
-                                if (lines[y].StartsWith("User : krbtgt"))
+                                credType = "hash";
+                            }
+                            else
+                            {
+                                credType = "plaintext";
+                            }
+                            if (!(credType == "plaintext" && username.EndsWith("$")))
+                            {
+                                if (IsNTLM(password))
                                 {
-                                    krbtgtHash = lines[y + 2].Split(":")[1].Trim();
-                                    break;
+                                    credentials.Add(new CapturedHashCredential
+                                    {
+                                        Domain = domain,
+                                        Username = username,
+                                        Hash = password,
+                                        HashCredentialType = CapturedHashCredential.HashType.NTLM
+                                    });
+                                }
+                                else
+                                {
+                                    credentials.Add(new CapturedPasswordCredential
+                                    {
+                                        Domain = domain,
+                                        Username = username,
+                                        Password = password
+                                    });
                                 }
                             }
-                            if (krbtgtHash != "")
+                        }
+                    }
+                }
+
+                // Mimikatz lsadump::sam
+                if (credentials.Count == 0)
+                {
+                    if (lines.FirstOrDefault(L => L.Contains("SAMKey")) != null)
+                    {
+                        string lines_combined = String.Join('\n', lines);
+                        string domain = lines.FirstOrDefault(L => L.Contains("Domain :")).Split(":")[1].Trim();
+                        MatchCollection hash_matches = Regex.Matches(lines_combined, "(?s)RID  :.*?((?=RID  :)|$)");
+                        foreach (Match match in hash_matches)
+                        {
+                            string user = "";
+                            string userHash = "";
+                            List<string> lines2 = match.Groups[0].Value.Split('\n').ToList();
+                            foreach (string line in lines2)
+                            {
+                                try
+                                {
+                                    if (line.Trim().StartsWith("User :"))
+                                    {
+                                        user = line.Split(":")[1].Trim();
+                                    }
+                                    else if (line.Trim().StartsWith("Hash NTLM:"))
+                                    {
+                                        userHash = line.Split(":")[1].Trim();
+                                    }
+                                }
+                                catch (Exception) { continue; }
+                            }
+                            if (domain != "" && user != "" && userHash != "")
                             {
                                 credentials.Add(new CapturedHashCredential
                                 {
                                     Domain = domain,
-                                    Username = "krbtgt",
-                                    Hash = krbtgtHash,
+                                    Username = user,
+                                    Hash = userHash,
                                     HashCredentialType = CapturedHashCredential.HashType.NTLM
                                 });
                             }
-                        }
-                        catch(Exception) { continue; }
-                    }
-                }
-            }
-            if (credentials.Count == 0)
-            {
-                if (lines.FirstOrDefault(L => L.Contains("SAMKey")) != null)
-                {
-                    string lines_combined = String.Join('\n', lines);
-                    string domain = lines.FirstOrDefault(L => L.Contains("Domain :")).Split(":")[1].Trim();
-                    MatchCollection hash_matches = Regex.Matches(lines_combined, "(?s)RID  :.*?((?=RID  :)|$)");
-                    foreach (Match match in hash_matches)
-                    {
-                        string user = "";
-                        string userHash = "";
-                        List<string> lines2 = match.Groups[0].Value.Split('\n').ToList();
-                        foreach (string line in lines2)
-                        {
-                            try
-                            {
-                                if (line.Trim().StartsWith("User :"))
-                                {
-                                    user = line.Split(":")[1].Trim();
-                                }
-                                else if (line.Trim().StartsWith("Hash NTLM:"))
-                                {
-                                    userHash = line.Split(":")[1].Trim();
-                                }
-                            }
-                            catch (Exception) { continue; }
-                        }
-                        if (domain != "" && user != "" && userHash != "")
-                        {
-                            credentials.Add(new CapturedHashCredential
-                            {
-                                Domain = domain,
-                                Username = user,
-                                Hash = userHash,
-                                HashCredentialType = CapturedHashCredential.HashType.NTLM
-                            });
                         }
                     }
                 }

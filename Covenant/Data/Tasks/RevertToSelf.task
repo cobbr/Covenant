@@ -6,16 +6,20 @@ public static class Task
 {
     public static string Execute()
     {
-        using (Tokens t = new Tokens())
+        try
         {
-            if (t.RevertToSelf())
+            using (Tokens t = new Tokens())
             {
-                return "Reverted to user: " + t.WhoAmI();
-            }
-            else
-            {
-                return "Failed to RevertToSelf.";
+                if (t.RevertToSelf())
+                {
+                    return "Reverted to user: " + t.WhoAmI();
+                }
+                else
+                {
+                    return "Failed to RevertToSelf.";
+                }
             }
         }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

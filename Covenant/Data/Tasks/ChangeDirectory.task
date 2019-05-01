@@ -1,12 +1,17 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 using SharpSploit.Enumeration;
 
 public static class Task
 {
-    public static string Execute(string AppendDirectory)
+    public static string Execute(string Directory)
     {
-        Host.ChangeCurrentDirectory(AppendDirectory);
-        return Host.GetCurrentDirectory();
+        try
+        {
+            Host.ChangeCurrentDirectory(Directory);
+            return Host.GetCurrentDirectory();
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

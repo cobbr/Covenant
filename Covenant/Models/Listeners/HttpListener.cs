@@ -141,9 +141,9 @@ namespace Covenant.Models.Listeners
                 var services = scope.ServiceProvider;
                 HttpListenerContext context = services.GetRequiredService<HttpListenerContext>();
                 context.Database.EnsureCreated();
-                if (!context.listener.Any())
+                if (!context.Listener.Any())
                 {
-                    context.listener.Add(this);
+                    context.Listener.Add(this);
                 }
                 context.SaveChanges();
             }
@@ -290,13 +290,17 @@ namespace Covenant.Models.Listeners
                 .Replace("{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}", this.FormatForVerbatimString(profile.HttpGetResponse))
                 .Replace("{{REPLACE_PROFILE_HTTP_POST_REQUEST}}", this.FormatForVerbatimString(profile.HttpPostRequest))
                 .Replace("{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}", this.FormatForVerbatimString(profile.HttpPostResponse))
+                .Replace("{{REPLACE_COMM_TYPE}}", grunt.CommType.ToString())
+                .Replace("{{REPLACE_VALIDATE_CERT}}", grunt.ValidateCert ? "true" : "false")
+                .Replace("{{REPLACE_USE_CERT_PINNING}}", grunt.UseCertPinning ? "true" : "false")
+                .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
                 .Replace("{{REPLACE_COVENANT_URI}}", this.FormatForVerbatimString(ConnectUrl))
                 .Replace("{{REPLACE_COVENANT_CERT_HASH}}", this.FormatForVerbatimString(this.UseSSL ? this.SSLCertHash : ""))
-                .Replace("{{REPLACE_GRUNT_ID}}", this.FormatForVerbatimString(grunt.Id.ToString()))
-                .Replace("{{REPLACE_GRUNT_NAME}}", this.FormatForVerbatimString(grunt.Name))
+                .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
                 .Replace("{{REPLACE_DELAY}}", this.FormatForVerbatimString(grunt.Delay.ToString()))
-                .Replace("{{REPLACE_JITTER}}", this.FormatForVerbatimString(grunt.Jitter.ToString()))
+                .Replace("{{REPLACE_JITTER_PERCENT}}", this.FormatForVerbatimString(grunt.JitterPercent.ToString()))
                 .Replace("{{REPLACE_CONNECT_ATTEMPTS}}", this.FormatForVerbatimString(grunt.ConnectAttempts.ToString()))
+                .Replace("{{REPLACE_KILL_DATE}}", this.FormatForVerbatimString(grunt.KillDate.ToBinary().ToString()))
                 .Replace("{{REPLACE_GRUNT_SHARED_SECRET_PASSWORD}}", this.FormatForVerbatimString(grunt.GruntSharedSecretPassword));
         }
 
@@ -305,13 +309,13 @@ namespace Covenant.Models.Listeners
             return replacement.Replace("\"", "\"\"").Replace("{", "{{").Replace("}", "}}").Replace("{{0}}", "{0}");
         }
 
-        private static string GruntStagerTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "GruntStager" + ".cs"));
-        private static string GruntExecutorTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "Grunt" + ".cs"));
+        private static readonly string GruntStagerTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "GruntStager" + ".cs"));
+        private static readonly string GruntExecutorTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "Grunt" + ".cs"));
     }
 
     public class HttpListenerContext : IdentityDbContext
     {
-        public DbSet<HttpListener> listener { get; set; }
+        public DbSet<HttpListener> Listener { get; set; }
         public HttpListenerContext(DbContextOptions<HttpListenerContext> options) : base(options)
         {
 

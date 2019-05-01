@@ -7,10 +7,12 @@ using System.IO;
 using System.Net;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -24,7 +26,6 @@ using NLog.Config;
 using NLog.Targets;
 
 using Covenant.Models;
-using Covenant.Data;
 using Covenant.Core;
 using Covenant.Models.Covenant;
 
@@ -100,7 +101,20 @@ namespace Covenant
                     var services = scope.ServiceProvider;
                     var context = services.GetRequiredService<CovenantContext>();
                     var userManager = services.GetRequiredService<UserManager<CovenantUser>>();
-					var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                    var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
+                    context.Database.EnsureCreated();
+                    if (context.Users.Any())
+                    {
+                        CovenantUser user = context.Users.FirstOrDefault(CU => CU.UserName == username);
+                        Task<bool> task = userManager.CheckPasswordAsync(user, password);
+                        task.Wait();
+                        if (!task.Result)
+                        {
+                            Console.Error.WriteLine($"Error: Incorrect password for user: {username}");
+                            return -2;
+                        }
+                    }
+                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
 					var cancellationTokens = services.GetRequiredService<Dictionary<int, CancellationTokenSource>>();
                     DbInitializer.Initialize(context, userManager, roleManager, configuration, cancellationTokens);
@@ -149,12 +163,12 @@ namespace Covenant
                             {
                                 Console.WriteLine("Creating cert...");
                                 X509Certificate2 certificate = Utilities.CreateSelfSignedCertificate(CovenantEndpoint.Address, "CN=Covenant");
-                                File.WriteAllBytes(Common.CovenantPrivateCertFile, certificate.Export(X509ContentType.Pfx, CovenantPassword));
+                                File.WriteAllBytes(Common.CovenantPrivateCertFile, certificate.Export(X509ContentType.Pfx));
                                 File.WriteAllBytes(Common.CovenantPublicCertFile, certificate.Export(X509ContentType.Cert));
                             }
                             try
                             {
-                                httpsOptions.ServerCertificate = new X509Certificate2(Common.CovenantPrivateCertFile, CovenantPassword);
+                                httpsOptions.ServerCertificate = new X509Certificate2(Common.CovenantPrivateCertFile);
                             }
                             catch (CryptographicException)
                             {

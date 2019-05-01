@@ -9,15 +9,19 @@ public static class Task
 {
     public static string Execute(string ComputerNames = "")
     {
-        List<string> computerList = ComputerNames.Split(',').ToList();
-        List<Net.LoggedOnUser> loggedOnUsers = Net.GetNetLoggedOnUsers(computerList);
-        
-        StringBuilder results = new StringBuilder();
-        foreach (Net.LoggedOnUser loggedOnUser in loggedOnUsers)
+        try
         {
-            results.Append(loggedOnUser.ToString());
-            results.AppendLine("------");
+            List<string> computerList = ComputerNames.Split(',').ToList();
+            List<Net.LoggedOnUser> loggedOnUsers = Net.GetNetLoggedOnUsers(computerList);
+            
+            StringBuilder results = new StringBuilder();
+            foreach (Net.LoggedOnUser loggedOnUser in loggedOnUsers)
+            {
+                results.Append(loggedOnUser.ToString());
+                results.AppendLine("------");
+            }
+            return results.ToString();
         }
-        return results.ToString();
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

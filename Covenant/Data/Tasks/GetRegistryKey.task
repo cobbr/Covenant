@@ -1,0 +1,15 @@
+﻿using System;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+    public static string Execute(string RegPath)
+    {
+        try
+        {
+            return Registry.GetRegistryKey(RegPath);
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

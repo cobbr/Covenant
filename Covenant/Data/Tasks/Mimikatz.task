@@ -6,6 +6,10 @@ public static class Task
 {
     public static string Execute(string Command)
     {
-        return Mimikatz.Command(Command);
+        try
+        {
+            return Mimikatz.Command(Command);
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

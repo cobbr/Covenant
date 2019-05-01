@@ -9,15 +9,19 @@ public static class Task
 {
     public static string Execute(string ComputerNames = "", string GroupName = "Administrators")
     {
-        List<string> computerList = ComputerNames.Split(',').ToList();
-        List<Net.LocalGroupMember> localGroupMembers = Net.GetNetLocalGroupMembers(computerList, GroupName);
-        
-        StringBuilder results = new StringBuilder();
-        foreach (Net.LocalGroupMember localGroupMember in localGroupMembers)
+        try
         {
-            results.Append(localGroupMember.ToString());
-            results.AppendLine("------");
+            List<string> computerList = ComputerNames.Split(',').ToList();
+            List<Net.LocalGroupMember> localGroupMembers = Net.GetNetLocalGroupMembers(computerList, GroupName);
+            
+            StringBuilder results = new StringBuilder();
+            foreach (Net.LocalGroupMember localGroupMember in localGroupMembers)
+            {
+                results.Append(localGroupMember.ToString());
+                results.AppendLine("------");
+            }
+            return results.ToString();
         }
-        return results.ToString();
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

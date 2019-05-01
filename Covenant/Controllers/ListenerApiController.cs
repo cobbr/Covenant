@@ -2,6 +2,7 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -22,8 +23,8 @@ namespace Covenant.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/[controller]s")]
-    public class ListenerController : Controller
+    [Route("api/listeners")]
+    public class ListenerApiController : Controller
     {
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
@@ -32,7 +33,7 @@ namespace Covenant.Controllers
         // Dictionary of CancellationTokenSources for active listeners to stop them asynchronously
         private readonly Dictionary<int, CancellationTokenSource> _cancellationTokens;
 
-        public ListenerController(CovenantContext context, UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, IConfiguration configuration, Dictionary<int, CancellationTokenSource> cancellationTokens)
+        public ListenerApiController(CovenantContext context, UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, IConfiguration configuration, Dictionary<int, CancellationTokenSource> cancellationTokens)
         {
             _context = context;
             _userManager = userManager;
@@ -41,12 +42,33 @@ namespace Covenant.Controllers
             _cancellationTokens = cancellationTokens;
         }
 
+        private Microsoft.AspNetCore.Identity.SignInResult GetPasswordSignInResult(string username, string password)
+        {
+            Task<Microsoft.AspNetCore.Identity.SignInResult> task = _signInManager.PasswordSignInAsync(username, password, false, false);
+            task.Wait();
+            return task.Result;
+        }
+
+        private IdentityResult CreateCovenantUser(CovenantUser user, string password)
+        {
+            Task<IdentityResult> task = _userManager.CreateAsync(user, password);
+            task.Wait();
+            return task.Result;
+        }
+
+        private IdentityResult CreateUserRole(CovenantUser user, string rolename)
+        {
+            Task<IdentityResult> task = _userManager.AddToRoleAsync(user, rolename);
+            task.Wait();
+            return task.Result;
+        }
+
         // GET: api/listeners/types
         // <summary>
         // Get listener types
         // </summary>
         [HttpGet("types", Name = "GetListenerTypes")]
-        public IEnumerable<ListenerType> GetListenerTypes()
+        public ActionResult<IEnumerable<ListenerType>> GetListenerTypes()
         {
             return _context.ListenerTypes.ToList();
         }
@@ -61,9 +83,9 @@ namespace Covenant.Controllers
             ListenerType type = _context.ListenerTypes.FirstOrDefault(LT => LT.Id == id);
             if (type == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - ListenerType with id: {id}");
             }
-            return Ok(type);
+            return type;
         }
 
         // GET: api/listeners
@@ -71,7 +93,7 @@ namespace Covenant.Controllers
         // Get listeners
         // </summary>
         [HttpGet(Name = "GetListeners")]
-        public IEnumerable<Listener> GetListeners()
+        public ActionResult<IEnumerable<Listener>> GetListeners()
         {
             return _context.Listeners.ToList();
         }
@@ -86,9 +108,9 @@ namespace Covenant.Controllers
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {id}");
             }
-            return Ok(listener);
+            return listener;
         }
 
         // PUT api/listeners
@@ -101,7 +123,7 @@ namespace Covenant.Controllers
             Listener savedListener = _context.Listeners.FirstOrDefault(L => L.Id == listener.Id);
             if (savedListener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {listener.Id}");
             }
             savedListener.Name = listener.Name;
             savedListener.Description = listener.Description;
@@ -114,26 +136,43 @@ namespace Covenant.Controllers
             {
                 savedListener.Stop(_cancellationTokens[savedListener.Id]);
                 savedListener.Status = listener.Status;
+                savedListener.StartTime = DateTime.MinValue;
+                DateTime eventTime = DateTime.UtcNow;
+                _context.Events.Add(new Event
+                {
+                    Time = eventTime,
+                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + savedListener.Name,
+                    Level = Event.EventLevel.Warning,
+                    Context = "*"
+                });
             }
             else if (savedListener.Status != Listener.ListenerStatus.Active && listener.Status == Listener.ListenerStatus.Active)
             {
+                savedListener.StartTime = DateTime.UtcNow;
                 HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(HP => savedListener.ProfileId == HP.Id);
                 if (profile == null)
                 {
-                    return NotFound();
+                    return NotFound($"NotFound - HttpProfile with id: {savedListener.ProfileId}");
                 }
                 CancellationTokenSource listenerCancellationToken = savedListener.Start(profile);
                 if (listenerCancellationToken == null)
                 {
-                    return BadRequest();
+                    return BadRequest($"BadRequest - Listener with id: {savedListener.Id} did not start properly");
                 }
                 _cancellationTokens[savedListener.Id] = listenerCancellationToken;
+                _context.Events.Add(new Event
+                {
+                    Time = savedListener.StartTime,
+                    MessageHeader = "[" + savedListener.StartTime + " UTC] Started Listener: " + savedListener.Name,
+                    Level = Event.EventLevel.Highlight,
+                    Context = "*"
+                });
             }
 
             _context.Listeners.Update(savedListener);
             _context.SaveChanges();
 
-            return Ok(listener);
+            return listener;
         }
 
         // DELETE api/listeners/{id}
@@ -146,7 +185,7 @@ namespace Covenant.Controllers
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {id}");
             }
             if (listener.Status == Listener.ListenerStatus.Active)
             {
@@ -154,7 +193,7 @@ namespace Covenant.Controllers
             }
             _context.Listeners.Remove(listener);
             _context.SaveChanges();
-            return Ok(listener);
+            return listener;
         }
 
         // GET api/listeners/http/{id}
@@ -167,14 +206,14 @@ namespace Covenant.Controllers
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - Listener with id: {id}");
             }
             ListenerType listenerType = _context.ListenerTypes.FirstOrDefault(L => L.Id == listener.ListenerTypeId);
             if (listenerType == null || listenerType.Name != "HTTP")
             {
-                return NotFound();
+                return NotFound($"NotFound - ListenerType with id: {listener.ListenerTypeId}");
             }
-            return Ok((HttpListener)listener);
+            return (HttpListener)listener;
         }
 
         // POST api/listeners/http
@@ -182,35 +221,32 @@ namespace Covenant.Controllers
         // Create an HttpListener
         // </summary>
         [HttpPost("http", Name = "CreateHttpListener")]
-        public async Task<ActionResult<HttpListener>> CreateHttpListener([FromBody] HttpListener listener = null)
+        public ActionResult<HttpListener> CreateHttpListener([FromBody] HttpListener listener)
         {
-            if (listener == null || listener.Id == 0)
+            ListenerType httpType = _context.ListenerTypes.FirstOrDefault(LT => LT.Name == "HTTP");
+            if (httpType == null)
             {
-                ListenerType httpType = _context.ListenerTypes.FirstOrDefault(LT => LT.Name == "HTTP");
-                if (httpType == null)
-                {
-                    return BadRequest();
-                }
-                listener = (HttpListener) _context.Listeners.FirstOrDefault(L => L.ListenerTypeId == httpType.Id && L.Status == Listener.ListenerStatus.Uninitialized);
-                if (listener != null)
-                {
-                    return Ok(listener);
-                }
-                else
-                {
-                    Profile profile = _context.Profiles.FirstOrDefault(HP => HP.Id == 1);
-                    listener = new HttpListener(httpType.Id, profile.Id);
-                }
+                return NotFound($"NotFound - HttpListener");
+            }
+            listener = (HttpListener) _context.Listeners.FirstOrDefault(L => L.ListenerTypeId == httpType.Id && L.Status == Listener.ListenerStatus.Uninitialized);
+            if (listener != null)
+            {
+                return listener;
+            }
+            else
+            {
+                Profile profile = _context.Profiles.FirstOrDefault(HP => HP.Id == 1);
+                listener = new HttpListener(httpType.Id, profile.Id);
             }
 
             // Append capital letter to appease Password complexity requirements, get rid of warning output
             string covenantListenerUsername = Utilities.CreateSecureGuid().ToString();
             string covenantListenerPassword = Utilities.CreateSecureGuid().ToString() + "A";
             CovenantUser covenantListenerUser = new CovenantUser { UserName = covenantListenerUsername };
-            await _userManager.CreateAsync(covenantListenerUser, covenantListenerPassword);
-            await _userManager.AddToRoleAsync(covenantListenerUser, "Listener");
+            this.CreateCovenantUser(covenantListenerUser, covenantListenerPassword);
+            this.CreateUserRole(covenantListenerUser, "Listener");
 
-            var signInResult = await _signInManager.PasswordSignInAsync(covenantListenerUser.UserName, covenantListenerPassword, true, false);
+            var signInResult = this.GetPasswordSignInResult(covenantListenerUser.UserName, covenantListenerPassword);
             var token = Utilities.GenerateJwtToken(
                 covenantListenerUser.UserName, covenantListenerUser.Id, new[] { "Listener" },
                 _configuration["JwtKey"], _configuration["JwtIssuer"],
@@ -220,7 +256,7 @@ namespace Covenant.Controllers
 
             _context.Listeners.Add(listener);
             _context.SaveChanges();
-            return Ok(listener);
+            return listener;
         }
 
         // PUT api/listeners/http
@@ -233,12 +269,12 @@ namespace Covenant.Controllers
             Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == httpListener.Id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpListener with id: {httpListener.Id}");
             }
             ListenerType listenerType = _context.ListenerTypes.FirstOrDefault(L => L.Id == listener.ListenerTypeId);
             if (listenerType == null || listenerType.Name != "HTTP")
             {
-                return NotFound();
+                return NotFound($"NotFound - ListenerType with id: {listener.ListenerTypeId}");
             }
             HttpListener savedhttpListener = (HttpListener)listener;
 
@@ -257,28 +293,39 @@ namespace Covenant.Controllers
             }
             savedhttpListener.ProfileId = httpListener.ProfileId;
             savedhttpListener.Name = httpListener.Name;
+            savedhttpListener.SSLCertificatePassword = httpListener.SSLCertificatePassword;
             savedhttpListener.SSLCertificate = httpListener.SSLCertificate;
 
             if (savedhttpListener.Status == Listener.ListenerStatus.Active && httpListener.Status == Listener.ListenerStatus.Stopped)
             {
                 savedhttpListener.Stop(_cancellationTokens[savedhttpListener.Id]);
                 savedhttpListener.Status = httpListener.Status;
+                savedhttpListener.StartTime = DateTime.MinValue;
+                DateTime eventTime = DateTime.UtcNow;
+                _context.Events.Add(new Event
+                {
+                    Time = eventTime,
+                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + savedhttpListener.Name + " at: " + savedhttpListener.Url,
+                    Level = Event.EventLevel.Warning,
+                    Context = "*"
+                });
             }
             else if(savedhttpListener.Status != Listener.ListenerStatus.Active && httpListener.Status == Listener.ListenerStatus.Active)
             {
+                savedhttpListener.StartTime = DateTime.UtcNow;
                 if (savedhttpListener.UseSSL && (savedhttpListener.SSLCertHash == "" || savedhttpListener.SSLCertificate == ""))
                 {
-                    return BadRequest();
+                    return BadRequest($"HttpListener: {savedhttpListener.Name} missing SSLCertificate");
                 }
                 else if (_context.Listeners.Where(L => L.Status == Listener.ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
                 {
-                    return BadRequest();
+                    return BadRequest($"HttpListener already listening on port: {listener.BindPort}");
                 }
                 HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(HP => HP.Id == savedhttpListener.ProfileId);
                 CancellationTokenSource listenerCancellationToken = savedhttpListener.Start(profile);
                 if (listenerCancellationToken == null)
                 {
-                    return BadRequest();
+                    return BadRequest($"BadRequest - Listener with id: {savedhttpListener.Id} did not start properly");
                 }
                 NetworkIndicator httpIndicator = new NetworkIndicator
                 {
@@ -295,12 +342,19 @@ namespace Covenant.Controllers
                     _context.Indicators.Add(httpIndicator);
                 }
                 _cancellationTokens[savedhttpListener.Id] = listenerCancellationToken;
+                _context.Events.Add(new Event
+                {
+                    Time = savedhttpListener.StartTime,
+                    MessageHeader = "[" + savedhttpListener.StartTime + " UTC] Started Listener: " + savedhttpListener.Name + " at: " + savedhttpListener.Url,
+                    Level = Event.EventLevel.Highlight,
+                    Context = "*"
+                });
             }
 
             _context.Listeners.Update(savedhttpListener);
             _context.SaveChanges();
 
-            return Ok(listener);
+            return savedhttpListener;
         }
 
         // GET api/listeners/{id}/hostedfiles
@@ -309,7 +363,7 @@ namespace Covenant.Controllers
         // </summary>
         [Authorize]
         [HttpGet("{id}/hostedfiles", Name = "GetHostedFiles")]
-        public IEnumerable<HostedFile> GetHostedFiles(int id)
+        public ActionResult<IEnumerable<HostedFile>> GetHostedFiles(int id)
         {
             return _context.HostedFiles.Where(HF => HF.ListenerId == id).ToList();
         }
@@ -324,9 +378,9 @@ namespace Covenant.Controllers
             HostedFile file = _context.HostedFiles.FirstOrDefault(HF => HF.ListenerId == id && HF.Id == hfid);
             if (file == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HostedFile with id: {hfid} and Listener id: {id}");
             }
-            return Ok(file);
+            return file;
         }
 
         // POST api/listeners/{id}/hostedfiles
@@ -340,14 +394,14 @@ namespace Covenant.Controllers
             HttpListener listener = (HttpListener)_context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpListener with id: {id}");
             }
             hostFileRequest.ListenerId = listener.Id;
             HostedFile existingHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Path == hostFileRequest.Path);
             if (existingHostedFile != null)
             {
                 // If file already exists and is being hosted, BadRequest
-                return BadRequest();
+                return BadRequest($"BadRequest - HostedFile already exists at: {hostFileRequest.Path}");
             }
             try
             {
@@ -355,21 +409,21 @@ namespace Covenant.Controllers
             }
             catch
             {
-                return BadRequest();
+                return BadRequest($"BadRequest - Error hosting file at: {hostFileRequest.Path}");
             }
             // Check if it already exists again, path could have changed
             existingHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Path == hostFileRequest.Path);
             if (existingHostedFile != null)
             {
-                return BadRequest();
+                return BadRequest($"BadRequest - HostedFile already exists at: {existingHostedFile.Path}");
             }
             _context.Indicators.Add(new FileIndicator
             {
                 FileName = hostFileRequest.Path.Split("/").Last(),
                 FilePath = listener.Url + hostFileRequest.Path,
-                MD5 = Encrypt.Utilities.GetMD5(System.Convert.FromBase64String(hostFileRequest.Content)),
-                SHA1 = Encrypt.Utilities.GetSHA1(System.Convert.FromBase64String(hostFileRequest.Content)),
-                SHA2 = Encrypt.Utilities.GetSHA256(System.Convert.FromBase64String(hostFileRequest.Content))
+                MD5 = Encrypt.Utilities.GetMD5(Convert.FromBase64String(hostFileRequest.Content)),
+                SHA1 = Encrypt.Utilities.GetSHA1(Convert.FromBase64String(hostFileRequest.Content)),
+                SHA2 = Encrypt.Utilities.GetSHA256(Convert.FromBase64String(hostFileRequest.Content))
             });
             _context.HostedFiles.Add(hostFileRequest);
             _context.SaveChanges();
@@ -387,12 +441,12 @@ namespace Covenant.Controllers
             HttpListener listener = (HttpListener)_context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpListener with id: {id}");
             }
             HostedFile file = _context.HostedFiles.FirstOrDefault(HF => HF.ListenerId == listener.Id && HF.Id == hfid && HF.Id == hostedFile.Id);
             if (file == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HostedFile with id: {hfid} and Listener id: {id}");
             }
             try
             {
@@ -400,14 +454,14 @@ namespace Covenant.Controllers
             }
             catch
             {
-                return BadRequest();
+                return BadRequest($"BadRequest - Error hosting file at: {hostedFile.Path}");
             }
             file.Path = hostedFile.Path;
             file.Content = hostedFile.Path;
             _context.HostedFiles.Update(file);
             _context.SaveChanges();
 
-            return Ok(file);
+            return file;
         }
 
         // DELETE api/listeners/{id}/hostedfiles/{hfid}
@@ -421,12 +475,12 @@ namespace Covenant.Controllers
             HttpListener listener = (HttpListener)_context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpListener with id: {id}");
             }
             HostedFile file = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hfid && HF.ListenerId == listener.Id);
             if (file == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HostedFile with id: {hfid} and Listener id: {id}");
             }
 
             _context.HostedFiles.Remove(file);
@@ -444,14 +498,14 @@ namespace Covenant.Controllers
             HttpListener listener = (HttpListener)_context.Listeners.FirstOrDefault(L => L.Id == id);
             if (listener == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpListener with id: {id}");
             }
             HttpProfile profile = (HttpProfile) _context.Profiles.FirstOrDefault(HP => HP.Id == listener.ProfileId);
             if (profile == null)
             {
-                return NotFound();
+                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
             }
-            return Ok(profile);
+            return profile;
         }
     }
 }
