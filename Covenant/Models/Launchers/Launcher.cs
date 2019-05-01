@@ -31,13 +31,22 @@ namespace Covenant.Models.Launchers
         public int Id { get; set; }
         public int ListenerId { get; set; }
         public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
-        public string LauncherString { get; set; } = "";
         public LauncherType Type { get; set; }
+
         public string Name { get; set; } = "GenericLauncher";
         public string Description { get; set; } = "A generic launcher.";
+        
+        public Grunt.CommunicationType CommType { get; set; } = Grunt.CommunicationType.HTTP;
+        public bool ValidateCert { get; set; } = true;
+        public bool UseCertPinning { get; set; } = true;
+        public string SMBPipeName { get; set; } = "gruntsvc";
+
         public int Delay { get; set; } = 5;
-        public int Jitter { get; set; } = 0;
-        public int ConnectAttempts { get; set; } = 1000;
+        public int JitterPercent { get; set; } = 10;
+        public int ConnectAttempts { get; set; } = 5000;
+        public DateTime KillDate { get; set; } = DateTime.MaxValue;
+
+        public string LauncherString { get; set; } = "";
         public string StagerCode { get; set; } = "";
         public string Base64ILByteString { get; set; } = "";
 

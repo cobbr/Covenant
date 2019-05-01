@@ -3,10 +3,12 @@
 // License: GNU GPLv3
 
 using System;
+using System.Xml;
 using System.Text;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Xml;
+
+using Covenant.Models.Grunts;
 
 namespace Covenant.Core.Encryption
 {
@@ -38,14 +40,15 @@ namespace Covenant.Core.Encryption
 
             return decrypted;
         }
+
         // Convenience method for decrypting an EncryptedMessagePacket
-        public static byte[] AesDecrypt(EncryptedMessagePacket encryptedMessage, byte[] key)
+        public static byte[] AesDecrypt(GruntEncryptedMessage encryptedMessage, byte[] key)
         {
             return AesDecrypt(
-                    Convert.FromBase64String(encryptedMessage.IV)
-                       .Concat(Convert.FromBase64String(encryptedMessage.EncryptedMessage)).ToArray(),
-                    key
-                );
+                Convert.FromBase64String(encryptedMessage.IV)
+                   .Concat(Convert.FromBase64String(encryptedMessage.EncryptedMessage)).ToArray(),
+                key
+            );
         }
 
         public static byte[] ComputeHMAC(byte[] data, byte[] key)
@@ -114,42 +117,6 @@ namespace Covenant.Core.Encryption
                 return sBuilder.ToString();
             }
         }
-    }
-
-    public class EncryptedMessagePacket
-    {
-        public string IV { get; set; }
-        public string EncryptedMessage { get; set; }
-        public string HMAC { get; set; }
-
-        public static EncryptedMessagePacket Create(byte[] message, byte[] key)
-        {
-            byte[] encryptedMessagePacket = Utilities.AesEncrypt(message, key);
-            byte[] encryptionIV = encryptedMessagePacket.Take(Common.AesIVLength).ToArray();
-            byte[] encryptedMessage = encryptedMessagePacket.TakeLast(encryptedMessagePacket.Length - Common.AesIVLength).ToArray();
-            byte[] hmac = Utilities.ComputeHMAC(encryptedMessage, key);
-            return new EncryptedMessagePacket
-            {
-                EncryptedMessage = Convert.ToBase64String(encryptedMessage),
-                IV = Convert.ToBase64String(encryptionIV),
-                HMAC = Convert.ToBase64String(hmac)
-            };
-        }
-
-        public bool VerifyHMAC(byte[] Key)
-        {
-            if (IV == "" || EncryptedMessage == "" || HMAC == "" || Key.Length == 0) { return false; }
-            try
-            {
-                var hashedBytes = Convert.FromBase64String(this.EncryptedMessage);
-                return Utilities.VerifyHMAC(hashedBytes, Convert.FromBase64String(this.HMAC), Key);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
     }
 
     internal static class RSAKeyExtensions

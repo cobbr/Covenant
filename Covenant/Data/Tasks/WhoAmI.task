@@ -1,14 +1,14 @@
 ﻿using System;
-
-using SharpSploit.Credentials;
+using System.Security.Principal;
 
 public static class Task
 {
     public static string Execute()
     {
-        using (Tokens t = new Tokens())
+        try
         {
-            return t.WhoAmI();
+            return WindowsIdentity.GetCurrent().Name;
         }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

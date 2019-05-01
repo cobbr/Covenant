@@ -6,17 +6,21 @@ public static class Task
 {
     public static string Execute(string ProcessID)
     {
-        using (Tokens t = new Tokens())
+        try
         {
-            int ProcID = Int32.Parse(ProcessID);
-            if (t.ImpersonateProcess(ProcID))
+            using (Tokens t = new Tokens())
             {
-                return "Successfully impersonated: " + ProcessID;
-            }
-            else
-            {
-                return "Failed to impersonate: " + ProcessID;
+                int ProcID = Int32.Parse(ProcessID);
+                if (t.ImpersonateProcess(ProcID))
+                {
+                    return "Successfully impersonated: " + ProcessID;
+                }
+                else
+                {
+                    return "Failed to impersonate: " + ProcessID;
+                }
             }
         }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

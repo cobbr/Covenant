@@ -5,7 +5,11 @@ public static class Task
 {
     public static string Execute(string FileName)
     {
-        string FilePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + FileName;
-        return Convert.ToBase64String(File.ReadAllBytes(FilePath));
+        try
+        {
+            string FilePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + FileName;
+            return Convert.ToBase64String(File.ReadAllBytes(FilePath));
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

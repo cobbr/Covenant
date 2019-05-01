@@ -20,6 +20,28 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            public static CovenantUser ApiUsersCurrentGet(this ICovenantAPI operations)
+            {
+                return operations.ApiUsersCurrentGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CovenantUser> ApiUsersCurrentGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiUsersCurrentGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static IList<CovenantUser> ApiUsersGet(this ICovenantAPI operations)
             {
                 return operations.ApiUsersGetAsync().GetAwaiter().GetResult();
@@ -44,7 +66,7 @@ namespace Covenant.API
             /// </param>
             /// <param name='user'>
             /// </param>
-            public static CovenantUser ApiUsersPut(this ICovenantAPI operations, CovenantUser user = default(CovenantUser))
+            public static CovenantUser ApiUsersPut(this ICovenantAPI operations, CovenantUserLogin user = default(CovenantUserLogin))
             {
                 return operations.ApiUsersPutAsync(user).GetAwaiter().GetResult();
             }
@@ -57,7 +79,7 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<CovenantUser> ApiUsersPutAsync(this ICovenantAPI operations, CovenantUser user = default(CovenantUser), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<CovenantUser> ApiUsersPutAsync(this ICovenantAPI operations, CovenantUserLogin user = default(CovenantUserLogin), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.ApiUsersPutWithHttpMessagesAsync(user, null, cancellationToken).ConfigureAwait(false))
                 {
@@ -94,24 +116,24 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
-            public static CovenantUser ApiUsersByUidGet(this ICovenantAPI operations, string uid)
+            public static CovenantUser ApiUsersByIdGet(this ICovenantAPI operations, string id)
             {
-                return operations.ApiUsersByUidGetAsync(uid).GetAwaiter().GetResult();
+                return operations.ApiUsersByIdGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<CovenantUser> ApiUsersByUidGetAsync(this ICovenantAPI operations, string uid, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<CovenantUser> ApiUsersByIdGetAsync(this ICovenantAPI operations, string id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiUsersByUidGetWithHttpMessagesAsync(uid, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiUsersByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -120,24 +142,24 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
-            public static void ApiUsersByUidDelete(this ICovenantAPI operations, string uid)
+            public static void ApiUsersByIdDelete(this ICovenantAPI operations, string id)
             {
-                operations.ApiUsersByUidDeleteAsync(uid).GetAwaiter().GetResult();
+                operations.ApiUsersByIdDeleteAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ApiUsersByUidDeleteAsync(this ICovenantAPI operations, string uid, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task ApiUsersByIdDeleteAsync(this ICovenantAPI operations, string id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ApiUsersByUidDeleteWithHttpMessagesAsync(uid, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                (await operations.ApiUsersByIdDeleteWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
             }
 
             /// <param name='operations'>
@@ -191,24 +213,24 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
-            public static IList<IdentityUserRoleString> ApiUsersByUidRolesGet(this ICovenantAPI operations, string uid)
+            public static IList<IdentityUserRoleString> ApiUsersByIdRolesGet(this ICovenantAPI operations, string id)
             {
-                return operations.ApiUsersByUidRolesGetAsync(uid).GetAwaiter().GetResult();
+                return operations.ApiUsersByIdRolesGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<IdentityUserRoleString>> ApiUsersByUidRolesGetAsync(this ICovenantAPI operations, string uid, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<IdentityUserRoleString>> ApiUsersByIdRolesGetAsync(this ICovenantAPI operations, string id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiUsersByUidRolesGetWithHttpMessagesAsync(uid, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiUsersByIdRolesGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -217,28 +239,28 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='rid'>
             /// </param>
-            public static IdentityUserRoleString ApiUsersByUidRolesByRidGet(this ICovenantAPI operations, string uid, string rid)
+            public static IdentityUserRoleString ApiUsersByIdRolesByRidGet(this ICovenantAPI operations, string id, string rid)
             {
-                return operations.ApiUsersByUidRolesByRidGetAsync(uid, rid).GetAwaiter().GetResult();
+                return operations.ApiUsersByIdRolesByRidGetAsync(id, rid).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='rid'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IdentityUserRoleString> ApiUsersByUidRolesByRidGetAsync(this ICovenantAPI operations, string uid, string rid, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IdentityUserRoleString> ApiUsersByIdRolesByRidGetAsync(this ICovenantAPI operations, string id, string rid, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiUsersByUidRolesByRidGetWithHttpMessagesAsync(uid, rid, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiUsersByIdRolesByRidGetWithHttpMessagesAsync(id, rid, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -247,28 +269,28 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='rid'>
             /// </param>
-            public static IdentityUserRoleString ApiUsersByUidRolesByRidPost(this ICovenantAPI operations, string uid, string rid)
+            public static IdentityUserRoleString ApiUsersByIdRolesByRidPost(this ICovenantAPI operations, string id, string rid)
             {
-                return operations.ApiUsersByUidRolesByRidPostAsync(uid, rid).GetAwaiter().GetResult();
+                return operations.ApiUsersByIdRolesByRidPostAsync(id, rid).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='rid'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IdentityUserRoleString> ApiUsersByUidRolesByRidPostAsync(this ICovenantAPI operations, string uid, string rid, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IdentityUserRoleString> ApiUsersByIdRolesByRidPostAsync(this ICovenantAPI operations, string id, string rid, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiUsersByUidRolesByRidPostWithHttpMessagesAsync(uid, rid, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiUsersByIdRolesByRidPostWithHttpMessagesAsync(id, rid, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -277,28 +299,28 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='rid'>
             /// </param>
-            public static void ApiUsersByUidRolesByRidDelete(this ICovenantAPI operations, string uid, string rid)
+            public static void ApiUsersByIdRolesByRidDelete(this ICovenantAPI operations, string id, string rid)
             {
-                operations.ApiUsersByUidRolesByRidDeleteAsync(uid, rid).GetAwaiter().GetResult();
+                operations.ApiUsersByIdRolesByRidDeleteAsync(id, rid).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='uid'>
+            /// <param name='id'>
             /// </param>
             /// <param name='rid'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ApiUsersByUidRolesByRidDeleteAsync(this ICovenantAPI operations, string uid, string rid, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task ApiUsersByIdRolesByRidDeleteAsync(this ICovenantAPI operations, string id, string rid, CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ApiUsersByUidRolesByRidDeleteWithHttpMessagesAsync(uid, rid, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                (await operations.ApiUsersByIdRolesByRidDeleteWithHttpMessagesAsync(id, rid, null, cancellationToken).ConfigureAwait(false)).Dispose();
             }
 
             /// <param name='operations'>
@@ -1076,20 +1098,50 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            public static IList<GruntTask> ApiGruntTasksGet(this ICovenantAPI operations)
+            /// <param name='name'>
+            /// </param>
+            public static Grunt ApiGruntsByNameGet(this ICovenantAPI operations, string name)
             {
-                return operations.ApiGruntTasksGetAsync().GetAwaiter().GetResult();
+                return operations.ApiGruntsByNameGetAsync(name).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            /// <param name='name'>
+            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<GruntTask>> ApiGruntTasksGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<Grunt> ApiGruntsByNameGetAsync(this ICovenantAPI operations, string name, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiGruntTasksGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiGruntsByNameGetWithHttpMessagesAsync(name, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='guid'>
+            /// </param>
+            public static Grunt ApiGruntsGuidByGuidGet(this ICovenantAPI operations, string guid)
+            {
+                return operations.ApiGruntsGuidByGuidGetAsync(guid).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='guid'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<Grunt> ApiGruntsGuidByGuidGetAsync(this ICovenantAPI operations, string guid, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsGuidByGuidGetWithHttpMessagesAsync(guid, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -1100,9 +1152,11 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static GruntTask ApiGruntTasksByIdGet(this ICovenantAPI operations, int id)
+            /// <param name='tid'>
+            /// </param>
+            public static IList<string> ApiGruntsByIdPathByTidGet(this ICovenantAPI operations, int id, int tid)
             {
-                return operations.ApiGruntTasksByIdGetAsync(id).GetAwaiter().GetResult();
+                return operations.ApiGruntsByIdPathByTidGetAsync(id, tid).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1110,12 +1164,88 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
+            /// <param name='tid'>
+            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<GruntTask> ApiGruntTasksByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<string>> ApiGruntsByIdPathByTidGetAsync(this ICovenantAPI operations, int id, int tid, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiGruntTasksByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiGruntsByIdPathByTidGetWithHttpMessagesAsync(id, tid, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<GruntTask> ApiGrunttasksGet(this ICovenantAPI operations)
+            {
+                return operations.ApiGrunttasksGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<GruntTask>> ApiGrunttasksGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGrunttasksGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='task'>
+            /// </param>
+            public static GruntTask ApiGrunttasksPut(this ICovenantAPI operations, GruntTask task = default(GruntTask))
+            {
+                return operations.ApiGrunttasksPutAsync(task).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='task'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<GruntTask> ApiGrunttasksPutAsync(this ICovenantAPI operations, GruntTask task = default(GruntTask), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGrunttasksPutWithHttpMessagesAsync(task, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='task'>
+            /// </param>
+            public static GruntTask ApiGrunttasksPost(this ICovenantAPI operations, GruntTask task = default(GruntTask))
+            {
+                return operations.ApiGrunttasksPostAsync(task).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='task'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<GruntTask> ApiGrunttasksPostAsync(this ICovenantAPI operations, GruntTask task = default(GruntTask), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGrunttasksPostWithHttpMessagesAsync(task, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -1126,11 +1256,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='task'>
-            /// </param>
-            public static GruntTask ApiGruntTasksByIdPut(this ICovenantAPI operations, int id, GruntTask task = default(GruntTask))
+            public static GruntTask ApiGrunttasksByIdGet(this ICovenantAPI operations, int id)
             {
-                return operations.ApiGruntTasksByIdPutAsync(id, task).GetAwaiter().GetResult();
+                return operations.ApiGrunttasksByIdGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1138,14 +1266,12 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='task'>
-            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<GruntTask> ApiGruntTasksByIdPutAsync(this ICovenantAPI operations, int id, GruntTask task = default(GruntTask), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<GruntTask> ApiGrunttasksByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiGruntTasksByIdPutWithHttpMessagesAsync(id, task, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiGrunttasksByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -1156,39 +1282,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='task'>
-            /// </param>
-            public static GruntTask ApiGruntTasksByIdPost(this ICovenantAPI operations, int id, GruntTask task = default(GruntTask))
+            public static void ApiGrunttasksByIdDelete(this ICovenantAPI operations, int id)
             {
-                return operations.ApiGruntTasksByIdPostAsync(id, task).GetAwaiter().GetResult();
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
-            /// <param name='id'>
-            /// </param>
-            /// <param name='task'>
-            /// </param>
-            /// <param name='cancellationToken'>
-            /// The cancellation token.
-            /// </param>
-            public static async Task<GruntTask> ApiGruntTasksByIdPostAsync(this ICovenantAPI operations, int id, GruntTask task = default(GruntTask), CancellationToken cancellationToken = default(CancellationToken))
-            {
-                using (var _result = await operations.ApiGruntTasksByIdPostWithHttpMessagesAsync(id, task, null, cancellationToken).ConfigureAwait(false))
-                {
-                    return _result.Body;
-                }
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
-            /// <param name='id'>
-            /// </param>
-            public static void ApiGruntTasksByIdDelete(this ICovenantAPI operations, int id)
-            {
-                operations.ApiGruntTasksByIdDeleteAsync(id).GetAwaiter().GetResult();
+                operations.ApiGrunttasksByIdDeleteAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1199,9 +1295,9 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ApiGruntTasksByIdDeleteAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task ApiGrunttasksByIdDeleteAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ApiGruntTasksByIdDeleteWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                (await operations.ApiGrunttasksByIdDeleteWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
             }
 
             /// <param name='operations'>
@@ -1209,9 +1305,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='taskname'>
             /// </param>
-            public static GruntTask ApiGruntTasksByTasknameGet(this ICovenantAPI operations, string taskname)
+            public static GruntTask ApiGrunttasksByTasknameGet(this ICovenantAPI operations, string taskname)
             {
-                return operations.ApiGruntTasksByTasknameGetAsync(taskname).GetAwaiter().GetResult();
+                return operations.ApiGrunttasksByTasknameGetAsync(taskname).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1222,9 +1318,53 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<GruntTask> ApiGruntTasksByTasknameGetAsync(this ICovenantAPI operations, string taskname, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<GruntTask> ApiGrunttasksByTasknameGetAsync(this ICovenantAPI operations, string taskname, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiGruntTasksByTasknameGetWithHttpMessagesAsync(taskname, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiGrunttasksByTasknameGetWithHttpMessagesAsync(taskname, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<GruntTasking> ApiTaskingsGet(this ICovenantAPI operations)
+            {
+                return operations.ApiTaskingsGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<GruntTasking>> ApiTaskingsGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiTaskingsGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<GruntTasking> ApiTaskingsDetailGet(this ICovenantAPI operations)
+            {
+                return operations.ApiTaskingsDetailGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<GruntTasking>> ApiTaskingsDetailGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiTaskingsDetailGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -1291,11 +1431,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='taskname'>
-            /// </param>
-            public static GruntTasking ApiGruntsByIdTaskingsByTasknameGet(this ICovenantAPI operations, int id, string taskname)
+            public static IList<GruntTasking> ApiGruntsByIdTaskingsDetailGet(this ICovenantAPI operations, int id)
             {
-                return operations.ApiGruntsByIdTaskingsByTasknameGetAsync(id, taskname).GetAwaiter().GetResult();
+                return operations.ApiGruntsByIdTaskingsDetailGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1303,14 +1441,12 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='taskname'>
-            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<GruntTasking> ApiGruntsByIdTaskingsByTasknameGetAsync(this ICovenantAPI operations, int id, string taskname, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<GruntTasking>> ApiGruntsByIdTaskingsDetailGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiGruntsByIdTaskingsByTasknameGetWithHttpMessagesAsync(id, taskname, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiGruntsByIdTaskingsDetailGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -1321,13 +1457,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='taskname'>
-            /// </param>
-            /// <param name='gruntTasking'>
-            /// </param>
-            public static GruntTasking ApiGruntsByIdTaskingsByTasknamePut(this ICovenantAPI operations, int id, string taskname, GruntTasking gruntTasking = default(GruntTasking))
+            public static IList<GruntTasking> ApiGruntsByIdTaskingsSearchGet(this ICovenantAPI operations, int id)
             {
-                return operations.ApiGruntsByIdTaskingsByTasknamePutAsync(id, taskname, gruntTasking).GetAwaiter().GetResult();
+                return operations.ApiGruntsByIdTaskingsSearchGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1335,16 +1467,12 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='taskname'>
-            /// </param>
-            /// <param name='gruntTasking'>
-            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<GruntTasking> ApiGruntsByIdTaskingsByTasknamePutAsync(this ICovenantAPI operations, int id, string taskname, GruntTasking gruntTasking = default(GruntTasking), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<GruntTasking>> ApiGruntsByIdTaskingsSearchGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.ApiGruntsByIdTaskingsByTasknamePutWithHttpMessagesAsync(id, taskname, gruntTasking, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.ApiGruntsByIdTaskingsSearchGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -1355,11 +1483,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='taskname'>
-            /// </param>
-            public static void ApiGruntsByIdTaskingsByTasknameDelete(this ICovenantAPI operations, int id, string taskname)
+            public static IList<GruntTasking> ApiGruntsByIdTaskingsUninitializedGet(this ICovenantAPI operations, int id)
             {
-                operations.ApiGruntsByIdTaskingsByTasknameDeleteAsync(id, taskname).GetAwaiter().GetResult();
+                return operations.ApiGruntsByIdTaskingsUninitializedGetAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -1367,14 +1493,162 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            /// <param name='taskname'>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<GruntTasking>> ApiGruntsByIdTaskingsUninitializedGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsByIdTaskingsUninitializedGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static IList<GruntTasking> ApiGruntsByIdTaskingsSearchUninitializedGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiGruntsByIdTaskingsSearchUninitializedGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task ApiGruntsByIdTaskingsByTasknameDeleteAsync(this ICovenantAPI operations, int id, string taskname, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<GruntTasking>> ApiGruntsByIdTaskingsSearchUninitializedGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.ApiGruntsByIdTaskingsByTasknameDeleteWithHttpMessagesAsync(id, taskname, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                using (var _result = await operations.ApiGruntsByIdTaskingsSearchUninitializedGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            public static GruntTasking ApiGruntsByIdTaskingsByTidGet(this ICovenantAPI operations, int id, int tid)
+            {
+                return operations.ApiGruntsByIdTaskingsByTidGetAsync(id, tid).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<GruntTasking> ApiGruntsByIdTaskingsByTidGetAsync(this ICovenantAPI operations, int id, int tid, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsByIdTaskingsByTidGetWithHttpMessagesAsync(id, tid, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            /// <param name='gruntTasking'>
+            /// </param>
+            public static GruntTasking ApiGruntsByIdTaskingsByTidPut(this ICovenantAPI operations, int id, int tid, GruntTasking gruntTasking = default(GruntTasking))
+            {
+                return operations.ApiGruntsByIdTaskingsByTidPutAsync(id, tid, gruntTasking).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            /// <param name='gruntTasking'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<GruntTasking> ApiGruntsByIdTaskingsByTidPutAsync(this ICovenantAPI operations, int id, int tid, GruntTasking gruntTasking = default(GruntTasking), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsByIdTaskingsByTidPutWithHttpMessagesAsync(id, tid, gruntTasking, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            public static void ApiGruntsByIdTaskingsByTidDelete(this ICovenantAPI operations, int id, int tid)
+            {
+                operations.ApiGruntsByIdTaskingsByTidDeleteAsync(id, tid).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task ApiGruntsByIdTaskingsByTidDeleteAsync(this ICovenantAPI operations, int id, int tid, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.ApiGruntsByIdTaskingsByTidDeleteWithHttpMessagesAsync(id, tid, null, cancellationToken).ConfigureAwait(false)).Dispose();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            public static GruntTasking ApiGruntsByIdTaskingsByTidDetailGet(this ICovenantAPI operations, int id, int tid)
+            {
+                return operations.ApiGruntsByIdTaskingsByTidDetailGetAsync(id, tid).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='tid'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<GruntTasking> ApiGruntsByIdTaskingsByTidDetailGetAsync(this ICovenantAPI operations, int id, int tid, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsByIdTaskingsByTidDetailGetWithHttpMessagesAsync(id, tid, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
             }
 
             /// <param name='operations'>

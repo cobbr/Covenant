@@ -2,6 +2,12 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
+using Newtonsoft.Json;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -22,7 +28,6 @@ namespace Covenant.Models
         public DbSet<Launcher> Launchers { get; set; }
         public DbSet<Grunt> Grunts { get; set; }
         public DbSet<GruntTask> GruntTasks { get; set; }
-        public DbSet<GruntTask.GruntTaskOption> GruntTaskOptions { get; set; }
         public DbSet<HostedFile> HostedFiles { get; set; }
 
         public DbSet<CapturedCredential> Credentials { get; set; }
@@ -39,7 +44,32 @@ namespace Covenant.Models
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-			builder.Entity<HttpListener>().ToTable("HttpListener");
+
+            builder.Entity<GruntTask>().Property(GT => GT.ReferenceAssemblies).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+            builder.Entity<GruntTask>().Property(GT => GT.ReferenceSourceLibraries).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v =>  v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+            builder.Entity<GruntTask>().Property(GT => GT.EmbeddedResources).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+
+            builder.Entity<Grunt>().Property(G => G.Children).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+
+            builder.Entity<GruntTask.GruntTaskOption>().ToTable("GruntTaskOption");
+
+            builder.Entity<HttpListener>().ToTable("HttpListener");
             builder.Entity<HttpProfile>().ToTable("HttpProfile");
 
             builder.Entity<WmicLauncher>().ToTable("WmicLauncher");

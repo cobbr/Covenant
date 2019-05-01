@@ -9,91 +9,78 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 using Covenant.Core;
+using Covenant.Models.Covenant;
 
 namespace Covenant.Models.Grunts
 {
+    public enum GruntTaskingStatus
+    {
+        Uninitialized,
+        Tasked,
+        Progressed,
+        Completed
+    }
+
+    public enum GruntTaskingType
+    {
+        Assembly,
+        SetDelay,
+        SetJitter,
+        SetConnectAttempts,
+        Kill,
+        Connect,
+        Disconnect,
+        Jobs
+    }
+
+    public class GruntTaskingMessage
+    {
+        public GruntTaskingType Type { get; set; }
+        public string Name { get; set; }
+        public string Message { get; set; }
+        public bool Token { get; set; }
+    }
+
     public class GruntTasking
     {
-        public enum GruntTaskingStatus
-        {
-            Uninitialized,
-            Tasked,
-            Progressed,
-            Completed
-        }
-
-        public enum GruntTaskingType
-        {
-            Assembly,
-            Set,
-            Kill
-        }
-
-        public class GruntTaskingMessage
-        {
-            public GruntTaskingType type { get; set; }
-            public string Name { get; set; }
-            public string message { get; set; }
-        }
-
         public int Id { get; set; }
         public string Name { get; set; } = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
-        public int TaskId { get; set; }
-        public int GruntId { get; set; }
 
-        public GruntTaskingStatus status { get; set; } = GruntTaskingStatus.Uninitialized;
-        public GruntTaskingType type { get; set; } = GruntTaskingType.Assembly;
+        public int GruntId { get; set; }
+        public int TaskId { get; set; }
+
+        public GruntTaskingType Type { get; set; } = GruntTaskingType.Assembly;
+        public string TaskingMessage { get; set; } = "";
+        public bool TokenTask { get; set; } = false;
+
+        public string TaskingCommand { get; set; } = "";
+        public string TaskingUser { get; set; }
+
+        public GruntTaskingStatus Status { get; set; } = GruntTaskingStatus.Uninitialized;
         public string GruntTaskOutput { get; set; } = "";
 
-        public GruntTaskingMessage TaskingMessage
+        public DateTime TaskingTime { get; set; } = DateTime.MinValue;
+        public DateTime CompletionTime { get; set; } = DateTime.MinValue;
+
+        public GruntTaskingMessage GruntTaskingMessage
         {
             get
             {
-                if (this.type == GruntTaskingType.Assembly)
+                return new GruntTaskingMessage
                 {
-                    return new GruntTaskingMessage
-                    {
-                        type = GruntTaskingType.Assembly,
-                        Name = this.Name,
-                        message = this.GruntTaskingAssembly
-                    };
-                }
-                else if(this.type == GruntTaskingType.Set)
-                {
-                    string message = "";
-                    switch (SetType)
-                    {
-                        case GruntSetTaskingType.Delay: message = GruntSetTaskingType.Delay + "," + Value; break;
-                        case GruntSetTaskingType.Jitter: message = GruntSetTaskingType.Jitter + "," + Value; break;
-                        case GruntSetTaskingType.ConnectAttempts: message = GruntSetTaskingType.ConnectAttempts + "," + Value; break;
-                        default: message = ""; break;
-                    }
-                    return new GruntTaskingMessage
-                    {
-                        type = GruntTaskingType.Set,
-                        Name = this.Name,
-                        message = message
-                    };
-                }
-                else if (this.type == GruntTaskingType.Kill)
-                {
-                    return new GruntTaskingMessage
-                    {
-                        type = GruntTaskingType.Kill,
-                        Name = this.Name,
-                        message = "kill"
-                    };
-                }
-                return null;
+                    Type = this.Type,
+                    Name = this.Name,
+                    Message = this.TaskingMessage,
+                    Token = this.TokenTask
+                };
             }
         }
 
-        // Base64-encoded compressed task assembly bytes
-        public string GruntTaskingAssembly { get; private set; } = "";
-        public string Compile(string TaskCode, List<string> Parameters, List<string> ReferenceAssemblies, List<string> ReferenceSourceLibraries, List<string> EmbeddedResources, Common.DotNetVersion dotNetFrameworkVersion)
+        public string Compile(GruntTask task, Grunt grunt, List<string> Parameters)
         {
+            this.TokenTask = task.TokenTask;
             List<Compiler.Reference> references = Common.DefaultReferences;
-            ReferenceAssemblies.ForEach(RA =>
+            task.ReferenceAssemblies.ForEach(RA =>
             {
                 references.AddRange(
                     new List<Compiler.Reference> {
@@ -102,7 +89,7 @@ namespace Covenant.Models.Grunts
                     }
                 );
             });
-            List<Compiler.EmbeddedResource> resources = EmbeddedResources.Select(ER =>
+            List<Compiler.EmbeddedResource> resources = task.EmbeddedResources.Select(ER =>
             {
                 return new Compiler.EmbeddedResource
                 {
@@ -114,32 +101,28 @@ namespace Covenant.Models.Grunts
             }).ToList();
             byte[] compiled = Compiler.Compile(new Compiler.CompilationRequest
             {
-                Source = TaskCode,
-                SourceDirectory = ReferenceSourceLibraries == null || ReferenceSourceLibraries.Count == 0 ? null : Common.CovenantSrcDirectory + Path.DirectorySeparatorChar + ReferenceSourceLibraries[0],
+                Source = task.Code,
+                SourceDirectory = task.ReferenceSourceLibraries == null || task.ReferenceSourceLibraries.Count == 0 ? null : Common.CovenantSrcDirectory + Path.DirectorySeparatorChar + task.ReferenceSourceLibraries[0],
                 ResourceDirectory = Common.CovenantResourceDirectory,
                 ReferenceDirectory = Common.CovenantReferenceDirectory,
-                TargetDotNetVersion = dotNetFrameworkVersion,
+                TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 References = references,
                 EmbeddedResources = resources,
+                UnsafeCompile = task.UnsafeCompile,
                 Confuse = true,
-                Optimize = !ReferenceSourceLibraries.Contains("Rubeus") // TODO: Fix optimization to work with Rubeus
+                // TODO: Fix optimization to work with GhostPack
+                Optimize = !task.ReferenceSourceLibraries.Contains("Rubeus") &&
+                           !task.ReferenceSourceLibraries.Contains("SharpDPAPI") &&
+                           !task.ReferenceSourceLibraries.Contains("SharpUp") &&
+                           !task.ReferenceSourceLibraries.Contains("Seatbelt")
             });
 
-            this.GruntTaskingAssembly = Convert.ToBase64String(Utilities.Compress(compiled));
+            this.TaskingMessage = Convert.ToBase64String(Utilities.Compress(compiled));
             foreach(string Parameter in Parameters)
             {
-                this.GruntTaskingAssembly += "," + Convert.ToBase64String(Common.CovenantEncoding.GetBytes(Parameter));
+                this.TaskingMessage += "," + Convert.ToBase64String(Common.CovenantEncoding.GetBytes(Parameter));
             }
-            return this.GruntTaskingAssembly;
+            return this.TaskingMessage;
         }
-
-        public enum GruntSetTaskingType
-        {
-            Delay,
-            Jitter,
-            ConnectAttempts
-        }
-        public GruntSetTaskingType SetType { get; set; } = GruntSetTaskingType.Delay;
-        public string Value { get; set; } = "";
     }
 }

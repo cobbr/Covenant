@@ -6,6 +6,10 @@ public static class Task
 {
     public static string Execute(string PowerShellCommand)
     {
-        return Shell.PowerShellExecute(PowerShellCommand, true);
+        try
+        {
+            return Shell.PowerShellExecute(PowerShellCommand, true);
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
 }

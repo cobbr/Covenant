@@ -36,19 +36,21 @@ namespace Covenant.Models.Listeners
         }
 
         public int Id { get; set; }
-        public int ProfileId { get; set; } = 1;
         public string Name { get; set; } = GenerateName();
         public string Description { get; set; } = "A generic listener.";
+
         public string BindAddress { get; set; } = "0.0.0.0";
         public int BindPort { get; set; } = 80;
         public string ConnectAddress { get; set; } = System.Net.Dns.GetHostAddresses(System.Net.Dns.GetHostName()).FirstOrDefault(
             A => A.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
 
+        public int ProfileId { get; set; } = 1;
         public int ListenerTypeId { get; set; }
         public ListenerStatus Status { get; set; } = ListenerStatus.Uninitialized;
-
         public string CovenantToken { get; set; }
-        
+
+        public DateTime StartTime { get; set; } = DateTime.MinValue;
+
         public virtual CancellationTokenSource Start(HttpProfile profile) { return null; }
         public virtual void Stop(CancellationTokenSource cancellationTokenSource) { }
         public virtual string GetGruntStagerCode(Grunt grunt, HttpProfile profile) { return ""; }
