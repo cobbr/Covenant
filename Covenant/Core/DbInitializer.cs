@@ -1003,34 +1003,27 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
-                        Id = 36,
                         Name = "PrivExchange",
                         Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
-                        ReferenceAssemblies = String.Join(",", new List<string> { "System.XML.dll" }),
-                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        ReferenceAssemblies = new List<string> { "System.XML.dll" },
+                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PrivExchange" + ".task")),
                         Options = new List<GruntTask.GruntTaskOption>
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 36,
-                                OptionId = 1,
                                 Name = "EWSUri",
                                 Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
                                 Value = "https://exchange.example.local:443/EWS/Exchange.asmx"
                             },
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 36,
-                                OptionId = 2,
                                 Name = "RelayUri",
                                 Description = "The URI of the external relay of the Exchange authentication.",
                                 Value = "https://relay.example.local:443/relay"
                             },
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 36,
-                                OptionId = 3,
                                 Name = "ExchangeVersion",
                                 Description = "Microsoft Exchange version. Defaults to Exchange2010.",
                                 Value = "Exchange2010"
@@ -1039,26 +1032,21 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
-                        Id = 37,
                         Name = "PersistCOMHijack",
                         Description = "Hijacks a CLSID key to execute a payload for persistence.",
-                        ReferenceAssemblies = String.Join(",", new List<string>()),
-                        ReferenceSourceLibraries = String.Join(",", new List<string> { "SharpSploit" }),
+                        ReferenceAssemblies = new List<string>(),
+                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PersistCOMHijack" + ".task")),
                         Options = new List<GruntTask.GruntTaskOption>
                         {
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 37,
-                                OptionId = 1,
                                 Name = "CLSID",
                                 Description = "Missing CLSID to abuse.",
                                 Value = ""
                             },
                             new GruntTask.GruntTaskOption
                             {
-                                TaskId = 37,
-                                OptionId = 2,
                                 Name = "ExecutablePath",
                                 Description = "Path to the executable path.",
                                 Value = ""
