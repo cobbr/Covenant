@@ -1,3 +1,5 @@
+![Covenant](https://raw.githubusercontent.com/wiki/cobbr/Covenant/covenant.png)
+
 # Covenant
 
 Covenant is a .NET command and control framework that aims to highlight the attack surface of .NET, make the use of offensive .NET tradecraft easier, and serve as a collaborative command and control platform for red teamers.
