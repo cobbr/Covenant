@@ -1,92 +1,36 @@
-﻿@model IEnumerable<Covenant.API.Models.Indicator>
+﻿@using Covenant.Models.Indicators
+@model IEnumerable<Indicator>
 @{
     Layout = "_IndicatorLayout";
     ViewData["Title"] = "Indicators";
 }
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-4 border-bottom">
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-4">
     <h1 class="h2">Indicators</h1>
 </div>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-    <h4 class="h5">Target Indicators</h4>
-</div>
+@{
+    await Html.RenderPartialAsync("_IndicatorTables");
+}
 
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>ComputerName</th>
-                <th>UserName</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in ViewBag.TargetIndicators)
-            {
-            <tr>
-                <td>@item.ComputerName</td>
-                <td>@item.UserName</td>
-            </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-    <h4 class="h5">Network Indicators</h4>
-</div>
-
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>Protocol</th>
-                <th>Domain</th>
-                <th>IPAddress</th>
-                <th>Port</th>
-                <th>URI</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in ViewBag.NetworkIndicators)
-            {
-            <tr>
-                <td>@item.Protocol</td>
-                <td>@item.Domain</td>
-                <td>@item.IpAddress</td>
-                <td>@item.Port</td>
-                <td>@item.Uri</td>
-            </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
-    <h4 class="h5">File Indicators</h4>
-</div>
-
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>FileName</th>
-                <th>FilePath</th>
-                <th>SHA2</th>
-                <th>SHA1</th>
-                <th>MD5</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in ViewBag.FileIndicators)
-            {
-            <tr>
-                <td>@item.FileName</td>
-                <td>@item.FilePath</td>
-                <td>@item.ShA2</td>
-                <td>@item.ShA1</td>
-                <td>@item.MD5</td>
-            </tr>
-            }
-        </tbody>
-    </table>
-</div>
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#target-table').DataTable({
+                "info" : false,
+                "pageLength": 50,
+                "sDom": 'Rfrtilp'
+            });
+            $('#network-table').DataTable({
+                "info" : false,
+                "pageLength": 50,
+                "sDom": 'Rfrtilp'
+            });
+            $('#file-table').DataTable({
+                "info" : false,
+                "pageLength": 50,
+                "sDom": 'Rfrtilp'
+            });
+        });
+    </script>
+}

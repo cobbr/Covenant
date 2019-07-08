@@ -65,17 +65,17 @@ namespace Covenant
                 }
 
                 string username = UserNameOption.Value();
-                string password = PasswordOption.Value();
-                if (!UserNameOption.HasValue())
-                {
-                    Console.Write("Username: ");
-                    username = Console.ReadLine();
-                }
-                if (!PasswordOption.HasValue())
+                string password = "";
+
+                if (UserNameOption.HasValue() && !PasswordOption.HasValue())
                 {
                     Console.Write("Password: ");
                     password = GetPassword();
                     Console.WriteLine();
+                }
+                else if (PasswordOption.HasValue())
+                {
+                    password = PasswordOption.Value();
                 }
 
                 string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : "0.0.0.0";
@@ -90,12 +90,7 @@ namespace Covenant
                 }
                 IPEndPoint CovenantEndpoint = new IPEndPoint(address, Common.CovenantHTTPSPort);
                 string CovenantUri = (CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + Common.CovenantHTTPSPort : "https://" + CovenantEndpoint);
-                var host = BuildWebHost(
-                    CovenantEndpoint,
-                    CovenantUri,
-                    username,
-                    password
-                );
+                var host = BuildWebHost(CovenantEndpoint, CovenantUri);
                 using (var scope = host.Services.CreateScope())
                 {
                     var services = scope.ServiceProvider;
@@ -105,37 +100,27 @@ namespace Covenant
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     context.Database.EnsureCreated();
-                    if (context.Users.Any())
+                    DbInitializer.Initialize(context, roleManager).Wait();
+                    if (!context.Users.Any() && UserNameOption.HasValue() && !string.IsNullOrEmpty(password))
                     {
-                        CovenantUser user = context.Users.FirstOrDefault(CU => CU.UserName == username);
-                        Task<bool> task = userManager.CheckPasswordAsync(user, password);
+                        // TODO: create user
+                        CovenantUser user = new CovenantUser { UserName = UserNameOption.Value() };
+                        Task<IdentityResult> task = userManager.CreateAsync(user, password);
                         task.Wait();
-                        if (!task.Result)
+                        IdentityResult userResult = task.Result;
+                        if (userResult.Succeeded)
                         {
-                            Console.Error.WriteLine($"Error: Incorrect password for user: {username}");
-                            return -2;
+                            Task t = userManager.AddToRoleAsync(user, "User");
+                            t.Wait();
+                            Task t2 = userManager.AddToRoleAsync(user, "Administrator");
+                            t2.Wait();
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"Error creating user: {user.UserName}");
+                            return -1;
                         }
                     }
-					var cancellationTokens = services.GetRequiredService<Dictionary<int, CancellationTokenSource>>();
-                    DbInitializer.Initialize(context, userManager, roleManager, configuration, cancellationTokens);
-
-                    // Append capital letter to appease Password complexity requirements, get rid of warning output
-                    string covenantUsername = Utilities.CreateSecureGuid().ToString();
-                    string covenantPassword = Utilities.CreateSecureGuid().ToString() + "A";
-                    CovenantUser covenantUser = new CovenantUser { UserName = covenantUsername };
-                    userManager.CreateAsync(covenantUser, covenantPassword).Wait();
-                    covenantUser = context.Users.FirstOrDefault(U => U.UserName == covenantUsername);
-                    userManager.AddToRoleAsync(covenantUser, "Listener").Wait();
-                    userManager.AddToRoleAsync(covenantUser, "User").Wait();
-                    List<string> userRoles = context.UserRoles.Where(UR => UR.UserId == covenantUser.Id).Select(UR => UR.RoleId).ToList();
-                    List<string> roles = context.Roles.Where(R => userRoles.Contains(R.Id)).Select(R => R.Name).ToList();
-
-                    var token = Utilities.GenerateJwtToken(
-                        covenantUser.UserName, covenantUser.Id, roles.ToArray(),
-                        configuration["JwtKey"], configuration["JwtIssuer"],
-                        configuration["JwtAudience"], configuration["JwtExpireDays"]
-                    );
-                    configuration["CovenantToken"] = token;
                 }
                 
                 LoggingConfiguration loggingConfig = new LoggingConfiguration();
@@ -169,7 +154,7 @@ namespace Covenant
             app.Execute(args);
         }
 
-        public static IWebHost BuildWebHost(IPEndPoint CovenantEndpoint, string CovenantUri, string CovenantUsername, string CovenantPassword) =>
+        public static IWebHost BuildWebHost(IPEndPoint CovenantEndpoint, string CovenantUri) =>
             new WebHostBuilder()
                 .UseKestrel(options =>
                 {
@@ -190,7 +175,7 @@ namespace Covenant
                             }
                             catch (CryptographicException)
                             {
-                                Console.Error.WriteLine("Error importing Covenant certificate. Wrong password? Must use initial user/password.");
+                                Console.Error.WriteLine("Error importing Covenant certificate.");
                             }
                             httpsOptions.SslProtocols = SslProtocols.Tls12;
                             Console.WriteLine("Using Covenant certificate with hash: " + httpsOptions.ServerCertificate.GetCertHashString());
@@ -221,8 +206,6 @@ namespace Covenant
                 })
                 .UseStartup<Startup>()
                 .UseSetting("CovenantUri", CovenantUri)
-                .UseSetting("CovenantUsername", CovenantUsername)
-                .UseSetting("CovenantPassword", CovenantPassword)
                 .Build();
 
         private static string GetPassword()

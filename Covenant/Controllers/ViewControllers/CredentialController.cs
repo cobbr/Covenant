@@ -1,51 +1,60 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.Rest;
+﻿using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Configuration;
 
-using Covenant.Core;
-using Covenant.API;
-using Covenant.API.Models;
-
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Covenant.Models;
+using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
     [Authorize]
     public class CredentialController : Controller
     {
-        private readonly CovenantAPI _client;
+        private readonly CovenantContext _context;
 
-        public CredentialController(IConfiguration configuration)
+        public CredentialController(CovenantContext context)
         {
-            X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-            HttpClientHandler clientHandler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
-                {
-                    return cert.GetCertHashString() == covenantCert.GetCertHashString();
-                }
-            };
-            _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
-                new TokenCredentials(configuration["CovenantToken"]),
-                clientHandler
-            );
+            _context = context;
         }
 
-        // GET: /credential/
+        // GET: /credential
         public async Task<IActionResult> Index()
         {
-            ViewBag.PasswordCredentials = await _client.ApiCredentialsPasswordsGetAsync();
-            ViewBag.HashCredentials = await _client.ApiCredentialsHashesGetAsync();
-            ViewBag.TicketCredentials = await _client.ApiCredentialsTicketsGetAsync();
-            return View(await _client.ApiCredentialsGetAsync());
+            ViewBag.PasswordCredentials = await _context.GetPasswordCredentials();
+            ViewBag.HashCredentials = await _context.GetHashCredentials();
+            ViewBag.TicketCredentials = await _context.GetTicketCredentials();
+            return View(await _context.GetCredentials());
+        }
+
+        // GET: /credential/create
+        public IActionResult Create()
+        {
+            return View(new CapturedCredential());
+        }
+
+        // POST: /credential/createpasswordcredential
+        [HttpPost]
+        public async Task<IActionResult> CreatePasswordCredential(CapturedPasswordCredential credential)
+        {
+            CapturedCredential createdCredential = await _context.CreatePasswordCredential(credential);
+            return RedirectToAction("Index", "Data");
+        }
+
+        // POST: /credential/createhashcredential
+        [HttpPost]
+        public async Task<IActionResult> CreateHashCredential(CapturedHashCredential credential)
+        {
+            CapturedCredential createdCredential = await _context.CreateHashCredential(credential);
+            return RedirectToAction("Index", "Data");
+        }
+
+        // POST: /credential/createticketcredential
+        [HttpPost]
+        public async Task<IActionResult> CreateTicketCredential(CapturedTicketCredential credential)
+        {
+            CapturedCredential createdCredential = await _context.CreateTicketCredential(credential);
+            return RedirectToAction("Index", "Data");
         }
     }
 }

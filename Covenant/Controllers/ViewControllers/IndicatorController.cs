@@ -1,50 +1,60 @@
-﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Threading.Tasks;
 
-using Microsoft.Rest;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
-using Covenant.Core;
-using Covenant.API;
-using Covenant.API.Models;
+using Covenant.Models;
+using Covenant.Models.Indicators;
 
 namespace Covenant.Controllers
 {
     [Authorize]
     public class IndicatorController : Controller
     {
-        private readonly CovenantAPI _client;
+        private readonly CovenantContext _context;
 
-        public IndicatorController(IConfiguration configuration)
+        public IndicatorController(CovenantContext context)
         {
-            X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-            HttpClientHandler clientHandler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
-                {
-                    return cert.GetCertHashString() == covenantCert.GetCertHashString();
-                }
-            };
-            _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
-                new TokenCredentials(configuration["CovenantToken"]),
-                clientHandler
-            );
+            _context = context;
         }
 
         // GET: /indicator/
         public async Task<IActionResult> Index()
         {
-            ViewBag.TargetIndicators = await _client.ApiIndicatorsTargetsGetAsync();
-            ViewBag.NetworkIndicators = await _client.ApiIndicatorsNetworksGetAsync();
-            ViewBag.FileIndicators = await _client.ApiIndicatorsFilesGetAsync();
-            return View(await _client.ApiIndicatorsGetAsync());
+            ViewBag.TargetIndicators = await _context.GetTargetIndicators();
+            ViewBag.NetworkIndicators = await _context.GetNetworkIndicators();
+            ViewBag.FileIndicators = await _context.GetFileIndicators();
+            return View(await _context.GetIndicators());
+        }
+
+        // GET: /indicator/create
+        public IActionResult Create()
+        {
+            return View(new Indicator());
+        }
+
+        // POST: /indicator/createfileindicator
+        [HttpPost]
+        public async Task<IActionResult> CreateFileIndicator(FileIndicator indicator)
+        {
+            Indicator createdIndicator = await _context.CreateIndicator(indicator);
+            return RedirectToAction("Index", "Data");
+        }
+
+        // POST: /indicator/createnetworkindicator
+        [HttpPost]
+        public async Task<IActionResult> CreateNetworkIndicator(NetworkIndicator indicator)
+        {
+            Indicator createdIndicator = await _context.CreateIndicator(indicator);
+            return RedirectToAction("Index", "Data");
+        }
+
+        // POST: /indicator/createtargetindicator
+        [HttpPost]
+        public async Task<IActionResult> CreateTargetIndicator(TargetIndicator indicator)
+        {
+            Indicator createdIndicator = await _context.CreateIndicator(indicator);
+            return RedirectToAction("Index", "Data");
         }
     }
 }

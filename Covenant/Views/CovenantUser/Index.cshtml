@@ -1,14 +1,19 @@
-﻿@model IEnumerable<Covenant.API.Models.CovenantUser>
+﻿@using System.Linq
+@using Covenant.Models
+@using Covenant.Models.Covenant
+@using Microsoft.AspNetCore.Identity
+@model IEnumerable<CovenantUser>
 @{
     Layout = "_CovenantUserLayout";
     ViewData["Title"] = "CovenantUsers";
+    Dictionary<string, string> UserRoleDict = ViewBag.UserRoleDict;
 }
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">CovenantUsers</h1>
 </div>
 
 <div class="table-responsive">
-    <table class="table table-striped table-sm">
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.UserName)</th>
@@ -18,11 +23,19 @@
         <tbody>
             @foreach (var item in Model)
             {
-            <tr>
-                <td>@Html.DisplayFor(modelItem => item.UserName)</td>
-                <td>Roles</td>
-            </tr>
+                <tr>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id">
+                            @Html.DisplayFor(modelItem => item.UserName)
+                        </a>
+                    </td>
+                    <td>@UserRoleDict[item.UserName]</td>
+                </tr>
             }
         </tbody>
     </table>
 </div>
+@if (User.IsInRole("Administrator"))
+{
+    <a class="btn btn-primary" asp-action="Create" role="button"><span data-feather="plus"></span> Create</a>
+}

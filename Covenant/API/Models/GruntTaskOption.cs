@@ -7,6 +7,8 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class GruntTaskOption
@@ -22,12 +24,16 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTaskOption class.
         /// </summary>
-        public GruntTaskOption(int? id = default(int?), string name = default(string), string value = default(string), string description = default(string))
+        public GruntTaskOption(int? id = default(int?), string name = default(string), string value = default(string), string description = default(string), IList<string> suggestedValues = default(IList<string>), bool? optional = default(bool?), bool? displayInCommand = default(bool?), int? gruntTaskId = default(int?))
         {
             Id = id;
             Name = name;
             Value = value;
             Description = description;
+            SuggestedValues = suggestedValues;
+            Optional = optional;
+            DisplayInCommand = displayInCommand;
+            GruntTaskId = gruntTaskId;
             CustomInit();
         }
 
@@ -55,6 +61,26 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "suggestedValues")]
+        public IList<string> SuggestedValues { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "optional")]
+        public bool? Optional { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "displayInCommand")]
+        public bool? DisplayInCommand { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntTaskId")]
+        public int? GruntTaskId { get; set; }
 
     }
 }

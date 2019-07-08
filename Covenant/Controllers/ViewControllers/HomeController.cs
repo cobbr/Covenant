@@ -1,46 +1,29 @@
-﻿using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Threading.Tasks;
 
-using Microsoft.Rest;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
-using Covenant.Core;
-using Covenant.API;
-using Covenant.API.Models;
+using Covenant.Models;
 
 namespace Covenant.Controllers
 {
     [Authorize]
     public class HomeController : Controller
     {
-        private readonly CovenantAPI _client;
+        private readonly CovenantContext _context;
 
-        public HomeController(IConfiguration configuration)
+        public HomeController(CovenantContext context)
         {
-            X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-            HttpClientHandler clientHandler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
-                {
-                    return cert.GetCertHashString() == covenantCert.GetCertHashString();
-                }
-            };
-            _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
-                new TokenCredentials(configuration["CovenantToken"]),
-                clientHandler
-            );
+            _context = context;
         }
 
-        // GET: /grunt
+        // GET: /
         public async Task<IActionResult> Index()
         {
-            ViewBag.Grunts = await _client.ApiGruntsGetAsync();
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
+            ViewBag.Grunts = await _context.GetGrunts();
+            ViewBag.Listeners = await _context.GetListeners();
+            ViewBag.GruntTaskings = await _context.GetGruntTaskings();
             return View();
         }
     }

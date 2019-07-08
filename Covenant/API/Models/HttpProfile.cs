@@ -7,6 +7,8 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class HttpProfile
@@ -22,18 +24,21 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the HttpProfile class.
         /// </summary>
-        public HttpProfile(string name = default(string), string httpUrls = default(string), string httpCookies = default(string), string httpMessageTransform = default(string), string httpRequestHeaders = default(string), string httpPostRequest = default(string), string httpResponseHeaders = default(string), string httpGetResponse = default(string), string httpPostResponse = default(string), int? id = default(int?))
+        /// <param name="type">Possible values include: 'HTTP'</param>
+        public HttpProfile(IList<string> httpUrls = default(IList<string>), IList<string> httpCookies = default(IList<string>), string httpMessageTransform = default(string), IList<HttpProfileHeader> httpRequestHeaders = default(IList<HttpProfileHeader>), IList<HttpProfileHeader> httpResponseHeaders = default(IList<HttpProfileHeader>), string httpPostRequest = default(string), string httpGetResponse = default(string), string httpPostResponse = default(string), int? id = default(int?), string name = default(string), string description = default(string), ProfileType? type = default(ProfileType?))
         {
-            Name = name;
             HttpUrls = httpUrls;
             HttpCookies = httpCookies;
             HttpMessageTransform = httpMessageTransform;
             HttpRequestHeaders = httpRequestHeaders;
-            HttpPostRequest = httpPostRequest;
             HttpResponseHeaders = httpResponseHeaders;
+            HttpPostRequest = httpPostRequest;
             HttpGetResponse = httpGetResponse;
             HttpPostResponse = httpPostResponse;
             Id = id;
+            Name = name;
+            Description = description;
+            Type = type;
             CustomInit();
         }
 
@@ -44,18 +49,13 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
-
-        /// <summary>
-        /// </summary>
         [JsonProperty(PropertyName = "httpUrls")]
-        public string HttpUrls { get; set; }
+        public IList<string> HttpUrls { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "httpCookies")]
-        public string HttpCookies { get; set; }
+        public IList<string> HttpCookies { get; set; }
 
         /// <summary>
         /// </summary>
@@ -65,17 +65,17 @@ namespace Covenant.API.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "httpRequestHeaders")]
-        public string HttpRequestHeaders { get; set; }
+        public IList<HttpProfileHeader> HttpRequestHeaders { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "httpResponseHeaders")]
+        public IList<HttpProfileHeader> HttpResponseHeaders { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "httpPostRequest")]
         public string HttpPostRequest { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "httpResponseHeaders")]
-        public string HttpResponseHeaders { get; set; }
 
         /// <summary>
         /// </summary>
@@ -91,6 +91,22 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "id")]
         public int? Id { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "description")]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets possible values include: 'HTTP'
+        /// </summary>
+        [JsonProperty(PropertyName = "type")]
+        public ProfileType? Type { get; set; }
 
     }
 }

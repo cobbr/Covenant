@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://opensource.org/licenses/BSD-3-Clause</licenseUrl>
+    <projectUrl>https://github.com/cobbr/SharpSploit</projectUrl>
+    <iconUrl>https://cobbr.io/favicon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>SharpSploit is a .NET post-exploitation library written in C#. https://sharpsploit.cobbr.io/api</description>
+    <releaseNotes>SharpSploit v1.1</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>SharpSploit C# .NET post-exploitation offensive security</tags>
+  </metadata>
+</package>

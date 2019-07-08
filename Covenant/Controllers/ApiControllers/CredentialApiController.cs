@@ -4,9 +4,12 @@
 
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Covenant;
 
@@ -29,9 +32,9 @@ namespace Covenant.Controllers
         // Get a list of CapturedCredentials
         // </summary>
         [HttpGet(Name = "GetCredentials")]
-        public ActionResult<IEnumerable<CapturedCredential>> GetCredentials()
+        public async Task<ActionResult<IEnumerable<CapturedCredential>>> GetCredentials()
         {
-            return _context.Credentials.ToList();
+            return Ok(await _context.GetCredentials());
         }
 
         // GET: api/credentials/passwords
@@ -39,9 +42,9 @@ namespace Covenant.Controllers
         // Get a list of CapturedPasswordCredentials
         // </summary>
         [HttpGet("passwords", Name = "GetPasswordCredentials")]
-        public ActionResult<IEnumerable<CapturedPasswordCredential>> GetPasswordCredentials()
+        public async Task<ActionResult<IEnumerable<CapturedPasswordCredential>>> GetPasswordCredentials()
         {
-            return _context.Credentials.Where(P => P.Type == CapturedCredential.CredentialType.Password).Select(P => (CapturedPasswordCredential)P).ToList();
+            return Ok(await _context.GetPasswordCredentials());
         }
 
         // GET: api/credentials/hashes
@@ -49,9 +52,9 @@ namespace Covenant.Controllers
         // Get a list of CapturedHashCredentials
         // </summary>
         [HttpGet("hashes", Name = "GetHashCredentials")]
-        public ActionResult<IEnumerable<CapturedHashCredential>> GetHashCredentials()
+        public async Task<ActionResult<IEnumerable<CapturedHashCredential>>> GetHashCredentials()
         {
-            return _context.Credentials.Where(P => P.Type == CapturedCredential.CredentialType.Hash).Select(H => (CapturedHashCredential)H).ToList();
+            return Ok(await _context.GetHashCredentials());
         }
 
         // GET: api/credentials/tickets
@@ -59,9 +62,9 @@ namespace Covenant.Controllers
         // Get a list of CapturedTicketCredentials
         // </summary>
         [HttpGet("tickets", Name = "GetTicketCredentials")]
-        public ActionResult<IEnumerable<CapturedTicketCredential>> GetTicketCredentials()
+        public async Task<ActionResult<IEnumerable<CapturedTicketCredential>>> GetTicketCredentials()
         {
-            return _context.Credentials.Where(P => P.Type == CapturedCredential.CredentialType.Ticket).Select(T => (CapturedTicketCredential)T).ToList();
+            return Ok(await _context.GetTicketCredentials());
         }
 
         // GET api/credentials/{id}
@@ -69,14 +72,24 @@ namespace Covenant.Controllers
         // Get a CapturedCredential by id
         // </summary>
         [HttpGet("{id}", Name = "GetCredential")]
-        public ActionResult<CapturedCredential> GetCredential(int id)
+        public async Task<ActionResult<CapturedCredential>> GetCredential(int id)
         {
-            var credential = _context.Credentials.FirstOrDefault(c => c.Id == id);
-            if (credential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedCredential with id: {id}");
+                return await _context.GetCredential(id);
             }
-            return credential;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // GET api/credentials/passwords/{id}
@@ -84,16 +97,24 @@ namespace Covenant.Controllers
         // Get a CapturedPasswordCredential by id
         // </summary>
         [HttpGet("passwords/{id}", Name = "GetPasswordCredential")]
-        public ActionResult<CapturedPasswordCredential> GetPasswordCredential(int id)
+        public async Task<ActionResult<CapturedPasswordCredential>> GetPasswordCredential(int id)
         {
-            var credential = (CapturedPasswordCredential) _context.Credentials
-                                .Where(C => C.Type == CapturedCredential.CredentialType.Password)
-                                .FirstOrDefault(c => c.Id == id);
-            if (credential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedPasswordCredential with id: {id}");
+                return await _context.GetPasswordCredential(id);
             }
-            return credential;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // GET api/credentials/hashes/{id}
@@ -101,16 +122,24 @@ namespace Covenant.Controllers
         // Get a CapturedHashCredential by id
         // </summary>
         [HttpGet("hashes/{id}", Name = "GetHashCredential")]
-        public ActionResult<CapturedHashCredential> GetHashCredential(int id)
+        public async Task<ActionResult<CapturedHashCredential>> GetHashCredential(int id)
         {
-            var credential = (CapturedHashCredential) _context.Credentials
-                                .Where(C => C.Type == CapturedCredential.CredentialType.Hash)
-                                .FirstOrDefault(c => c.Id == id);
-            if (credential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedHashCredential with id: {id}");
+                return await _context.GetHashCredential(id);
             }
-            return credential;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // GET api/credentials/tickets/{id}
@@ -118,16 +147,24 @@ namespace Covenant.Controllers
         // Get a CapturedTicketCredential by id
         // </summary>
         [HttpGet("tickets/{id}", Name = "GetTicketCredential")]
-        public ActionResult<CapturedTicketCredential> GetTicketCredential(int id)
+        public async Task<ActionResult<CapturedTicketCredential>> GetTicketCredential(int id)
         {
-            var credential = (CapturedTicketCredential) _context.Credentials
-                                .Where(C => C.Type == CapturedCredential.CredentialType.Ticket)
-                                .FirstOrDefault(c => c.Id == id);
-            if (credential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedTicketCredential with id: {id}");
+                return await _context.GetTicketCredential(id);
             }
-            return Ok(credential);
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST api/credentials/passwords
@@ -136,12 +173,25 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost("passwords", Name = "CreatePasswordCredential")]
         [ProducesResponseType(typeof(CapturedPasswordCredential), 201)]
-        public ActionResult<CapturedPasswordCredential> CreatePasswordCredential([FromBody]CapturedPasswordCredential passwordCredential)
+        public async Task<ActionResult<CapturedPasswordCredential>> CreatePasswordCredential([FromBody]CapturedPasswordCredential credential)
         {
-            _context.Credentials.Add(passwordCredential);
-            _context.SaveChanges();
-
-            return CreatedAtRoute(nameof(GetPasswordCredential), new { id = passwordCredential.Id }, passwordCredential);
+            try
+            {
+                CapturedPasswordCredential addedCredential = await _context.CreatePasswordCredential(credential);
+                return CreatedAtRoute(nameof(GetPasswordCredential), new { id = addedCredential.Id }, addedCredential);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST api/credentials/hashes
@@ -150,12 +200,25 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost("hashes", Name = "CreateHashCredential")]
         [ProducesResponseType(typeof(CapturedHashCredential), 201)]
-        public ActionResult<CapturedHashCredential> CreateHashCredential([FromBody]CapturedHashCredential hashCredential)
+        public async Task<ActionResult<CapturedHashCredential>> CreateHashCredential([FromBody]CapturedHashCredential credential)
         {
-            _context.Credentials.Add(hashCredential);
-            _context.SaveChanges();
-
-            return CreatedAtRoute(nameof(GetHashCredential), new { id = hashCredential.Id }, hashCredential);
+            try
+            {
+                CapturedHashCredential addedCredential = await _context.CreateHashCredential(credential);
+                return CreatedAtRoute(nameof(GetHashCredential), new { id = addedCredential.Id }, addedCredential);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST api/credentials/tickets
@@ -164,12 +227,25 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost("tickets", Name = "CreateTicketCredential")]
         [ProducesResponseType(typeof(CapturedTicketCredential), 201)]
-        public ActionResult<CapturedTicketCredential> CreateTicketCredential([FromBody]CapturedTicketCredential ticketCredential)
+        public async Task<ActionResult<CapturedTicketCredential>> CreateTicketCredential([FromBody]CapturedTicketCredential credential)
         {
-            _context.Credentials.Add(ticketCredential);
-            _context.SaveChanges();
-
-            return CreatedAtRoute(nameof(GetTicketCredential), new { id = ticketCredential.Id }, ticketCredential);
+            try
+            {
+                CapturedTicketCredential addedCredential = await _context.CreateTicketCredential(credential);
+                return CreatedAtRoute(nameof(GetHashCredential), new { id = addedCredential.Id }, addedCredential);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // PUT api/credentials/passwords
@@ -177,24 +253,24 @@ namespace Covenant.Controllers
         // Edit a CapturedPasswordCredential
         // </summary>
         [HttpPut("passwords", Name = "EditPasswordCredential")]
-        public ActionResult<CapturedPasswordCredential> EditPasswordCredential([FromBody] CapturedPasswordCredential passwordCredential)
+        public async Task<ActionResult<CapturedPasswordCredential>> EditPasswordCredential([FromBody] CapturedPasswordCredential credential)
         {
-            CapturedPasswordCredential matching_passwordCredential = (CapturedPasswordCredential) _context.Credentials.FirstOrDefault(c => 
-                c.Type == CapturedCredential.CredentialType.Password && passwordCredential.Id == c.Id
-            );
-
-            if (matching_passwordCredential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedPasswordCredential with id: {passwordCredential.Id}");
+                return await _context.EditPasswordCredential(credential);
             }
-
-            matching_passwordCredential.Username = passwordCredential.Username;
-            matching_passwordCredential.Password = passwordCredential.Password;
-            matching_passwordCredential.Type = passwordCredential.Type;
-
-            _context.Credentials.Update(matching_passwordCredential);
-            _context.SaveChanges();
-            return matching_passwordCredential;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // PUT api/credentials/hashes
@@ -202,25 +278,24 @@ namespace Covenant.Controllers
         // Edit a CapturedHashCredential
         // </summary>
         [HttpPut("hashes", Name = "EditHashCredential")]
-        public ActionResult<CapturedHashCredential> EditHashCredential([FromBody] CapturedHashCredential hashCredential)
+        public async Task<ActionResult<CapturedHashCredential>> EditHashCredential([FromBody] CapturedHashCredential credential)
         {
-            CapturedHashCredential matching_hashCredential = (CapturedHashCredential)_context.Credentials.FirstOrDefault(c =>
-                c.Type == CapturedCredential.CredentialType.Hash && hashCredential.Id == c.Id
-            );
-
-            if (matching_hashCredential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedHashCredential with id: {hashCredential.Id}");
+                return await _context.EditHashCredential(credential);
             }
-
-            matching_hashCredential.Username = hashCredential.Username;
-            matching_hashCredential.Hash = hashCredential.Hash;
-            matching_hashCredential.HashCredentialType = hashCredential.HashCredentialType;
-            matching_hashCredential.Type = hashCredential.Type;
-
-            _context.Credentials.Update(matching_hashCredential);
-            _context.SaveChanges();
-            return matching_hashCredential;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // PUT api/credentials/tickets
@@ -228,25 +303,24 @@ namespace Covenant.Controllers
         // Edit a CapturedTicketCredential
         // </summary>
         [HttpPut("tickets", Name = "EditTicketCredential")]
-        public ActionResult<CapturedTicketCredential> EditTicketCredential([FromBody] CapturedTicketCredential ticketCredential)
+        public async Task<ActionResult<CapturedTicketCredential>> EditTicketCredential([FromBody] CapturedTicketCredential credential)
         {
-            CapturedTicketCredential matching_ticketCredential = (CapturedTicketCredential)_context.Credentials.FirstOrDefault(c =>
-                c.Type == CapturedCredential.CredentialType.Password && ticketCredential.Id == c.Id
-            );
-
-            if (matching_ticketCredential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedTicketCredential with id: {ticketCredential.Id}");
+                return await _context.EditTicketCredential(credential);
             }
-
-            matching_ticketCredential.Username = ticketCredential.Username;
-            matching_ticketCredential.Ticket = ticketCredential.Ticket;
-            matching_ticketCredential.TicketCredentialType = ticketCredential.TicketCredentialType;
-            matching_ticketCredential.Type = ticketCredential.Type;
-
-            _context.Credentials.Update(matching_ticketCredential);
-            _context.SaveChanges();
-            return matching_ticketCredential;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // DELETE api/credentials/{id}
@@ -255,17 +329,25 @@ namespace Covenant.Controllers
         // </summary>
         [HttpDelete("{id}", Name = "DeleteCredential")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteCredential(int id)
+        public async Task<ActionResult> DeleteCredential(int id)
         {
-            var credential = _context.Credentials.FirstOrDefault(c => c.Id == id);
-            if (credential == null)
+            try
             {
-                return NotFound($"NotFound - CapturedCredential with id: {id}");
+                await _context.DeleteCredential(id);
+                return new NoContentResult();
             }
-
-            _context.Credentials.Remove(credential);
-            _context.SaveChanges();
-            return new NoContentResult();
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
     }
 }

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 
 using Covenant.Models;
-using Covenant.Models.Covenant;
 using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
@@ -17,50 +15,40 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-		public static void Initialize(CovenantContext context, UserManager<CovenantUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, Dictionary<int, CancellationTokenSource> cancellationTokens)
+        public async static Task Initialize(CovenantContext context, RoleManager<IdentityRole> roleManager)
         {
             context.Database.EnsureCreated();
 
-			InitializeListeners(context, cancellationTokens);
-            InitializeLaunchers(context);
-            InitializeTasks(context);
-			InitializeRoles(roleManager);
-            InitializeUsers(userManager, configuration);          
+            await InitializeListeners(context);
+            await InitializeLaunchers(context);
+            await InitializeTasks(context);
+            await InitializeRoles(roleManager);
         }
 
-		public static void InitializeListeners(CovenantContext context, Dictionary<int, CancellationTokenSource> cancellationTokens)
+        public async static Task InitializeListeners(CovenantContext context)
         {
             if (!context.ListenerTypes.Any())
             {
-				context.ListenerTypes.Add(ListenerType.HttpListenerType);
-                context.SaveChanges();
+                await context.ListenerTypes.AddAsync(ListenerType.HttpListenerType);
+                await context.SaveChangesAsync();
             }
             if (!context.Profiles.Any())
             {
-                HttpProfile defaultProfile = HttpProfile.Create(Common.CovenantDefaultHttpProfile);
-                int idNum = 1;
-                defaultProfile.Id = idNum;
-                context.Profiles.Add(defaultProfile);
                 List<HttpProfile> profiles = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
-                                                 .Where(F => F != Common.CovenantDefaultHttpProfile)
                                                  .Select(F => HttpProfile.Create(F))
                                                  .ToList();
-                foreach (HttpProfile p in profiles)
-                {
-                    idNum++;
-                    p.Id = idNum;
-                    context.Profiles.Add(p);
-                }
+                await context.Profiles.AddRangeAsync(profiles);
+                await context.SaveChangesAsync();
             }
 
-			foreach (Listener l in context.Listeners.Where(L => L.Status == Listener.ListenerStatus.Active))
-			{
-                HttpProfile profile = (HttpProfile)context.Profiles.FirstOrDefault(HP => HP.Id == l.ProfileId);
-                cancellationTokens[l.Id] = l.Start(profile);
-			}
+            foreach (Listener l in context.Listeners.Where(L => L.Status == ListenerStatus.Active))
+            {
+                HttpProfile profile = await context.GetHttpProfile(l.ProfileId);
+                await context.StartListener(l.Id);
+            }
         }
 
-        public static void InitializeLaunchers(CovenantContext context)
+        public async static Task InitializeLaunchers(CovenantContext context)
         {
             if (!context.Launchers.Any())
             {
@@ -76,1027 +64,1562 @@ namespace Covenant.Core
                     new PowerShellLauncher(),
                     new BinaryLauncher()
                 };
-                foreach (Launcher l in launchers)
-                {
-                    context.Launchers.Add(l);
-                }
+                await context.Launchers.AddRangeAsync(launchers);
+                await context.SaveChangesAsync();
             }
         }
 
-        public static void InitializeTasks(CovenantContext context)
+        public async static Task InitializeTasks(CovenantContext context)
         {
+            if (!context.ReferenceAssemblies.Any())
+            {
+                List<ReferenceAssembly> ReferenceAssemblies = Directory.GetFiles(Common.CovenantAssemblyReferenceNet35Directory).Select(R =>
+                {
+                    FileInfo info = new FileInfo(R);
+                    return new ReferenceAssembly
+                    {
+                        Name = info.Name,
+                        Location = info.FullName,
+                        DotNetVersion = Common.DotNetVersion.Net35
+                    };
+                }).ToList();
+                Directory.GetFiles(Common.CovenantAssemblyReferenceNet40Directory).ToList().ForEach(R =>
+                {
+                    FileInfo info = new FileInfo(R);
+                    ReferenceAssemblies.Add(new ReferenceAssembly
+                    {
+                        Name = info.Name,
+                        Location = info.FullName,
+                        DotNetVersion = Common.DotNetVersion.Net40
+                    });
+                });
+                await context.ReferenceAssemblies.AddRangeAsync(ReferenceAssemblies);
+                await context.SaveChangesAsync();
+            }
+            if (!context.EmbeddedResources.Any())
+            {
+                IEnumerable<EmbeddedResource> EmbeddedResources = Directory.GetFiles(Common.CovenantEmbeddedResourcesDirectory).Select(R =>
+                {
+                    FileInfo info = new FileInfo(R);
+                    return new EmbeddedResource
+                    {
+                        Name = info.Name,
+                        Location = info.FullName
+                    };
+                });
+                await context.EmbeddedResources.AddRangeAsync(EmbeddedResources);
+                await context.SaveChangesAsync();
+            }
+
+            if (!context.ReferenceSourceLibraries.Any())
+            {
+                var ReferenceSourceLibraries = new List<ReferenceSourceLibrary>
+                {
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "SharpSploit", Description = "SharpSploit is a library for C# post-exploitation modules.",
+                        Location = Common.CovenantReferenceSourceLibraries + "SharpSploit" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "Rubeus", Description = "Rubeus is a C# toolset for raw Kerberos interaction and abuses.",
+                        Location = Common.CovenantReferenceSourceLibraries + "Rubeus" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "Seatbelt", Description = "Seatbelt is a C# project that performs a number of security oriented host-survey \"safety checks\" relevant from both offensive and defensive security perspectives.",
+                        Location = Common.CovenantReferenceSourceLibraries + "Seatbelt" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "SharpDPAPI", Description = "SharpDPAPI is a C# port of some Mimikatz DPAPI functionality.",
+                        Location = Common.CovenantReferenceSourceLibraries + "SharpDPAPI" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "SharpDump", Description = "SharpDump is a C# port of PowerSploit's Out-Minidump.ps1 functionality.",
+                        Location = Common.CovenantReferenceSourceLibraries + "SharpDump" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "SharpUp", Description = "SharpUp is a C# port of various PowerUp functionality.",
+                        Location = Common.CovenantReferenceSourceLibraries + "SharpUp" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "SharpWMI", Description = "SharpWMI is a C# implementation of various WMI functionality.",
+                        Location = Common.CovenantReferenceSourceLibraries + "SharpWMI" + Path.DirectorySeparatorChar,
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    }
+                };
+                await context.ReferenceSourceLibraries.AddRangeAsync(ReferenceSourceLibraries);
+                await context.SaveChangesAsync();
+
+                var ss = await context.GetReferenceSourceLibraryByName("SharpSploit");
+                var ru = await context.GetReferenceSourceLibraryByName("Rubeus");
+                var se = await context.GetReferenceSourceLibraryByName("Seatbelt");
+                var sd = await context.GetReferenceSourceLibraryByName("SharpDPAPI");
+                var sdu = await context.GetReferenceSourceLibraryByName("SharpDump");
+                var su = await context.GetReferenceSourceLibraryByName("SharpUp");
+                var sw = await context.GetReferenceSourceLibraryByName("SharpWMI");
+                await context.AddRangeAsync(
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net40) },
+
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40) },
+
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net40) },
+
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) }
+                );
+            }
+
             if (!context.GruntTasks.Any())
             {
-				var GruntTasks = new List<GruntTask>
-				{
-					new GruntTask
-					{
-						Name = "Shell",
-						Description = "Execute a Shell command.",
-						ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
-						Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Shell" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption>
-						{
-							new GruntTask.GruntTaskOption
-							{
+                var GruntTasks = new List<GruntTask>
+                {
+                    new GruntTask
+                    {
+                        Name = "Shell",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute a Shell command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Shell" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
                                 Id = 1,
-								Name = "ShellCommand",
-								Description = "The ShellCommand to execute.",
-								Value = "whoami"
-							}
-						}
-					},
+                                Name = "ShellCommand",
+                                Description = "The ShellCommand to execute.",
+                                Value = "whoami",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
                     new GruntTask
                     {
                         Name = "ShellCmd",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a Shell command using \"cmd.exe /c\"",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ShellCmd" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 2,
                                 Name = "ShellCommand",
                                 Description = "The ShellCommand to execute.",
-                                Value = "whoami"
+                                Value = "whoami",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
-					{
-						Name = "PowerShell",
-						Description = "Execute a PowerShell command.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
+                    {
+                        Name = "PowerShell",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute a PowerShell command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PowerShell" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption>
-						{
-							new GruntTask.GruntTaskOption
-							{
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
                                 Id = 3,
                                 Name = "PowerShellCommand",
-								Description = "The PowerShellCommand to execute.",
-								Value = "Get-ChildItem Env:"
-							}
-						}
-					},
+                                Description = "The PowerShellCommand to execute.",
+                                Value = "Get-ChildItem Env:",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
                     new GruntTask
                     {
                         Name = "Assembly",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a dotnet Assembly EntryPoint.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Assembly" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 4,
-                                Name = "EncodedAssembly",
-                                Description = "The Base64 encoded Assembly bytes.",
-                                Value = ""
+                                Name = "AssemblyName",
+                                Description = "Name of the assembly.",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 5,
+                                Name = "EncodedAssembly",
+                                Description = "The Base64 encoded Assembly bytes.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 6,
                                 Name = "Parameters",
                                 Description = "The command-line parameters to pass to the assembly's EntryPoint.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
-					new GruntTask
-					{
-						Name = "AssemblyReflect",
-						Description = "Execute a dotnet Assembly method using reflection.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
+                    new GruntTask
+                    {
+                        Name = "AssemblyReflect",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute a dotnet Assembly method using reflection.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "AssemblyReflect" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption>
-						{
-							new GruntTask.GruntTaskOption
-							{
-                                Id = 6,
-                                Name = "EncodedAssembly",
-								Description = "The Base64 encoded Assembly bytes.",
-								Value = ""
-							},
-							new GruntTask.GruntTaskOption
-							{
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
                                 Id = 7,
-                                Name = "TypeName",
-								Description = "The name of the Type that contains the method to execute.",
-								Value = ""
-							},
-							new GruntTask.GruntTaskOption
-							{
+                                Name = "AssemblyName",
+                                Description = "Name of the assembly.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
                                 Id = 8,
-                                Name = "MethodName",
-								Description = "The name of the method to execute.",
-								Value = ""
-							},
-                            new GruntTask.GruntTaskOption
+                                Name = "EncodedAssembly",
+                                Description = "The Base64 encoded Assembly bytes.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
+                            },
+                            new GruntTaskOption
                             {
                                 Id = 9,
-                                Name = "Parameters",
-                                Description = "The parameters to pass to the method.",
-                                Value = ""
-                            }
-                        }
-					},
-					new GruntTask
-					{
-						Name = "ListDirectory",
-						Description = "Get a listing of the current directory.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ListDirectory" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption>
-                        {
-                            new GruntTask.GruntTaskOption
+                                Name = "TypeName",
+                                Description = "The name of the Type that contains the method to execute.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
                             {
                                 Id = 10,
+                                Name = "MethodName",
+                                Description = "The name of the method to execute.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 11,
+                                Name = "Parameters",
+                                Description = "The parameters to pass to the method.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ListDirectory",
+                        AlternateNames = new List<string> { "ls" },
+                        Description = "Get a listing of the current directory.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ListDirectory" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 12,
                                 Name = "Path",
                                 Description = "Directory to list.",
-                                Value = "."
+                                Value = ".",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
                             }
                         }
                     },
-					new GruntTask
-					{
-						Name = "ChangeDirectory",
-						Description = "Change the current directory.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ChangeDirectory" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption>
-						{
-							new GruntTask.GruntTaskOption
-							{
-                                Id = 11,
-                                Name = "Directory",
-								Description = "Directory to change to.",
-								Value = "."
-							}
-						}
-					},
-					new GruntTask
-					{
-						Name = "ProcessList",
-						Description = "Get a list of currently running processes.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ProcessList" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption> { }
-					},
-					new GruntTask
-					{
-						Name = "Upload",
-						Description = "Upload a file.",
-                        ReferenceAssemblies = new List<string>(),
-                        ReferenceSourceLibraries = new List<string>(),
-                        EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Upload" + ".task")),
-						Options = new List<GruntTask.GruntTaskOption>
-						{
-							new GruntTask.GruntTaskOption
-							{
-                                Id = 12,
-                                Name = "FileName",
-								Description = "Local file name to write to.",
-                                Value = ""
-							},
-							new GruntTask.GruntTaskOption
-							{
-                                Id = 13,
-                                Name = "FileContents",
-								Description = "Base64 contents of the file to be written."
-							}
-						}
-					},
-					new GruntTask
+                    new GruntTask
                     {
-                        Name = "Download",
-                        Description = "Download a file.",
-                        ReferenceAssemblies = new List<string>(),
-                        ReferenceSourceLibraries = new List<string>(),
-                        EmbeddedResources = new List<string>(),
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Download" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Name = "ChangeDirectory",
+                        AlternateNames = new List<string> { "cd" },
+                        Description = "Change the current directory.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ChangeDirectory" + ".task")),
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
+                            {
+                                Id = 13,
+                                Name = "Directory",
+                                Description = "Directory to change to.",
+                                Value = ".",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ProcessList",
+                        AlternateNames = new List<string> { "ps" },
+                        Description = "Get a list of currently running processes.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ProcessList" + ".task")),
+                        Options = new List<GruntTaskOption> { }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Upload",
+                        AlternateNames = new List<string>(),
+                        Description = "Upload a file.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Upload" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
                             {
                                 Id = 14,
-                                Name = "FileName",
-                                Description = "Remote file name to download.",
-                                Value = ""
+                                Name = "FilePath",
+                                Description = "Remote file path to write to.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 15,
+                                Name = "FileContents",
+                                Description = "Base64 contents of the file to be written.",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
                             }
                         }
                     },
-					new GruntTask
-					{
-						Name = "Mimikatz",
+                    new GruntTask
+                    {
+                        Name = "Download",
+                        AlternateNames = new List<string>(),
+                        Description = "Download a file.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Download" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 16,
+                                Name = "FileName",
+                                Description = "Remote file name to download.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Mimikatz",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a mimikatz command.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string> { "SharpSploit.Resources.powerkatz_x64.dll" },
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Mimikatz" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
-						{
-							new GruntTask.GruntTaskOption
-							{
-                                Id = 15,
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 17,
                                 Name = "Command",
                                 Description = "Mimikatz command to execute.",
-								Value = "sekurlsa::logonPasswords"
-							}
-						}
+                                Value = "sekurlsa::logonPasswords",
+                                SuggestedValues = new List<string> { "sekurlsa::logonpasswords", "privilege::debug sekurlsa::logonpasswords", "lsadump::sam", "token::elevate lsadump::sam", "lsadump::secrets", "token::elevate lsadump::secrets" },
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "LogonPasswords",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute the 'privilege::debug sekurlsa::logonPasswords' Mimikatz command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "LogonPasswords" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "LsaSecrets",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute the 'privilege::debug lsadump::secrets' Mimikatz command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "LsaSecrets" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "LsaCache",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute the 'privilege::debug lsadump::cache' Mimikatz command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "LsaCache" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "SamDump",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute the 'privilege::debug lsadump::sam' Mimikatz command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SamDump" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "Wdigest",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute the 'sekurlsa::wdigest' Mimikatz command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Wdigest" + ".task")),
+                        Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "PortScan",
+                        AlternateNames = new List<string>(),
                         Description = "Perform a TCP port scan.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PortScan" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 16,
-                                Name = "ComputerNames",
-                                Description = "ComputerName(s) to port scan. Can be a DNS name, IP address, or CIDR range.",
-                                Value = "127.0.0.1"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 17,
-                                Name = "Ports",
-                                Description = "Ports to scan. Comma-delimited port list.",
-                                Value = "80,443,445"
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 18,
+                                Name = "ComputerNames",
+                                Description = "ComputerName(s) to port scan. Can be a DNS name, IP address, or CIDR range.",
+                                Value = "127.0.0.1",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 19,
+                                Name = "Ports",
+                                Description = "Ports to scan. Comma-delimited port list.",
+                                Value = "80,443,445",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 20,
                                 Name = "Ping",
                                 Description = "Boolean, whether to ping hosts prior to port scanning.",
-                                Value = "False"
+                                Value = "False",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "Rubeus",
+                        AlternateNames = new List<string>(),
                         Description = "Use a rubeus command.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.DirectoryServices.AccountManagement.dll", "System.IdentityModel.dll" },
-                        ReferenceSourceLibraries = new List<string> { "Rubeus" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Rubeus" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 19,
+                                Id = 21,
                                 Name = "Command",
                                 Description = "Rubeus command to execute.",
-                                Value = "triage"
+                                Value = "triage",
+                                SuggestedValues = new List<string> { "triage", "dump", "asktgt", "asktgs", "renew", "s4u", "ptt", "purge", "describe", "klist", "tgtdeleg", "monitor", "harvest", "kerberoast", "asreproast", "createnetonly", "changepw", "hash", "tgssub" },
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "Kerberoast",
+                        AlternateNames = new List<string>(),
                         Description = "Perform a \"Kerberoast\" attack that retrieves crackable service tickets for Domain User's w/ an SPN set.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Kerberoast" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 20,
+                                Id = 22,
                                 Name = "Usernames",
                                 Description = "Username(s) to port scan. Comma-delimited username list.",
-                                Value = "DOMAIN\\username1,DOMAIN\\username2"
+                                Value = "DOMAIN\\username1,DOMAIN\\username2",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 21,
+                                Id = 23,
                                 Name = "HashFormat",
                                 Description = "Format to output the hashes (\"Hashcat\" or \"John\").",
-                                Value = "Hashcat"
+                                Value = "Hashcat",
+                                SuggestedValues = new List<string> { "Hashcat", "John" },
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "SafetyKatz",
+                        AlternateNames = new List<string>(),
                         Description = "Use SafetyKatz.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string> { "SharpSploit.Resources.powerkatz_x64.dll" },
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SafetyKatz" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>()
+                        Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "SharpDPAPI",
+                        AlternateNames = new List<string>(),
                         Description = "Use a SharpDPAPI command.",
-                        ReferenceAssemblies = new List<string>(),
-                        ReferenceSourceLibraries = new List<string> { "SharpDPAPI" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpDPAPI" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 22,
+                                Id = 24,
                                 Name = "Command",
                                 Description = "SharpDPAPI command to execute.",
-                                Value = "triage"
+                                Value = "triage",
+                                SuggestedValues = new List<string> { "triage", "machinetriage", "backupkey", "masterkeys", "machinemasterkeys", "credentials", "machinecredentials", "vaults", "machinevaults", "rdg" },
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "SharpUp",
+                        AlternateNames = new List<string>(),
                         Description = "Use a SharpUp command.",
-                        ReferenceAssemblies = new List<string> { "System.ServiceProcess.dll", "System.Management.dll", "System.XML.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpUp" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpUp" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 23,
+                                Id = 25,
                                 Name = "Command",
                                 Description = "SharpUp command to execute.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "SharpDump",
+                        AlternateNames = new List<string>(),
                         Description = "Use a SharpDump command.",
-                        ReferenceAssemblies = new List<string>(),
-                        ReferenceSourceLibraries = new List<string> { "SharpDump" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpDump" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 24,
+                                Id = 26,
                                 Name = "ProcessID",
                                 Description = "ProcessID of the process to createa dump file of.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "Seatbelt",
+                        AlternateNames = new List<string>(),
                         Description = "Use a Seatbelt command.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.Management.dll", "System.ServiceProcess.dll", "System.XML.dll", "System.Web.Extensions.dll" },
-                        ReferenceSourceLibraries = new List<string> { "Seatbelt" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Seatbelt" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 25,
+                                Id = 27,
                                 Name = "Command",
                                 Description = "Seatbelt command to execute.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string> { "all", "system", "BasicOSInfo", "RebootSchedule", "TokenGroupPrivs", "UACSystemPolicies", "PowerShellSettings",
+                                    "AuditSettings", "WEFSettings", "LSASettings", "UserEnvVariables", "SystemEnvVariables", "UserFolders", "NonstandardServices", "LapsSettings",
+                                    "LocalGroupMembers", "MappedDrives", "RDPSessions", "WMIMappedDrives", "NetworkShares", "FirewallRules", "AntiVirusWMI", "InterestingProcesses",
+                                    "RegistryAutoRuns", "RegistryAutoLogon", "DNSCache", "ARPTable", "AllTcpConnections", "AllUdpConnections", "NonstandardProcesses", "SysmonConfig",
+                                    "user", "SavedRDPConnections", "TriageIE", "DumpVault", "RecentRunCommands", "PuttySessions", "PuttySSHHostKeys", "CloudCreds", "RecentFiles",
+                                    "MasterKeys", "CredFiles", "RCDManFiles", "CurrentDomainGroups", "Patches", "LogonSessions", "KerberosTGTData", "InterestingFiles", "IETabs",
+                                    "TriageChrome", "TriageFirefox", "RecycleBin", "4624Events", "4648Events", "KerberosTickets" },
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "SharpWMI",
+                        AlternateNames = new List<string>(),
                         Description = "Use a SharpWMI command.",
-                        ReferenceAssemblies = new List<string> { "System.Management.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpWMI" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpWMI" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 26,
+                                Id = 28,
                                 Name = "Command",
                                 Description = "SharpWMI command to execute.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string> { "action=query", "action=create", "action=executevbs" },
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "WhoAmI",
+                        AlternateNames = new List<string>(),
                         Description = "Gets the username of the currently used/impersonated token.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WhoAmI" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>()
+                        Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "ImpersonateUser",
+                        AlternateNames = new List<string>(),
                         Description = "Find a process owned by the specified user and impersonate the token. Used to execute subsequent commands as the specified user.",
                         TokenTask = true,
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ImpersonateUser" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 27,
+                                Id = 29,
                                 Name = "Username",
                                 Description = "User to impersonate. \"DOMAIN\\Username\" format expected.",
-                                Value = "DOMAIN\\Username"
+                                Value = "DOMAIN\\Username",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "ImpersonateProcess",
+                        AlternateNames = new List<string>(),
                         Description = "Impersonate the token of the specified process. Used to execute subsequent commands as the user associated with the token of the specified process.",
                         TokenTask = true,
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ImpersonateUser" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 28,
+                                Id = 30,
                                 Name = "ProcessID",
                                 Description = "Process ID of the process to impersonate.",
-                                Value = "1234"
+                                Value = "1234",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetSystem",
+                        AlternateNames = new List<string>(),
                         Description = "Impersonate the SYSTEM user. Equates to ImpersonateUser(\"NT AUTHORITY\\SYSTEM\").",
                         TokenTask = true,
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetSystem" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>()
+                        Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "MakeToken",
+                        AlternateNames = new List<string>(),
                         Description = "Makes a new token with a specified username and password, and impersonates it to conduct future actions as the specified user.",
                         TokenTask = true,
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "MakeToken" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 29,
-                                Name = "Username",
-                                Description = "Username to authenticate as.",
-                                Value = "username1"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 30,
-                                Name = "Domain",
-                                Description = "Domain to authenticate the user to.",
-                                Value = "DOMAIN"
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 31,
-                                Name = "Password",
-                                Description = "Password to authenticate the user.",
-                                Value = "Password123"
+                                Name = "Username",
+                                Description = "Username to authenticate as.",
+                                Value = "username1",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 32,
+                                Name = "Domain",
+                                Description = "Domain to authenticate the user to.",
+                                Value = "DOMAIN",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 33,
+                                Name = "Password",
+                                Description = "Password to authenticate the user.",
+                                Value = "Password123",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 34,
                                 Name = "LogonType",
                                 Description = "LogonType to use. Defaults to LOGON32_LOGON_NEW_CREDENTIALS, which is suitable to perform actions that require remote authentication. LOGON32_LOGON_INTERACTIVE is suitable for local actions.",
-                                Value = "LOGON32_LOGON_NEW_CREDENTIALS"
+                                Value = "LOGON32_LOGON_NEW_CREDENTIALS",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "RevertToSelf",
+                        AlternateNames = new List<string> { "RevToSelf" },
                         Description = "Ends the impersonation of any token, reverting back to the initial token associated with the current process. Useful in conjuction with functions impersonate a token and do not automatically RevertToSelf, such as ImpersonateUser(), ImpersonateProcess(), GetSystem(), and MakeToken().",
                         TokenTask = true,
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "RevertToSelf" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>()
+                        Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "WMICommand",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a process on a remote system using Win32_Process Create, optionally with alternate credentials.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WMI" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 33,
-                                Name = "ComputerName",
-                                Description = "ComputerName to create the process on.",
-                                Value = "localhost"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 34,
-                                Name = "Command",
-                                Description = "Command line to execute on the remote system.",
-                                Value = ""
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 35,
-                                Name = "Username",
-                                Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
-                                Value = ""
+                                Name = "ComputerName",
+                                Description = "ComputerName to create the process on.",
+                                Value = "localhost",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 36,
+                                Name = "Command",
+                                Description = "Command line to execute on the remote system.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 37,
+                                Name = "Username",
+                                Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 38,
                                 Name = "Password",
                                 Description = "Password to authenticate the user. (optional)",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "WMIGrunt",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using Win32_Process Create, optionally with alternate credentials.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WMI" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 37,
-                                Name = "ComputerName",
-                                Description = "ComputerName to launch the Grunt on.",
-                                Value = "localhost"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 38,
-                                Name = "Launcher",
-                                Description = "Grunt Launcher to execute on the remote system.",
-                                Value = "PowerShell"
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 39,
-                                Name = "Username",
-                                Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
-                                Value = ""
+                                Name = "ComputerName",
+                                Description = "ComputerName to launch the Grunt on.",
+                                Value = "localhost",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 40,
+                                Name = "Launcher",
+                                Description = "Grunt Launcher to execute on the remote system.",
+                                Value = "PowerShell",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 41,
+                                Name = "Username",
+                                Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 42,
                                 Name = "Password",
                                 Description = "Password to authenticate the user. (optional)",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "DCOMCommand",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a process on a remote system using various DCOM methods.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "DCOM" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 41,
-                                Name = "ComputerName",
-                                Description = "ComputerName to execute the process on.",
-                                Value = "localhost"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 42,
-                                Name = "Command",
-                                Description = "Command line to execute on the remote system.",
-                                Value = ""
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 43,
+                                Name = "ComputerName",
+                                Description = "ComputerName to execute the process on.",
+                                Value = "localhost",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 44,
+                                Name = "Command",
+                                Description = "Command line to execute on the remote system.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 45,
                                 Name = "Method",
                                 Description = "DCOM method to use for execution.",
-                                Value = "MMC20.Application"
+                                Value = "MMC20.Application",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "DCOMGrunt",
+                        AlternateNames = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using various DCOM methods.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "DCOM" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 44,
-                                Name = "ComputerName",
-                                Description = "ComputerName to execute the process on.",
-                                Value = "locate"
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 45,
-                                Name = "Launcher",
-                                Description = "Grunt Launcher to execute on the remote system.",
-                                Value = "PowerShell"
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 46,
+                                Name = "ComputerName",
+                                Description = "ComputerName to execute the process on.",
+                                Value = "localhost",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 47,
+                                Name = "Launcher",
+                                Description = "Grunt Launcher to execute on the remote system.",
+                                Value = "PowerShell",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 48,
                                 Name = "Method",
                                 Description = "DCOM method to use for execution.",
-                                Value = "MMC20.Application"
+                                Value = "MMC20.Application",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "BypassUACCommand",
+                        AlternateNames = new List<string>(),
                         Description = "Bypasses UAC through token duplication and executes a command with high integrity.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "BypassUAC" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 47,
+                                Id = 49,
                                 Name = "Command",
                                 Description = "Command to execute with high integrity.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "BypassUACGrunt",
+                        AlternateNames = new List<string>(),
                         Description = "Bypasses UAC through token duplication and executes a Grunt Launcher with high integrity.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "BypassUAC" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 48,
+                                Id = 50,
                                 Name = "Launcher",
                                 Description = "Launcher to execute with high integrity.",
-                                Value = "PowerShell"
+                                Value = "PowerShell",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetDomainUser",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of specified (or all) user `DomainObject`s in the current Domain.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetDomainUser" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 49,
+                                Id = 51,
                                 Name = "Identities",
                                 Description = "List of comma-delimited usernames to retrieve.",
-                                Value = "username"
+                                Value = "username",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetDomainGroup",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of specified (or all) group `DomainObject`s in the current Domain.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetDomainGroup" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 50,
+                                Id = 52,
                                 Name = "Identities",
                                 Description = "List of comma-delimited groups to retrieve.",
-                                Value = "Domain Admins"
+                                Value = "Domain Admins",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetDomainComputer",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of specified (or all) computer `DomainObject`s in the current Domain.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetDomainComputer" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 51,
+                                Id = 53,
                                 Name = "Identities",
                                 Description = "List of comma-delimited computers to retrieve.",
-                                Value = "DC01"
+                                Value = "DC01",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetNetLocalGroup",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of `LocalGroup`s from specified remote computer(s).",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroup" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 52,
+                                Id = 54,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
+                                Value = "DC01",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetNetLocalGroupMember",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of `LocalGroupMember`s from specified remote computer(s).",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroupMember" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 53,
+                                Id = 55,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
+                                Value = "DC01",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 54,
+                                Id = 56,
                                 Name = "LocalGroup",
                                 Description = "LocalGroup name to query for members.",
-                                Value = "Administrators"
+                                Value = "Administrators",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetNetLoggedOnUser",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of `LoggedOnUser`s from specified remote computer(s).",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLoggedOnUser" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 55,
+                                Id = 57,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
+                                Value = "DC01",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetNetSession",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a list of `SessionInfo`s from specified remote computer(s).",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetSession" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 56,
+                                Id = 58,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01"
+                                Value = "DC01",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetRegistryKey",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a value stored in registry.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetRegistryKey" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 57,
+                                Id = 59,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
-                                Value = "HKEY_CURRENT_USER\\Environment\\Path"
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "SetRegistryKey",
+                        AlternateNames = new List<string>(),
                         Description = "Sets a value into the registry.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SetRegistryKey" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 58,
+                                Id = 60,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
-                                Value = "HKEY_CURRENT_USER\\Environment\\Path"
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 59,
+                                Id = 61,
                                 Name = "Value",
                                 Description = "The value to write to the registry key.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "GetRemoteRegistryKey",
+                        AlternateNames = new List<string>(),
                         Description = "Gets a value stored in registry on a remote system.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetRemoteRegistryKey" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 60,
+                                Id = 62,
                                 Name = "Hostname",
                                 Description = "The Hostname of the remote system to query.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 61,
+                                Id = 63,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
-                                Value = "HKEY_CURRENT_USER\\Environment\\Path"
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "SetRemoteRegistryKey",
+                        AlternateNames = new List<string>(),
                         Description = "Sets a value into the registry on a remote system.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SetRemoteRegistryKey" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 62,
-                                Name = "Hostname",
-                                Description = "The Hostname of the remote system to write to.",
-                                Value = ""
-                            },
-                            new GruntTask.GruntTaskOption
-                            {
-                                Id = 63,
-                                Name = "RegPath",
-                                Description = "The full path to the registry value to be read.",
-                                Value = "HKEY_CURRENT_USER\\Environment\\Path"
-                            },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 64,
+                                Name = "Hostname",
+                                Description = "The Hostname of the remote system to write to.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 65,
+                                Name = "RegPath",
+                                Description = "The full path to the registry value to be read.",
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 66,
                                 Name = "Value",
                                 Description = "The value to write to the registry key.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
                     new GruntTask
                     {
                         Name = "ShellCode",
+                        AlternateNames = new List<string>(),
                         Description = "Executes a specified shellcode byte array by copying it to pinned memory, modifying the memory permissions, and executing.",
-                        ReferenceAssemblies = new List<string> { "System.DirectoryServices.dll", "System.IdentityModel.dll", "System.Management.dll", "System.Management.Automation.dll" },
-                        ReferenceSourceLibraries = new List<string> { "SharpSploit" },
-                        EmbeddedResources = new List<string>(),
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ShellCode" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
-                                Id = 65,
+                                Id = 67,
                                 Name = "Hex",
                                 Description = "Hex string representing the Shellcode bytes to execute.",
-                                Value = ""
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Set",
+                        AlternateNames = new List<string>(),
+                        Description = "Set a Grunt setting.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 68,
+                                Name = "Setting",
+                                Description = "Setting to set.",
+                                Value = "",
+                                SuggestedValues = new List<string> { "Delay", "ConnectAttempts", "KillDate" },
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Jobs",
+                        AlternateNames = new List<string>(),
+                        Description = "Get active Jobs.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "Kill",
+                        AlternateNames = new List<string>(),
+                        Description = "Kill the Grunt.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "Connect",
+                        AlternateNames = new List<string>(),
+                        Description = "Connect to a P2P Grunt.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 69,
+                                Name = "ComputerName",
+                                Description = "ComputerName of Grunt to connect to.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 70,
+                                Name = "PipeName",
+                                Description = "PipeName of Grunt to connect to.",
+                                Value = "",
+                                SuggestedValues = new List<string> { "gruntsvc" },
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Disconnect",
+                        AlternateNames = new List<string>(),
+                        Description = "Disconnect from a ChildGrunt.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 71,
+                                Name = "GruntName",
+                                Description = "Name of Grunt to disconnect from.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "SharpShell",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute custom c# code.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 72,
+                                Name = "Code",
+                                Description = "C# code to execute.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     }
                 };
+                await context.GruntTasks.AddRangeAsync(GruntTasks);
+                await context.SaveChangesAsync();
 
-                foreach (GruntTask task in GruntTasks)
-                {
-                    context.GruntTasks.Add(task);
-                }
+                var ss = await context.GetReferenceSourceLibraryByName("SharpSploit");
+                var ru = await context.GetReferenceSourceLibraryByName("Rubeus");
+                var se = await context.GetReferenceSourceLibraryByName("Seatbelt");
+                var sd = await context.GetReferenceSourceLibraryByName("SharpDPAPI");
+                var sdu = await context.GetReferenceSourceLibraryByName("SharpDump");
+                var su = await context.GetReferenceSourceLibraryByName("SharpUp");
+                var sw = await context.GetReferenceSourceLibraryByName("SharpWMI");
+                await context.AddRangeAsync(
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Shell") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCmd") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PowerShell") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Assembly") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("AssemblyReflect") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ListDirectory") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ChangeDirectory") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ProcessList") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("LogonPasswords") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("LsaSecrets") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("LsaCache") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SamDump") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Wdigest") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PortScan") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ru, GruntTask = await context.GetGruntTaskByName("Rubeus") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Kerberoast") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SafetyKatz") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sd, GruntTask = await context.GetGruntTaskByName("SharpDPAPI") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = su, GruntTask = await context.GetGruntTaskByName("SharpUp") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sdu, GruntTask = await context.GetGruntTaskByName("SharpDump") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = se, GruntTask = await context.GetGruntTaskByName("Seatbelt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sw, GruntTask = await context.GetGruntTaskByName("SharpWMI") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WhoAmI") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ImpersonateUser") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ImpersonateProcess") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetSystem") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("MakeToken") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("RevertToSelf") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WMICommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WMIGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCOMCommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCOMGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassUACCommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassUACGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainUser") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainGroup") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainComputer") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLocalGroup") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLocalGroupMember") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLoggedOnUser") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetSession") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SetRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRemoteRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SetRemoteRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCode") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SharpShell") }
+                );
+
+                var er1 = await context.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x64.dll");
+                var er2 = await context.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x86.dll");
+                await context.AddRangeAsync(
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("LogonPasswords") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("LsaSecrets") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("LsaCache") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("SamDump") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("Wdigest") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("SafetyKatz") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("LogonPasswords") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("LsaSecrets") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("LsaCache") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("SamDump") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("Wdigest") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("SafetyKatz") }
+                );
+                var upload = await context.GetGruntTaskByName("Upload");
+                var download = await context.GetGruntTaskByName("Download");
+                await context.AddRangeAsync(
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) }
+                );
             }
         }
 
-		public static async void InitializeRoles(RoleManager<IdentityRole> roleManager)
+        public async static Task InitializeRoles(RoleManager<IdentityRole> roleManager)
         {
-			List<string> roles = new List<string> { "Administrator", "User", "Listener" };
-			foreach (string role in roles)
-			{
-				if (!(await roleManager.RoleExistsAsync(role)))
-				{
-					IdentityResult roleResult = await roleManager.CreateAsync(new IdentityRole(role));
-				}
-			}
-        }
-
-		public static async void InitializeUsers(UserManager<CovenantUser> userManager, IConfiguration configuration)
-        {
-			CovenantUser existing = await userManager.FindByNameAsync(configuration["CovenantUsername"]);
-			if (existing == null)
-			{
-				CovenantUser user = new CovenantUser { UserName = configuration["CovenantUsername"] };
-				IdentityResult userResult = await userManager.CreateAsync(user, configuration["CovenantPassword"]);
-				await userManager.AddToRoleAsync(user, "User");
-				await userManager.AddToRoleAsync(user, "Administrator");
-			}
+            List<string> roles = new List<string> { "Administrator", "User", "Listener" };
+            foreach (string role in roles)
+            {
+                if (!(await roleManager.RoleExistsAsync(role)))
+                {
+                    IdentityResult roleResult = await roleManager.CreateAsync(new IdentityRole(role));
+                }
+            }
         }
     }
 }

@@ -29,15 +29,15 @@ namespace Covenant.API.Models
         /// 'InstallUtil'</param>
         /// <param name="commType">Possible values include: 'HTTP',
         /// 'SMB'</param>
-        public InstallUtilLauncher(string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), string name = default(string), string description = default(string), CommunicationType? commType = default(CommunicationType?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string))
+        public InstallUtilLauncher(string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), string name = default(string), string description = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), CommunicationType? commType = default(CommunicationType?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string))
         {
             DiskCode = diskCode;
             Id = id;
             ListenerId = listenerId;
-            DotNetFrameworkVersion = dotNetFrameworkVersion;
-            Type = type;
             Name = name;
             Description = description;
+            DotNetFrameworkVersion = dotNetFrameworkVersion;
+            Type = type;
             CommType = commType;
             ValidateCert = validateCert;
             UseCertPinning = useCertPinning;
@@ -73,6 +73,16 @@ namespace Covenant.API.Models
         public int? ListenerId { get; set; }
 
         /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "description")]
+        public string Description { get; set; }
+
+        /// <summary>
         /// Gets or sets possible values include: 'Net40', 'Net35', 'NetCore21'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetFrameworkVersion")]
@@ -85,16 +95,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public LauncherType? Type { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "description")]
-        public string Description { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'HTTP', 'SMB'

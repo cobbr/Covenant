@@ -1,77 +1,129 @@
-﻿@model Covenant.API.Models.HttpListener
+﻿@using Covenant.Models.Listeners
+@model HttpListener
 @{
     Layout = "_ListenerLayout";
     ViewData["Title"] = "HTTP Listener";
+    IEnumerable<HttpProfile> Profiles = ViewBag.Profiles;
+    IEnumerable<HostedFile> HostedFiles = ViewBag.HostedFiles;
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">Interact @ViewBag.ListenerType.Name Listener: <span class="text-primary">@Html.DisplayFor(model => model.Name)</span></h1>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Listener: <span class="text-primary">@Html.DisplayFor(model => model.Name)</span></h1>
 </div>
 
-<form asp-action="Create">
-    <p>@Html.DisplayNameFor(model => model.Description): @Html.DisplayFor(model => model.Description)</p>
-    <input type="hidden" name="@Html.DisplayNameFor(model => model.ListenerTypeId)" value="@Html.DisplayFor(model => model.ListenerTypeId)">
-    <input type="hidden" name="@Html.DisplayNameFor(model => model.Status)" value="Active">
-    <input type="hidden" name="@Html.DisplayNameFor(model => model.CovenantToken)" value="@Html.DisplayFor(model => model.CovenantToken)">
-    <div class="form-group">
-        <label for="set-name">@Html.DisplayNameFor(model => model.Name)</label>
-        <input disabled type="text" class="form-control" id="set-name" name="@Html.DisplayNameFor(model => model.Name)" placeholder="@Html.DisplayFor(model => model.Name)">
-    </div>
-    <div class="form-group">
-        <label for="set-url">@Html.DisplayNameFor(model => model.Url)</label>
-        <input disabled type="text" class="form-control" id="set-url" name="@Html.DisplayNameFor(model => model.Url)" placeholder="@Html.DisplayFor(model => model.Url)">
-    </div>
-    <div class="form-group">
-        <label for="set-connect-address">@Html.DisplayNameFor(model => model.ConnectAddress)</label>
-        <input disabled type="text" class="form-control" id="set-connect-address" name="@Html.DisplayNameFor(model => model.ConnectAddress)" placeholder="@Html.DisplayFor(model => model.ConnectAddress)">
-    </div>
-    <div class="form-group">
-        <label for="set-bind-address">@Html.DisplayNameFor(model => model.BindAddress)</label>
-        <input disabled type="text" class="form-control" id="set-bind-address" name="@Html.DisplayNameFor(model => model.BindAddress)" placeholder="@Html.DisplayFor(model => model.BindAddress)">
-    </div>
-    <div class="form-group">
-        <label for="set-bind-port">@Html.DisplayNameFor(model => model.BindPort)</label>
-        <input disabled type="text" class="form-control" id="set-bind-port" name="@Html.DisplayNameFor(model => model.BindPort)" placeholder="@Html.DisplayFor(model => model.BindPort)">
-    </div>
-    <div class="form-group">
-        <label for="set-http-profile">HttpProfile</label>
-        <select disabled class="form-control" id="set-http-profile" name="@Html.DisplayNameFor(model => model.ProfileId)">
-            <option>@ViewBag.Profile.Name</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="set-use-ssl">@Html.DisplayNameFor(model => model.UseSSL)</label>
-        <select disabled class="form-control" id="set-use-ssl" name="@Html.DisplayNameFor(model => model.UseSSL)">
-            <option>False</option>
-            <option>True</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="set-ssl-cert-path">@Html.DisplayNameFor(model => model.SslCertificate)</label>
-        <input disabled type="file" class="form-control-file" id="set-ssl-cert-path" name="@Html.DisplayNameFor(model => model.SslCertificate)" />
-    </div>
-</form>
+<ul class="nav nav-tabs mb-3" id="listener-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true">
+            <span data-feather="info"></span>
+            Info
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="host-tab" data-toggle="tab" href="#host" role="tab" aria-controls="host" aria-selected="false">
+            <span data-feather="cloud"></span>
+            Hosted Files
+        </a>
+    </li>
+</ul>
 
-<form asp-action="Start" asp-route-id="@Model.Id">
-    <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
-    @if (Model.Status == API.Models.ListenerStatus.Active)
-    {
-        <button type="button" class="btn btn-outline-primary" disabled>Start</button>
-    }
-    else
-    {
-        <button type="button" class="btn btn-primary">Start</button>
-    }
-</form>
+<div class="tab-content" id="listener-tab-content">
+    <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+        <input asp-for="Id" value="@Model.Id" type="hidden" disabled>
+        <input asp-for="GUID" value="@Model.GUID" type="hidden" disabled>
+        <input asp-for="ListenerTypeId" value="@Model.ListenerTypeId" type="hidden" disabled>
+        <input asp-for="Status" value="Active" type="hidden" disabled>
+        <input asp-for="CovenantToken" value="@Model.CovenantToken" type="hidden" disabled>
+        <div class="form-group">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" value="@Model.Description" class="form-control-plaintext" readonly disabled>
+        </div>
+        <div class="form-group">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" value="@Model.Name" class="form-control" disabled>
+        </div>
+        <div class="form-group">
+            <label asp-for="Url"></label>
+            <input asp-for="Url" value="@Model.Url" class="form-control" disabled>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label asp-for="ConnectAddress"></label>
+                <input asp-for="ConnectAddress" value="@Model.ConnectAddress" class="form-control form-control-sm" disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="BindAddress"></label>
+                <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control-sm" disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="BindPort"></label>
+                <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control-sm" disabled>
+            </div>
+            <div class="form-group col-md-3">
+                <label asp-for="UseSSL"></label>
+                <select asp-for="UseSSL" class="form-control form-control-sm" disabled>
+                    <option>False</option>
+                    <option>True</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="ProfileId">HttpProfile</label>
+            <select asp-for="ProfileId" class="form-control" disabled>
+                @foreach (var item in Profiles)
+                {
+                    <option value="@item.Id">@item.Name</option>
+                }
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label asp-for="SSLCertificate"></label>
+                <input asp-for="SSLCertificate" class="form-control-file" type="file" disabled>
+            </div>
+            <div class="form-group col-md-6">
+                <label asp-for="SSLCertificatePassword"></label>
+                <input asp-for="SSLCertificatePassword" class="form-control form-control-sm" disabled>
+            </div>
+        </div>
 
-<form asp-action="Stop" asp-route-id="@Model.Id">
-    <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
-    @if (Model.Status == API.Models.ListenerStatus.Active)
-    {
-        <button type="button" class="btn btn-danger">Stop</button>
-    }
-    else
-    {
-        <button type="button" class="btn btn-outline-danger" disabled>Stop</button>
-    }
-</form>
+        <div class="btn-group" role="group">
+            <form asp-action="Start" asp-route-id="@Model.Id">
+                <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
+                @if (Model.Status == ListenerStatus.Active)
+                {
+                    <button type="submit" class="btn btn-outline-primary mr-5" disabled>Start</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-primary mr-5">Start</button>
+                }
+            </form>
+
+            <form asp-action="Stop" asp-route-id="@Model.Id">
+                <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
+                @if (Model.Status == ListenerStatus.Active)
+                {
+                    <button type="submit" class="btn btn-danger ml-5">Stop</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-outline-danger ml-5" disabled>Stop</button>
+                }
+            </form>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
+        @{
+            ViewBag.Listener = Model;
+            await Html.RenderPartialAsync("../HostedFile/_HostedFileTable", HostedFiles);
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#info-tab").tab('show');
+        });
+    </script>
+}

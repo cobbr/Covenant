@@ -1,0 +1,94 @@
+﻿@using Covenant.Models.Listeners
+@model HttpListener
+@{
+    Layout = "_ListenerLayout";
+    ViewData["Title"] = "HTTP Listener";
+    IEnumerable<HttpProfile> Profiles = ViewBag.Profiles;
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create @ViewBag.ListenerType.Name Listener</h1>
+</div>
+
+<form id="submit-listener-form" asp-action="Create">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input asp-for="Id" value="@Model.Id" type="hidden">
+    <input asp-for="GUID" value="@Model.GUID" type="hidden">
+    <input asp-for="ListenerTypeId" value="@Model.ListenerTypeId" type="hidden">
+    <input asp-for="Status" value="Active" type="hidden">
+    <input asp-for="CovenantToken" value="@Model.CovenantToken" type="hidden">
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" value="@Model.Description" class="form-control-plaintext" readonly>
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" value="@Model.Name" class="form-control">
+    </div>
+    <div class="form-group">
+        <label asp-for="Url"></label>
+        <input asp-for="Url" value="@Model.Url" class="form-control">
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label asp-for="ConnectAddress"></label>
+            <input asp-for="ConnectAddress" value="@Model.ConnectAddress" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="BindAddress"></label>
+            <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="BindPort"></label>
+            <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="UseSSL"></label>
+            <select asp-for="UseSSL" class="form-control form-control-sm">
+                <option>False</option>
+                <option>True</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="ProfileId">HttpProfile</label>
+        <select asp-for="ProfileId" class="form-control">
+            @foreach (var item in Profiles)
+            {
+                <option value="@item.Id">@item.Name</option>
+            }
+        </select>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="SSLCertificateFile">SSLCertificate</label>
+            <input id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file" type="file">
+            <input asp-for="SSLCertificate" class="form-control file-filler" type="hidden" disabled>
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="SSLCertificatePassword"></label>
+            <input asp-for="SSLCertificatePassword" class="form-control form-control-sm">
+        </div>
+    </div>
+    <button id="submit-listener-button" type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+</form>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#submit-listener-button').click(function () {
+                var filecontrol = $("input.form-control-file")[0];
+                var file = filecontrol.files[0];
+                var fr = new FileReader();
+                fr.onload = receivedFileBuffer;
+                fr.readAsDataURL(file);
+
+                function receivedFileBuffer() {
+                    $("input.file-filler").val(fr.result.split(",").pop()).prop("disabled", false);
+                    $("input.form-control-file").prop("disabled", true);
+                    $("#submit-listener-form").submit();
+                }
+            });
+        });
+    </script>
+}

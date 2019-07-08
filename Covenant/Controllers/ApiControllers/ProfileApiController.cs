@@ -3,10 +3,12 @@
 // License: GNU GPLv3
 
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Listeners;
 
@@ -29,9 +31,9 @@ namespace Covenant.Controllers
         // Get a list of Profiles
         // </summary>
         [HttpGet(Name = "GetProfiles")]
-        public ActionResult<IEnumerable<Profile>> GetProfiles()
+        public async Task<ActionResult<IEnumerable<Profile>>> GetProfiles()
         {
-            return _context.Profiles.ToList();
+            return Ok(await _context.GetProfiles());
         }
 
         // GET api/profiles/{id}
@@ -39,14 +41,20 @@ namespace Covenant.Controllers
         // Get a Profile by id
         // </summary>
         [HttpGet("{id}", Name = "GetProfile")]
-        public ActionResult<Profile> GetProfile(int id)
+        public async Task<ActionResult<Profile>> GetProfile(int id)
         {
-            var profile = _context.Profiles.FirstOrDefault(p => p.Id == id);
-            if (profile == null)
+            try
             {
-                return NotFound($"NotFound - Profile with id: {id}");
+                return await _context.GetProfile(id);
             }
-            return profile;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/profiles
@@ -55,11 +63,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost(Name = "CreateProfile")]
         [ProducesResponseType(typeof(Profile), 201)]
-        public ActionResult<Profile> CreateProfile([FromBody]Profile profile)
+        public async Task<ActionResult<Profile>> CreateProfile([FromBody]Profile profile)
         {
-            _context.Profiles.Add(profile);
-            _context.SaveChanges();
-            return CreatedAtRoute(nameof(GetProfile), new { id = profile.Id }, profile);
+            try
+            {
+                Profile createdProfile = await _context.CreateProfile(profile);
+                return CreatedAtRoute(nameof(GetProfile), new { id = createdProfile.Id }, createdProfile);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // PUT api/profiles
@@ -67,19 +85,20 @@ namespace Covenant.Controllers
         // Edit a Profile
         // </summary>
         [HttpPut(Name = "EditProfile")]
-        public ActionResult<Profile> EditProfile([FromBody] Profile profile)
+        public async Task<ActionResult<Profile>> EditProfile([FromBody] Profile profile)
         {
-            var matching_profile = _context.Profiles.FirstOrDefault(p => profile.Id == p.Id);
-            if (matching_profile == null)
+            try
             {
-                return NotFound($"NotFound - Profile with id: {profile.Id}");
+                return await _context.EditProfile(profile);
             }
-            matching_profile.Id = profile.Id;
-
-            _context.Profiles.Update(matching_profile);
-            _context.SaveChanges();
-
-            return matching_profile;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // DELETE api/profiles/{id}
@@ -88,17 +107,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpDelete("{id}", Name = "DeleteProfile")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteProfile(int id)
+        public async Task<ActionResult> DeleteProfile(int id)
         {
-            var profile = _context.Profiles.FirstOrDefault(p => p.Id == id);
-            if (profile == null)
+            try
             {
-                return NotFound($"NotFound - Profile with id: {id}");
+                await _context.DeleteProfile(id);
+                return new NoContentResult();
             }
-
-            _context.Profiles.Remove(profile);
-            _context.SaveChanges();
-            return new NoContentResult();
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/profiles/http
@@ -106,14 +129,9 @@ namespace Covenant.Controllers
         // Get a list of HttpProfiles
         // </summary>
         [HttpGet("http", Name = "GetHttpProfiles")]
-        public ActionResult<IEnumerable<HttpProfile>> GetHttpProfiles()
+        public async Task<ActionResult<IEnumerable<HttpProfile>>> GetHttpProfiles()
         {
-            List<HttpProfile> httpProfiles = new List<HttpProfile>();
-            foreach (Profile profile in _context.Profiles.ToList())
-            {
-                httpProfiles.Add((HttpProfile)profile);
-            }
-            return httpProfiles;
+            return Ok(await _context.GetHttpProfiles());
         }
 
         // GET api/profiles/http/{id}
@@ -121,14 +139,20 @@ namespace Covenant.Controllers
         // Get an HttpProfile by id
         // </summary>
         [HttpGet("http/{id}", Name = "GetHttpProfile")]
-        public ActionResult<HttpProfile> GetHttpProfile(int id)
+        public async Task<ActionResult<HttpProfile>> GetHttpProfile(int id)
         {
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(p => p.Id == id);
-            if (profile == null)
+            try
             {
-                return NotFound($"NotFound - HttpProfile with id: {id}");
+                return await _context.GetHttpProfile(id);
             }
-            return profile;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/profiles/http
@@ -137,11 +161,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost("http", Name = "CreateHttpProfile")]
         [ProducesResponseType(typeof(HttpProfile), 201)]
-        public ActionResult<HttpProfile> CreateHttpProfile([FromBody] HttpProfile profile)
+        public async Task<ActionResult<HttpProfile>> CreateHttpProfile([FromBody] HttpProfile profile)
         {
-            _context.Profiles.Add(profile);
-            _context.SaveChanges();
-            return CreatedAtRoute(nameof(GetHttpProfile), new { id = profile.Id }, profile);
+            try
+            {
+                HttpProfile createdProfile = await _context.CreateHttpProfile(profile);
+                return CreatedAtRoute(nameof(GetHttpProfile), new { id = createdProfile.Id }, createdProfile);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // PUT api/profiles/http
@@ -149,25 +183,20 @@ namespace Covenant.Controllers
         // Edit a Profile
         // </summary>
         [HttpPut("http", Name = "EditHttpProfile")]
-        public ActionResult<Profile> EditHttpProfile([FromBody] HttpProfile profile)
+        public async Task<ActionResult<Profile>> EditHttpProfile([FromBody] HttpProfile profile)
         {
-            HttpProfile matching_profile = (HttpProfile)_context.Profiles.FirstOrDefault(p => profile.Id == p.Id);
-            if (matching_profile == null)
+            try
             {
-                return NotFound($"NotFound - HttpProfile with id: {profile.Id}");
+                return await _context.EditHttpProfile(profile);
             }
-
-            matching_profile.HttpRequestHeaders = profile.HttpRequestHeaders;
-            matching_profile.HttpUrls = profile.HttpUrls;
-            matching_profile.HttpCookies = profile.HttpCookies;
-            matching_profile.HttpGetResponse = profile.HttpGetResponse;
-            matching_profile.HttpPostRequest = profile.HttpPostRequest;
-            matching_profile.HttpPostResponse = profile.HttpPostResponse;
-
-            _context.Profiles.Update(matching_profile);
-            _context.SaveChanges();
-
-            return matching_profile;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // DELETE api/profiles/http/{id}
@@ -176,17 +205,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpDelete("http/{id}", Name = "DeleteHttpProfile")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteHttpProfile(int id)
+        public async Task<ActionResult> DeleteHttpProfile(int id)
         {
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(p => p.Id == id);
-            if (profile == null)
+            try
             {
-                return NotFound($"NotFound - HttpProfile with id: {id}");
+                await _context.DeleteProfile(id);
+                return new NoContentResult();
             }
-
-            _context.Profiles.Remove(profile);
-            _context.SaveChanges();
-            return new NoContentResult();
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

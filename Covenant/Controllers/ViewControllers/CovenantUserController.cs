@@ -1,47 +1,233 @@
 ﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
 
-using Microsoft.Rest;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authentication;
 
 using Covenant.Core;
-using Covenant.API;
-using Covenant.API.Models;
+using Covenant.Models;
+using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize]
     public class CovenantUserController : Controller
     {
-        private readonly CovenantAPI _client;
+        private readonly CovenantContext _context;
+        private readonly SignInManager<CovenantUser> _signInManager;
+        private readonly UserManager<CovenantUser> _userManager;
 
-        public CovenantUserController(IConfiguration configuration)
+        public CovenantUserController(CovenantContext context, SignInManager<CovenantUser> signInManager, UserManager<CovenantUser> userManager)
         {
-            X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-            HttpClientHandler clientHandler = new HttpClientHandler
+            _context = context;
+            _signInManager = signInManager;
+            _userManager = userManager;
+        }
+
+        // GET: /covenantuser/login
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        // POST: /covenantuser/login
+        [HttpPost]
+        public async Task<IActionResult> Login(CovenantUserLogin login)
+        {
+            try
             {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
+                var result = await _signInManager.PasswordSignInAsync(login.UserName, login.Password, true, lockoutOnFailure: false);
+                if (!result.Succeeded == true)
                 {
-                    return cert.GetCertHashString() == covenantCert.GetCertHashString();
+                    ModelState.AddModelError(string.Empty, "Login Failed");
                 }
-            };
-            _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
-                new TokenCredentials(configuration["CovenantToken"]),
-                clientHandler
-            );
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        // GET: /covenantuser/logout
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // GET: /users/
+        [Authorize]
         public async Task<IActionResult> Index()
         {
-            return View(await _client.ApiUsersGetAsync());
+            IEnumerable<CovenantUser> users = await _context.GetUsers();
+            IEnumerable<IdentityUserRole<string>> userRoles = await _context.GetUserRoles();
+            Dictionary<string, string> userRoleDict = new Dictionary<string, string>();
+            foreach (CovenantUser user in users)
+            {
+                try
+                {
+                    string roles = String.Join(", ",
+                    userRoles.Where(UR => UR.UserId == user.Id)
+                    .Select(UR =>
+                    {
+                        var t = _context.GetRole(UR.RoleId);
+                        t.Wait();
+                        return t.Result.Name;
+                    }).ToList());
+                    userRoleDict[user.UserName] = roles;
+                }
+                catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+                {
+                    continue;
+                }
+            }
+            ViewBag.UserRoleDict = userRoleDict;
+            return View(users);
+        }
+
+        // GET: /covenantuser/create
+        [Authorize(Policy = "RequireAdministratorRole")]
+        public IActionResult Create()
+        {
+            return View(new CovenantUserRegister());
+        }
+
+        // POST: /covenantuser/create
+        [HttpPost]
+        public async Task<IActionResult> Create(CovenantUserRegister register)
+        {
+            try
+            {
+                if (register.Password != register.ConfirmPassword)
+                {
+                    return BadRequest($"BadRequest - Password does not match ConfirmPassword.");
+                }
+
+                if (!_userManager.Users.Any())
+                {
+                    CovenantUser user = new CovenantUser { UserName = register.UserName };
+                    IdentityResult userResult = await _userManager.CreateAsync(user, register.Password);
+                    await _userManager.AddToRoleAsync(user, "User");
+                    await _userManager.AddToRoleAsync(user, "Administrator");
+                    await _signInManager.PasswordSignInAsync(register.UserName, register.Password, true, lockoutOnFailure: false);
+                }
+                else if (_signInManager.IsSignedIn(HttpContext.User) && HttpContext.User.IsInRole("Administrator"))
+                {
+                    CovenantUser user = new CovenantUser { UserName = register.UserName };
+                    IdentityResult userResult = await _userManager.CreateAsync(user, register.Password);
+                    await _userManager.AddToRoleAsync(user, "User");
+                }
+                else
+                {
+                    return new UnauthorizedResult();
+                }
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Edit(string id)
+        {
+            try
+            {
+                CovenantUser user = await _context.GetUser(id);
+                List<string> rolesSelected = (await _context.GetUserRoles(user.Id)).Select(UR =>
+                {
+                    Task<IdentityRole> t = _context.GetRole(UR.RoleId);
+                    t.Wait();
+                    return t.Result.Name;
+                }).ToList();
+                ViewBag.RolesSelected = rolesSelected;
+                ViewBag.RolesNotSelected = (await _context.GetRoles()).Where(R => !rolesSelected.Contains(R.Name)).Select(R => R.Name);
+                return View(new CovenantUserLogin { UserName = user.UserName, Password = "12345678" });
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [Authorize(Policy = "RequireAdministratorRole")]
+        [HttpPost]
+        public async Task<IActionResult> Edit(CovenantUserLogin login)
+        {
+            try
+            {
+                CovenantUser user = await _context.GetUserByUsername(login.UserName);
+                await _context.EditUser(_userManager, user, login);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                return View(new CovenantUserLogin { UserName = login.UserName, Password = "12345678" });
+            }
+        }
+
+        public class EditRolesModel
+        {
+            public string UserName { get; set; }
+            public List<string> Rolenames { get; set; }
+        }
+
+        [Authorize(Policy = "RequireAdministratorRole")]
+        [HttpPost]
+        public async Task<IActionResult> EditRoles(EditRolesModel roleadd)
+        {
+            try
+            {
+                CovenantUser user = await _context.GetUserByUsername(roleadd.UserName);
+                IEnumerable<string> userRoles = (await _context.GetUserRoles(user.Id)).Select(UR =>
+                {
+                    Task<IdentityRole> t = _context.GetRole(UR.RoleId);
+                    t.Wait();
+                    return t.Result.Name;
+                });
+
+                IEnumerable<string> userRolesRemain = userRoles.Where(UR => roleadd.Rolenames.Contains(UR));
+                foreach (string rolename in roleadd.Rolenames)
+                {
+                    // Selected role that has not been added, must add
+                    if (!userRolesRemain.Contains(rolename))
+                    {
+                        IdentityRole role = await _context.GetRoleByName(rolename);
+                        await _context.CreateUserRole(_userManager, user.Id, role.Id);
+                    }
+                }
+
+                IEnumerable<string> userRolesNotRemain = userRoles.Where(UR => !roleadd.Rolenames.Contains(UR));
+                foreach (string rolename in userRolesNotRemain)
+                {
+                    // Did not select role that is already added, must remove
+                    IdentityRole role = await _context.GetRoleByName(rolename);
+                    await _context.DeleteUserRole(_userManager, user.Id, role.Id);
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }

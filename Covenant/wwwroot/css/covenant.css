@@ -1,5 +1,11 @@
-﻿.grunt-interact::-webkit-scrollbar {
+﻿.grunt-interact {
+    overflow-y: scroll;
+    overflow-x: scroll;
+}
+
+.grunt-interact::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
     background-color: #343a40;
 }
 
@@ -25,4 +31,100 @@
 .grunt-interact::-ms-input-placeholder { /* Microsoft Edge */
     color: white;
     opacity: 0.8;
+}
+
+.interact-width {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+#interact-input {
+    width: 100%;
+    margin-right: 0;
+}
+
+.twitter-typeahead {
+    width: 100%;
+    margin: 0;
+}
+
+.tt-hint, .tt-input, .tt-menu, .typeahead {
+    width: auto;
+    margin-right: 0;
+}
+
+.tt-hint {
+    color: #999;
+    height: 30px;
+    padding: 8px 0;
+    font-size: 24px;
+    line-height: 30px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+}
+
+.tt-menu {
+    margin-top: 12px;
+    padding: 8px 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+
+.tt-suggestion {
+    margin: 0;
+    padding: 3px 20px;
+    font-size: 15px;
+    line-height: 24px;
+}
+
+.tt-suggestion.tt-cursor {
+    color: #fff;
+    background-color: #007CFF;
+}
+
+.tt-suggestion p {
+    margin: 0;
+}
+
+.tt-menu.tt-open {
+    bottom: 100% !important;
+    top: auto !important;
+}
+
+.task-card {
+    background: rgba(255, 255, 255, 0);
+}
+
+.task-card:hover, .task-card:focus {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.task-button {
+    text-align: left;
+    margin: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0);
+}
+
+.task-text-head {
+    margin: 0;
+    font-size: 10px;
+}
+
+.task-text-body {
+    margin: 0;
+    font-size: 13px;
+}
+
+.xbutton {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+    padding-top: 0;
+    padding-bottom: 0;
 }

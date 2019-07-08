@@ -3,10 +3,13 @@
 // License: GNU GPLv3
 
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Indicators;
 
@@ -40,9 +43,9 @@ namespace Covenant.Controllers
         // Get a list of Indicators
         // </summary>
         [HttpGet(Name = "GetIndicators")]
-        public ActionResult<IEnumerable<Indicator>> GetIndicators()
+        public async Task<ActionResult<IEnumerable<Indicator>>> GetIndicators()
         {
-            return _context.Indicators.ToList();
+            return Ok(await _context.GetIndicators());
         }
 
         // GET: api/indicators/files
@@ -50,9 +53,9 @@ namespace Covenant.Controllers
         // Get a list of FileIndicators
         // </summary>
         [HttpGet("files", Name = "GetFileIndicators")]
-        public ActionResult<IEnumerable<FileIndicator>> GetFileIndicators()
+        public async Task<ActionResult<IEnumerable<FileIndicator>>> GetFileIndicators()
         {
-            return _context.Indicators.Where(I => I.Name == "FileIndicator").Select(I => (FileIndicator)I).ToList();
+            return Ok(await _context.GetFileIndicators());
         }
 
         // GET: api/indicators/networks
@@ -60,9 +63,9 @@ namespace Covenant.Controllers
         // Get a list of NetworksIndicators
         // </summary>
         [HttpGet("networks", Name = "GetNetworkIndicators")]
-        public ActionResult<IEnumerable<NetworkIndicator>> GetNetworkIndicators()
+        public async Task<ActionResult<IEnumerable<NetworkIndicator>>> GetNetworkIndicators()
         {
-            return _context.Indicators.Where(I => I.Name == "NetworkIndicator").Select(I => (NetworkIndicator)I).ToList();
+            return Ok(await _context.GetNetworkIndicators());
         }
 
         // GET: api/indicators/targets
@@ -70,9 +73,9 @@ namespace Covenant.Controllers
         // Get a list of TargetIndicators
         // </summary>
         [HttpGet("targets", Name = "GetTargetIndicators")]
-        public ActionResult<IEnumerable<TargetIndicator>> GetTargetIndicators()
+        public async Task<ActionResult<IEnumerable<TargetIndicator>>> GetTargetIndicators()
         {
-            return _context.Indicators.Where(I => I.Name == "TargetIndicator").Select(I => (TargetIndicator)I).ToList();
+            return Ok(await _context.GetTargetIndicators());
         }
 
         // GET api/indicators/{id}
@@ -80,14 +83,20 @@ namespace Covenant.Controllers
         // Get an Indicator by id
         // </summary>
         [HttpGet("{id}", Name = "GetIndicator")]
-        public ActionResult<Indicator> GetIndicator(int id)
+        public async Task<ActionResult<Indicator>> GetIndicator(int id)
         {
-            var indicator = _context.Indicators.FirstOrDefault(i => i.Id == id);
-            if (indicator == null)
+            try
             {
-                return NotFound($"NotFound - Indicator with id: {id}");
+                return await _context.GetIndicator(id);
             }
-            return indicator;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/indicators/files/{id}
@@ -95,15 +104,20 @@ namespace Covenant.Controllers
         // Get a list of FileIndicators
         // </summary>
         [HttpGet("files/{id}", Name = "GetFileIndicator")]
-        public ActionResult<FileIndicator> GetFileIndicator(int id)
+        public async Task<ActionResult<FileIndicator>> GetFileIndicator(int id)
         {
-            var indicator = _context.Indicators.Where(I => I.Name == "FileIndicator").Select(I => (FileIndicator)I)
-            .FirstOrDefault(i => i.Id == id);
-            if (indicator == null)
+            try
             {
-                return NotFound($"NotFound - FileIndicator with id: {id}");
+                return await _context.GetFileIndicator(id);
             }
-            return indicator;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/indicators/networks/{id}
@@ -111,15 +125,20 @@ namespace Covenant.Controllers
         // Get a list of NetworksIndicators
         // </summary>
         [HttpGet("networks/{id}", Name = "GetNetworkIndicator")]
-        public ActionResult<NetworkIndicator> GetNetworkIndicator(int id)
+        public async Task<ActionResult<NetworkIndicator>> GetNetworkIndicator(int id)
         {
-            var indicator = _context.Indicators.Where(I => I.Name == "NetworkIndicator").Select(I => (NetworkIndicator)I)
-            .FirstOrDefault(i => i.Id == id);
-            if (indicator == null)
+            try
             {
-                return NotFound($"NotFound - NetworkIndicator with id: {id}");
+                return await _context.GetNetworkIndicator(id);
             }
-            return indicator;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/indicators/targets/{id}
@@ -127,15 +146,20 @@ namespace Covenant.Controllers
         // Get a list of TargetIndicators
         // </summary>
         [HttpGet("targets/{id}", Name = "GetTargetIndicator")]
-        public ActionResult<TargetIndicator> GetTargetIndicator(int id)
+        public async Task<ActionResult<TargetIndicator>> GetTargetIndicator(int id)
         {
-            var indicator = _context.Indicators.Where(I => I.Name == "TargetIndicator").Select(I => (TargetIndicator)I)
-            .FirstOrDefault(i => i.Id == id);
-            if (indicator == null)
+            try
             {
-                return NotFound($"NotFound - TargetIndicator with id: {id}");
+                return await _context.GetTargetIndicator(id);
             }
-            return indicator;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/indicators
@@ -144,11 +168,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost(Name = "CreateIndicator")]
         [ProducesResponseType(typeof(Indicator), 201)]
-        public ActionResult<Indicator> CreateIndicator([FromBody]Indicator indicator)
+        public async Task<ActionResult<Indicator>> CreateIndicator([FromBody]Indicator indicator)
         {
-            _context.Indicators.Add(indicator);
-            _context.SaveChanges();
-            return CreatedAtRoute(nameof(GetIndicator), new { id = indicator.Id }, indicator);
+            try
+            {
+                Indicator createdIndicator = await _context.CreateIndicator(indicator);
+                return CreatedAtRoute(nameof(GetIndicator), new { id = createdIndicator.Id }, createdIndicator);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // PUT api/indicators
@@ -156,20 +190,20 @@ namespace Covenant.Controllers
         // Edit a Indicator
         // </summary>
         [HttpPut(Name = "EditIndicator")]
-        public ActionResult<Indicator> EditIndicator([FromBody] Indicator indicator)
+        public async Task<ActionResult<Indicator>> EditIndicator([FromBody] Indicator indicator)
         {
-            var matching_indicator = _context.Indicators.FirstOrDefault(i => indicator.Id == i.Id);
-            if (matching_indicator == null)
+            try
             {
-                return NotFound($"NotFound - Indicator with id: {indicator.Id}");
+                return await _context.EditIndicator(indicator);
             }
-
-            matching_indicator.Name = indicator.Name;
-
-            _context.Indicators.Update(matching_indicator);
-            _context.SaveChanges();
-
-            return matching_indicator;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // DELETE api/indicators/{id}
@@ -178,17 +212,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpDelete("{id}", Name = "DeleteIndicator")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteIndicator(int id)
+        public async Task<ActionResult> DeleteIndicator(int id)
         {
-            var indicator = _context.Indicators.FirstOrDefault(i => i.Id == id);
-            if (indicator == null)
+            try
             {
-                return NotFound($"NotFound - Indicator with id: {id}");
+                await _context.DeleteIndicator(id);
+                return new NoContentResult();
             }
-
-            _context.Indicators.Remove(indicator);
-            _context.SaveChanges();
-            return new NoContentResult();
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

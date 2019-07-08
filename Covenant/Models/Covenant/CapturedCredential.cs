@@ -9,20 +9,65 @@ using System.Text.RegularExpressions;
 
 namespace Covenant.Models.Covenant
 {
+    public enum CredentialType
+    {
+        Password,
+        Hash,
+        Ticket
+    }
+
+    public class CapturedPasswordCredential : CapturedCredential
+    {
+        public string Password { get; set; }
+
+        public CapturedPasswordCredential()
+        {
+            this.Type = CredentialType.Password;
+        }
+    }
+
+    public enum HashType
+    {
+        NTLM,
+        LM,
+        SHA1
+    }
+
+    public class CapturedHashCredential : CapturedCredential
+    {
+        public HashType HashCredentialType { get; set; }
+        public string Hash { get; set; }
+
+        public CapturedHashCredential()
+        {
+            this.Type = CredentialType.Hash;
+        }
+    }
+
+    public enum TicketType
+    {
+        RC4,
+        AES
+    }
+
+    public class CapturedTicketCredential : CapturedCredential
+    {
+        public TicketType TicketCredentialType { get; set; }
+        public string ServiceName { get; set; }
+        public string Ticket { get; set; }
+
+        public CapturedTicketCredential()
+        {
+            this.Type = CredentialType.Ticket;
+        }
+    }
+
     public class CapturedCredential
     {
-        public enum CredentialType
-        {
-            Password,
-            Hash,
-            Ticket
-        }
-
         public int Id { get; set; }
+        public CredentialType Type { get; set; }
         public string Domain { get; set; }
         public string Username { get; set; }
-        public string ServiceName { get; set; }
-        public CredentialType Type { get; set; }
 
         // Adapted from https://github.com/EmpireProject/Empire
         public static List<CapturedCredential> ParseCredentials(string input)
@@ -38,7 +83,7 @@ namespace Covenant.Models.Covenant
                 List<string> lines = input.Split('\n').ToList();
                 foreach (string line in lines.Take(2))
                 {
-                    if (line.StartsWith("Hostname:"))
+                    if (line.StartsWith("Hostname:", StringComparison.Ordinal))
                     {
                         try
                         {
@@ -89,7 +134,7 @@ namespace Covenant.Models.Covenant
                         if (username != "" && password != "" && password != "(null)")
                         {
                             string sid = "";
-                            if (hostDomain.StartsWith(domain.ToLower()))
+                            if (hostDomain.StartsWith(domain.ToLower(), StringComparison.Ordinal))
                             {
                                 domain = hostDomain;
                                 sid = domainSid;
@@ -103,7 +148,7 @@ namespace Covenant.Models.Covenant
                             {
                                 credType = "plaintext";
                             }
-                            if (!(credType == "plaintext" && username.EndsWith("$")))
+                            if (!(credType == "plaintext" && username.EndsWith("$", StringComparison.Ordinal)))
                             {
                                 if (IsNTLM(password))
                                 {
@@ -112,7 +157,7 @@ namespace Covenant.Models.Covenant
                                         Domain = domain,
                                         Username = username,
                                         Hash = password,
-                                        HashCredentialType = CapturedHashCredential.HashType.NTLM
+                                        HashCredentialType = HashType.NTLM
                                     });
                                 }
                                 else
@@ -146,11 +191,11 @@ namespace Covenant.Models.Covenant
                             {
                                 try
                                 {
-                                    if (line.Trim().StartsWith("User :"))
+                                    if (line.Trim().StartsWith("User :", StringComparison.Ordinal))
                                     {
                                         user = line.Split(":")[1].Trim();
                                     }
-                                    else if (line.Trim().StartsWith("Hash NTLM:"))
+                                    else if (line.Trim().StartsWith("Hash NTLM:", StringComparison.Ordinal))
                                     {
                                         userHash = line.Split(":")[1].Trim();
                                     }
@@ -164,7 +209,7 @@ namespace Covenant.Models.Covenant
                                     Domain = domain,
                                     Username = user,
                                     Hash = userHash,
-                                    HashCredentialType = CapturedHashCredential.HashType.NTLM
+                                    HashCredentialType = HashType.NTLM
                                 });
                             }
                         }
@@ -213,7 +258,7 @@ namespace Covenant.Models.Covenant
                             }
                             else if (line.Contains("Base64EncodedTicket"))
                             {
-                                ticket = ticket_match.Groups[0].Value.Substring(ticket_match.Groups[0].Value.IndexOf("Base64EncodedTicket") + 26).Trim().Replace(" ", "").Replace("\r", "").Replace("\n","");
+                                ticket = ticket_match.Groups[0].Value.Substring(ticket_match.Groups[0].Value.IndexOf("Base64EncodedTicket", StringComparison.Ordinal) + 26).Trim().Replace(" ", "").Replace("\r", "").Replace("\n","");
                             }
                         }
                         catch (Exception) { continue; }
@@ -226,9 +271,7 @@ namespace Covenant.Models.Covenant
                             Username = username,
                             ServiceName = servicename,
                             Ticket = ticket,
-                            TicketCredentialType = sessionkeytype.Contains("rc4") ?
-                                                        CapturedTicketCredential.TicketType.RC4 :
-                                                        CapturedTicketCredential.TicketType.AES
+                            TicketCredentialType = sessionkeytype.Contains("rc4") ? TicketType.RC4 : TicketType.AES
                         });
                     }
                 }
@@ -239,51 +282,6 @@ namespace Covenant.Models.Covenant
         private static bool IsNTLM(string input)
         {
             return Regex.IsMatch(input, "^[0-9a-f]{32}", RegexOptions.IgnoreCase);
-        }
-    }
-
-    public class CapturedPasswordCredential : CapturedCredential
-    {
-        public string Password { get; set; }
-
-        public CapturedPasswordCredential()
-        {
-            this.Type = CredentialType.Password;
-        }
-    }
-
-    public class CapturedHashCredential : CapturedCredential
-    {
-        public enum HashType
-        {
-            NTLM,
-            LM,
-            SHA1
-        }
-
-        public string Hash { get; set; }
-        public HashType HashCredentialType { get; set; }
-
-        public CapturedHashCredential()
-        {
-            this.Type = CredentialType.Hash;
-        }
-    }
-
-    public class CapturedTicketCredential : CapturedCredential
-    {
-        public enum TicketType
-        {
-            RC4,
-            AES
-        }
-
-        public string Ticket { get; set; }
-        public TicketType TicketCredentialType { get; set; }
-
-        public CapturedTicketCredential()
-        {
-            this.Type = CredentialType.Ticket;
         }
     }
 }

@@ -41,10 +41,7 @@ namespace Covenant
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<CovenantContext>(opt =>
-			{
-				opt.UseSqlite("Data Source=" + Common.CovenantDatabaseFile);
-			});
+            services.AddDbContext<CovenantContext>();
 
             services.AddIdentity<CovenantUser, IdentityRole>()
             .AddEntityFrameworkStores<CovenantContext>()
@@ -70,8 +67,8 @@ namespace Covenant
                 options.Cookie.HttpOnly = true;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
 
-                options.LoginPath = "/Login";
-                options.LogoutPath = "/Login/Logout";
+                options.LoginPath = "/CovenantUser/Login";
+                options.LogoutPath = "/CovenantUser/Logout";
                 options.AccessDeniedPath = "/Login/AccessDenied";
                 options.SlidingExpiration = true;
             });
@@ -103,6 +100,10 @@ namespace Covenant
                     policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
                     policy.RequireRole("Administrator");
                 });
+                options.AddPolicy("RequireAdministratorRole", policy =>
+                {
+                    policy.RequireRole("Administrator");
+                });
             });
 
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
@@ -121,9 +122,7 @@ namespace Covenant
                 c.SchemaFilter<EnumSchemaFilter>();
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
-
-			services.AddSingleton<Dictionary<int, CancellationTokenSource>>();
-
+            
             services.AddSignalR();
         }
 
@@ -163,7 +162,10 @@ namespace Covenant
 
             app.UseSignalR(routes =>
             {
-                routes.MapHub<TestHub>("/testhub");
+                routes.MapHub<GruntHub>("/grunthub", options =>
+                {
+                    options.ApplicationMaxBufferSize = 500 * 1024;
+                });
             });
         }
 
@@ -179,7 +181,7 @@ namespace Covenant
                         "x-ms-enum",
                         new { name = typeInfo.Name, modelAsString = false }
                     );
-                };
+                }
             }
         }
 

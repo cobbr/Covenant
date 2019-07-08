@@ -3,12 +3,12 @@
 // License: GNU GPLv3
 
 using System;
-using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Grunts;
 
@@ -31,9 +31,9 @@ namespace Covenant.Controllers
         // Get Tasks
         // </summary>
         [HttpGet(Name = "GetGruntTasks")]
-        public ActionResult<IEnumerable<GruntTask>> GetGruntTasks()
+        public async Task<ActionResult<IEnumerable<GruntTask>>> GetGruntTasks()
         {
-            return _context.GruntTasks.Include(T => T.Options).ToList();
+            return Ok(await _context.GetGruntTasks());
         }
 
         // GET: api/grunttasks/{id}
@@ -41,14 +41,20 @@ namespace Covenant.Controllers
         // Get a Task by Id
         // </summary>
         [HttpGet("{id:int}", Name = "GetGruntTask")]
-        public ActionResult<GruntTask> GetGruntTask(int id)
+        public async Task<ActionResult<GruntTask>> GetGruntTask(int id)
         {
-            GruntTask task = _context.GruntTasks.Include(T => T.Options).FirstOrDefault(T => T.Id == id);
-            if (task == null)
+            try
             {
-                return NotFound($"NotFound - GruntTask with id: {id}");
+                return await _context.GetGruntTask(id);
             }
-            return task;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/grunttasks/{taskname}
@@ -56,14 +62,20 @@ namespace Covenant.Controllers
         // Get a Task by Name
         // </summary>
         [HttpGet("{taskname}", Name = "GetGruntTaskByName")]
-        public ActionResult<GruntTask> GetGruntTaskByName(string taskname)
+        public async Task<ActionResult<GruntTask>> GetGruntTaskByName(string taskname)
         {
-            GruntTask task = _context.GruntTasks.Include(T => T.Options).FirstOrDefault(T => T.Name.ToLower() == taskname.ToLower());
-            if (task == null)
+            try
             {
-                return NotFound($"NotFound - GruntTask with TaskName: {taskname}");
+                return await _context.GetGruntTaskByName(taskname);
             }
-            return task;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/grunttasks
@@ -72,16 +84,10 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost(Name = "CreateGruntTask")]
         [ProducesResponseType(typeof(GruntTask), 201)]
-        public ActionResult<GruntTask> CreateGruntTask([FromBody] GruntTask task)
+        public async Task<ActionResult<GruntTask>> CreateGruntTask([FromBody] GruntTask task)
         {
-            _context.GruntTasks.Add(task);
-            _context.SaveChanges();
-            GruntTask savedTask = _context.GruntTasks.Include(T => T.Options).FirstOrDefault(GT => GT.Id == task.Id);
-            if (savedTask == null)
-            {
-                return NotFound($"NotFound - GruntTask with id: {task.Id}");
-            }
-            return CreatedAtRoute(nameof(GetGruntTask), new { id = task.Id }, task);
+            GruntTask savedTask = await _context.CreateGruntTask(task);
+            return CreatedAtRoute(nameof(GetGruntTask), new { id = savedTask.Id }, savedTask);
         }
 
         // PUT api/grunttasks
@@ -89,32 +95,20 @@ namespace Covenant.Controllers
         // Edit a Task
         // </summary>
         [HttpPut(Name = "EditGruntTask")]
-        public ActionResult<GruntTask> EditGruntTask([FromBody] GruntTask task)
+        public async Task<ActionResult<GruntTask>> EditGruntTask([FromBody] GruntTask task)
         {
-            GruntTask updatingTask = _context.GruntTasks.Include(T => T.Options).FirstOrDefault(T => T.Id == task.Id);
-            if (updatingTask == null)
+            try
             {
-                return NotFound($"NotFound - GruntTask with id: {task.Id}");
+                return await _context.EditGruntTask(task);
             }
-            updatingTask.Name = task.Name;
-            updatingTask.Code = task.Code;
-            updatingTask.Description = task.Description;
-            updatingTask.EmbeddedResources = task.EmbeddedResources;
-            updatingTask.ReferenceAssemblies = task.ReferenceAssemblies;
-            updatingTask.ReferenceSourceLibraries = task.ReferenceSourceLibraries;
-            updatingTask.TokenTask = task.TokenTask;
-            foreach (GruntTask.GruntTaskOption option in updatingTask.Options)
+            catch (ControllerNotFoundException e)
             {
-                GruntTask.GruntTaskOption t = task.Options.FirstOrDefault(O => O.Name == option.Name);
-                if (t != null)
-                {
-                    option.Value = t.Value;
-                }
+                return NotFound(e.Message);
             }
-            _context.GruntTasks.Update(updatingTask);
-            _context.SaveChanges();
-
-            return updatingTask;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // DELETE api/grunttasks/{id}
@@ -123,17 +117,20 @@ namespace Covenant.Controllers
         // </summary>
         [HttpDelete("{id}", Name = "DeleteGruntTask")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteGruntTask(int id)
+        public async Task<ActionResult> DeleteGruntTask(int id)
         {
-            GruntTask removingTask = _context.GruntTasks.Include(T => T.Options).FirstOrDefault(T => T.Id == id);
-
-            if (removingTask == null)
+            try
             {
-                return NotFound($"NotFound - GruntTask with id: {id}");
+                await _context.DeleteGruntTask(id);
             }
-            _context.GruntTasks.Remove(removingTask);
-            _context.SaveChanges();
-
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
             return new NoContentResult();
         }
     }

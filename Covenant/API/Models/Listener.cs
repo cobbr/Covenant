@@ -6,6 +6,7 @@
 
 namespace Covenant.API.Models
 {
+    using Microsoft.Rest;
     using Newtonsoft.Json;
     using System.Linq;
 
@@ -24,16 +25,19 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Active', 'Stopped'</param>
-        public Listener(int? id = default(int?), string name = default(string), string description = default(string), string bindAddress = default(string), int? bindPort = default(int?), string connectAddress = default(string), int? profileId = default(int?), int? listenerTypeId = default(int?), ListenerStatus? status = default(ListenerStatus?), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
+        public Listener(string name, string guid, string description, string bindAddress, int bindPort, string connectAddress, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             Id = id;
             Name = name;
+            Guid = guid;
             Description = description;
             BindAddress = bindAddress;
             BindPort = bindPort;
             ConnectAddress = connectAddress;
             ProfileId = profileId;
+            Profile = profile;
             ListenerTypeId = listenerTypeId;
+            ListenerType = listenerType;
             Status = status;
             CovenantToken = covenantToken;
             StartTime = startTime;
@@ -57,6 +61,11 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "guid")]
+        public string Guid { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
 
@@ -68,7 +77,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "bindPort")]
-        public int? BindPort { get; set; }
+        public int BindPort { get; set; }
 
         /// <summary>
         /// </summary>
@@ -78,19 +87,29 @@ namespace Covenant.API.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "profileId")]
-        public int? ProfileId { get; set; }
+        public int ProfileId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "profile")]
+        public Profile Profile { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "listenerTypeId")]
-        public int? ListenerTypeId { get; set; }
+        public int ListenerTypeId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "listenerType")]
+        public ListenerType ListenerType { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'Uninitialized', 'Active',
         /// 'Stopped'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
-        public ListenerStatus? Status { get; set; }
+        public ListenerStatus Status { get; set; }
 
         /// <summary>
         /// </summary>
@@ -102,5 +121,79 @@ namespace Covenant.API.Models
         [JsonProperty(PropertyName = "startTime")]
         public System.DateTime? StartTime { get; set; }
 
+        /// <summary>
+        /// Validate the object.
+        /// </summary>
+        /// <exception cref="ValidationException">
+        /// Thrown if validation fails
+        /// </exception>
+        public virtual void Validate()
+        {
+            if (Name == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "Name");
+            }
+            if (Guid == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "Guid");
+            }
+            if (Description == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "Description");
+            }
+            if (BindAddress == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "BindAddress");
+            }
+            if (ConnectAddress == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "ConnectAddress");
+            }
+            if (Name != null)
+            {
+                if (Name.Length > 100)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "Name", 100);
+                }
+                if (Name.Length < 0)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "Name", 0);
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(Name, "^[a-zA-Z0-9]*$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "Name", "^[a-zA-Z0-9]*$");
+                }
+            }
+            if (Guid != null)
+            {
+                if (Guid.Length > 100)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "Guid", 100);
+                }
+                if (Guid.Length < 0)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "Guid", 0);
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(Guid, "^[a-zA-Z0-9]*$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "Guid", "^[a-zA-Z0-9]*$");
+                }
+            }
+            if (BindAddress != null)
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(BindAddress, "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "BindAddress", "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+                }
+            }
+            if (BindPort > 65535)
+            {
+                throw new ValidationException(ValidationRules.InclusiveMaximum, "BindPort", 65535);
+            }
+            if (BindPort < 1)
+            {
+                throw new ValidationException(ValidationRules.InclusiveMinimum, "BindPort", 1);
+            }
+        }
     }
 }

@@ -2,10 +2,9 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
-using System.IO;
-using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -32,9 +31,9 @@ namespace Covenant.Controllers
         // Get a list of Events
         // </summary>
         [HttpGet(Name = "GetEvents")]
-        public ActionResult<IEnumerable<Event>> GetEvents()
+        public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
-            return _context.Events.ToList();
+            return Ok(await _context.GetEvents());
         }
 
         // GET api/events/{id}
@@ -42,24 +41,41 @@ namespace Covenant.Controllers
         // Get an Event by id
         // </summary>
         [HttpGet("{id}", Name = "GetEvent")]
-        public ActionResult<Event> GetEvent(int id)
+        public async Task<ActionResult<Event>> GetEvent(int id)
         {
-            var anEvent = _context.Events.FirstOrDefault(E => E.Id == id);
-            if (anEvent == null)
+            try
             {
-                return NotFound($"NotFound - Event with id: {id}");
+                return await _context.GetEvent(id);
             }
-            return Ok(anEvent);
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/events/time
         // <summary>
         // Get Covenant's current DateTime
         // </summary>
-        [HttpGet("time", Name = "GetTime")]
-        public ActionResult<long> GetTime()
+        [HttpGet("time", Name = "GetEventTime")]
+        public ActionResult<long> GetEventTime()
         {
-            return Ok(DateTime.UtcNow.ToBinary());
+            try
+            {
+                return _context.GetEventTime();
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/events/range/{fromdate}
@@ -67,10 +83,20 @@ namespace Covenant.Controllers
         // Get a list of Events that occurred after the specified DateTime
         // </summary>
         [HttpGet("range/{fromdate}", Name = "GetEventsAfter")]
-        public ActionResult<IEnumerable<Event>> GetEventsAfter(long fromdate)
+        public async Task<ActionResult<IEnumerable<Event>>> GetEventsAfter(long fromdate)
         {
-            DateTime start = DateTime.FromBinary(fromdate);
-            return _context.Events.Where(E => E.Time.CompareTo(start) >= 0).ToList();
+            try
+            {
+                return Ok(await _context.GetEventsAfter(fromdate));
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/events/range/{fromdate}/{todate}
@@ -78,11 +104,20 @@ namespace Covenant.Controllers
         // Get a list of Events that occurred between the range of specified DateTimes
         // </summary>
         [HttpGet("range/{fromdate}/{todate}", Name = "GetEventsRange")]
-        public ActionResult<IEnumerable<Event>> GetEventsRange(long fromdate, long todate)
+        public async Task<ActionResult<IEnumerable<Event>>> GetEventsRange(long fromdate, long todate)
         {
-            DateTime start = DateTime.FromBinary(fromdate);
-            DateTime end = DateTime.FromBinary(todate);
-            return _context.Events.Where(E => E.Time.CompareTo(start) >= 0 && E.Time.CompareTo(end) <= 0).ToList();
+            try
+            {
+                return Ok(await _context.GetEventsRange(fromdate, todate));
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
 		// POST api/events
@@ -91,22 +126,42 @@ namespace Covenant.Controllers
 		// </summary>
 		[HttpPost(Name = "CreateEvent")]
 		[ProducesResponseType(typeof(Event), 201)]
-		public ActionResult<Event> CreateEvent([FromBody]Event anEvent)
+		public async Task<ActionResult<Event>> CreateEvent([FromBody]Event anEvent)
 		{
-			anEvent.Time = DateTime.UtcNow;
-			_context.Events.Add(anEvent);
-			_context.SaveChanges();
-			return CreatedAtRoute(nameof(GetEvent), new { id = anEvent.Id }, anEvent);
-		}
+            try
+            {
+                Event createdEvent = await _context.CreateEvent(anEvent);
+                return CreatedAtRoute(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
         // GET: api/events/download/{id}
         // <summary>
         // Get a DownloadEvent
         // </summary>
         [HttpGet("download/{id}", Name = "GetDownloadEvent")]
-        public ActionResult<DownloadEvent> GetDownloadEvent(int id)
+        public async Task<ActionResult<DownloadEvent>> GetDownloadEvent(int id)
         {
-            return ((DownloadEvent)_context.Events.FirstOrDefault(E => E.Id == id && E.Type == Event.EventType.Download));
+            try
+            {
+                return await _context.GetDownloadEvent(id);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET: api/events/download/{id}/content
@@ -114,19 +169,20 @@ namespace Covenant.Controllers
         // Get a downloaded file
         // </summary>
         [HttpGet("download/{id}/content", Name = "GetDownloadContent")]
-        public ActionResult<string> GetDownloadContent(int id)
+        public async Task<ActionResult<string>> GetDownloadContent(int id)
         {
-            DownloadEvent theEvent = ((DownloadEvent)_context.Events.FirstOrDefault(E => E.Id == id));
-            if (theEvent == null)
+            try
             {
-                return NotFound($"NotFound - DownloadEvent with id: {id}"); ;
+                return await _context.GetDownloadContent(id);
             }
-            string filename = Path.Combine(Common.CovenantDownloadDirectory, theEvent.FileName);
-            if (!System.IO.File.Exists(filename))
+            catch (ControllerNotFoundException e)
             {
-                return BadRequest($"BadRequest - Path does not exist on disk: {filename}");
+                return NotFound(e.Message);
             }
-            return Convert.ToBase64String(System.IO.File.ReadAllBytes(filename));
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/events/download
@@ -135,13 +191,21 @@ namespace Covenant.Controllers
         // </summary>
         [HttpPost("download", Name = "CreateDownloadEvent")]
         [ProducesResponseType(typeof(Event), 201)]
-        public ActionResult CreateDownloadEvent([FromBody]DownloadEvent downloadEvent)
+        public async Task<ActionResult> CreateDownloadEvent([FromBody]DownloadEvent downloadEvent)
         {
-            downloadEvent.Time = DateTime.UtcNow;
-            downloadEvent.WriteToDisk();
-            _context.Events.Add(downloadEvent);
-            _context.SaveChanges();
-            return CreatedAtRoute(nameof(GetEvent), new { id = downloadEvent.Id }, downloadEvent);
+            try
+            {
+                DownloadEvent createdEvent = await _context.CreateDownloadEvent(downloadEvent);
+                return CreatedAtRoute(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

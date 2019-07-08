@@ -1,83 +1,54 @@
-﻿@{
+﻿@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
+@{
     Layout = "_Layout";
     ViewData["Title"] = "Dashboard";
+    IEnumerable<Grunt> Grunts = ViewBag.Grunts;
+    IEnumerable<Listener> Listeners = ViewBag.Listeners;
+    IEnumerable<GruntTasking> GruntTaskings = ViewBag.GruntTaskings;
 }
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Dashboard</h1>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>CommType</th>
-                <th>Hostname</th>
-                <th>UserName</th>
-                <th>Status</th>
-                <th>LastCheckIn</th>
-                <th>Integrity</th>
-                <th>OperatingSystem</th>
-                <th>Process</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in ViewBag.Grunts)
-            {
-                @if (item.Status != API.Models.GruntStatus.Uninitialized)
-                {
-                    <tr>
-                        <td>
-                            <a asp-controller="Grunt" asp-action="interact" asp-route-id="@item.Id">
-                                @item.Name
-                            </a>
-                        </td>
-                        <td>@item.CommType</td>
-                        <td>@item.Hostname</td>
-                        <td>@item.UserName</td>
-                        <td>@item.Status</td>
-                        <td>@item.LastCheckIn</td>
-                        <td>@item.Integrity</td>
-                        <td>@item.OperatingSystem</td>
-                        <td>@item.Process</td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Grunts</h4>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>TypeName</th>
-                <th>Status</th>
-                <th>StartTime</th>
-                <th>BindAddress</th>
-                <th>BindPort</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in ViewBag.Listeners)
-            {
-                @if (item.Status != API.Models.ListenerStatus.Uninitialized)
-                {
-                    <tr>
-                        <td>
-                            <a asp-controller="Listener" asp-action="interact" asp-route-id="@item.Id">
-                                @item.Name
-                            </a>
-                        </td>
-                        <td>HTTP</td>
-                        <td>@item.Status</td>
-                        <td>@item.StartTime</td>
-                        <td>@item.BindAddress</td>
-                        <td>@item.BindPort</td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
+@{
+    await Html.RenderPartialAsync("../Grunt/_GruntTable", Grunts);
+}
+<br/>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Listeners</h4>
 </div>
+
+@{
+    await Html.RenderPartialAsync("../Listener/_ListenerTable", Listeners);
+}
+<br/>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Taskings</h4>
+</div>
+
+@{
+    await Html.RenderPartialAsync("../GruntTasking/_GruntTaskingTable", GruntTaskings);
+}
+<br/>
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#grunt-table').DataTable({
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": false
+            });
+            $('#tasking-table').DataTable({
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": false
+            });
+        });
+    </script>
+}

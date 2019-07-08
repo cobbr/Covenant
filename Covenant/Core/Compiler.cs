@@ -24,9 +24,7 @@ namespace Covenant.Core
         public class CompilationRequest
         {
             public string Source { get; set; } = null;
-            public string SourceDirectory { get; set; } = null;
-            public string ResourceDirectory { get; set; } = null;
-            public string ReferenceDirectory { get; set; } = null;
+            public List<string> SourceDirectories { get; set; } = null;
 
             public Common.DotNetVersion TargetDotNetVersion { get; set; } = Common.DotNetVersion.Net35;
             public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
@@ -68,12 +66,15 @@ namespace Covenant.Core
             List<SourceSyntaxTree> sourceSyntaxTrees = new List<SourceSyntaxTree>();
             List<SyntaxTree> compilationTrees = new List<SyntaxTree>();
 
-            if (request.SourceDirectory != null)
+            if (request.SourceDirectories != null)
             {
-                sourceSyntaxTrees = Directory.GetFiles(request.SourceDirectory, "*.cs", SearchOption.AllDirectories)
-                    .Select(F => new SourceSyntaxTree { FileName = F, SyntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(F), new CSharpParseOptions()) })
-                    .ToList();
-                compilationTrees = sourceSyntaxTrees.Select(S => S.SyntaxTree).ToList();
+                foreach (var sourceDirectory in request.SourceDirectories)
+                {
+                    sourceSyntaxTrees.AddRange(Directory.GetFiles(sourceDirectory, "*.cs", SearchOption.AllDirectories)
+                        .Select(F => new SourceSyntaxTree { FileName = F, SyntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(F), new CSharpParseOptions()) })
+                        .ToList());
+                    compilationTrees.AddRange(sourceSyntaxTrees.Select(S => S.SyntaxTree).ToList());
+                }
             }
             SyntaxTree sourceTree = CSharpSyntaxTree.ParseText(request.Source, new CSharpParseOptions());
             compilationTrees.Add(sourceTree);
@@ -83,11 +84,11 @@ namespace Covenant.Core
                 switch (R.Framework)
                 {
                     case Common.DotNetVersion.Net35:
-                        return MetadataReference.CreateFromFile(request.ReferenceDirectory + "net35" + Path.DirectorySeparatorChar + R.File);
+                        return MetadataReference.CreateFromFile(R.File);
                     case Common.DotNetVersion.Net40:
-                        return MetadataReference.CreateFromFile(request.ReferenceDirectory + "net40" + Path.DirectorySeparatorChar + R.File);
+                        return MetadataReference.CreateFromFile(R.File);
                     case Common.DotNetVersion.NetCore21:
-                        return MetadataReference.CreateFromFile(request.ReferenceDirectory + Path.DirectorySeparatorChar + R.File);
+                        return MetadataReference.CreateFromFile(R.File);
                     default:
                         return null;
                 }
@@ -137,11 +138,11 @@ namespace Covenant.Core
                         switch (request.TargetDotNetVersion)
                         {
                             case Common.DotNetVersion.Net35:
-                                return MetadataReference.CreateFromFile(request.ReferenceDirectory + "net35" + Path.DirectorySeparatorChar + R.File);
+                                return MetadataReference.CreateFromFile(R.File);
                             case Common.DotNetVersion.Net40:
-                                return MetadataReference.CreateFromFile(request.ReferenceDirectory + "net40" + Path.DirectorySeparatorChar + R.File);
+                                return MetadataReference.CreateFromFile(R.File);
                             case Common.DotNetVersion.NetCore21:
-                                return MetadataReference.CreateFromFile(request.ReferenceDirectory + Path.DirectorySeparatorChar + R.File);
+                                return MetadataReference.CreateFromFile(R.File);
                             default:
                                 return null;
                         }
@@ -162,7 +163,7 @@ namespace Covenant.Core
                         return request.Platform == Platform.AnyCpu || ER.Platform == Platform.AnyCpu || ER.Platform == request.Platform;
                     }).Where(ER => ER.Enabled).Select(ER =>
                     {
-                        return new ResourceDescription(ER.Name, () => File.OpenRead(request.ResourceDirectory + ER.File), true);
+                        return new ResourceDescription(ER.Name, () => File.OpenRead(ER.File), true);
                     }).ToList()
                 );
                 if (emitResult.Success)
@@ -201,8 +202,8 @@ namespace Covenant.Core
             );
             doc.Load(new StringReader(ProjectFile));
             project.Load(doc);
-            project.ProbePaths.Add(Common.Net35Directory);
-            project.ProbePaths.Add(Common.Net40Directory);
+            project.ProbePaths.Add(Common.CovenantAssemblyReferenceNet35Directory);
+            project.ProbePaths.Add(Common.CovenantAssemblyReferenceNet40Directory);
 
             ConfuserParameters parameters = new ConfuserParameters();
             parameters.Project = project;

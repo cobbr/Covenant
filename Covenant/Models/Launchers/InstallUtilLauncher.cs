@@ -29,7 +29,7 @@ namespace Covenant.Models.Launchers
             this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, this.OutputKind, true);
             string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
 
-            List<Compiler.Reference> references = Common.DefaultReferences;
+            List<Compiler.Reference> references = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
             references.Add(new Compiler.Reference
             {
                 File = "System.Configuration.Install.dll",
@@ -39,8 +39,6 @@ namespace Covenant.Models.Launchers
             this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CompilationRequest
             {
                 Source = code,
-                ResourceDirectory = Common.CovenantResourceDirectory,
-                ReferenceDirectory = Common.CovenantReferenceDirectory,
                 TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,
                 References = references

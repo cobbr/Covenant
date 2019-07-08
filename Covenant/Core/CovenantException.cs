@@ -7,13 +7,61 @@ using System.Collections.Generic;
 
 namespace Covenant.Core
 {
-    public class CovenantException: Exception
+    public class CovenantException : Exception
     {
         public CovenantException() : base()
         {
 
         }
         public CovenantException(string message) : base(message)
+        {
+
+        }
+    }
+
+    public class ControllerException : Exception
+    {
+        public ControllerException() : base()
+        {
+
+        }
+        public ControllerException(string message) : base(message)
+        {
+
+        }
+    }
+
+    public class ControllerNotFoundException : Exception
+    {
+        public ControllerNotFoundException() : base()
+        {
+
+        }
+        public ControllerNotFoundException(string message) : base(message)
+        {
+
+        }
+    }
+
+    public class ControllerBadRequestException : Exception
+    {
+        public ControllerBadRequestException() : base()
+        {
+
+        }
+        public ControllerBadRequestException(string message) : base(message)
+        {
+
+        }
+    }
+
+    public class ControllerUnauthorizedException : Exception
+    {
+        public ControllerUnauthorizedException() : base()
+        {
+
+        }
+        public ControllerUnauthorizedException(string message) : base(message)
         {
 
         }

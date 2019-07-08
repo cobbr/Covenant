@@ -2,10 +2,17 @@
 
 namespace Covenant.Models.Indicators
 {
+    public enum IndicatorType
+    {
+        FileIndicator,
+        NetworkIndicator,
+        TargetIndicator
+    }
+
     public class Indicator
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public IndicatorType Type { get; set; }
     }
 
     public class FileIndicator : Indicator
@@ -19,7 +26,7 @@ namespace Covenant.Models.Indicators
 
         public FileIndicator()
         {
-            this.Name = "FileIndicator";
+            this.Type = IndicatorType.FileIndicator;
         }
 
         public override string ToString()
@@ -45,7 +52,7 @@ namespace Covenant.Models.Indicators
 
         public NetworkIndicator()
         {
-            this.Name = "NetworkIndicator";
+            this.Type = IndicatorType.NetworkIndicator;
         }
 
         public override string ToString()
@@ -68,7 +75,7 @@ namespace Covenant.Models.Indicators
 
         public TargetIndicator()
         {
-            this.Name = "TargetIndicator";
+            this.Type = IndicatorType.TargetIndicator;
         }
 
         public override string ToString()

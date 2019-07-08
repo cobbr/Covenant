@@ -10,17 +10,19 @@ using System.Net.Http;
 using System.Threading;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 using NLog.Web;
 using NLog.Config;
@@ -29,9 +31,8 @@ using NLog.Targets;
 using Newtonsoft.Json;
 
 using Covenant.API;
-using APIModels = Covenant.API.Models;
-using Covenant.Models.Grunts;
 using Covenant.Core;
+using Covenant.Models.Grunts;
 
 namespace Covenant.Models.Listeners
 {
@@ -45,52 +46,36 @@ namespace Covenant.Models.Listeners
 
     public class HttpListener : Listener
     {
+        [Required]
+        [DisplayName("UseSSL")]
         public bool UseSSL { get; set; } = false;
-        private string _SSLCertificateFile
-        {
-            get
-            {
-                return Common.CovenantResourceDirectory + "httplistener-" + this.Id + "-certificate.pfx";
-            }
-        }
-        private string _SSLCertificate = "";
-        public string SSLCertificate
-        {
-            get
-            {
-                return _SSLCertificate;
-            }
-            set
-            {
-                _SSLCertificate = value;
-                if (_SSLCertificate != "")
-                {
-                    File.WriteAllBytes(_SSLCertificateFile, Convert.FromBase64String(value));
-                }
-            }
-        }
-
+        private string SSLCertificateFile { get {  return this.ListenerDirectory + "httplistener-" + this.GUID + "-certificate.pfx"; } }
+        [DisplayName("SSLCertificate")]
+        public string SSLCertificate { get; set; }
+        [DisplayName("SSLCertificatePassword")]
         public string SSLCertificatePassword { get; set; } = "CovenantDev";
 
+        [DisplayName("SSLCertHash")]
         public string SSLCertHash
         {
             get
             {
-                if (_SSLCertificate == "" || !File.Exists(_SSLCertificateFile)) { return ""; }
+                if (!UseSSL || !File.Exists(SSLCertificateFile)) { return ""; }
                 try
                 {
-                    X509Certificate2 cert = new X509Certificate2(_SSLCertificateFile, this.SSLCertificatePassword);
+                    X509Certificate2 cert = new X509Certificate2(SSLCertificateFile, this.SSLCertificatePassword);
                     return cert.GetCertHashString();
                 }
                 catch (Exception) { return ""; }
             }
         }
 
+        [Required]
         public string Url
         {
             get
             {
-                string scheme = (UseSSL ? "https://" : "http://");
+                string scheme = UseSSL ? "https://" : "http://";
                 return scheme + this.ConnectAddress + ":" + this.BindPort; 
             }
             set
@@ -101,6 +86,8 @@ namespace Covenant.Models.Listeners
                 this.BindPort = uri.Port;
             }
         }
+
+        private string ListenerStaticHostDirectory { get { return this.ListenerDirectory + "Static" + Path.DirectorySeparatorChar; } }
 
         public HttpListener()
         {
@@ -113,29 +100,22 @@ namespace Covenant.Models.Listeners
             this.ProfileId = ProfileId;
         }
 
-        public static HttpListener Create(APIModels.HttpListener httpListenerModel)
+        private bool CreateDirectories()
         {
-            HttpListener listener = new HttpListener(httpListenerModel.ListenerTypeId ?? default, httpListenerModel.ProfileId ?? default);
-            listener.Id = httpListenerModel.Id ?? default;
-            listener.Name = httpListenerModel.Name;
-            listener.Description = httpListenerModel.Description;
-            listener.ProfileId = httpListenerModel.ProfileId ?? default;
-            listener.UseSSL = httpListenerModel.UseSSL ?? default;
-            listener.SSLCertificate = httpListenerModel.SslCertificate;
-            listener.SSLCertificatePassword = httpListenerModel.SslCertificatePassword;
-            listener.Url = httpListenerModel.Url;
-            listener.ConnectAddress = httpListenerModel.ConnectAddress;
-            listener.BindAddress = httpListenerModel.BindAddress;
-            listener.BindPort = httpListenerModel.BindPort ?? default;
-            listener.ListenerTypeId = httpListenerModel.ListenerTypeId ?? default;
-            listener.Status = (ListenerStatus)Enum.Parse(typeof(ListenerStatus), httpListenerModel.Status.ToString());
-            listener.CovenantToken = httpListenerModel.CovenantToken;
-            return listener;
+            if (!Directory.Exists(this.ListenerDirectory))
+            {
+                Directory.CreateDirectory(this.ListenerDirectory);
+            }
+            if (!Directory.Exists(this.ListenerStaticHostDirectory))
+            {
+                Directory.CreateDirectory(this.ListenerStaticHostDirectory);
+            }
+            return Directory.Exists(this.ListenerDirectory) && Directory.Exists(this.ListenerStaticHostDirectory);
         }
         
-        public override CancellationTokenSource Start(HttpProfile profile)
+        public override CancellationTokenSource Start()
         {
-            IWebHost host = BuildWebHost(profile);
+            IWebHost host = BuildWebHost();
 
             using (var scope = host.Services.CreateScope())
             {
@@ -182,19 +162,21 @@ namespace Covenant.Models.Listeners
             }
         }
 
-        private IWebHost BuildWebHost(HttpProfile profile)
+        private IWebHost BuildWebHost()
         {
+            this.CreateDirectories();
             WebHostBuilder builder = new WebHostBuilder();
             builder.UseKestrel(options =>
             {
                 options.AddServerHeader = false;
                 if (UseSSL)
                 {
+                    File.WriteAllBytes(this.SSLCertificateFile, Convert.FromBase64String(this.SSLCertificate));
                     options.Listen(new IPEndPoint(IPAddress.Parse(this.BindAddress), this.BindPort), listenOptions =>
                     {
                         listenOptions.UseHttps(httpsOptions =>
                         {
-                            httpsOptions.ServerCertificate = new X509Certificate2(_SSLCertificateFile, this.SSLCertificatePassword);
+                            httpsOptions.ServerCertificate = new X509Certificate2(SSLCertificateFile, this.SSLCertificatePassword);
                             httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
                                                         System.Security.Authentication.SslProtocols.Tls11 |
                                                         System.Security.Authentication.SslProtocols.Tls;
@@ -202,7 +184,6 @@ namespace Covenant.Models.Listeners
                     });
                 }
             });
-            
             return builder.UseContentRoot(Directory.GetCurrentDirectory())
                     .ConfigureLogging((hostingContext, logging) =>
                     {
@@ -214,8 +195,10 @@ namespace Covenant.Models.Listeners
                     })
                     .UseNLog()
                     .UseStartup<HttpListenerStartup>()
+                    .UseSetting("ListenerId", this.Id.ToString())
                     .UseSetting("CovenantToken", this.CovenantToken)
-                    .UseSetting("ProfileUrls", profile.HttpUrls)
+                    .UseSetting("ProfileUrls", JsonConvert.SerializeObject((this.Profile as HttpProfile).HttpUrls))
+                    .UseSetting("ListenerStaticHostDirectory", this.ListenerStaticHostDirectory)
                     .UseUrls((this.UseSSL ? "https://" : "http://") + this.BindAddress + ":" + this.BindPort)
                     .Build();
         }
@@ -223,18 +206,20 @@ namespace Covenant.Models.Listeners
         public HostedFile HostFile(HostedFile hostFileRequest)
         {
             hostFileRequest.Path = hostFileRequest.Path.TrimStart('/').TrimStart('\\');
-            string FullPath = Path.GetFullPath(Path.Combine(Common.CovenantStaticHostDirectory, hostFileRequest.Path));
-            if (!FullPath.StartsWith(Common.CovenantStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
-            FileInfo file = new FileInfo(FullPath);
+            string FullPath = Path.GetFullPath(Path.Combine(this.ListenerStaticHostDirectory, hostFileRequest.Path));
+            if (!FullPath.StartsWith(this.ListenerStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
+            FileInfo file1 = new FileInfo(FullPath);
+            string filename = file1.Name;
+            foreach (char invalid in Path.GetInvalidFileNameChars())
+            {
+                filename = filename.Replace(invalid, '_');
+            }
+            FileInfo file = new FileInfo(file1.DirectoryName + Path.DirectorySeparatorChar + filename);
             if (!file.Directory.Exists)
             {
                 file.Directory.Create();
             }
-            foreach (char invalid in Path.GetInvalidFileNameChars())
-            {
-                file.Name.Replace(invalid, '_');
-            }
-            string uriPath = file.FullName.Replace(Common.CovenantStaticHostDirectory, "");
+            string uriPath = file.FullName.Replace(this.ListenerStaticHostDirectory, "");
             Uri uri = new Uri(this.Url + "/" + uriPath);
             hostFileRequest.Path = uri.AbsolutePath;
             File.WriteAllBytes(file.FullName, Convert.FromBase64String(hostFileRequest.Content));
@@ -243,8 +228,8 @@ namespace Covenant.Models.Listeners
 
         public void UnhostFile(HostedFile hostFileRequest)
         {
-            string FullPath = Path.GetFullPath(Path.Combine(Common.CovenantStaticHostDirectory, hostFileRequest.Path));
-            if (!FullPath.StartsWith(Common.CovenantStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
+            string FullPath = Path.GetFullPath(Path.Combine(this.ListenerStaticHostDirectory, hostFileRequest.Path));
+            if (!FullPath.StartsWith(this.ListenerStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
             FileInfo file = new FileInfo(FullPath);
             if(file.Exists)
             {
@@ -257,27 +242,22 @@ namespace Covenant.Models.Listeners
             return this.GruntTemplateReplace(GruntStagerTemplateCode, grunt, profile);
         }
 
-        public override string GetGruntExecutorCode(Grunt grunt, HttpProfile profile)
-        {
-            return this.GruntTemplateReplace(GruntExecutorTemplateCode, grunt, profile);
-        }
-
         private string GruntTemplateReplace(string CodeTemplate, Grunt grunt, HttpProfile profile)
         {
             string ConnectUrl = (this.UseSSL ? "https://" : "http://") + this.ConnectAddress + ":" + this.BindPort;
             string HttpHeaders = "";
-            foreach (HttpProfile.HttpProfileHeader header in JsonConvert.DeserializeObject<List<HttpProfile.HttpProfileHeader>>(profile.HttpRequestHeaders))
+            foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
             {
                 HttpHeaders += "ProfileHttpHeaderNames.Add(@\"" + this.FormatForVerbatimString(header.Name) + "\");\n";
                 HttpHeaders += "ProfileHttpHeaderValues.Add(@\"" + this.FormatForVerbatimString(header.Value) + "\");\n";
             }
             string HttpUrls = "";
-            foreach (string url in JsonConvert.DeserializeObject<List<string>>(profile.HttpUrls))
+            foreach (string url in profile.HttpUrls)
             {
                 HttpUrls += "ProfileHttpUrls.Add(@\"" + this.FormatForVerbatimString(url) + "\");\n";
             }
             string HttpCookies = "";
-            foreach (string cookie in JsonConvert.DeserializeObject<List<string>>(profile.HttpCookies))
+            foreach (string cookie in profile.HttpCookies)
             {
                 HttpCookies += "ProfileHttpCookies.Add(@\"" + this.FormatForVerbatimString(cookie) + "\");\n";
             }
@@ -310,21 +290,46 @@ namespace Covenant.Models.Listeners
         }
 
         private static readonly string GruntStagerTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "GruntStager" + ".cs"));
-        private static readonly string GruntExecutorTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "Grunt" + ".cs"));
     }
 
     public class HttpListenerContext : IdentityDbContext
     {
         public DbSet<HttpListener> Listener { get; set; }
+        public DbSet<Profile> Profile { get; set; }
         public HttpListenerContext(DbContextOptions<HttpListenerContext> options) : base(options)
         {
 
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+            => optionsBuilder.UseInMemoryDatabase("HttpListenerDatabase");
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
             builder.Entity<HttpListener>().ToTable("HttpListener");
+            builder.Entity<HttpProfile>().HasBaseType<Profile>().ToTable("HttpProfile");
+
+            builder.Entity<HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+            builder.Entity<HttpProfile>().Property(HP => HP.HttpCookies).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+            builder.Entity<HttpProfile>().Property(HP => HP.HttpRequestHeaders).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<HttpProfileHeader>() : JsonConvert.DeserializeObject<List<HttpProfileHeader>>(v)
+            );
+            builder.Entity<HttpProfile>().Property(HP => HP.HttpResponseHeaders).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<HttpProfileHeader>() : JsonConvert.DeserializeObject<List<HttpProfileHeader>>(v)
+            );
+            base.OnModelCreating(builder);
         }
     }
 
@@ -354,7 +359,7 @@ namespace Covenant.Models.Listeners
                     clientHandler
                 );
             });
-            services.AddDbContext<HttpListenerContext>(opt => opt.UseInMemoryDatabase("HttpListenerDatabase"));
+            services.AddDbContext<HttpListenerContext>();
             services.AddMvc();
             services.AddAuthorization(options =>
             {
@@ -375,7 +380,7 @@ namespace Covenant.Models.Listeners
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-             app.UseMvc(routes =>
+            app.UseMvc(routes =>
             {
                 foreach (string route in JsonConvert.DeserializeObject<List<string>>(Configuration["ProfileUrls"]))
                 {
@@ -387,7 +392,7 @@ namespace Covenant.Models.Listeners
             var ContentTypeProvider = new FileExtensionContentTypeProvider(contentTypeMappings);
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Common.CovenantStaticHostDirectory),
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Configuration["ListenerStaticHostDirectory"]),
                 RequestPath = "",
                 ContentTypeProvider = ContentTypeProvider,
                 ServeUnknownFileTypes = true,

@@ -1,14 +1,14 @@
-﻿@model IEnumerable<Covenant.API.Models.Launcher>
+﻿@model IEnumerable<Covenant.Models.Launchers.Launcher>
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Launchers";
 }
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Launchers</h1>
 </div>
 
 <div class="table-responsive">
-    <table class="table table-striped table-sm">
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.Name)</th>
@@ -20,7 +20,7 @@
             {
             <tr>
                 <td>
-                    <a asp-action="@item.Name">
+                    <a asp-action="Create" asp-route-id="@item.Name">
                         @Html.DisplayFor(modelItem => item.Name)
                     </a>
                 </td>

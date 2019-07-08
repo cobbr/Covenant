@@ -26,15 +26,14 @@ namespace Covenant.API.Models
         /// 'LM', 'SHA1'</param>
         /// <param name="type">Possible values include: 'Password', 'Hash',
         /// 'Ticket'</param>
-        public CapturedHashCredential(string hash = default(string), HashType? hashCredentialType = default(HashType?), int? id = default(int?), string domain = default(string), string username = default(string), string serviceName = default(string), CredentialType? type = default(CredentialType?))
+        public CapturedHashCredential(HashType? hashCredentialType = default(HashType?), string hash = default(string), int? id = default(int?), CredentialType? type = default(CredentialType?), string domain = default(string), string username = default(string))
         {
-            Hash = hash;
             HashCredentialType = hashCredentialType;
+            Hash = hash;
             Id = id;
+            Type = type;
             Domain = domain;
             Username = username;
-            ServiceName = serviceName;
-            Type = type;
             CustomInit();
         }
 
@@ -44,11 +43,6 @@ namespace Covenant.API.Models
         partial void CustomInit();
 
         /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "hash")]
-        public string Hash { get; set; }
-
-        /// <summary>
         /// Gets or sets possible values include: 'NTLM', 'LM', 'SHA1'
         /// </summary>
         [JsonProperty(PropertyName = "hashCredentialType")]
@@ -56,8 +50,19 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "hash")]
+        public string Hash { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "id")]
         public int? Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets possible values include: 'Password', 'Hash', 'Ticket'
+        /// </summary>
+        [JsonProperty(PropertyName = "type")]
+        public CredentialType? Type { get; set; }
 
         /// <summary>
         /// </summary>
@@ -68,17 +73,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "username")]
         public string Username { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "serviceName")]
-        public string ServiceName { get; set; }
-
-        /// <summary>
-        /// Gets or sets possible values include: 'Password', 'Hash', 'Ticket'
-        /// </summary>
-        [JsonProperty(PropertyName = "type")]
-        public CredentialType? Type { get; set; }
 
     }
 }

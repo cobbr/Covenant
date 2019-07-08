@@ -3,10 +3,13 @@
 // License: GNU GPLv3
 
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
+using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Grunts;
 using Covenant.Models.Launchers;
@@ -31,9 +34,9 @@ namespace Covenant.Controllers
         // Get PowerShellLauncher
         // </summary>
         [HttpGet(Name = "GetLaunchers")]
-        public ActionResult<IEnumerable<Launcher>> Get()
+        public async Task<ActionResult<IEnumerable<Launcher>>> GetLaunchers()
         {
-            return _context.Launchers.ToList();
+            return Ok(await _context.GetLaunchers());
         }
 
         // GET api/launchers/binary
@@ -41,123 +44,83 @@ namespace Covenant.Controllers
         // Get BinaryLauncher
         // </summary>
         [HttpGet("binary", Name = "GetBinaryLauncher")]
-        public ActionResult<BinaryLauncher> GetBinaryLauncher()
+        public async Task<ActionResult<BinaryLauncher>> GetBinaryLauncher()
         {
-            BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - BinaryLauncher");
+                return await _context.GetBinaryLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
-        // POST api/stagers/launcher
+        // POST api/launchers/binary
         // <summary>
         // Generate BinaryLauncher LauncherString
         // </summary>
         [HttpPost("binary", Name = "GenerateBinaryLauncher")]
-        public ActionResult<BinaryLauncher> GenerateBinaryLauncher()
+        public async Task<ActionResult<BinaryLauncher>> GenerateBinaryLauncher()
         {
-            BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - BinaryLauncher");
+                return await _context.GenerateBinaryLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Launcher with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-
-            launcher.GetLauncher(listener, grunt, profile);
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-            return launcher;
         }
 
         // POST api/launchers/binary/hosted
         // <summary>
         // Generate a BinaryLauncher that points to a hosted binary file
         // </summary>
-        [HttpPost("binary/hosted", Name = "GenerateBinaryHostedFileLauncher")]
-        public ActionResult<BinaryLauncher> GenerateBinaryHostedFileLauncher(HostedFile hostedFile)
+        [HttpPost("binary/hosted", Name = "GenerateBinaryHostedLauncher")]
+        public async Task<ActionResult<BinaryLauncher>> GenerateBinaryHostedLauncher(HostedFile file)
         {
-            BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - BinaryLauncher");
+                return await _context.GenerateBinaryHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/binary
         // <summary>
         // Edit BinaryLauncher
         // </summary>
-        [HttpPut("binary", Name = "PutBinaryLauncher")]
-        public ActionResult<BinaryLauncher> PutBinaryLauncher([FromBody]BinaryLauncher binaryLauncher)
+        [HttpPut("binary", Name = "EditBinaryLauncher")]
+        public async Task<ActionResult<BinaryLauncher>> EditBinaryLauncher([FromBody]BinaryLauncher launcher)
         {
-            BinaryLauncher launcher = (BinaryLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Binary);
-            if (launcher == null || launcher.Id != binaryLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - BinaryLauncher with id: {binaryLauncher.Id}");
+                return await _context.EditBinaryLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == binaryLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = binaryLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = binaryLauncher.CommType;
-            launcher.SMBPipeName = binaryLauncher.SMBPipeName;
-            launcher.ValidateCert = binaryLauncher.ValidateCert;
-            launcher.UseCertPinning = binaryLauncher.UseCertPinning;
-            launcher.Delay = binaryLauncher.Delay;
-            launcher.JitterPercent = binaryLauncher.JitterPercent;
-            launcher.ConnectAttempts = binaryLauncher.ConnectAttempts;
-            launcher.KillDate = binaryLauncher.KillDate;
-            launcher.DotNetFrameworkVersion = binaryLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = binaryLauncher.LauncherString;
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/powershell
@@ -165,14 +128,20 @@ namespace Covenant.Controllers
         // Get PowerShellLauncher
         // </summary>
         [HttpGet("powershell", Name = "GetPowerShellLauncher")]
-        public ActionResult<PowerShellLauncher> GetPowerShellLauncher()
+        public async Task<ActionResult<PowerShellLauncher>> GetPowerShellLauncher()
         {
-            PowerShellLauncher launcher = (PowerShellLauncher) _context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - PowerShellLauncher");
+                return await _context.GetPowerShellLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/powershell
@@ -180,46 +149,20 @@ namespace Covenant.Controllers
         // Generate PowerShellLauncher LauncherString
         // </summary>
         [HttpPost("powershell", Name = "GeneratePowerShellLauncher")]
-        public ActionResult<PowerShellLauncher> GeneratePowerShellLauncher()
+        public async Task<ActionResult<PowerShellLauncher>> GeneratePowerShellLauncher()
         {
-            PowerShellLauncher launcher = (PowerShellLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - PowerShellLauncher");
+                return await _context.GeneratePowerShellLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/powershell/hosted
@@ -227,65 +170,41 @@ namespace Covenant.Controllers
         // Generate a PowerShellLauncher that points to a hosted powershell file
         // </summary>
         [HttpPost("powershell/hosted", Name = "GeneratePowerShellHostedFileLauncher")]
-        public ActionResult<PowerShellLauncher> GeneratePowerShellHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<PowerShellLauncher>> GeneratePowerShellHostedFileLauncher(HostedFile file)
         {
-            PowerShellLauncher launcher = (PowerShellLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - PowerShellLauncher");
+                return await _context.GeneratePowerShellHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/powershell
         // <summary>
         // Edit PowerShellLauncher
         // </summary>
-        [HttpPut("powershell", Name = "PutPowerShellLauncher")]
-        public ActionResult<PowerShellLauncher> PutPowerShellLauncher([FromBody] PowerShellLauncher powerShellLauncher)
+        [HttpPut("powershell", Name = "EditPowerShellLauncher")]
+        public async Task<ActionResult<PowerShellLauncher>> EditPowerShellLauncher([FromBody] PowerShellLauncher launcher)
         {
-            PowerShellLauncher launcher = (PowerShellLauncher) _context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.PowerShell);
-            if (launcher == null || launcher.Id != powerShellLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - PowerShellLauncher with id: {powerShellLauncher.Id}");
+                return await _context.EditPowerShellLauncher(launcher);
             }
-
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == powerShellLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = powerShellLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-
-            launcher.CommType = powerShellLauncher.CommType;
-            launcher.SMBPipeName = powerShellLauncher.SMBPipeName;
-            launcher.ValidateCert = powerShellLauncher.ValidateCert;
-            launcher.UseCertPinning = powerShellLauncher.UseCertPinning;
-            launcher.Delay = powerShellLauncher.Delay;
-            launcher.JitterPercent = powerShellLauncher.JitterPercent;
-            launcher.ConnectAttempts = powerShellLauncher.ConnectAttempts;
-            launcher.KillDate = powerShellLauncher.KillDate;
-            launcher.ParameterString = powerShellLauncher.ParameterString;
-            launcher.DotNetFrameworkVersion = powerShellLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = powerShellLauncher.LauncherString;
-            _context.Launchers.Update(launcher);
-
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/msbuild
@@ -293,14 +212,20 @@ namespace Covenant.Controllers
         // Get MSBuildLauncher
         // </summary>
         [HttpGet("msbuild", Name = "GetMSBuildLauncher")]
-        public ActionResult<MSBuildLauncher> GetMSBuildLauncher()
+        public async Task<ActionResult<MSBuildLauncher>> GetMSBuildLauncher()
         {
-            MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - MSBuildLauncher");
+                return await _context.GetMSBuildLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/msbuild
@@ -308,46 +233,20 @@ namespace Covenant.Controllers
         // Generate MSBuild LauncherString
         // </summary>
         [HttpPost("msbuild", Name = "GenerateMSBuildLauncher")]
-        public ActionResult<MSBuildLauncher> GenerateMSBuildLauncher()
+        public async Task<ActionResult<MSBuildLauncher>> GenerateMSBuildLauncher()
         {
-            MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - MSBuildLauncher");
+                return await _context.GenerateMSBuildLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/msbuild/hosted
@@ -355,66 +254,41 @@ namespace Covenant.Controllers
         // Generate a MSBuildLauncher that points to a hosted msbuild xml file
         // </summary>
         [HttpPost("msbuild/hosted", Name = "GenerateMSBuildHostedFileLauncher")]
-        public ActionResult<MSBuildLauncher> GenerateMSBuildHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<MSBuildLauncher>> GenerateMSBuildHostedFileLauncher(HostedFile file)
         {
-            MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - MSBuildLauncher");
+                return await _context.GenerateMSBuildHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/msbuild
         // <summary>
         // Edit MSBuildLauncher
         // </summary>
-        [HttpPut("msbuild", Name = "PutMSBuildLauncher")]
-        public ActionResult<MSBuildLauncher> PutMSBuildLauncher([FromBody] MSBuildLauncher msbuildLauncher)
+        [HttpPut("msbuild", Name = "EditMSBuildLauncher")]
+        public async Task<ActionResult<MSBuildLauncher>> EditMSBuildLauncher([FromBody] MSBuildLauncher launcher)
         {
-            MSBuildLauncher launcher = (MSBuildLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.MSBuild);
-            if (launcher == null || launcher.Id != msbuildLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - MSBuildLauncher wiht id: {msbuildLauncher.Id}");
+                return await _context.EditMSBuildLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == msbuildLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = msbuildLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = msbuildLauncher.CommType;
-            launcher.SMBPipeName = msbuildLauncher.SMBPipeName;
-            launcher.ValidateCert = msbuildLauncher.ValidateCert;
-            launcher.UseCertPinning = msbuildLauncher.UseCertPinning;
-            launcher.Delay = msbuildLauncher.Delay;
-            launcher.JitterPercent = msbuildLauncher.JitterPercent;
-            launcher.ConnectAttempts = msbuildLauncher.ConnectAttempts;
-            launcher.KillDate = msbuildLauncher.KillDate;
-            launcher.DotNetFrameworkVersion = msbuildLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = msbuildLauncher.LauncherString;
-            launcher.DiskCode = msbuildLauncher.DiskCode;
-            launcher.StagerCode = msbuildLauncher.StagerCode;
-            launcher.TargetName = msbuildLauncher.TargetName;
-            launcher.TaskName = msbuildLauncher.TaskName;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/installutil
@@ -422,14 +296,20 @@ namespace Covenant.Controllers
         // Get InstallUtilLauncher
         // </summary>
         [HttpGet("installutil", Name = "GetInstallUtilLauncher")]
-        public ActionResult<InstallUtilLauncher> GetInstallUtilLauncher()
+        public async Task<ActionResult<InstallUtilLauncher>> GetInstallUtilLauncher()
         {
-            InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - InstallUtilLauncher");
+                return await _context.GetInstallUtilLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/installutil
@@ -437,46 +317,20 @@ namespace Covenant.Controllers
         // Generate InstallUtil LauncherString
         // </summary>
         [HttpPost("installutil", Name = "GenerateInstallUtilLauncher")]
-        public ActionResult<InstallUtilLauncher> GenerateInstallUtilLauncher()
+        public async Task<ActionResult<InstallUtilLauncher>> GenerateInstallUtilLauncher()
         {
-            InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - InstallUtilLauncher");
+                return await _context.GenerateInstallUtilLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/installutil/hosted
@@ -484,64 +338,41 @@ namespace Covenant.Controllers
         // Generate a InstallUtilLauncher that points to a hosted msbuild xml file
         // </summary>
         [HttpPost("installutil/hosted", Name = "GenerateInstallUtilHostedFileLauncher")]
-        public ActionResult<InstallUtilLauncher> GenerateInstallUtilHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<InstallUtilLauncher>> GenerateInstallUtilHostedFileLauncher(HostedFile file)
         {
-            InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - InstallUtilLauncher");
+                return await _context.GenerateInstallUtilHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/installutil
         // <summary>
         // Edit InstallUtilLauncher
         // </summary>
-        [HttpPut("installutil", Name = "PutInstallUtilLauncher")]
-        public ActionResult<InstallUtilLauncher> PutInstallUtilLauncher([FromBody] InstallUtilLauncher installutilLauncher)
+        [HttpPut("installutil", Name = "EditInstallUtilLauncher")]
+        public async Task<ActionResult<InstallUtilLauncher>> EditInstallUtilLauncher([FromBody] InstallUtilLauncher launcher)
         {
-            InstallUtilLauncher launcher = (InstallUtilLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.InstallUtil);
-            if (launcher == null || launcher.Id != installutilLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - InstallUtilLauncher with id: {installutilLauncher.Id}");
+                return await _context.EditInstallUtilLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == installutilLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = installutilLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = installutilLauncher.CommType;
-            launcher.SMBPipeName = installutilLauncher.SMBPipeName;
-            launcher.ValidateCert = installutilLauncher.ValidateCert;
-            launcher.UseCertPinning = installutilLauncher.UseCertPinning;
-            launcher.Delay = installutilLauncher.Delay;
-            launcher.JitterPercent = installutilLauncher.JitterPercent;
-            launcher.ConnectAttempts = installutilLauncher.ConnectAttempts;
-            launcher.KillDate = installutilLauncher.KillDate;
-            launcher.DotNetFrameworkVersion = installutilLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = installutilLauncher.LauncherString;
-            launcher.DiskCode = installutilLauncher.DiskCode;
-            launcher.StagerCode = installutilLauncher.StagerCode;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/wmic
@@ -549,14 +380,20 @@ namespace Covenant.Controllers
         // Get WmicLauncher
         // </summary>
         [HttpGet("wmic", Name = "GetWmicLauncher")]
-        public ActionResult<WmicLauncher> GetWmicLauncher()
+        public async Task<ActionResult<WmicLauncher>> GetWmicLauncher()
         {
-            WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - WmicLauncher");
+                return await _context.GetWmicLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/wmic
@@ -564,46 +401,20 @@ namespace Covenant.Controllers
         // Generate WmicLauncher LauncherString
         // </summary>
         [HttpPost("wmic", Name = "GenerateWmicLauncher")]
-        public ActionResult<WmicLauncher> GenerateWmicLauncher()
+        public async Task<ActionResult<WmicLauncher>> GenerateWmicLauncher()
         {
-            WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - WmicLauncher");
+                return await _context.GenerateWmicLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/wmic/hosted
@@ -611,65 +422,41 @@ namespace Covenant.Controllers
         // Generate a WmicLauncher that points to a hosted xls file
         // </summary>
         [HttpPost("wmic/hosted", Name = "GenerateWmicHostedFileLauncher")]
-        public ActionResult<WmicLauncher> GenerateWmicHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<WmicLauncher>> GenerateWmicHostedFileLauncher(HostedFile file)
         {
-            WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - WmicLauncher");
+                return await _context.GenerateWmicHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/wmic
         // <summary>
         // Edit WmicLauncher
         // </summary>
-        [HttpPut("wmic", Name = "PutWmicLauncher")]
-        public ActionResult<WmicLauncher> PutWscriptLauncher([FromBody]WmicLauncher wmicLauncher)
+        [HttpPut("wmic", Name = "EditWmicLauncher")]
+        public async Task<ActionResult<WmicLauncher>> EditWmicLauncher([FromBody]WmicLauncher launcher)
         {
-            WmicLauncher launcher = (WmicLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wmic);
-            if (launcher == null || launcher.Id != wmicLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - WmicLauncher with id: {wmicLauncher.Id}");
+                return await _context.EditWmicLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == wmicLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = wmicLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = wmicLauncher.CommType;
-            launcher.SMBPipeName = wmicLauncher.SMBPipeName;
-            launcher.ValidateCert = wmicLauncher.ValidateCert;
-            launcher.UseCertPinning = wmicLauncher.UseCertPinning;
-            launcher.Delay = wmicLauncher.Delay;
-            launcher.JitterPercent = wmicLauncher.JitterPercent;
-            launcher.ConnectAttempts = wmicLauncher.ConnectAttempts;
-            launcher.KillDate = wmicLauncher.KillDate;
-            launcher.ScriptLanguage = wmicLauncher.ScriptLanguage;
-            launcher.DotNetFrameworkVersion = wmicLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = wmicLauncher.LauncherString;
-            launcher.DiskCode = wmicLauncher.DiskCode;
-            launcher.StagerCode = wmicLauncher.StagerCode;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/regsvr32
@@ -677,14 +464,20 @@ namespace Covenant.Controllers
         // Get Regsvr32Launcher
         // </summary>
         [HttpGet("regsvr32", Name = "GetRegsvr32Launcher")]
-        public ActionResult<Regsvr32Launcher> GetRegsvr32Launcher()
+        public async Task<ActionResult<Regsvr32Launcher>> GetRegsvr32Launcher()
         {
-            Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - Regsvr32Launcher");
+                return await _context.GetRegsvr32Launcher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launcher/regsvr32
@@ -692,46 +485,20 @@ namespace Covenant.Controllers
         // Generate Regsvr32Launcher LauncherString
         // </summary>
         [HttpPost("regsvr32", Name = "GenerateRegsvr32Launcher")]
-        public ActionResult<Regsvr32Launcher> GenerateRegsvr32Launcher()
+        public async Task<ActionResult<Regsvr32Launcher>> GenerateRegsvr32Launcher()
         {
-            Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - Regsvr32Launcher");
+                return await _context.GenerateRegsvr32Launcher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/regsvr32/hosted
@@ -739,67 +506,41 @@ namespace Covenant.Controllers
         // Generate a Regsvr32Launcher that points to a hosted sct file
         // </summary>
         [HttpPost("regsvr32/hosted", Name = "GenerateRegsvr32HostedFileLauncher")]
-        public ActionResult<Regsvr32Launcher> GenerateRegsvr32HostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<Regsvr32Launcher>> GenerateRegsvr32HostedFileLauncher(HostedFile file)
         {
-            Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - Regsvr32Launcher");
+                return await _context.GenerateRegsvr32HostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/regsvr32
         // <summary>
         // Edit Regsvr32Launcher
         // </summary>
-        [HttpPut("regsvr32", Name = "PutRegsvr32Launcher")]
-        public ActionResult<Regsvr32Launcher> PutRegsvr32Launcher([FromBody]Regsvr32Launcher regsvr32Launcher)
+        [HttpPut("regsvr32", Name = "EditRegsvr32Launcher")]
+        public async Task<ActionResult<Regsvr32Launcher>> EditRegsvr32Launcher([FromBody]Regsvr32Launcher launcher)
         {
-            Regsvr32Launcher launcher = (Regsvr32Launcher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Regsvr32);
-            if (launcher == null || launcher.Id != regsvr32Launcher.Id)
+            try
             {
-                return NotFound($"NotFound - Regsvr32Launcher with id: {regsvr32Launcher.Id}");
+                return await _context.EditRegsvr32Launcher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == regsvr32Launcher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = regsvr32Launcher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = regsvr32Launcher.CommType;
-            launcher.SMBPipeName = regsvr32Launcher.SMBPipeName;
-            launcher.ValidateCert = regsvr32Launcher.ValidateCert;
-            launcher.UseCertPinning = regsvr32Launcher.UseCertPinning;
-            launcher.Delay = regsvr32Launcher.Delay;
-            launcher.JitterPercent = regsvr32Launcher.JitterPercent;
-            launcher.ConnectAttempts = regsvr32Launcher.ConnectAttempts;
-            launcher.KillDate = regsvr32Launcher.KillDate;
-            launcher.ParameterString = regsvr32Launcher.ParameterString;
-            launcher.DllName = regsvr32Launcher.DllName;
-            launcher.ScriptLanguage = regsvr32Launcher.ScriptLanguage;
-            launcher.DotNetFrameworkVersion = regsvr32Launcher.DotNetFrameworkVersion;
-            launcher.LauncherString = regsvr32Launcher.LauncherString;
-            launcher.DiskCode = regsvr32Launcher.DiskCode;
-            launcher.StagerCode = regsvr32Launcher.StagerCode;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/mshta
@@ -807,14 +548,20 @@ namespace Covenant.Controllers
         // Get MshtaLauncher
         // </summary>
         [HttpGet("mshta", Name = "GetMshtaLauncher")]
-        public ActionResult<MshtaLauncher> GetMshtaLauncher()
+        public async Task<ActionResult<MshtaLauncher>> GetMshtaLauncher()
         {
-            MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - Regsvr32Launcher");
+                return await _context.GetMshtaLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/mshta
@@ -822,46 +569,20 @@ namespace Covenant.Controllers
         // Generate MshtaLauncher LauncherString
         // </summary>
         [HttpPost("mshta", Name = "GenerateMshtaLauncher")]
-        public ActionResult<MshtaLauncher> GenerateMshtaLauncher()
+        public async Task<ActionResult<MshtaLauncher>> GenerateMshtaLauncher()
         {
-            MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - MshtaLauncher");
+                return await _context.GenerateMshtaLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/mshta/hosted
@@ -869,65 +590,41 @@ namespace Covenant.Controllers
         // Generate a MshtaLauncher that points to a hosted sct file
         // </summary>
         [HttpPost("mshta/hosted", Name = "GenerateMshtaHostedFileLauncher")]
-        public ActionResult<MshtaLauncher> GenerateMshtaHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<MshtaLauncher>> GenerateMshtaHostedFileLauncher(HostedFile file)
         {
-            MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - MshtaLauncher");
+                return await _context.GenerateMshtaHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/mshta
         // <summary>
         // Edit MshtaLauncher
         // </summary>
-        [HttpPut("mshta", Name = "PutMshtaLauncher")]
-        public ActionResult<MshtaLauncher> PutMshtaLauncher([FromBody] MshtaLauncher mshtaLauncher)
+        [HttpPut("mshta", Name = "EditMshtaLauncher")]
+        public async Task<ActionResult<MshtaLauncher>> EditMshtaLauncher([FromBody] MshtaLauncher launcher)
         {
-            MshtaLauncher launcher = (MshtaLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Mshta);
-            if (launcher == null || launcher.Id != mshtaLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - MshtaLauncher with id: {mshtaLauncher.Id}");
+                return await _context.EditMshtaLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == mshtaLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = mshtaLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = mshtaLauncher.CommType;
-            launcher.SMBPipeName = mshtaLauncher.SMBPipeName;
-            launcher.ValidateCert = mshtaLauncher.ValidateCert;
-            launcher.UseCertPinning = mshtaLauncher.UseCertPinning;
-            launcher.Delay = mshtaLauncher.Delay;
-            launcher.JitterPercent = mshtaLauncher.JitterPercent;
-            launcher.ConnectAttempts = mshtaLauncher.ConnectAttempts;
-            launcher.KillDate = mshtaLauncher.KillDate;
-            launcher.ScriptLanguage = mshtaLauncher.ScriptLanguage;
-            launcher.DotNetFrameworkVersion = mshtaLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = mshtaLauncher.LauncherString;
-            launcher.DiskCode = mshtaLauncher.DiskCode;
-            launcher.StagerCode = mshtaLauncher.StagerCode;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/cscript
@@ -935,14 +632,20 @@ namespace Covenant.Controllers
         // Get CscriptLauncher
         // </summary>
         [HttpGet("cscript", Name = "GetCscriptLauncher")]
-        public ActionResult<CscriptLauncher> GetCscriptLauncher()
+        public async Task<ActionResult<CscriptLauncher>> GetCscriptLauncher()
         {
-            CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - CscriptLauncher");
+                return await _context.GetCscriptLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/cscript
@@ -950,46 +653,20 @@ namespace Covenant.Controllers
         // Generate CscriptLauncher LauncherString
         // </summary>
         [HttpPost("cscript", Name = "GenerateCscriptLauncher")]
-        public ActionResult<CscriptLauncher> GenerateCscriptLauncher()
+        public async Task<ActionResult<CscriptLauncher>> GenerateCscriptLauncher()
         {
-            CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - CscriptLauncher");
+                return await _context.GenerateCscriptLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/cscript/hosted
@@ -997,65 +674,41 @@ namespace Covenant.Controllers
         // Generate a CscriptLauncher that points to a hosted sct file
         // </summary>
         [HttpPost("cscript/hosted", Name = "GenerateCscriptHostedFileLauncher")]
-        public ActionResult<CscriptLauncher> GenerateCscriptHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<CscriptLauncher>> GenerateCscriptHostedFileLauncher(HostedFile file)
         {
-            CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - CscriptLauncher");
+                return await _context.GenerateCscriptHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/cscript
         // <summary>
         // Edit CscriptLauncher
         // </summary>
-        [HttpPut("cscript", Name = "PutCscriptLauncher")]
-        public ActionResult<CscriptLauncher> PutCscriptLauncher([FromBody]CscriptLauncher cscriptLauncher)
+        [HttpPut("cscript", Name = "EditCscriptLauncher")]
+        public async Task<ActionResult<CscriptLauncher>> EditCscriptLauncher([FromBody]CscriptLauncher launcher)
         {
-            CscriptLauncher launcher = (CscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Cscript);
-            if (launcher == null || launcher.Id != cscriptLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - CscriptLauncher with id: {cscriptLauncher.Id}");
+                return await _context.EditCscriptLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == cscriptLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = cscriptLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = cscriptLauncher.CommType;
-            launcher.SMBPipeName = cscriptLauncher.SMBPipeName;
-            launcher.ValidateCert = cscriptLauncher.ValidateCert;
-            launcher.UseCertPinning = cscriptLauncher.UseCertPinning;
-            launcher.Delay = cscriptLauncher.Delay;
-            launcher.JitterPercent = cscriptLauncher.JitterPercent;
-            launcher.ConnectAttempts = cscriptLauncher.ConnectAttempts;
-            launcher.KillDate = cscriptLauncher.KillDate;
-            launcher.ScriptLanguage = cscriptLauncher.ScriptLanguage;
-            launcher.DotNetFrameworkVersion = cscriptLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = cscriptLauncher.LauncherString;
-            launcher.DiskCode = cscriptLauncher.DiskCode;
-            launcher.StagerCode = cscriptLauncher.StagerCode;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/wscript
@@ -1063,14 +716,20 @@ namespace Covenant.Controllers
         // Get WscriptLauncher
         // </summary>
         [HttpGet("wscript", Name = "GetWscriptLauncher")]
-        public ActionResult<WscriptLauncher> GetWscriptLauncher()
+        public async Task<ActionResult<WscriptLauncher>> GetWscriptLauncher()
         {
-            WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - WscriptLauncher");
+                return await _context.GetWscriptLauncher();
             }
-            return launcher;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // POST api/launchers/wscript
@@ -1078,46 +737,20 @@ namespace Covenant.Controllers
         // Generate WscriptLauncher LauncherString
         // </summary>
         [HttpPost("wscript", Name = "GenerateWscriptLauncher")]
-        public ActionResult<WscriptLauncher> GenerateWscriptLauncher()
+        public async Task<ActionResult<WscriptLauncher>> GenerateWscriptLauncher()
         {
-            WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - WscriptLauncher");
+                return await _context.GenerateWscriptLauncher();
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == launcher.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {launcher.ListenerId}");
+                return NotFound(e.Message);
             }
-            HttpProfile profile = (HttpProfile)_context.Profiles.FirstOrDefault(P => P.Id == listener.ProfileId);
-            if (profile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HttpProfile with id: {listener.ProfileId}");
+                return BadRequest(e.Message);
             }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                CovenantIPAddress = listener.BindAddress,
-                CommType = launcher.CommType,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
-            };
-
-            _context.Grunts.Add(grunt);
-            _context.SaveChanges();
-            launcher.GetLauncher(listener, grunt, profile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // POST api/launchers/wscript/hosted
@@ -1125,65 +758,41 @@ namespace Covenant.Controllers
         // Generate a WscriptLauncher that points to a hosted sct file
         // </summary>
         [HttpPost("wscript/hosted", Name = "GenerateWscriptHostedFileLauncher")]
-        public ActionResult<WscriptLauncher> GenerateWscriptHostedFileLauncher(HostedFile hostedFile)
+        public async Task<ActionResult<WscriptLauncher>> GenerateWscriptHostedFileLauncher(HostedFile file)
         {
-            WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
-            if (launcher == null)
+            try
             {
-                return NotFound($"NotFound - WscriptLauncher");
+                return await _context.GenerateWscriptHostedLauncher(file);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(S => S.Id == hostedFile.ListenerId);
-            if (listener == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Listener with id: {hostedFile.ListenerId}");
+                return NotFound(e.Message);
             }
-            HostedFile savedHostedFile = _context.HostedFiles.FirstOrDefault(HF => HF.Id == hostedFile.Id);
-            if (savedHostedFile == null)
+            catch (ControllerBadRequestException e)
             {
-                return NotFound($"NotFound - HostedFile with id: {hostedFile.Id}");
+                return BadRequest(e.Message);
             }
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedHostedFile);
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
         }
 
         // PUT api/launchers/wscript
         // <summary>
         // Edit WscriptLauncher
         // </summary>
-        [HttpPut("wscript", Name = "PutWscriptLauncher")]
-        public ActionResult<WscriptLauncher> PutWscriptLauncher([FromBody] WscriptLauncher wscriptLauncher)
+        [HttpPut("wscript", Name = "EditWscriptLauncher")]
+        public async Task<ActionResult<WscriptLauncher>> EditWscriptLauncher([FromBody] WscriptLauncher launcher)
         {
-            WscriptLauncher launcher = (WscriptLauncher)_context.Launchers.FirstOrDefault(S => S.Type == Launcher.LauncherType.Wscript);
-            if (launcher == null || launcher.Id != wscriptLauncher.Id)
+            try
             {
-                return NotFound($"NotFound - WscriptLauncher with id: {wscriptLauncher.Id}");
+                return await _context.EditWscriptLauncher(launcher);
             }
-            Listener listener = _context.Listeners.FirstOrDefault(L => L.Id == wscriptLauncher.ListenerId);
-            if (listener != null)
+            catch (ControllerNotFoundException e)
             {
-                launcher.ListenerId = wscriptLauncher.ListenerId;
+                return NotFound(e.Message);
             }
-            launcher.CommType = wscriptLauncher.CommType;
-            launcher.SMBPipeName = wscriptLauncher.SMBPipeName;
-            launcher.ValidateCert = wscriptLauncher.ValidateCert;
-            launcher.UseCertPinning = wscriptLauncher.UseCertPinning;
-            launcher.Delay = wscriptLauncher.Delay;
-            launcher.JitterPercent = wscriptLauncher.JitterPercent;
-            launcher.ConnectAttempts = wscriptLauncher.ConnectAttempts;
-            launcher.KillDate = wscriptLauncher.KillDate;
-            launcher.ScriptLanguage = wscriptLauncher.ScriptLanguage;
-            launcher.DotNetFrameworkVersion = wscriptLauncher.DotNetFrameworkVersion;
-            launcher.LauncherString = wscriptLauncher.LauncherString;
-            launcher.DiskCode = wscriptLauncher.DiskCode;
-            launcher.StagerCode = wscriptLauncher.StagerCode;
-
-            _context.Launchers.Update(launcher);
-            _context.SaveChanges();
-
-            return launcher;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
     }
 }

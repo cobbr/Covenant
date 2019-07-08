@@ -19,9 +19,7 @@ using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-	[Authorize(Policy = "RequireJwtBearer")]
-	[ApiController]
-    [Route("api")]
+	[Authorize(Policy = "RequireJwtBearer"), ApiController, Route("api")]
     public class CovenantUserApiController : Controller
     {
 		private readonly CovenantContext _context;
@@ -39,104 +37,106 @@ namespace Covenant.Controllers
             _configuration = configuration;
         }
 
-        private CovenantUser GetCurrentAPIUser()
-        {
-            Task<CovenantUser> task = _userManager.GetUserAsync(HttpContext.User);
-            task.Wait();
-            return task.Result;
-        }
-
-        private Microsoft.AspNetCore.Identity.SignInResult GetPasswordSignInResult(string username, string password)
-        {
-            Task<Microsoft.AspNetCore.Identity.SignInResult> task = _signInManager.PasswordSignInAsync(username, password, false, false);
-            task.Wait();
-            return task.Result;
-        }
-
-        private IdentityResult CreateCovenantUser(CovenantUser user, string password)
-        {
-            Task<IdentityResult> task = _userManager.CreateAsync(user, password);
-            task.Wait();
-            return task.Result;
-        }
-
-        private IdentityResult CreateUserRole(CovenantUser user, string rolename)
-        {
-            Task<IdentityResult> task = _userManager.AddToRoleAsync(user, rolename);
-            task.Wait();
-            return task.Result;
-        }
-
-        // GET: api/users/current
-        // Get a list of Users
-        [HttpGet("users/current", Name = "GetCurrentUser")]
-        public ActionResult<CovenantUser> GetCurrentUser()
-        {
-            CovenantUser user = GetCurrentAPIUser();
-            if (user == null)
-            {
-                return NotFound($"NotFound - Could not identify current username");
-            }
-            user.PasswordHash = "";
-            user.SecurityStamp = "";
-            return user;
-        }
-
         // GET: api/users
         // Get a list of Users
         [HttpGet("users", Name = "GetUsers")]
-		public ActionResult<IEnumerable<CovenantUser>> GetUsers()
+		public async Task<ActionResult<IEnumerable<CovenantUser>>> GetUsers()
         {
-            List<CovenantUser> users = _context.Users.ToList();
-            foreach(CovenantUser user in users)
+            try
             {
-                // Hide sensitive information
-                user.PasswordHash = "";
-                user.SecurityStamp = "";
+                IEnumerable<CovenantUser> users = await _context.GetUsers();
+                foreach (CovenantUser user in users)
+                {
+                    user.PasswordHash = "";
+                }
+                return Ok(users);
             }
-            return users;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
 		// GET api/users/{id}
         // Get a User by id
         [HttpGet("users/{id}", Name = "GetUser")]
-		public ActionResult<CovenantUser> GetUser(string id)
+		public async Task<ActionResult<CovenantUser>> GetUser(string id)
         {
-			var user = _context.Users.FirstOrDefault(U => U.Id == id);
-			if (user == null)
+            try
             {
-                return NotFound($"NotFound - Grunt with id: {id}");
+                CovenantUser user = await _context.GetUser(id);
+                user.PasswordHash = "";
+                return user;
             }
-            user.PasswordHash = "";
-            user.SecurityStamp = "";
-			return user;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
+        }
+
+        // GET: api/users/current
+        // Get a list of Users
+        [HttpGet("users/current", Name = "GetCurrentUser")]
+        public async Task<ActionResult<CovenantUser>> GetCurrentUser()
+        {
+            try
+            {
+                CovenantUser user = await _context.GetCurrentUser(_userManager, HttpContext.User);
+                user.PasswordHash = "";
+                return user;
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST api/users/login
         // Login a User by password
-		[AllowAnonymous]
+        [AllowAnonymous]
         [HttpPost("users/login", Name = "Login")]
-        public ActionResult<CovenantUserLoginResult> Login([FromBody] CovenantUserLogin login)
+        public async Task<ActionResult<CovenantUserLoginResult>> Login([FromBody] CovenantUserLogin login)
         {
-            Microsoft.AspNetCore.Identity.SignInResult result = this.GetPasswordSignInResult(login.UserName, login.Password);
-            if (!result.Succeeded)
+            try
+            {
+                return await _context.Login(_signInManager, _configuration, login);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
             {
                 return new UnauthorizedResult();
             }
-            CovenantUser user = _userManager.Users.FirstOrDefault(U => U.UserName == login.UserName);
-            if (user == null)
-            {
-                return NotFound($"NotFound - User with username: {login.UserName}");
-            }
-            List<string> userRoles = _context.UserRoles.Where(UR => UR.UserId == user.Id).Select(UR => UR.RoleId).ToList();
-			List<string> roles = _context.Roles.Where(R => userRoles.Contains(R.Id)).Select(R => R.Name).ToList();
-
-            string token = Utilities.GenerateJwtToken(
-				login.UserName, user.Id, roles.ToArray(),
-                _configuration["JwtKey"], _configuration["JwtIssuer"],
-                _configuration["JwtAudience"], _configuration["JwtExpireDays"]
-            );
-            return new CovenantUserLoginResult { success = true, token = token };
         }
 
         // POST api/users
@@ -144,72 +144,50 @@ namespace Covenant.Controllers
         [Authorize(Policy = "RequireJwtBearerRequireAdministratorRole")]
         [HttpPost("users", Name = "CreateUser")]
 		[ProducesResponseType(typeof(CovenantUser), 201)]
-		public ActionResult<CovenantUser> CreateUser([FromBody] CovenantUserLogin login)
+		public async Task<ActionResult<CovenantUser>> CreateUser([FromBody] CovenantUserLogin login)
 		{
-			CovenantUser user = new CovenantUser { UserName = login.UserName };
-            IdentityResult result = this.CreateCovenantUser(user, login.Password);
-            if(!result.Succeeded)
+            try
             {
-                List<IdentityError> errors = result.Errors.ToList();
-                string ErrorMessage = $"BadRequest - Could not create CovenantUser: {login.UserName}";
-                foreach (IdentityError error in result.Errors)
-                {
-                    ErrorMessage += Environment.NewLine + error.Description;
-                }
-                return BadRequest(ErrorMessage);
+                CovenantUser user = await _context.CreateUser(_userManager, login);
+                return CreatedAtRoute(nameof(GetUser), new { id = user.Id }, user);
             }
-
-            CovenantUser savedUser = _context.Users.FirstOrDefault(U => U.UserName == user.UserName);
-            if (savedUser == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Could not find CovenantUser with username: {login.UserName}");
+                return NotFound(e.Message);
             }
-            string savedRoles = String.Join(",", _context.UserRoles.Where(UR => UR.UserId == savedUser.Id).ToList());
-
-            DateTime eventTime = DateTime.UtcNow;
-            _context.Events.Add(new Event
+            catch (ControllerBadRequestException e)
             {
-                Time = eventTime,
-                MessageHeader = "[" + eventTime + " UTC] User: " + savedUser.UserName + " with roles: " + savedRoles + " has been created!",
-                Level = Event.EventLevel.Highlight,
-                Context = "Users"
-            });
-
-            return CreatedAtRoute(nameof(GetUser), new { id = savedUser.Id }, savedUser);
-		}
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
+        }
 
         // PUT api/users
         // Edit a User's password
         [HttpPut("users", Name = "EditUser")]
-		public ActionResult<CovenantUser> EditUser([FromBody] CovenantUserLogin user)
+		public async Task<ActionResult<CovenantUser>> EditUser([FromBody] CovenantUserLogin user)
         {
-            var matching_user = _context.Users.FirstOrDefault(U => user.UserName == U.UserName);
-			if (matching_user == null)
-			{
-				return NotFound($"NotFound - Could not find CovenantUser with username: {user.UserName}");
-			}
-            CovenantUser currentUser = GetCurrentAPIUser();
-            var admins = from users in _context.Users
-                         join userroles in _context.UserRoles on users.Id equals userroles.UserId
-                         join roles in _context.Roles on userroles.RoleId equals roles.Id
-                         where roles.Name == "Administrator"
-                         select users.UserName;
-            if (currentUser.UserName != matching_user.UserName && !admins.Contains(currentUser.UserName))
+            try
             {
-                return BadRequest($"BadRequest - Current user: {currentUser.UserName} is not an Administrator and cannot change password of user: {user.Password}");
+                CovenantUser editedUser = await _context.EditUser(_userManager, HttpContext.User, user);
+                editedUser.PasswordHash = "";
+                return editedUser;
             }
-            matching_user.PasswordHash = _userManager.PasswordHasher.HashPassword(matching_user, user.Password);
-            Task<IdentityResult> task = _userManager.UpdateAsync(matching_user);
-            task.Wait();
-            if (!task.Result.Succeeded)
+            catch (ControllerNotFoundException e)
             {
-                return BadRequest($"BadRequest - Could not set new password for CovenantUser with username: {user.UserName}");
+                return NotFound(e.Message);
             }
-            _context.Users.Update(matching_user);
-            _context.SaveChanges();
-            matching_user.PasswordHash = "";
-            matching_user.SecurityStamp = "";
-			return matching_user;
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // DELETE api/users/{id}
@@ -217,56 +195,94 @@ namespace Covenant.Controllers
         [Authorize(Policy = "RequireAdministratorRole")]
         [HttpDelete("users/{id}", Name = "DeleteUser")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteUser(string id)
+        public async Task<ActionResult> DeleteUser(string id)
         {
-            var user = _context.Users.FirstOrDefault(U => U.Id == id);
-            if (user == null)
+            try
             {
-                return NotFound($"NotFound - Could not find CovenantUser with id: {id}");
+                await _context.DeleteUser(id);
+                return new NoContentResult();
             }
-            var admins = from users in _context.Users
-                         join userroles in _context.UserRoles on users.Id equals userroles.UserId
-                         join roles in _context.Roles on userroles.RoleId equals roles.Id
-                         where roles.Name == "Administrator"
-                         select users.UserName;
-            if (admins.Contains(user.UserName) && admins.Count() == 1)
+            catch (ControllerNotFoundException e)
             {
-                string ErrorMessage = $"BadRequest - Could not delete CovenantUser with id: {id}";
-                ErrorMessage += "Can't delete the last Administrative user.";
-                return BadRequest(ErrorMessage);
+                return NotFound(e.Message);
             }
-            _context.Users.Remove(user);
-            _context.SaveChanges();
-            return new NoContentResult();
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
 		// GET: api/users/roles
         // Get a list of all UserRoles
         [HttpGet("users/roles", Name = "GetUsersRoles")]
-		public ActionResult<IEnumerable<IdentityUserRole<string>>> GetUsersRoles()
+		public async Task<ActionResult<IEnumerable<IdentityUserRole<string>>>> GetUserRoles()
         {
-			return _context.UserRoles.ToList();
+            try
+            {
+                return Ok(await _context.GetUserRoles());
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // GET: api/users/{id}/roles
         // Get a list of Roles for a User
         [HttpGet("users/{id}/roles", Name = "GetUserRoles")]
-		public ActionResult<IEnumerable<IdentityUserRole<string>>> GetUserRoles(string id)
+		public async Task<ActionResult<IEnumerable<IdentityUserRole<string>>>> GetUserRoles(string id)
         {
-			return _context.UserRoles.Where(UR => UR.UserId == id).ToList();
+            try
+            {
+                return Ok(await _context.GetUserRoles(id));
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
 		// GET: api/users/{id}/roles/{rid}
         // Get a Role for a User
 		[HttpGet("users/{id}/roles/{rid}", Name = "GetUserRole")]
-		public ActionResult<IdentityUserRole<string>> GetUserRole(string id, string rid)
+		public async Task<ActionResult<IdentityUserRole<string>>> GetUserRole(string id, string rid)
         {
-			IdentityUserRole<string> userRole = _context.UserRoles.FirstOrDefault(UR => UR.UserId == id && UR.RoleId == rid);
-            if (userRole == null)
-			{
-				return NotFound($"NotFound - Could not find UserRole with user id: {id} and role id: {rid}");
-			}
-			return userRole;
+            try
+            {
+                return await _context.GetUserRole(id, rid);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST: api/users/{id}/roles/{rid}
@@ -274,35 +290,25 @@ namespace Covenant.Controllers
         [Authorize(Policy = "RequireAdministratorRole")]
         [HttpPost("users/{id}/roles/{rid}", Name = "CreateUserRole")]
 		[ProducesResponseType(typeof(IdentityUserRole<string>), 201)]
-		public ActionResult<IdentityUserRole<string>> CreateUserRole(string id, string rid)
+		public async Task<ActionResult<IdentityUserRole<string>>> CreateUserRole(string id, string rid)
         {
-			CovenantUser user = _context.Users.FirstOrDefault(U => U.Id == id);
-			IdentityRole role = _context.Roles.FirstOrDefault(R => R.Id == rid);
-            if (user == null)
+            try
             {
-                return NotFound($"NotFound - Could not find CovenantUser with id: {id}");
+                IdentityUserRole<string> userRole = await _context.CreateUserRole(_userManager, id, rid);
+                return CreatedAtRoute(nameof(GetUserRole), new { id = id, rid = rid }, userRole);
             }
-            if (role == null)
+            catch (ControllerNotFoundException e)
             {
-                return NotFound($"NotFound - Could not find UserRole with rid: {rid}");
+                return NotFound(e.Message);
             }
-
-            IdentityResult result = this.CreateUserRole(user, role.Name);
-            if (!result.Succeeded)
+            catch (ControllerBadRequestException e)
             {
-                string ErrorMessage = $"BadRequest - Could not add CovenantUser: {user.UserName} to role: {role.Name}";
-                foreach (IdentityError error in result.Errors)
-                {
-                    ErrorMessage += Environment.NewLine + error.Description;
-                }
-                return BadRequest(ErrorMessage);
+                return BadRequest(e.Message);
             }
-            IdentityUserRole<string> userRole = _context.UserRoles.FirstOrDefault(UR => UR.UserId == id && UR.RoleId == rid);
-            if (userRole == null)
+            catch (ControllerUnauthorizedException)
             {
-                return NotFound($"NotFound - Could not find UserRole with user id: {id} and role id: {rid}");
+                return new UnauthorizedResult();
             }
-            return CreatedAtRoute(nameof(GetUserRole), new { id = id, rid = rid }, userRole);
         }
 
         // DELETE api/users/{id}/roles/{rid}
@@ -310,49 +316,71 @@ namespace Covenant.Controllers
         [Authorize(Policy = "RequireAdministratorRole")]
         [HttpDelete("users/{id}/roles/{rid}", Name = "DeleteUserRole")]
         [ProducesResponseType(204)]
-        public ActionResult DeleteUserRole(string id, string rid)
+        public async Task<ActionResult> DeleteUserRole(string id, string rid)
         {
-			var userRole = _context.UserRoles.FirstOrDefault(UR => UR.UserId == id && UR.RoleId == rid);
-			if (userRole == null)
+            try
             {
-                return NotFound($"NotFound - Could not find UserRole with user id: {id} and role id: {rid}");
+                await _context.DeleteUserRole(_userManager, id, rid);
+                return new NoContentResult();
             }
-            var adminUserRoles = from users in _context.Users
-                         join userroles in _context.UserRoles on users.Id equals userroles.UserId
-                         join roles in _context.Roles on userroles.RoleId equals roles.Id
-                         where roles.Name == "Administrator"
-                         select userroles;
-            if (adminUserRoles.Contains(userRole) && adminUserRoles.Count() == 1)
+            catch (ControllerNotFoundException e)
             {
-                string ErrorMessage = $"BadRequest - Could not remove CovenantUser with id: {id} from role";
-                ErrorMessage += "Can't remove the last Administrative user.";
-                return BadRequest(ErrorMessage);
+                return NotFound(e.Message);
             }
-
-			_context.UserRoles.Remove(userRole);
-            _context.SaveChanges();
-            return new NoContentResult();
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
 		// GET: api/roles
         // Get a list of all Roles
         [HttpGet("roles", Name = "GetRoles")]
-        public ActionResult<IEnumerable<IdentityRole>> GetRoles()
+        public async Task<ActionResult<IEnumerable<IdentityRole>>> GetRoles()
         {
-            return _context.Roles.ToList();
+            try
+            {
+                return Ok(await _context.GetRoles());
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
 		// GET: api/roles/{rid}
         // Get a list of Roles for a User
 		[HttpGet("roles/{rid}", Name = "GetRole")]
-		public ActionResult<IdentityRole> GetRole(string rid)
+		public async Task<ActionResult<IdentityRole>> GetRole(string rid)
         {
-			var role = _context.Roles.FirstOrDefault(R => R.Id == rid);
-			if (role == null)
+            try
             {
-                return NotFound($"NotFound - Could not find UserRoles with id: {rid}");
+                return await _context.GetRole(rid);
             }
-			return role;
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
     }
 }

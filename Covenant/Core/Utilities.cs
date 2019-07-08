@@ -81,6 +81,11 @@ namespace Covenant.Core
             }
         }
 
+        public static string CreateShortGuid()
+        {
+            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
+        }
+
         public static Guid CreateSecureGuid()
         {
             using (var provider = RandomNumberGenerator.Create())

@@ -1,104 +1,68 @@
 ﻿using System;
-using System.Net.Http;
-using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
-using System.Security.Cryptography.X509Certificates;
 
-using Microsoft.Rest;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Configuration;
 
 using Covenant.Core;
-using Covenant.API;
-using Covenant.API.Models;
+using Covenant.Models;
+using Covenant.Models.Launchers;
+using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
 {
     [Authorize]
     public class LauncherController : Controller
     {
-        private readonly CovenantAPI _client;
+        private readonly CovenantContext _context;
 
-        public LauncherController(IConfiguration configuration)
+        public LauncherController(CovenantContext context)
         {
-            X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-            HttpClientHandler clientHandler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
-                {
-                    return cert.GetCertHashString() == covenantCert.GetCertHashString();
-                }
-            };
-            _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
-                new TokenCredentials(configuration["CovenantToken"]),
-                clientHandler
-            );
+            _context = context;
         }
 
         // GET: /launcher/
         public async Task<IActionResult> Index()
         {
-            return View(await _client.ApiLaunchersGetAsync());
+            return View(await _context.GetLaunchers());
         }
 
-        // GET: /launcher/powershell
-        public async Task<IActionResult> PowerShell()
-        {
-            PowerShellLauncher launcher = await _client.ApiLaunchersPowershellGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
-        }
-
-        // POST: /launcher/powershell
-        [HttpPost]
-        public async Task<IActionResult> PowerShell(PowerShellLauncher launcher)
+        // GET: /launcher/create/{name}
+        public async Task<IActionResult> Create(string id)
         {
             try
             {
-                launcher = await _client.ApiLaunchersPowershellPutAsync(launcher);
-                launcher = await _client.ApiLaunchersPowershellPostAsync();
-                ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                switch (id.ToLower())
+                {
+                    case "binary":
+                        return View(await _context.GetBinaryLauncher());
+                    case "powershell":
+                        return View(await _context.GetPowerShellLauncher());
+                    case "installutil":
+                        return View(await _context.GetInstallUtilLauncher());
+                    case "msbuild":
+                        return View(await _context.GetMSBuildLauncher());
+                    case "regsvr32":
+                        return View(await _context.GetRegsvr32Launcher());
+                    case "mshta":
+                        return View(await _context.GetMshtaLauncher());
+                    case "wmic":
+                        return View(await _context.GetWmicLauncher());
+                    case "cscript":
+                        return View(await _context.GetCscriptLauncher());
+                    case "wscript":
+                        return View(await _context.GetWscriptLauncher());
+                    default:
+                        return RedirectToAction(nameof(Index));
+                }
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
             }
-        }
-
-        // POST: /launcher/powershell/host
-        [HttpPost("powershell/host", Name = "HostPowerShell")]
-        public async Task<IActionResult> HostPowerShell(HostedFile file)
-        {
-            try
-            {
-                PowerShellLauncher launcher = await _client.ApiLaunchersPowershellPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersPowershellHostedPostAsync(file);
-                return RedirectToAction("PowerShell");
-            }
-            catch (HttpOperationException e)
-            {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("PowerShell");
-            }
-        }
-
-        // GET: /launcher/binary
-        public async Task<IActionResult> Binary()
-        {
-            BinaryLauncher launcher = await _client.ApiLaunchersBinaryGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
         }
 
         // POST: /launcher/binary
@@ -107,47 +71,105 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersBinaryPutAsync(launcher);
-                launcher = await _client.ApiLaunchersBinaryPostAsync();
+                launcher = await _context.EditBinaryLauncher(launcher);
+                launcher = await _context.GenerateBinaryLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/binary/host
-        [HttpPost("binary/host", Name = "HostBinary")]
+        // POST: /launcher/hostbinary
         public async Task<IActionResult> HostBinary(HostedFile file)
         {
             try
             {
-                BinaryLauncher launcher = await _client.ApiLaunchersBinaryPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersBinaryHostedPostAsync(file);
-                return RedirectToAction("Binary");
+                BinaryLauncher launcher = await _context.GenerateBinaryLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateBinaryHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("Binary");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Binary" });
             }
         }
 
-        // GET: /launcher/installutil
-        public async Task<IActionResult> InstallUtil()
+        // GET: /launcher/binarydownload
+        public async Task<IActionResult> BinaryDownload()
         {
-            InstallUtilLauncher launcher = await _client.ApiLaunchersInstallutilGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                BinaryLauncher binaryLauncher = await _context.GetBinaryLauncher();
+                return File(Convert.FromBase64String(binaryLauncher.Base64ILByteString), MediaTypeNames.Application.Octet, "GruntStager.exe");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Binary" });
+            }
+        }
+
+        // POST: /launcher/powershell
+        [HttpPost]
+        public async Task<IActionResult> PowerShell(PowerShellLauncher launcher)
+        {
+            try
+            {
+                launcher = await _context.EditPowerShellLauncher(launcher);
+                launcher = await _context.GeneratePowerShellLauncher();
+                ViewBag.Launcher = launcher;
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                ViewBag.Launcher = launcher;
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            }
+        }
+
+        // POST: /launcher/hostpowershell
+        public async Task<IActionResult> HostPowerShell(HostedFile file)
+        {
+            try
+            {
+                PowerShellLauncher launcher = await _context.GeneratePowerShellLauncher();
+                file = await _context.CreateHostedFile(file.ListenerId, file);
+                launcher = await _context.GeneratePowerShellHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "PowerShell" });
+            }
+        }
+
+        // GET: /launcher/powershelldownload
+        public async Task<IActionResult> PowerShellDownload()
+        {
+            try
+            {
+                PowerShellLauncher powershellLauncher = await _context.GetPowerShellLauncher();
+                return File(Common.CovenantEncoding.GetBytes(powershellLauncher.PowerShellCode), MediaTypeNames.Text.Plain, "GruntStager.ps1");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "PowerShell" });
+            }
         }
 
         // POST: /launcher/installutil
@@ -156,47 +178,52 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersInstallutilPutAsync(launcher);
-                launcher = await _client.ApiLaunchersInstallutilPostAsync();
+                launcher = await _context.EditInstallUtilLauncher(launcher);
+                launcher = await _context.GenerateInstallUtilLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/installutil/host
-        [HttpPost("installutil/host", Name = "HostInstallUtil")]
+        // POST: /launcher/hostinstallutil
         public async Task<IActionResult> HostInstallUtil(HostedFile file)
         {
             try
             {
-                InstallUtilLauncher launcher = await _client.ApiLaunchersInstallutilPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersInstallutilHostedPostAsync(file);
-                return RedirectToAction("InstallUtil");
+                InstallUtilLauncher launcher = await _context.GenerateInstallUtilLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateInstallUtilHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("InstallUtil");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "InstallUtil" });
             }
         }
 
-        // GET: /launcher/msbuild
-        public async Task<IActionResult> MSBuild()
+        // GET: /launcher/installutildownload
+        public async Task<IActionResult> InstallUtilDownload()
         {
-            MSBuildLauncher launcher = await _client.ApiLaunchersMsbuildGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                InstallUtilLauncher installUtilLauncher = await _context.GetInstallUtilLauncher();
+                return File(Common.CovenantEncoding.GetBytes(installUtilLauncher.DiskCode), MediaTypeNames.Text.Xml, "GruntStager.xml");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "InstallUtil" });
+            }
         }
 
         // POST: /launcher/msbuild
@@ -205,47 +232,52 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersMsbuildPutAsync(launcher);
-                launcher = await _client.ApiLaunchersMsbuildPostAsync();
+                launcher = await _context.EditMSBuildLauncher(launcher);
+                launcher = await _context.GenerateMSBuildLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/msbuild/host
-        [HttpPost("msbuild/host", Name = "HostMSBuild")]
+        // POST: /launcher/hostmsbuild
         public async Task<IActionResult> HostMSBuild(HostedFile file)
         {
             try
             {
-                MSBuildLauncher launcher = await _client.ApiLaunchersMsbuildPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersMsbuildHostedPostAsync(file);
-                return RedirectToAction("MSBuild");
+                MSBuildLauncher launcher = await _context.GenerateMSBuildLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateMSBuildHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("MSBuild");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "MSBuild" });
             }
         }
 
-        // GET: /launcher/regsvr32
-        public async Task<IActionResult> Regsvr32()
+        // GET: /launcher/msbuilddownload
+        public async Task<IActionResult> MSBuildDownload()
         {
-            Regsvr32Launcher launcher = await _client.ApiLaunchersRegsvr32GetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                MSBuildLauncher msbuildLauncher = await _context.GetMSBuildLauncher();
+                return File(Common.CovenantEncoding.GetBytes(msbuildLauncher.DiskCode), MediaTypeNames.Text.Xml, "GruntStager.xml");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "MSBuild" });
+            }
         }
 
         // POST: /launcher/regsvr32
@@ -254,47 +286,52 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersRegsvr32PutAsync(launcher);
-                launcher = await _client.ApiLaunchersRegsvr32PostAsync();
+                launcher = await _context.EditRegsvr32Launcher(launcher);
+                launcher = await _context.GenerateRegsvr32Launcher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/regsvr32/host
-        [HttpPost("regsvr32/host", Name = "HostRegsvr32")]
+        // POST: /launcher/hostregsvr32
         public async Task<IActionResult> HostRegsvr32(HostedFile file)
         {
             try
             {
-                Regsvr32Launcher launcher = await _client.ApiLaunchersRegsvr32PostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersRegsvr32HostedPostAsync(file);
-                return RedirectToAction("Regsvr32");
+                Regsvr32Launcher launcher = await _context.GenerateRegsvr32Launcher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateRegsvr32HostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("Regsvr32");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Regsvr32" });
             }
         }
 
-        // GET: /launcher/mshta
-        public async Task<IActionResult> Mshta()
+        // GET: /launcher/regsvr32download
+        public async Task<IActionResult> Regsvr32Download()
         {
-            MshtaLauncher launcher = await _client.ApiLaunchersMshtaGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                Regsvr32Launcher regsvr32Launcher = await _context.GetRegsvr32Launcher();
+                return File(Common.CovenantEncoding.GetBytes(regsvr32Launcher.DiskCode), MediaTypeNames.Text.Plain, "GruntStager.sct");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Regsvr32" });
+            }
         }
 
         // POST: /launcher/mshta
@@ -303,47 +340,52 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersMshtaPutAsync(launcher);
-                launcher = await _client.ApiLaunchersMshtaPostAsync();
+                launcher = await _context.EditMshtaLauncher(launcher);
+                launcher = await _context.GenerateMshtaLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/mshta/host
-        [HttpPost("mshta/host", Name = "HostMshta")]
+        // POST: /launcher/hostmshta
         public async Task<IActionResult> HostMshta(HostedFile file)
         {
             try
             {
-                MshtaLauncher launcher = await _client.ApiLaunchersMshtaPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersMshtaHostedPostAsync(file);
-                return RedirectToAction("Mshta");
+                MshtaLauncher launcher = await _context.GenerateMshtaLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateMshtaHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("Mshta");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Mshta" });
             }
         }
 
-        // GET: /launcher/wmic
-        public async Task<IActionResult> Wmic()
+        // GET: /launcher/mshtadownload
+        public async Task<IActionResult> MshtaDownload()
         {
-            WmicLauncher launcher = await _client.ApiLaunchersWmicGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                MshtaLauncher mshtaLauncher = await _context.GetMshtaLauncher();
+                return File(Common.CovenantEncoding.GetBytes(mshtaLauncher.DiskCode), MediaTypeNames.Text.Plain, "GruntStager.hta");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Mshta" });
+            }
         }
 
         // POST: /launcher/wmic
@@ -352,47 +394,52 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersWmicPutAsync(launcher);
-                launcher = await _client.ApiLaunchersWmicPostAsync();
+                launcher = await _context.EditWmicLauncher(launcher);
+                launcher = await _context.GenerateWmicLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/wmic/host
-        [HttpPost("wmic/host", Name = "HostWmic")]
+        // POST: /launcher/hostwmic
         public async Task<IActionResult> HostWmic(HostedFile file)
         {
             try
             {
-                WmicLauncher launcher = await _client.ApiLaunchersWmicPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersWmicHostedPostAsync(file);
-                return RedirectToAction("Wmic");
+                WmicLauncher launcher = await _context.GenerateWmicLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateWmicHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("Wmic");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Wmic" });
             }
         }
 
-        // GET: /launcher/cscript
-        public async Task<IActionResult> Cscript()
+        // GET: /launcher/wmicdownload
+        public async Task<IActionResult> WmicDownload()
         {
-            CscriptLauncher launcher = await _client.ApiLaunchersCscriptGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                WmicLauncher wmicLauncher = await _context.GetWmicLauncher();
+                return File(Common.CovenantEncoding.GetBytes(wmicLauncher.DiskCode), MediaTypeNames.Text.Plain, "GruntStager.xsl");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Wmic" });
+            }
         }
 
         // POST: /launcher/cscript
@@ -401,47 +448,52 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersCscriptPutAsync(launcher);
-                launcher = await _client.ApiLaunchersCscriptPostAsync();
+                launcher = await _context.EditCscriptLauncher(launcher);
+                launcher = await _context.GenerateCscriptLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/cscript/host
-        [HttpPost("cscript/host", Name = "HostCscript")]
+        // POST: /launcher/hostcscript
         public async Task<IActionResult> HostCscript(HostedFile file)
         {
             try
             {
-                CscriptLauncher launcher = await _client.ApiLaunchersCscriptPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersCscriptHostedPostAsync(file);
-                return RedirectToAction("Cscript");
+                CscriptLauncher launcher = await _context.GenerateCscriptLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateCscriptHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("Cscript");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Cscript" });
             }
         }
 
-        // GET: /launcher/wscript
-        public async Task<IActionResult> Wscript()
+        // GET: /launcher/cscriptdownload
+        public async Task<IActionResult> CscriptDownload()
         {
-            WscriptLauncher launcher = await _client.ApiLaunchersWscriptGetAsync();
-            ViewBag.Launcher = launcher;
-            ViewBag.Listeners = await _client.ApiListenersGetAsync();
-            return View(launcher);
+            try
+            {
+                CscriptLauncher cscriptLauncher = await _context.GetCscriptLauncher();
+                return File(Common.CovenantEncoding.GetBytes(cscriptLauncher.DiskCode), MediaTypeNames.Text.Plain, "GruntStager.js");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Cscript" });
+            }
         }
 
         // POST: /launcher/wscript
@@ -450,37 +502,51 @@ namespace Covenant.Controllers
         {
             try
             {
-                launcher = await _client.ApiLaunchersWscriptPutAsync(launcher);
-                launcher = await _client.ApiLaunchersWscriptPostAsync();
+                launcher = await _context.EditWscriptLauncher(launcher);
+                launcher = await _context.GenerateWscriptLauncher();
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
+                ModelState.AddModelError(string.Empty, e.Message);
                 ViewBag.Launcher = launcher;
-                ViewBag.Listeners = await _client.ApiListenersGetAsync();
-                return View(launcher);
+                ViewBag.Listeners = await _context.GetListeners();
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
         }
 
-        // POST: /launcher/wscript/host
-        [HttpPost("wscript/host", Name = "HostWscript")]
+        // POST: /launcher/hostwscript
         public async Task<IActionResult> HostWscript(HostedFile file)
         {
             try
             {
-                WscriptLauncher launcher = await _client.ApiLaunchersWscriptPostAsync();
-                HttpListener listener = await _client.ApiListenersHttpByIdGetAsync(file.ListenerId ?? default);
-                file = await _client.ApiListenersByIdHostedfilesPostAsync(listener.Id ?? default, file);
-                launcher = await _client.ApiLaunchersWscriptHostedPostAsync(file);
-                return RedirectToAction("Wscript");
+                WscriptLauncher launcher = await _context.GenerateWscriptLauncher();
+                HttpListener listener = await _context.GetHttpListener(file.ListenerId);
+                file = await _context.CreateHostedFile(listener.Id, file);
+                launcher = await _context.GenerateWscriptHostedLauncher(file);
+                return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
-            catch (HttpOperationException e)
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                ModelState.AddModelError(string.Empty, e.Response.Content);
-                return RedirectToAction("Wscript");
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Wscript" });
+            }
+        }
+
+        // GET: /launcher/wscriptdownload
+        public async Task<IActionResult> WscriptDownload()
+        {
+            try
+            {
+                WscriptLauncher wscriptLauncher = await _context.GetWscriptLauncher();
+                return File(Common.CovenantEncoding.GetBytes(wscriptLauncher.DiskCode), MediaTypeNames.Text.Plain, "GruntStager.js");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Create), new { id = "Wscript" });
             }
         }
     }
