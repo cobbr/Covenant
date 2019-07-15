@@ -25,9 +25,19 @@ Covenant has several key features:
 
 Be sure to clone Covenant recursively to initialize the git submodules: `git clone --recurse-submodules https://github.com/cobbr/Covenant`
 
+### Dotnet Core
+
+The easiest way to use Covenant, is by installing dotnet core. You can download dotnet core for your platform from [here](https://dotnet.microsoft.com/download).
+
+Once you have installed dotnet core, we can build and run Covenant using the dotnet CLI:
+```
+$ ~/Covenant/Covenant > dotnet build
+$ ~/Covenant/Covenant > dotnet run
+```
+
 ### Docker
 
-Covenant is easy to deploy with Docker!
+Covenant can also be run with Docker. There are a couple of gotchas with Docker, so I only recommend using docker if you are familiar with docker or are willing to learn the subtle gotchas.
 
 First, build the docker image:
 ```
@@ -66,21 +76,12 @@ Finally, want to develop and hack on Covenant? Awesome, Covenant has a Swagger U
 $ ~/Covenant/Covenant > docker run -it -p 7443:7443 -p 80:80 -p 443:443 --env ASPNETCORE_ENVIRONMENT=Development --name covenant covenant --username AdminUser --computername 0.0.0.0
 ```
 
-### Without Docker
-
-Don't like Docker? Ok.... :(
-
-We can build and run Covenant ourselves using `dotnet` core. Be sure to have installed dotnet core 2.1 prior to attempting!
-```
-$ ~/Covenant/Covenant > dotnet build
-$ ~/Covenant/Covenant > dotnet run --username AdminUser
-```
-
-Have a redistributable `Covenant.dll`? Okay, no need to build, we can run this with dotnet core as well:
-```
-$ ~/Covenant/Covenant > dotnet Covenant.dll -u AdminUser
-```
+### Next Steps
 
 > Okay it's running.... Now what?
 
 You need the client-side component of this project, `Elite`! Go checkout the [Elite README](https://github.com/cobbr/Elite/blob/master/README.md) to see how to do that.
+
+### Questions and Discussion
+
+Have questions or want to chat more about Covenant? Join the #Covenant channel in the [BloodHound Gang Slack](https://bloodhoundgang.herokuapp.com/).
