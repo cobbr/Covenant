@@ -20,7 +20,7 @@ namespace Covenant.API
     public partial class CovenantAPI : ServiceClient<CovenantAPI>, ICovenantAPI
     {
         /// <summary>
-        /// The base URI of the service.HttpLi
+        /// The base URI of the service.
         /// </summary>
         public System.Uri BaseUri { get; set; }
 

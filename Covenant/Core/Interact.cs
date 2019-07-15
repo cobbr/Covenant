@@ -27,7 +27,6 @@ namespace Covenant.Core
     {
         private readonly CovenantContext _context;
         private readonly IHubContext<GruntHub> _grunthub;
-        public string PowerShellImport { get; set; } = "";
 
         public Interaction(CovenantContext context, IHubContext<GruntHub> grunthub)
         {
@@ -140,6 +139,14 @@ namespace Covenant.Core
                     return UserInput.Replace(parameters[2].Value, "");
                 }
             }
+            else if (UserInput.StartsWith("PowerShellImport", StringComparison.OrdinalIgnoreCase))
+            {
+                List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
+                if (parameters.Count >= 2)
+                {
+                    return UserInput.Replace(parameters[1].Value, "");
+                }
+            }
             return UserInput;
         }
 
@@ -222,6 +229,12 @@ namespace Covenant.Core
                 grunt.Note = string.Join(" ", parameters.Skip(1).Select(P => P.Value).ToArray());
                 await _context.EditGrunt(grunt, user, _grunthub);
                 output = "Note: " + grunt.Note;
+            }
+            else if (parameters.FirstOrDefault().Value.ToLower() == "powershellimport")
+            {
+                grunt.PowerShellImport = parameters.Count >= 2 ? parameters[1].Value : "";
+                await _context.EditGrunt(grunt, user, _grunthub);
+                output = "PowerShell Imported";
             }
             else if (commandTask != null)
             {

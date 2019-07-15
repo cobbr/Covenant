@@ -23,14 +23,14 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntCommand class.
         /// </summary>
-        public GruntCommand(string command, CovenantUser user, System.DateTime commandTime, int? id = default(int?), int? commandOutputId = default(int?), CommandOutput commandOutput = default(CommandOutput), int? gruntId = default(int?), int? gruntTaskingId = default(int?))
+        public GruntCommand(string command, System.DateTime commandTime, CovenantUser user, int? id = default(int?), int? commandOutputId = default(int?), CommandOutput commandOutput = default(CommandOutput), int? gruntId = default(int?), int? gruntTaskingId = default(int?))
         {
             Id = id;
             Command = command;
-            User = user;
             CommandTime = commandTime;
             CommandOutputId = commandOutputId;
             CommandOutput = commandOutput;
+            User = user;
             GruntId = gruntId;
             GruntTaskingId = gruntTaskingId;
             CustomInit();
@@ -53,11 +53,6 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "user")]
-        public CovenantUser User { get; set; }
-
-        /// <summary>
-        /// </summary>
         [JsonProperty(PropertyName = "commandTime")]
         public System.DateTime CommandTime { get; set; }
 
@@ -70,6 +65,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "commandOutput")]
         public CommandOutput CommandOutput { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "user")]
+        public CovenantUser User { get; set; }
 
         /// <summary>
         /// </summary>
@@ -96,6 +96,10 @@ namespace Covenant.API.Models
             if (User == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "User");
+            }
+            if (CommandOutput != null)
+            {
+                CommandOutput.Validate();
             }
         }
     }

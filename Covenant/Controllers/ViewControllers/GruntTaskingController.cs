@@ -49,6 +49,7 @@ namespace Covenant.Controllers
                 GruntTasking tasking = await _context.GruntTaskings
                     .Include(GT => GT.Grunt)
                     .Include(GT => GT.GruntTask)
+                        .ThenInclude(GT => GT.Options)
                     .Include(GT => GT.GruntCommand)
                         .ThenInclude(GC => GC.CommandOutput)
                     .Include(GT => GT.GruntCommand)
@@ -92,6 +93,8 @@ namespace Covenant.Controllers
                 {
                     Command = GetCommand(tasking),
                     CommandTime = DateTime.UtcNow,
+                    CommandOutputId = 0,
+                    CommandOutput = new CommandOutput(),
                     User = currentUser,
                     GruntId = tasking.Grunt.Id,
                     Grunt = tasking.Grunt

@@ -426,14 +426,14 @@ namespace Covenant.Controllers
                             Message = Convert.ToBase64String(this.GetCompressedILAssembly35(tasking.GruntTask.Name));
                             if (tasking.Parameters.Any())
                             {
-                                Message += "," + String.Join(",", tasking.Parameters);
+                                Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
                             }
                             break;
                         case DotNetVersion.Net40:
                             Message = Convert.ToBase64String(this.GetCompressedILAssembly40(tasking.GruntTask.Name));
                             if (tasking.Parameters.Any())
                             {
-                                Message += "," + String.Join(",", tasking.Parameters);
+                                Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
                             }
                             break;
                     }
@@ -448,7 +448,7 @@ namespace Covenant.Controllers
                     Message = tasking.Parameters[0];
                     break;
                 default:
-                    Message = String.Join(",", tasking.Parameters);
+                    Message = String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
                     break;
             }
             return new GruntTaskingMessage
@@ -647,7 +647,9 @@ namespace Covenant.Controllers
                 GruntCommandId = gruntTasking.GruntCommandId,
                 Output = taskOutput
             };
+            gruntTasking.GruntCommand.CommandOutputId = 0;
             gruntTasking.Status = GruntTaskingStatus.Completed;
+            gruntTasking.CompletionTime = DateTime.UtcNow;
             gruntTasking.GruntCommand = await this.CovenantClient.ApiCommandsPutAsync(gruntTasking.GruntCommand);
             await this.CovenantClient.ApiTaskingsPutAsync(gruntTasking);
             targetGrunt.LastCheckIn = DateTime.UtcNow;

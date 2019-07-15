@@ -113,9 +113,6 @@
     <Content Remove="API\openapi17.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="wwwroot\images\covenant revisi - black - edited.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

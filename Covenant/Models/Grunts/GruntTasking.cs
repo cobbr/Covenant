@@ -3,7 +3,6 @@
 // License: GNU GPLv3
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -19,36 +18,33 @@ namespace Covenant.Models.Grunts
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string Output { get; set; }
 
-        public override string ToString()
-        {
-            return this.Output;
-        }
+        public string Output { get; set; } = "";
 
+        [Required]
         public int GruntCommandId { get; set; }
-        [JsonIgnore]
         public GruntCommand GruntCommand { get; set; }
     }
 
     public class GruntCommand
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public string Command { get; set; }
         [Required]
-        public CovenantUser User { get; set; }
-        [Required]
         public DateTime CommandTime { get; set; } = DateTime.MinValue;
+
         public int CommandOutputId { get; set; }
         public CommandOutput CommandOutput { get; set; }
 
+        [Required]
+        public CovenantUser User { get; set; }
+
         public int GruntId { get; set; }
-        [JsonIgnore]
         public Grunt Grunt { get; set; }
 
         public int? GruntTaskingId { get; set; }
-        [JsonIgnore]
         public GruntTasking GruntTasking { get; set; }
     }
 
@@ -83,6 +79,7 @@ namespace Covenant.Models.Grunts
 
     public class GruntTasking
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; } = Utilities.CreateShortGuid();

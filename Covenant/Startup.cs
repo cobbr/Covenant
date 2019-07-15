@@ -106,7 +106,10 @@ namespace Covenant
                 });
             });
 
-            services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
+            services.AddMvc().AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
             services.AddRouting(options => options.LowercaseUrls = true);
 
             services.AddSwaggerGen(c =>
@@ -122,8 +125,11 @@ namespace Covenant
                 c.SchemaFilter<EnumSchemaFilter>();
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
-            
-            services.AddSignalR();
+
+            services.AddSignalR().AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -164,7 +170,7 @@ namespace Covenant
             {
                 routes.MapHub<GruntHub>("/grunthub", options =>
                 {
-                    options.ApplicationMaxBufferSize = 500 * 1024;
+                    options.ApplicationMaxBufferSize = 2000 * 1024;
                 });
             });
         }

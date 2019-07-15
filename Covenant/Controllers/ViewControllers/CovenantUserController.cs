@@ -44,14 +44,15 @@ namespace Covenant.Controllers
                 var result = await _signInManager.PasswordSignInAsync(login.UserName, login.Password, true, lockoutOnFailure: false);
                 if (!result.Succeeded == true)
                 {
-                    ModelState.AddModelError(string.Empty, "Login Failed");
+                    ModelState.AddModelError(string.Empty, "Incorrect username or password");
+                    return View();
                 }
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                return RedirectToAction("Index", "Home");
+                return View();
             }
         }
 

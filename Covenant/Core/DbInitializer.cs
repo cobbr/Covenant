@@ -607,7 +607,7 @@ namespace Covenant.Core
                                 Description = "Boolean, whether to ping hosts prior to port scanning.",
                                 Value = "False",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -881,7 +881,7 @@ namespace Covenant.Core
                                 Description = "LogonType to use. Defaults to LOGON32_LOGON_NEW_CREDENTIALS, which is suitable to perform actions that require remote authentication. LOGON32_LOGON_INTERACTIVE is suitable for local actions.",
                                 Value = "LOGON32_LOGON_NEW_CREDENTIALS",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -1508,6 +1508,26 @@ namespace Covenant.Core
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PowerShellImport",
+                        AlternateNames = new List<string>(),
+                        Description = "Import a PowerShell script.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 73,
+                                Name = "Script",
+                                Description = "PowerShell Script to import.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
                             }
                         }
                     }

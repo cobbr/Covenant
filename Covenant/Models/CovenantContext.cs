@@ -767,7 +767,7 @@ namespace Covenant.Models
             matching_grunt.GruntNegotiatedSessionKey = grunt.GruntNegotiatedSessionKey;
             matching_grunt.GruntRSAPublicKey = grunt.GruntRSAPublicKey;
             matching_grunt.GruntSharedSecretPassword = grunt.GruntSharedSecretPassword;
-
+            matching_grunt.PowerShellImport = grunt.PowerShellImport;
             this.Grunts.Update(matching_grunt);
 
             TargetIndicator indicator = (await this.GetTargetIndicators())
@@ -1200,7 +1200,13 @@ namespace Covenant.Models
         {
             this.GruntCommands.Add(command);
             await this.SaveChangesAsync();
-            GruntCommand createdCommand = await this.GetGruntCommand(command.Id);
+            GruntCommand createdCommand = await this.GruntCommands
+                .Where(GC => GC.Id == command.Id)
+                .Include(GC => GC.User)
+                .Include(GC => GC.CommandOutput)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GC => GC.GruntTask)
+                .FirstOrDefaultAsync();
             Event ev = new Event
             {
                 Time = createdCommand.CommandTime,
@@ -1211,18 +1217,25 @@ namespace Covenant.Models
             };
             await this.Events.AddAsync(ev);
             await this.SaveChangesAsync();
-            await HubProxy.SendCommandEvent(_grunthub, ev, command);
+            await HubProxy.SendCommandEvent(_grunthub, ev, createdCommand);
             return createdCommand;
         }
 
         public async Task<GruntCommand> EditGruntCommand(GruntCommand command, IHubContext<GruntHub> _grunthub)
         {
-            GruntCommand updatingCommand = await this.GetGruntCommand(command.Id);
+            GruntCommand updatingCommand = await this.GruntCommands
+                .Where(GC => GC.Id == command.Id)
+                .Include(GC => GC.User)
+                .Include(GC => GC.CommandOutput)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GC => GC.GruntTask)
+                .FirstOrDefaultAsync();
             updatingCommand.Command = command.Command;
             updatingCommand.CommandTime = command.CommandTime;
 
-            if (updatingCommand.CommandOutput != command.CommandOutput)
+            if (updatingCommand.CommandOutput.Output != command.CommandOutput.Output)
             {
+                updatingCommand.CommandOutputId = command.CommandOutputId;
                 updatingCommand.CommandOutput = command.CommandOutput;
                 Grunt g = await this.GetGrunt(updatingCommand.GruntId);
                 Event ev = new Event
@@ -1287,7 +1300,13 @@ namespace Covenant.Models
             if (updatingOutput.Output != output.Output)
             {
                 updatingOutput.Output = output.Output;
-                GruntCommand command = await this.GetGruntCommand(updatingOutput.GruntCommandId);
+                GruntCommand command = await this.GruntCommands
+                    .Where(GC => GC.Id == updatingOutput.GruntCommandId)
+                    .Include(GC => GC.User)
+                    .Include(GC => GC.CommandOutput)
+                    .Include(GC => GC.GruntTasking)
+                        .ThenInclude(GC => GC.GruntTask)
+                    .FirstOrDefaultAsync();
                 command.CommandOutput = updatingOutput;
                 Grunt g = await this.GetGrunt(command.GruntId);
                 Event ev = new Event
@@ -1397,7 +1416,14 @@ namespace Covenant.Models
                 if (!tasking.Parameters.Any())
                 {
                     List<string> parameters = task.Options.Select(O => O.Value).ToList();
-                    if (task.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
+                    if (task.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && parameters.Any())
+                    {
+                        if (!string.IsNullOrWhiteSpace(grunt.PowerShellImport))
+                        {
+                            parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(grunt.PowerShellImport)) + "\r\n" + parameters[0];
+                        }
+                    }
+                    else if (task.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
                     {
                         Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
                         if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
@@ -1682,7 +1708,6 @@ namespace Covenant.Models
                     await this.Events.AddAsync(ev);
                 }
             }
-
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
             updatingGruntTasking.Status = newStatus;
             updatingGruntTasking.GruntCommand.CommandOutput.Output = tasking.GruntCommand.CommandOutput.Output;
@@ -1691,6 +1716,13 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
             if (ev != null)
             {
+                tasking.GruntCommand = await this.GruntCommands
+                    .Where(GC => GC.Id == tasking.GruntCommandId)
+                    .Include(GC => GC.User)
+                    .Include(GC => GC.CommandOutput)
+                    .Include(GC => GC.GruntTasking)
+                        .ThenInclude(GC => GC.GruntTask)
+                    .FirstOrDefaultAsync();
                 await HubProxy.SendCommandEvent(_grunthub, ev, tasking.GruntCommand);
             }
             return updatingGruntTasking;

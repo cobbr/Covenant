@@ -125,10 +125,10 @@ namespace Covenant.Models.Listeners
                 HttpCookies = yaml.HttpCookies,
                 HttpMessageTransform = yaml.HttpMessageTransform,
                 HttpRequestHeaders = yaml.HttpRequestHeaders,
-                HttpPostRequest = yaml.HttpPostRequest,
+                HttpPostRequest = yaml.HttpPostRequest.TrimEnd('\n'),
                 HttpResponseHeaders = yaml.HttpResponseHeaders,
-                HttpGetResponse = yaml.HttpGetResponse,
-                HttpPostResponse = yaml.HttpPostResponse
+                HttpGetResponse = yaml.HttpGetResponse.TrimEnd('\n'),
+                HttpPostResponse = yaml.HttpPostResponse.TrimEnd('\n')
             };
         }
     }

@@ -20,16 +20,10 @@ namespace Covenant.Hubs
 {
     public static class HubProxy
     {
-        public async static Task SendEvent(IHubContext<GruntHub> context, Event anEvent)
-        {
-            await context.Clients.Group(anEvent.Context).SendAsync("ReceiveEvent", EliteConsole.PrintFormattedHighlight(anEvent.MessageHeader), anEvent.MessageBody);
-        }
-
         public async static Task SendCommandEvent(IHubContext<GruntHub> context, Event taskingEvent, GruntCommand command)
         {
             await context.Clients.Group(taskingEvent.Context)
-                .SendAsync("ReceiveCommandEvent", command.Id, EliteConsole.PrintFormattedHighlight(taskingEvent.MessageHeader),
-                           command.User.UserName, command.Command, command.CommandOutput.Output);
+                .SendAsync("ReceiveCommandEvent", command, taskingEvent);
         }
     }
 
@@ -55,7 +49,7 @@ namespace Covenant.Hubs
             List<Grunt> grunts = (await _context.GetGrunts()).Where(G => G.Status != GruntStatus.Uninitialized).ToList();
             foreach (Grunt g in grunts)
             {
-                await this.Clients.Caller.SendAsync("ReceiveGrunt", g.Id, g.Name);
+                await this.Clients.Caller.SendAsync("ReceiveGrunt", g.GUID, g.Name);
             }
         }
 
@@ -64,7 +58,7 @@ namespace Covenant.Hubs
             List<Listener> listeners = (await _context.GetListeners()).Where(L => L.Status == ListenerStatus.Active).ToList();
             foreach (Listener l in listeners)
             {
-                await this.Clients.Caller.SendAsync("ReceiveListener", l.Id, l.Name);
+                await this.Clients.Caller.SendAsync("ReceiveListener", l.GUID, l.Name);
             }
         }
 
@@ -76,7 +70,7 @@ namespace Covenant.Hubs
                 foreach (string child in g.Children)
                 {
                     Grunt childGrunt = await _context.GetGruntByGUID(child);
-                    await this.Clients.Caller.SendAsync("ReceiveGruntLink", g.Id, childGrunt.Id);
+                    await this.Clients.Caller.SendAsync("ReceiveGruntLink", g.GUID, childGrunt.GUID);
                 }
             }
         }
@@ -90,7 +84,8 @@ namespace Covenant.Hubs
                 .ToList();
             foreach (Grunt g in grunts)
             {
-                await this.Clients.Caller.SendAsync("ReceiveGruntListenerLink", g.ListenerId, g.Id);
+                Listener l = await _context.GetListener(g.ListenerId);
+                await this.Clients.Caller.SendAsync("ReceiveGruntListenerLink", l.GUID, g.GUID);
             }
         }
 
@@ -99,15 +94,24 @@ namespace Covenant.Hubs
             CovenantUser user = await _context.GetUserByUsername(this.Context.User.Identity.Name);
             Grunt grunt = await _context.GetGruntByName(gruntName);
             GruntCommand command = await interact.Input(user, grunt, input);
+            if (!string.IsNullOrWhiteSpace(command.CommandOutput.Output))
+            {
+                await this.Clients.Caller.SendAsync("ReceiveCommandOutput", command);
+            }
         }
 
         public async Task GetCommandOutput(int id)
         {
-            GruntCommand command = await _context.GetGruntCommand(id);
-            CommandOutput output = await _context.GetCommandOutput(command.CommandOutputId);
-            if (!string.IsNullOrWhiteSpace(output.Output))
+            GruntCommand command = await _context.GruntCommands
+                .Where(GC => GC.Id == id)
+                .Include(GC => GC.User)
+                .Include(GC => GC.CommandOutput)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GC => GC.GruntTask)
+                .FirstOrDefaultAsync();
+            if (!string.IsNullOrWhiteSpace(command.CommandOutput.Output))
             {
-                await this.Clients.Caller.SendAsync("ReceiveCommandOutput", output.Output);
+                await this.Clients.Caller.SendAsync("ReceiveCommandOutput", command);
             }
         }
 
