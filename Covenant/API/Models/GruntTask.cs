@@ -119,6 +119,16 @@ namespace Covenant.API.Models
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "Name");
             }
+            if (Options != null)
+            {
+                foreach (var element in Options)
+                {
+                    if (element != null)
+                    {
+                        element.Validate();
+                    }
+                }
+            }
         }
     }
 }

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
 using Covenant.Models;
+using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
@@ -15,10 +16,12 @@ namespace Covenant.Controllers
     public class ProfileController : Controller
     {
         private readonly CovenantContext _context;
+        private readonly UserManager<CovenantUser> _userManager;
 
-        public ProfileController(CovenantContext context)
+        public ProfileController(CovenantContext context, UserManager<CovenantUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: /profile/
@@ -53,7 +56,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.EditHttpProfile(profile);
+                await _context.EditHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return RedirectToAction("Index", "Listener");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -67,13 +70,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return View(new HttpProfile
-                {
-                    HttpUrls = new List<string> { "" },
-                    HttpCookies = new List<string> { "" },
-                    HttpRequestHeaders = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } },
-                    HttpResponseHeaders = new List<HttpProfileHeader> { new HttpProfileHeader {  Name = "", Value = "" } }
-                });
+                return View(new HttpProfile());
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -87,7 +84,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.CreateHttpProfile(profile);
+                await _context.CreateHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return RedirectToAction("Index", "Listener");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

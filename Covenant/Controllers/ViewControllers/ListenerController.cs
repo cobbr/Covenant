@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 using Covenant.Core;
 using Covenant.Models;
@@ -105,6 +106,7 @@ namespace Covenant.Controllers
                 {
                     return RedirectToAction(nameof(Index));
                 }
+                _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Active;
                 await _context.EditHttpListener(listener);
                 return RedirectToAction(nameof(Index));
@@ -126,6 +128,7 @@ namespace Covenant.Controllers
                 {
                     return RedirectToAction(nameof(Index));
                 }
+                _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Stopped;
                 await _context.EditHttpListener(listener);
                 return RedirectToAction(nameof(Index));

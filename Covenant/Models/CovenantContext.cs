@@ -4,10 +4,10 @@
 
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
@@ -18,7 +18,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using Covenant.Hubs;
-
 using Covenant.Core;
 using Encrypt = Covenant.Core.Encryption;
 using Covenant.Models.Covenant;
@@ -176,11 +175,6 @@ namespace Covenant.Models
             );
 
             builder.Entity<HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
-            (
-                v => JsonConvert.SerializeObject(v),
-                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
-            builder.Entity<HttpProfile>().Property(HP => HP.HttpCookies).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
@@ -590,16 +584,6 @@ namespace Covenant.Models
             return grunt;
         }
 
-        public async Task<Grunt> GetGruntByCookieAuthKey(string cookiekey)
-        {
-            Grunt grunt = await this.Grunts.FirstOrDefaultAsync(g => g.CookieAuthKey == cookiekey);
-            if (grunt == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Grunt with CookieAuthKey: {cookiekey}");
-            }
-            return grunt;
-        }
-
         public async Task<List<string>> GetPathToChildGrunt(int gruntId, int childId)
         {
             Grunt grunt = await this.GetGrunt(gruntId);
@@ -687,7 +671,9 @@ namespace Covenant.Models
                         CommandTime = DateTime.UtcNow,
                         User = user,
                         GruntId = grunt.Id,
-                        Grunt = grunt
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
                     }, grunthub);
                     await this.CreateGruntTasking(new GruntTasking
                     {
@@ -713,7 +699,9 @@ namespace Covenant.Models
                         CommandTime = DateTime.UtcNow,
                         User = user,
                         GruntId = grunt.Id,
-                        Grunt = grunt
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
                     }, grunthub);
                     await this.CreateGruntTasking(new GruntTasking
                     {
@@ -739,7 +727,9 @@ namespace Covenant.Models
                         CommandTime = DateTime.UtcNow,
                         User = user,
                         GruntId = grunt.Id,
-                        Grunt = grunt
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
                     }, grunthub);
                     await this.CreateGruntTasking(new GruntTasking
                     {
@@ -2102,16 +2092,23 @@ namespace Covenant.Models
             return profile;
         }
 
-        public async Task<Profile> CreateProfile(Profile profile)
+        public async Task<Profile> CreateProfile(Profile profile, CovenantUser currentUser)
         {
+            if (! await this.IsAdmin(currentUser))
+            {
+                throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+            }
             await this.Profiles.AddAsync(profile);
             await this.SaveChangesAsync();
             return await this.GetProfile(profile.Id);
         }
 
-        public async Task<Profile> EditProfile(Profile profile)
+        public async Task<Profile> EditProfile(Profile profile, CovenantUser currentUser)
         {
             Profile matchingProfile = await this.GetProfile(profile.Id);
+            matchingProfile.Description = profile.Description;
+            matchingProfile.Name = profile.Name;
+            matchingProfile.Type = profile.Type;
             this.Profiles.Update(matchingProfile);
             await this.SaveChangesAsync();
             return await this.GetProfile(profile.Id);
@@ -2139,22 +2136,42 @@ namespace Covenant.Models
             return (HttpProfile)profile;
         }
 
-        public async Task<HttpProfile> CreateHttpProfile(HttpProfile profile)
+        public async Task<HttpProfile> CreateHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
+            if (!await this.IsAdmin(currentUser))
+            {
+                throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+            }
             await this.Profiles.AddAsync(profile);
             await this.SaveChangesAsync();
             return await this.GetHttpProfile(profile.Id);
         }
 
-        public async Task<HttpProfile> EditHttpProfile(HttpProfile profile)
+        public async Task<HttpProfile> EditHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
             HttpProfile matchingProfile = await this.GetHttpProfile(profile.Id);
+            Listener l = await this.Listeners.FirstOrDefaultAsync(L => L.ProfileId == matchingProfile.Id && L.Status == ListenerStatus.Active);
+            if (l != null)
+            {
+                throw new ControllerBadRequestException($"BadRequest - Cannot edit a profile assigned to an Active Listener");
+            }
+            matchingProfile.Name = profile.Name;
+            matchingProfile.Type = profile.Type;
+            matchingProfile.Description = profile.Description;
             matchingProfile.HttpRequestHeaders = profile.HttpRequestHeaders;
+            matchingProfile.HttpResponseHeaders = profile.HttpResponseHeaders;
             matchingProfile.HttpUrls = profile.HttpUrls;
-            matchingProfile.HttpCookies = profile.HttpCookies;
-            matchingProfile.HttpGetResponse = profile.HttpGetResponse;
-            matchingProfile.HttpPostRequest = profile.HttpPostRequest;
-            matchingProfile.HttpPostResponse = profile.HttpPostResponse;
+            matchingProfile.HttpGetResponse = profile.HttpGetResponse.Replace("\r\n", "\n");
+            matchingProfile.HttpPostRequest = profile.HttpPostRequest.Replace("\r\n", "\n");
+            matchingProfile.HttpPostResponse = profile.HttpPostResponse.Replace("\r\n", "\n");
+            if (matchingProfile.HttpMessageTransform != profile.HttpMessageTransform)
+            {
+                if (!await this.IsAdmin(currentUser))
+                {
+                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+                }
+                matchingProfile.HttpMessageTransform = profile.HttpMessageTransform;
+            }
             this.Update(matchingProfile);
             await this.SaveChangesAsync();
             return await this.GetHttpProfile(profile.Id);
@@ -2368,7 +2385,6 @@ namespace Covenant.Models
             matchingListener.GUID = listener.GUID;
             matchingListener.SSLCertificatePassword = listener.SSLCertificatePassword;
             matchingListener.SSLCertificate = listener.SSLCertificate;
-
             if (matchingListener.Status == ListenerStatus.Active && listener.Status == ListenerStatus.Stopped)
             {
                 matchingListener.Stop(_ListenerCancellationTokens[matchingListener.Id]);

@@ -43,7 +43,7 @@ namespace Covenant.Core
 
             foreach (Listener l in context.Listeners.Where(L => L.Status == ListenerStatus.Active))
             {
-                HttpProfile profile = await context.GetHttpProfile(l.ProfileId);
+                l.Profile = await context.GetHttpProfile(l.ProfileId);
                 await context.StartListener(l.Id);
             }
         }
@@ -1419,7 +1419,7 @@ namespace Covenant.Core
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
-                                SuggestedValues = new List<string> { "Delay", "ConnectAttempts", "KillDate" },
+                                SuggestedValues = new List<string> { "Delay", "ConnectAttempts", "JitterPercent" },
                                 Optional = false,
                                 DisplayInCommand = true
                             }

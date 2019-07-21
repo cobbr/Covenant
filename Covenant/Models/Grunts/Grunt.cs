@@ -46,9 +46,9 @@ namespace Covenant.Models.Grunts
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
-        public string Name { get; set; } = GenerateName();
+        public string Name { get; set; } = Utilities.CreateShortGuid();
         [Required]
-        public string OriginalServerGuid { get; set; } = GenerateName();
+        public string OriginalServerGuid { get; set; } = Utilities.CreateShortGuid();
         [DisplayName("GUID")]
         public string GUID { get; set; }
 
@@ -100,7 +100,6 @@ namespace Covenant.Models.Grunts
         public string GruntRSAPublicKey { get; set; } = "";
         public string GruntNegotiatedSessionKey { get; set; } = "";
         public string GruntChallenge { get; set; } = "";
-        public string CookieAuthKey { get; set; } = Utilities.CreateSecretPassword();
 
         // Time information
         public DateTime ActivationTime { get; set; } = DateTime.MinValue;
@@ -120,11 +119,6 @@ namespace Covenant.Models.Grunts
         public bool RemoveChild(Grunt grunt)
         {
             return this.Children.Remove(grunt.GUID);
-        }
-
-        private static string GenerateName()
-        {
-            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
         }
     }
 }

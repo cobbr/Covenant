@@ -24,7 +24,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ReferenceSourceLibrary class.
         /// </summary>
-        public ReferenceSourceLibrary(int? id = default(int?), string name = default(string), string description = default(string), string location = default(string), IList<DotNetVersion?> supportedDotNetVersions = default(IList<DotNetVersion?>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>))
+        public ReferenceSourceLibrary(int? id = default(int?), string name = default(string), string description = default(string), string location = default(string), IList<DotNetVersion?> supportedDotNetVersions = default(IList<DotNetVersion?>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), IList<GruntTask> gruntTasks = default(IList<GruntTask>))
         {
             Id = id;
             Name = name;
@@ -33,6 +33,7 @@ namespace Covenant.API.Models
             SupportedDotNetVersions = supportedDotNetVersions;
             ReferenceAssemblies = referenceAssemblies;
             EmbeddedResources = embeddedResources;
+            GruntTasks = gruntTasks;
             CustomInit();
         }
 
@@ -75,6 +76,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "embeddedResources")]
         public IList<EmbeddedResource> EmbeddedResources { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntTasks")]
+        public IList<GruntTask> GruntTasks { get; private set; }
 
     }
 }

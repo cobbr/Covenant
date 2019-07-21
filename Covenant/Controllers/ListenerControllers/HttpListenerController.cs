@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 using Covenant.API;
 using Covenant.API.Models;
@@ -188,25 +189,19 @@ namespace Covenant.Controllers
             string HttpHeaders = "";
             foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
             {
-                HttpHeaders += "ProfileHttpHeaderNames.Add(@\"" + this.FormatForVerbatimString(header.Name) + "\");\n";
-                HttpHeaders += "ProfileHttpHeaderValues.Add(@\"" + this.FormatForVerbatimString(header.Value) + "\");\n";
+                HttpHeaders += "ProfileHttpHeaderNames.Add(@\"" + this.FormatForVerbatimString(header.Name.Replace("{GUID}", grunt.Guid)) + "\");\n";
+                HttpHeaders += "ProfileHttpHeaderValues.Add(@\"" + this.FormatForVerbatimString(header.Value.Replace("{GUID}", grunt.Guid)) + "\");\n";
             }
             string HttpUrls = "";
             foreach (string url in profile.HttpUrls)
             {
-                HttpUrls += "ProfileHttpUrls.Add(@\"" + this.FormatForVerbatimString(url) + "\");\n";
-            }
-            string HttpCookies = "";
-            foreach (string cookie in profile.HttpCookies)
-            {
-                HttpCookies += "ProfileHttpCookies.Add(@\"" + this.FormatForVerbatimString(cookie) + "\");\n";
+                HttpUrls += "ProfileHttpUrls.Add(@\"" + this.FormatForVerbatimString(url.Replace("{GUID}", grunt.Guid)) + "\");\n";
             }
 
             return CodeTemplate
                 .Replace("// {{REPLACE_PROFILE_HTTP_TRANSFORM}}", profile.HttpMessageTransform)
                 .Replace("// {{REPLACE_PROFILE_HTTP_HEADERS}}", HttpHeaders)
                 .Replace("// {{REPLACE_PROFILE_HTTP_URLS}}", HttpUrls)
-                .Replace("// {{REPLACE_PROFILE_HTTP_COOKIES}}", HttpCookies)
                 .Replace("{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}", this.FormatForVerbatimString(profile.HttpGetResponse))
                 .Replace("{{REPLACE_PROFILE_HTTP_POST_REQUEST}}", this.FormatForVerbatimString(profile.HttpPostRequest))
                 .Replace("{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}", this.FormatForVerbatimString(profile.HttpPostResponse))
@@ -263,6 +258,26 @@ namespace Covenant.Controllers
                 ILBytes = Utilities.Compress(ILBytes);
             }
             return Convert.ToBase64String(ILBytes);
+        }
+
+        public static List<string> Parse(string data, string format)
+        {
+            format = Regex.Escape(format).Replace("\\{", "{");
+            if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
+            if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
+            if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
+            if (format.Contains("{3}")) { format = format.Replace("{3}", "(?'group3'.*)"); }
+            if (format.Contains("{4}")) { format = format.Replace("{4}", "(?'group4'.*)"); }
+            if (format.Contains("{5}")) { format = format.Replace("{5}", "(?'group5'.*)"); }
+            Match match = new Regex(format).Match(data);
+            List<string> matches = new List<string>();
+            if (match.Groups["group0"] != null) { matches.Add(match.Groups["group0"].Value); }
+            if (match.Groups["group1"] != null) { matches.Add(match.Groups["group1"].Value); }
+            if (match.Groups["group2"] != null) { matches.Add(match.Groups["group2"].Value); }
+            if (match.Groups["group3"] != null) { matches.Add(match.Groups["group3"].Value); }
+            if (match.Groups["group4"] != null) { matches.Add(match.Groups["group4"].Value); }
+            if (match.Groups["group5"] != null) { matches.Add(match.Groups["group5"].Value); }
+            return matches;
         }
 
         public enum GruntEncryptedMessageType
@@ -338,32 +353,40 @@ namespace Covenant.Controllers
     [AllowAnonymous]
     public class HttpListenerController : Controller
     {
-        private readonly ICovenantAPI CovenantClient;
-        private HttpListener Listener { get; }
-        private HttpProfile Profile { get; }
-        private ModelUtilities ModelUtilities { get; } = new ModelUtilities();
+        private readonly ICovenantAPI _client;
+        private readonly Covenant.Models.Listeners.HttpListenerContext _context;
+        private readonly ModelUtilities _utilities = new ModelUtilities();
 
-		public HttpListenerController(ICovenantAPI api, IConfiguration configuration)
+		public HttpListenerController(ICovenantAPI api, Covenant.Models.Listeners.HttpListenerContext context)
         {
-            this.CovenantClient = api;
-            if (int.TryParse(configuration["ListenerId"], out int id))
-            {
-                this.Listener = this.CovenantClient.ApiListenersHttpByIdGet(id);
-                this.Profile = this.CovenantClient.ApiProfilesHttpByIdGet(this.Listener.ProfileId);
-            }
+            _client = api;
+            _context = context;
         }
 
-        private string GetCookie()
+        private string GetGuid()
 		{
-			return HttpContext.Request.Cookies
-                   .Where(C => this.Profile.HttpCookies.Contains(C.Key))
-                   .Select(C => C.Value)
-                   .FirstOrDefault();
-		}
+            foreach (HttpProfileHeader header in _context.HttpProfile.First().HttpRequestHeaders)
+            {
+                if (header.Name.Contains("{GUID}"))
+                {
+                    return ModelUtilities.Parse(HttpContext.Request.Headers.First(H => H.Value == header.Value).Key, header.Name.Replace("{GUID}", "{0}"))[0];
+                }
+                if (header.Value.Contains("{GUID}"))
+                {
+                    return ModelUtilities.Parse(HttpContext.Request.Headers[header.Name].First(), header.Value.Replace("{GUID}", "{0}"))[0];
+                }
+            }
+            string url = _context.HttpProfile.First().HttpUrls.FirstOrDefault(U => U.StartsWith(HttpContext.Request.Path, StringComparison.CurrentCultureIgnoreCase));
+            if (url != null && url.Contains("{GUID}"))
+            {
+                return ModelUtilities.Parse((HttpContext.Request.Path + HttpContext.Request.QueryString), url.Replace("{GUID}", "{0}"))[0];
+            }
+            return null;
+        }
 
         private void SetHeaders()
         {
-            foreach (HttpProfileHeader header in this.Profile.HttpResponseHeaders)
+            foreach (HttpProfileHeader header in _context.HttpProfile.First().HttpResponseHeaders)
             {
                 HttpContext.Response.Headers[header.Name] = header.Value;
             }
@@ -371,12 +394,12 @@ namespace Covenant.Controllers
 
         private string GetGetEmptyResponse()
         {
-            return String.Format(this.Profile.HttpGetResponse, "");
+            return String.Format(_context.HttpProfile.First().HttpGetResponse, "");
         }
 
         private string GetPostEmptyResponse()
         {
-            return String.Format(this.Profile.HttpPostResponse, "");
+            return String.Format(_context.HttpProfile.First().HttpPostResponse, "");
         }
 
         private ModelUtilities.GruntEncryptedMessage CreateMessageForGrunt(Grunt grunt, Grunt targetGrunt, GruntTaskingMessage taskingMessage)
@@ -386,13 +409,13 @@ namespace Covenant.Controllers
 
         private ModelUtilities.GruntEncryptedMessage CreateMessageForGrunt(Grunt grunt, Grunt targetGrunt, byte[] message)
         {
-            List<string> path = this.CovenantClient.ApiGruntsByIdPathByCidGet(grunt.Id ?? default, targetGrunt.Id ?? default).ToList();
+            List<string> path = _client.ApiGruntsByIdPathByCidGet(grunt.Id ?? default, targetGrunt.Id ?? default).ToList();
             path.Reverse();
             ModelUtilities.GruntEncryptedMessage finalMessage = null;
             ModelUtilities.GruntEncryptedMessageType messageType = ModelUtilities.GruntEncryptedMessageType.Tasking;
             foreach (string guid in path)
             {
-                Grunt thisGrunt = this.CovenantClient.ApiGruntsGuidByGuidGet(guid);
+                Grunt thisGrunt = _client.ApiGruntsGuidByGuidGet(guid);
                 finalMessage = ModelUtilities.GruntEncryptedMessage.Create(
                     thisGrunt,
                     message,
@@ -447,8 +470,14 @@ namespace Covenant.Controllers
                 case GruntTaskingType.SetConnectAttempts:
                     Message = tasking.Parameters[0];
                     break;
+                case GruntTaskingType.Connect:
+                    Message = tasking.Parameters[0] + "," + tasking.Parameters[1];
+                    break;
+                case GruntTaskingType.Disconnect:
+                    Message = tasking.Parameters[0];
+                    break;
                 default:
-                    Message = String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
+                    Message = string.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
                     break;
             }
             return new GruntTaskingMessage
@@ -467,26 +496,26 @@ namespace Covenant.Controllers
             try
             {
                 this.SetHeaders();
-                string cookie = this.GetCookie();
-                if (cookie == null)
+                string guid = this.GetGuid();
+                if (string.IsNullOrEmpty(guid))
                 {
-                    // Invalid CookieAuthKey. May not be legitimate Grunt request, respond Ok
+                    // Invalid GUID. May not be legitimate Grunt request, respond Ok
                     return Ok();
                 }
                 Grunt grunt = null;
                 try
                 {
-                    grunt = await this.CovenantClient.ApiGruntsCookiekeyByCookieGetAsync(System.Net.WebUtility.UrlEncode(cookie));
+                    grunt = await _client.ApiGruntsGuidByGuidGetAsync(guid);
                 }
                 catch (HttpOperationException) { grunt = null; }
                 if (grunt == null || grunt.Status != GruntStatus.Active)
                 {
-                    // Invalid CookieAuthKey. May not be legitimate Grunt request, respond Ok
+                    // Invalid GUID. May not be legitimate Grunt request, respond Ok
                     return Ok();
                 }
                 grunt.LastCheckIn = DateTime.UtcNow;
-                await this.CovenantClient.ApiGruntsPutAsync(grunt);
-                GruntTasking gruntTasking = (await this.CovenantClient.ApiGruntsByIdTaskingsSearchUninitializedGetAsync(grunt.Id ?? default)).FirstOrDefault();
+                await _client.ApiGruntsPutAsync(grunt);
+                GruntTasking gruntTasking = (await _client.ApiGruntsByIdTaskingsSearchUninitializedGetAsync(grunt.Id ?? default)).FirstOrDefault();
                 if (gruntTasking == null)
                 {
                     // No GruntTasking assigned. Respond with empty template
@@ -501,8 +530,8 @@ namespace Covenant.Controllers
 
                 gruntTasking.Status = GruntTaskingStatus.Tasked;
                 gruntTasking.TaskingTime = DateTime.UtcNow;
-                gruntTasking = await this.CovenantClient.ApiTaskingsPutAsync(gruntTasking);
-                gruntTasking.Grunt = gruntTasking.GruntId == grunt.Id ? grunt : await this.CovenantClient.ApiGruntsByIdGetAsync(gruntTasking.GruntId);
+                gruntTasking = await _client.ApiTaskingsPutAsync(gruntTasking);
+                gruntTasking.Grunt = gruntTasking.GruntId == grunt.Id ? grunt : await _client.ApiGruntsByIdGetAsync(gruntTasking.GruntId);
                 ModelUtilities.GruntEncryptedMessage message = null;
                 try
                 {
@@ -511,13 +540,13 @@ namespace Covenant.Controllers
                 catch (HttpOperationException)
                 {
                     gruntTasking.Status = GruntTaskingStatus.Aborted;
-                    await this.CovenantClient.ApiTaskingsPutAsync(gruntTasking);
+                    await _client.ApiTaskingsPutAsync(gruntTasking);
                     return NotFound();
                 }
                 // Transform response
-                string transformed = this.ModelUtilities.ProfileTransform(this.Profile, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+                string transformed = this._utilities.ProfileTransform(_context.HttpProfile.First(), Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
                 // Format transformed response
-                string response = String.Format(this.Profile.HttpPostResponse, transformed);
+                string response = String.Format(_context.HttpProfile.First().HttpPostResponse, transformed);
                 return Ok(response);
             }
             catch (HttpOperationException)
@@ -543,8 +572,8 @@ namespace Covenant.Controllers
                     try
                     {
                         string body = reader.ReadToEnd();
-                        string ExtractedMessage = body.ParseExact(this.Profile.HttpPostRequest).FirstOrDefault();
-                        string inverted = Common.CovenantEncoding.GetString(this.ModelUtilities.ProfileInvert(Profile, ExtractedMessage));
+                        string ExtractedMessage = body.ParseExact(_context.HttpProfile.First().HttpPostRequest).FirstOrDefault();
+                        string inverted = Common.CovenantEncoding.GetString(this._utilities.ProfileInvert(_context.HttpProfile.First(), ExtractedMessage));
                         message = JsonConvert.DeserializeObject<ModelUtilities.GruntEncryptedMessage>(inverted);
                     }
                     catch (Exception)
@@ -553,12 +582,12 @@ namespace Covenant.Controllers
                         return NotFound();
                     }
 
-                    string cookie = this.GetCookie();
+                    string guid = this.GetGuid();
                     Grunt egressGrunt = null;
                     Grunt targetGrunt = null;
                     try
                     {
-                        egressGrunt = cookie == null ? null : await this.CovenantClient.ApiGruntsCookiekeyByCookieGetAsync(System.Net.WebUtility.UrlEncode(cookie));
+                        egressGrunt = guid == null ? null : await _client.ApiGruntsGuidByGuidGetAsync(guid);
                     }
                     catch (HttpOperationException)
                     {
@@ -566,7 +595,7 @@ namespace Covenant.Controllers
                     }
                     try
                     {
-                        targetGrunt = await this.CovenantClient.ApiGruntsGuidByGuidGetAsync(message.GUID);
+                        targetGrunt = await _client.ApiGruntsGuidByGuidGetAsync(message.GUID);
                     }
                     catch (HttpOperationException)
                     {
@@ -574,7 +603,7 @@ namespace Covenant.Controllers
                         // Stage0 Guid is OriginalServerGuid + Guid
                         if (message.GUID.Length == 20)
                         {
-                            Grunt originalGeneratedGrunt = await this.CovenantClient.ApiGruntsOriginalguidByServerguidGetAsync(message.GUID.Substring(0, 10));
+                            Grunt originalGeneratedGrunt = await _client.ApiGruntsOriginalguidByServerguidGetAsync(message.GUID.Substring(0, 10));
                             return await this.PostStage0(egressGrunt, originalGeneratedGrunt, message);
                         }
                         return NotFound();
@@ -591,7 +620,7 @@ namespace Covenant.Controllers
                         case GruntStatus.Stage2:
                             return await this.RegisterGrunt(egressGrunt, targetGrunt, message);
                         case GruntStatus.Active:
-                            return await this.PostTask(egressGrunt, targetGrunt, message);
+                            return await this.PostTask(egressGrunt, targetGrunt, message, guid);
                         default:
                             return NotFound();
                     }
@@ -604,12 +633,11 @@ namespace Covenant.Controllers
         }
         
         // post task
-		private async Task<ActionResult> PostTask(Grunt egressGrunt, Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage outputMessage)
+		private async Task<ActionResult> PostTask(Grunt egressGrunt, Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage outputMessage, string guid)
         {
-            string cookie = this.GetCookie();
-            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Active || egressGrunt == null || egressGrunt.CookieAuthKey != cookie)
+            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Active || egressGrunt == null || egressGrunt.Guid != guid)
             {
-                // Invalid CookieAuthKey. May not be legitimate Grunt request, respond NotFound
+                // Invalid GUID. May not be legitimate Grunt request, respond NotFound
                 return NotFound();
             }
 
@@ -622,7 +650,7 @@ namespace Covenant.Controllers
             GruntTasking gruntTasking;
             try
             {
-                gruntTasking = await this.CovenantClient.ApiGruntsTaskingsByTaskingnameGetAsync(TaskName);
+                gruntTasking = await _client.ApiGruntsTaskingsByTaskingnameGetAsync(TaskName);
             }
             catch (HttpOperationException)
             {
@@ -640,7 +668,7 @@ namespace Covenant.Controllers
                 // Invalid signature. Almost certainly not a legitimate Grunt request, respond NotFound
                 return NotFound();
             }
-            string taskOutput = Common.CovenantEncoding.GetString(ModelUtilities.GruntSessionDecrypt(targetGrunt, outputMessage));
+            string taskOutput = Common.CovenantEncoding.GetString(_utilities.GruntSessionDecrypt(targetGrunt, outputMessage));
             gruntTasking.GruntCommand.CommandOutput = new CommandOutput
             {
                 Id = 0,
@@ -650,10 +678,10 @@ namespace Covenant.Controllers
             gruntTasking.GruntCommand.CommandOutputId = 0;
             gruntTasking.Status = GruntTaskingStatus.Completed;
             gruntTasking.CompletionTime = DateTime.UtcNow;
-            gruntTasking.GruntCommand = await this.CovenantClient.ApiCommandsPutAsync(gruntTasking.GruntCommand);
-            await this.CovenantClient.ApiTaskingsPutAsync(gruntTasking);
+            gruntTasking.GruntCommand = await _client.ApiCommandsPutAsync(gruntTasking.GruntCommand);
+            await _client.ApiTaskingsPutAsync(gruntTasking);
             targetGrunt.LastCheckIn = DateTime.UtcNow;
-            await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
+            await _client.ApiGruntsPutAsync(targetGrunt);
             return Ok();
         }
 
@@ -687,14 +715,14 @@ namespace Covenant.Controllers
                     DotNetFrameworkVersion = targetGrunt.DotNetFrameworkVersion,
                     LastCheckIn = DateTime.UtcNow
                 };
-                targetGrunt = await this.CovenantClient.ApiGruntsPostAsync(tempModel);
+                targetGrunt = await _client.ApiGruntsPostAsync(tempModel);
             }
             else
             {
                 targetGrunt.Status = GruntStatus.Stage0;
                 targetGrunt.Guid = guid;
                 targetGrunt.LastCheckIn = DateTime.UtcNow;
-                targetGrunt = await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
+                targetGrunt = await _client.ApiGruntsPutAsync(targetGrunt);
             }
             if (!egressGruntExists)
             {
@@ -710,12 +738,12 @@ namespace Covenant.Controllers
             Aes newAesKey = Aes.Create();
             newAesKey.GenerateKey();
             targetGrunt.GruntNegotiatedSessionKey = Convert.ToBase64String(newAesKey.Key);
-            await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
+            await _client.ApiGruntsPutAsync(targetGrunt);
 
             if (egressGruntExists)
             {
                 // Add this as Child grunt to Grunt that connects it
-                List<GruntTasking> taskings = this.CovenantClient.ApiTaskingsGet().ToList();
+                List<GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
                 // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
                 GruntTasking connectTasking = taskings.Where(GT => GT.Type == GruntTaskingType.Connect && GT.Status == GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
                 if (connectTasking == null)
@@ -724,9 +752,9 @@ namespace Covenant.Controllers
                 }
                 GruntTaskingMessage tmessage = this.GetGruntTaskingMessage(connectTasking, targetGrunt.DotNetFrameworkVersion);
                 targetGrunt.Hostname = tmessage.Message.Split(",")[0];
-                await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
+                await _client.ApiGruntsPutAsync(targetGrunt);
                 connectTasking.Status = GruntTaskingStatus.Completed;
-                await this.CovenantClient.ApiTaskingsPutAsync(connectTasking);
+                await _client.ApiTaskingsPutAsync(connectTasking);
             }
 
             byte[] rsaEncryptedBytes = EncryptUtilities.GruntRSAEncrypt(targetGrunt, Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey));
@@ -740,9 +768,9 @@ namespace Covenant.Controllers
                 return NotFound();
             }
             // Transform response
-            string transformed = this.ModelUtilities.ProfileTransform(this.Profile, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+            string transformed = this._utilities.ProfileTransform(_context.HttpProfile.First(), Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
-            string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            string response = String.Format(_context.HttpProfile.First().HttpPostResponse, transformed);
             // Stage0Response: "Id,Name,Base64(IV),Base64(AES(RSA(SessionKey))),Base64(HMAC)"
             return Ok(response);
         }
@@ -758,7 +786,7 @@ namespace Covenant.Controllers
             {
                 egressGrunt = targetGrunt;
             }
-            byte[] challenge1 = ModelUtilities.GruntSessionDecrypt(targetGrunt, gruntStage1Response);
+            byte[] challenge1 = _utilities.GruntSessionDecrypt(targetGrunt, gruntStage1Response);
             byte[] challenge2 = new byte[4];
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
@@ -768,7 +796,7 @@ namespace Covenant.Controllers
             targetGrunt.GruntChallenge = Convert.ToBase64String(challenge2);
             targetGrunt.Status = GruntStatus.Stage1;
             targetGrunt.LastCheckIn = DateTime.UtcNow;
-            await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
+            await _client.ApiGruntsPutAsync(targetGrunt);
 
             ModelUtilities.GruntEncryptedMessage message;
             try
@@ -781,9 +809,9 @@ namespace Covenant.Controllers
             }
 
             // Transform response
-            string transformed = this.ModelUtilities.ProfileTransform(this.Profile, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+            string transformed = this._utilities.ProfileTransform(_context.HttpProfile.First(), Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
-            string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            string response = String.Format(_context.HttpProfile.First().HttpPostResponse, transformed);
             // Stage1Response: "Base64(IV),Base64(AES(challenge1 + challenge2)),Base64(HMAC)"
             return Ok(response);
         }
@@ -799,7 +827,7 @@ namespace Covenant.Controllers
             {
                 egressGrunt = targetGrunt;
             }
-            byte[] challenge2test = ModelUtilities.GruntSessionDecrypt(targetGrunt, gruntStage2Response);
+            byte[] challenge2test = _utilities.GruntSessionDecrypt(targetGrunt, gruntStage2Response);
             if (targetGrunt.GruntChallenge != Convert.ToBase64String(challenge2test))
             {
                 // Always return NotFound, don't give away unnecessary info
@@ -807,8 +835,8 @@ namespace Covenant.Controllers
             }
             targetGrunt.Status = GruntStatus.Stage2;
             targetGrunt.LastCheckIn = DateTime.UtcNow;
-            await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
-            string GruntExecutorAssembly = this.ModelUtilities.ListenerCompileGruntExecutorCode(this.Listener, targetGrunt, this.Profile);
+            await _client.ApiGruntsPutAsync(targetGrunt);
+            string GruntExecutorAssembly = this._utilities.ListenerCompileGruntExecutorCode(_context.HttpListener.First(), targetGrunt, _context.HttpProfile.First());
 
             ModelUtilities.GruntEncryptedMessage message;
             try
@@ -821,9 +849,9 @@ namespace Covenant.Controllers
             }
 
             // Transform response
-            string transformed = this.ModelUtilities.ProfileTransform(this.Profile, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+            string transformed = this._utilities.ProfileTransform(_context.HttpProfile.First(), Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
             // Format transformed response
-            string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            string response = String.Format(_context.HttpProfile.First().HttpPostResponse, transformed);
             // returns: "Base64(IV),Base64(AES(GruntExecutorAssembly)),Base64(HMAC)"
             return Ok(response);
         }
@@ -839,7 +867,7 @@ namespace Covenant.Controllers
             {
                 egressGrunt = targetGrunt;
             }
-			string message = Common.CovenantEncoding.GetString(ModelUtilities.GruntSessionDecrypt(targetGrunt, gruntMessage));
+			string message = Common.CovenantEncoding.GetString(_utilities.GruntSessionDecrypt(targetGrunt, gruntMessage));
 			// todo: try/catch on deserialize?
 			Grunt grunt = JsonConvert.DeserializeObject<Grunt>(message);
 
@@ -853,11 +881,11 @@ namespace Covenant.Controllers
 			targetGrunt.Process = grunt.Process;
             targetGrunt.LastCheckIn = DateTime.UtcNow;
 
-            await this.CovenantClient.ApiGruntsPutAsync(targetGrunt);
+            await _client.ApiGruntsPutAsync(targetGrunt);
 
             GruntTaskingMessage tasking = new GruntTaskingMessage
             {
-                Message = targetGrunt.CookieAuthKey,
+                Message = targetGrunt.Guid,
                 Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
                 Type = GruntTaskingType.Jobs,
                 Token = false
@@ -874,9 +902,9 @@ namespace Covenant.Controllers
             }
 
             // Transform response
-            string transformed = this.ModelUtilities.ProfileTransform(this.Profile, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(responseMessage)));
+            string transformed = this._utilities.ProfileTransform(_context.HttpProfile.First(), Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(responseMessage)));
             // Format transformed response
-            string response = String.Format(this.Profile.HttpPostResponse, transformed);
+            string response = String.Format(_context.HttpProfile.First().HttpPostResponse, transformed);
             return Ok(response);
         }
     }

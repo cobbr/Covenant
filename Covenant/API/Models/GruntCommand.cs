@@ -23,7 +23,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntCommand class.
         /// </summary>
-        public GruntCommand(string command, System.DateTime commandTime, CovenantUser user, int? id = default(int?), int? commandOutputId = default(int?), CommandOutput commandOutput = default(CommandOutput), int? gruntId = default(int?), int? gruntTaskingId = default(int?))
+        public GruntCommand(string command, System.DateTime commandTime, CovenantUser user, int? id = default(int?), int? commandOutputId = default(int?), CommandOutput commandOutput = default(CommandOutput), int? gruntId = default(int?), Grunt grunt = default(Grunt), int? gruntTaskingId = default(int?), GruntTasking gruntTasking = default(GruntTasking))
         {
             Id = id;
             Command = command;
@@ -32,7 +32,9 @@ namespace Covenant.API.Models
             CommandOutput = commandOutput;
             User = user;
             GruntId = gruntId;
+            Grunt = grunt;
             GruntTaskingId = gruntTaskingId;
+            GruntTasking = gruntTasking;
             CustomInit();
         }
 
@@ -78,8 +80,18 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "grunt")]
+        public Grunt Grunt { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "gruntTaskingId")]
         public int? GruntTaskingId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntTasking")]
+        public GruntTasking GruntTasking { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -100,6 +112,14 @@ namespace Covenant.API.Models
             if (CommandOutput != null)
             {
                 CommandOutput.Validate();
+            }
+            if (Grunt != null)
+            {
+                Grunt.Validate();
+            }
+            if (GruntTasking != null)
+            {
+                GruntTasking.Validate();
             }
         }
     }

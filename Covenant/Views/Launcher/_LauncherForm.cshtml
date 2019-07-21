@@ -1,4 +1,5 @@
-﻿@using Covenant.Models.Listeners
+﻿@using Covenant.Core
+@using Covenant.Models.Listeners
 @using Covenant.Models.Launchers
 @model Launcher
 @{
@@ -65,13 +66,17 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-4">
             <label asp-for="@Model.ConnectAttempts"></label>
             <input asp-for="@Model.ConnectAttempts" value="@Model.ConnectAttempts" class="form-control">
         </div>
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-4">
             <label asp-for="@Model.KillDate"></label>
             <input id="KillDate" name="KillDate" value="@Model.KillDate" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+            <label asp-for="DotNetFrameworkVersion"></label>
+            <select asp-for="DotNetFrameworkVersion" asp-items="Html.GetEnumSelectList<Common.DotNetVersion>()" class="form-control"></select>
         </div>
     </div>
     <input asp-for="@Model.LauncherString" value="@Model.LauncherString" class="form-control" type="hidden">

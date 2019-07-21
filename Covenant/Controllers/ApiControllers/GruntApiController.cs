@@ -129,27 +129,6 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET api/grunts/cookiekey/{cookie}
-        // <summary>
-        // Get a Grunt by CookieAuthKey
-        // </summary>
-        [HttpGet("cookiekey/{cookie}", Name = "GetGruntByCookieAuthKey")]
-        public async Task<ActionResult<Grunt>> GetGruntByCookieAuthKey(string cookie)
-        {
-            try
-            {
-                return await _context.GetGruntByCookieAuthKey(System.Net.WebUtility.UrlDecode(cookie));
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
         // GET api/grunts/{id}/path/{cid}
         // <summary>
         // Get a path to a child Grunt by id

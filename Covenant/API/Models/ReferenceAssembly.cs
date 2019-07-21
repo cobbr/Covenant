@@ -7,6 +7,8 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class ReferenceAssembly
@@ -24,12 +26,14 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="dotNetVersion">Possible values include: 'Net40',
         /// 'Net35', 'NetCore21'</param>
-        public ReferenceAssembly(int? id = default(int?), string name = default(string), string location = default(string), DotNetVersion? dotNetVersion = default(DotNetVersion?))
+        public ReferenceAssembly(int? id = default(int?), string name = default(string), string location = default(string), DotNetVersion? dotNetVersion = default(DotNetVersion?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<GruntTask> gruntTasks = default(IList<GruntTask>))
         {
             Id = id;
             Name = name;
             Location = location;
             DotNetVersion = dotNetVersion;
+            ReferenceSourceLibraries = referenceSourceLibraries;
+            GruntTasks = gruntTasks;
             CustomInit();
         }
 
@@ -58,6 +62,16 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion? DotNetVersion { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "referenceSourceLibraries")]
+        public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntTasks")]
+        public IList<GruntTask> GruntTasks { get; private set; }
 
     }
 }

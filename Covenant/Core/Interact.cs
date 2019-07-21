@@ -152,7 +152,7 @@ namespace Covenant.Core
 
         public async Task<GruntCommand> Input(CovenantUser user, Grunt grunt, string UserInput)
         {
-            GruntCommand GruntCommand = new GruntCommand
+            GruntCommand GruntCommand = await _context.CreateGruntCommand(new GruntCommand
             {
                 Command = GetCommandFromInput(UserInput),
                 CommandTime = DateTime.UtcNow,
@@ -161,12 +161,7 @@ namespace Covenant.Core
                 Grunt = grunt,
                 CommandOutputId = 0,
                 CommandOutput = new CommandOutput()
-            };
-            try
-            {
-                await _context.CreateGruntCommand(GruntCommand, _grunthub);
-            }
-            catch (Exception) { }
+            }, _grunthub);
 
             List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
             GruntTask commandTask = null;
@@ -189,7 +184,7 @@ namespace Covenant.Core
                     };
                 }
             }
-            catch (Exception) { }
+            catch (ControllerNotFoundException) { }
 
             string output = "";
             if (parameters.FirstOrDefault().Value.ToLower() == "show")
@@ -206,7 +201,7 @@ namespace Covenant.Core
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "set")
             {
-                output = await Set(user, grunt, parameters);
+                output = await Set(grunt, GruntCommand, parameters);
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "history")
             {
@@ -431,7 +426,7 @@ public static class Task
             return "";
         }
 
-        public async Task<string> Set(CovenantUser user, Grunt grunt, List<ParsedParameter> parameters)
+        public async Task<string> Set(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
         {
             if (parameters.Count != 3)
             {
@@ -440,19 +435,58 @@ public static class Task
 
             if (int.TryParse(parameters[2].Value, out int n))
             {
+                GruntTask setTask = await _context.GetGruntTaskByName("Set");
                 if (parameters[1].Value.Equals("delay", StringComparison.OrdinalIgnoreCase))
                 {
                     grunt.Delay = n;
+                    await _context.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetDelay,
+                        Parameters = new List<string> { grunt.Delay.ToString() },
+                        GruntCommand = command,
+                        GruntCommandId = command.Id
+                    });
                 }
                 else if (parameters[1].Value.Equals("jitterpercent", StringComparison.OrdinalIgnoreCase))
                 {
                     grunt.JitterPercent = n;
+                    await _context.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetJitter,
+                        Parameters = new List<string> { grunt.JitterPercent.ToString() },
+                        GruntCommand = command,
+                        GruntCommandId = command.Id
+                    });
                 }
                 else if (parameters[1].Value.Equals("connectattempts", StringComparison.OrdinalIgnoreCase))
                 {
                     grunt.ConnectAttempts = n;
+                    await _context.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetConnectAttempts,
+                        Parameters = new List<string> { grunt.ConnectAttempts.ToString() },
+                        GruntCommand = command,
+                        GruntCommandId = command.Id
+                    });
                 }
-                await _context.EditGrunt(grunt, user, _grunthub);
                 return "";
             }
             return EliteConsole.PrintFormattedErrorLine("Usage: Set (Delay | JitterPercent | ConnectAttempts) <value>");

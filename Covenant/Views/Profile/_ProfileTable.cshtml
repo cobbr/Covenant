@@ -26,8 +26,10 @@
         </tbody>
     </table>
 </div>
-
-<a asp-controller="Profile" asp-action="Create" class="btn btn-primary">
-    <span data-feather="plus"></span>
-    Create
-</a>
+@if (User.IsInRole("Administrator"))
+{
+    <a asp-controller="Profile" asp-action="Create" class="btn btn-primary">
+        <span data-feather="plus"></span>
+        Create
+    </a>
+}
