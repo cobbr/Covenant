@@ -1530,6 +1530,25 @@ namespace Covenant.Core
                                 DisplayInCommand = false
                             }
                         }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Help",
+                        AlternateNames = new List<string>(),
+                        Description = "Show the help menu.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 74,
+                                Name = "TaskName",
+                                Description = "The GruntTask name to retrieve help information for.",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
                     }
                 };
                 await context.GruntTasks.AddRangeAsync(GruntTasks);

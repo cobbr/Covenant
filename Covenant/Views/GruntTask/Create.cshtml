@@ -145,11 +145,11 @@
             var newitem = '<div class="form-row option-row mt-2">' +
                 '    <input id="Options_' + num + '__Id" name="Options[' + num + '].Id" value="0" class="form-control" type="hidden" readonly>' +
                 '    <input id="Options_' + num + '__GruntTaskId" name="Options[' + num + '].GruntTaskId" value="' + modelId + '" class="form-control" type="hidden" readonly>' +
-                '    <input id="Options_' + num + '__Value" name="Options[' + num + '].Value" class="form-control">' +
+                '    <input id="Options_' + num + '__Value" name="Options[' + num + '].Value" class="form-control" type="hidden">' +
                 '    <div class="col-md-4">' +
                 '        <div class="row">' +
                 '            <div class="form-group col-auto">' +
-                '                <label for="Options_' + num + '__Name">Name</label>' +
+                '                <label for="Options_' + num + '__Name"><b>' + num + '</b>. Name</label>' +
                 '                <input id="Options_' + num + '__Name" name="Options[' + num + '].Name" class="form-control">' +
                 '            </div>' +
                 '            <div class="form-check form-check-inline mt-2">' +
@@ -186,6 +186,10 @@
                     $(this).find("label").each(function () {
                         var currForAttr = $(this).attr("for");
                         $(this).attr("for", currForAttr.replace(currNum, parseInt(currNum) - 1));
+                    });
+                    $(this).find("b").each(function () {
+                        console.log($(this).text());
+                        $(this).text(parseInt($(this).text()) - 1);
                     });
                 }
             });

@@ -30,14 +30,15 @@ namespace Covenant.Controllers
         }
 
         // GET: /covenantuser/login
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         // POST: /covenantuser/login
         [HttpPost]
-        public async Task<IActionResult> Login(CovenantUserLogin login)
+        public async Task<IActionResult> Login(CovenantUserLogin login, string returnUrl = "")
         {
             try
             {
@@ -46,6 +47,10 @@ namespace Covenant.Controllers
                 {
                     ModelState.AddModelError(string.Empty, "Incorrect username or password");
                     return View();
+                }
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
                 }
                 return RedirectToAction("Index", "Home");
             }

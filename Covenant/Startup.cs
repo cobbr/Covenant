@@ -65,7 +65,7 @@ namespace Covenant
             services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(120);
 
                 options.LoginPath = "/CovenantUser/Login";
                 options.LogoutPath = "/CovenantUser/Logout";

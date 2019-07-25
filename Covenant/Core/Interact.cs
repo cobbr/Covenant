@@ -191,6 +191,10 @@ namespace Covenant.Core
             {
                 output = await Show(grunt);
             }
+            else if (parameters.FirstOrDefault().Value.ToLower() == "help")
+            {
+                output = await Help(parameters);
+            }
             else if (parameters.FirstOrDefault().Value.ToLower() == "sharpshell")
             {
                 output = await SharpShell(grunt, GruntCommand, parameters);
@@ -333,6 +337,48 @@ namespace Covenant.Core
                 String.Join(",", tasks.Where(GT => GT.Status == GruntTaskingStatus.Completed).Select(T => T.Name))
             });
             return menu.Print();
+        }
+
+        public async Task<string> Help(List<ParsedParameter> parameters)
+        {
+            string Name = "Help";
+            if ((parameters.Count() != 1 && parameters.Count() != 2 ) || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
+            {
+                StringBuilder toPrint1 = new StringBuilder();
+                toPrint1.Append(EliteConsole.PrintFormattedErrorLine("Usage: Help <task_name>"));
+                return toPrint1.ToString();
+            }
+            StringBuilder toPrint = new StringBuilder();
+            foreach (GruntTask t in await _context.GetGruntTasks())
+            {
+                if (parameters.Count() == 1)
+                {
+                    toPrint.AppendLine($"{t.Name}\t\t{t.Description}");
+                }
+                else if(parameters.Count() == 2 && t.Name.Equals(parameters[1].Value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    string usage = t.Name;
+                    t.Options.ForEach(O =>
+                    {
+                        usage += O.Optional ? $" [ <{O.Name.Replace(" ", "_").ToLower()}> ]" : $" <{O.Name.Replace(" ", "_").ToLower()}>";
+                    });
+                    string libraries = string.Join(",", t.ReferenceSourceLibraries.Select(RSL => RSL.Name));
+                    string assemblies = string.Join(",", t.ReferenceAssemblies.Select(RA => RA.Name));
+                    string resources = string.Join(",", t.EmbeddedResources.Select(ER => ER.Name));
+                    toPrint.AppendLine($"Name: {t.Name}");
+                    toPrint.AppendLine($"Description: {t.Description}");
+                    toPrint.AppendLine($"Usage: {usage}");
+                    toPrint.AppendLine($"ReferenceSourceLibraries: " + (string.IsNullOrEmpty(libraries) ? "None" : libraries));
+                    toPrint.AppendLine($"ReferenceAssemblies: " + (string.IsNullOrEmpty(assemblies) ? "None" : assemblies));
+                    toPrint.AppendLine($"EmbeddedResources: " + (string.IsNullOrEmpty(resources) ? "None" : resources));
+                    if (!string.IsNullOrEmpty(t.Help))
+                    {
+                        toPrint.AppendLine($"Help: {t.Help}");
+                    }
+                    break;
+                }
+            }
+            return toPrint.ToString();
         }
 
         public async Task<GruntTasking> StartTask(Grunt grunt, GruntTask task, GruntCommand command)
