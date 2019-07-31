@@ -105,14 +105,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="API\openapi12.json" />
-    <Content Remove="wwwroot\images\covenant revisi - white - edited.png" />
-    <Content Remove="wwwroot\images\covenant-white.png" />
-    <Content Remove="wwwroot\images\covenant - edited.png" />
-    <Content Remove="wwwroot\images\covenant-bluewhite.png" />
-    <Content Remove="API\openapi17.json" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
