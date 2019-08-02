@@ -1558,9 +1558,9 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PrivExchange" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 75,
 				Name = "EWSUri",
@@ -1570,17 +1570,17 @@ namespace Covenant.Core
                                 Optional = false,
                                 DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 76,
                                 Name = "RelayUri",
                                 Description = "The URI of the external relay of the Exchange authentication.",
                                 Value = "https://relay.example.local:443/relay",
-                                SuggestedValues = new List<string(),
+                                SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 77,
 				Name = "ExchangeVersion",
@@ -1598,9 +1598,9 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Hijacks a CLSID key to execute a payload for persistence.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PersistCOMHijack" + ".task")),
-                        Options = new List<GruntTask.GruntTaskOption>
+                        Options = new List<GruntTaskOption>
                         {
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 78,
 			        Name = "CLSID",
@@ -1610,7 +1610,7 @@ namespace Covenant.Core
                                 Optional = false,
                                 DisplayInCommand = true
                             },
-                            new GruntTask.GruntTaskOption
+                            new GruntTaskOption
                             {
                                 Id = 79,
 			        Name = "ExecutablePath",
@@ -1720,8 +1720,8 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35 },
-    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40 }
+    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) }
                 );
             }
         }
