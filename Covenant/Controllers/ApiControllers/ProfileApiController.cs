@@ -6,10 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
 using Covenant.Models;
+using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
@@ -20,10 +22,12 @@ namespace Covenant.Controllers
     public class ProfileApiController : Controller
     {
         private readonly CovenantContext _context;
+        private readonly UserManager<CovenantUser> _userManager;
 
-        public ProfileApiController(CovenantContext context)
+        public ProfileApiController(CovenantContext context, UserManager<CovenantUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/profiles
@@ -55,6 +59,10 @@ namespace Covenant.Controllers
             {
                 return BadRequest(e.Message);
             }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST api/profiles
@@ -67,7 +75,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                Profile createdProfile = await _context.CreateProfile(profile);
+                Profile createdProfile = await _context.CreateProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return CreatedAtRoute(nameof(GetProfile), new { id = createdProfile.Id }, createdProfile);
             }
             catch (ControllerNotFoundException e)
@@ -77,6 +85,10 @@ namespace Covenant.Controllers
             catch (ControllerBadRequestException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
             }
         }
 
@@ -89,7 +101,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditProfile(profile);
+                return await _context.EditProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
             }
             catch (ControllerNotFoundException e)
             {
@@ -98,6 +110,10 @@ namespace Covenant.Controllers
             catch (ControllerBadRequestException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
             }
         }
 
@@ -121,6 +137,10 @@ namespace Covenant.Controllers
             catch (ControllerBadRequestException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
             }
         }
 
@@ -153,6 +173,10 @@ namespace Covenant.Controllers
             {
                 return BadRequest(e.Message);
             }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
         }
 
         // POST api/profiles/http
@@ -165,7 +189,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                HttpProfile createdProfile = await _context.CreateHttpProfile(profile);
+                HttpProfile createdProfile = await _context.CreateHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return CreatedAtRoute(nameof(GetHttpProfile), new { id = createdProfile.Id }, createdProfile);
             }
             catch (ControllerNotFoundException e)
@@ -175,6 +199,10 @@ namespace Covenant.Controllers
             catch (ControllerBadRequestException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
             }
         }
 
@@ -187,7 +215,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHttpProfile(profile);
+                return await _context.EditHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
             }
             catch (ControllerNotFoundException e)
             {
@@ -196,6 +224,10 @@ namespace Covenant.Controllers
             catch (ControllerBadRequestException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
             }
         }
 
@@ -219,6 +251,10 @@ namespace Covenant.Controllers
             catch (ControllerBadRequestException e)
             {
                 return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
             }
         }
     }

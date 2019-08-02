@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Newtonsoft.Json;
@@ -10,6 +11,7 @@ namespace Covenant.Models.Grunts
 {
     public class ReferenceAssembly
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Location { get; set; }
@@ -19,10 +21,8 @@ namespace Covenant.Models.Grunts
         private List<GruntTaskReferenceAssembly> GruntTaskReferenceAssemblies { get; set; } = new List<GruntTaskReferenceAssembly>();
 
         [NotMapped]
-        [JsonIgnore]
         public List<ReferenceSourceLibrary> ReferenceSourceLibraries => ReferenceSourceLibraryReferenceAssemblies.Select(e => e.ReferenceSourceLibrary).ToList();
         [NotMapped]
-        [JsonIgnore]
         public List<GruntTask> GruntTasks => GruntTaskReferenceAssemblies.Select(e => e.GruntTask).ToList();
     }
 
@@ -36,10 +36,8 @@ namespace Covenant.Models.Grunts
         private List<GruntTaskEmbeddedResource> GruntTaskEmbeddedResources { get; set; } = new List<GruntTaskEmbeddedResource>();
 
         [NotMapped]
-        [JsonIgnore]
         public List<ReferenceSourceLibrary> ReferenceSourceLibraries => ReferenceSourceLibraryEmbeddedResources.Select(e => e.ReferenceSourceLibrary).ToList();
         [NotMapped]
-        [JsonIgnore]
         public List<GruntTask> GruntTasks => GruntTaskEmbeddedResources.Select(e => e.GruntTask).ToList();
     }
 
@@ -94,7 +92,6 @@ namespace Covenant.Models.Grunts
         [NotMapped]
         public List<EmbeddedResource> EmbeddedResources => ReferenceSourceLibraryEmbeddedResources.Select(e => e.EmbeddedResource).ToList();
         [NotMapped]
-        [JsonIgnore]
         public List<GruntTask> GruntTasks => GruntTaskReferenceSourceLibraries.Select(e => e.GruntTask).ToList();
     }
 

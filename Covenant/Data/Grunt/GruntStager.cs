@@ -38,8 +38,8 @@ namespace GruntStager
                 // {{REPLACE_PROFILE_HTTP_HEADERS}}
                 List<string> ProfileHttpUrls = new List<string>();
                 // {{REPLACE_PROFILE_HTTP_URLS}}
-                string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}";
-                string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}";
+                string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
+                string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
                 string CommType = @"{{REPLACE_COMM_TYPE}}";
                 bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
                 bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");

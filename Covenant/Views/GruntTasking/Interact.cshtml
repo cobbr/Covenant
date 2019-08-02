@@ -33,6 +33,10 @@
         <select asp-for="Status" asp-items="Html.GetEnumSelectList<GruntTaskingStatus>()" class="form-control" disabled></select>
     </div>
     <div class="form-group col-md-4">
+        <label for="GruntCommand_CommandTime">CommandTime</label>
+        <input id="GruntCommand_CommandTime" name="GruntCommand_CommandTime" value="@Html.DisplayFor(model => model.GruntCommand.CommandTime)" class="form-control" readonly>
+    </div>
+    <div class="form-group col-md-4">
         <label asp-for="Type"></label>
         <select asp-for="Type" asp-items="Html.GetEnumSelectList<GruntTaskingType>()" class="form-control" disabled></select>
     </div>
@@ -55,8 +59,8 @@
     </div>
 }
 <div class="form-group">
-    <label asp-for="GruntCommand.CommandOutput"></label>
-    <textarea asp-for="GruntCommand.CommandOutput" value="@Model.GruntCommand.CommandOutput" rows="20" class="form-control" readonly></textarea>
+    <label asp-for="GruntCommand.CommandOutput.Output"></label>
+    <textarea asp-for="GruntCommand.CommandOutput.Output" value="@Model.GruntCommand.CommandOutput.Output" rows="20" class="form-control" readonly></textarea>
 </div>
 
 @section Scripts {

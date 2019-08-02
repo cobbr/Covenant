@@ -40,7 +40,7 @@ namespace Covenant.Controllers
         // GET: /grunt/interact/{id}
         public async Task<IActionResult> Interact(int id)
         {
-            const int DISPLAY_LAST = 30;
+            const int DISPLAY_LAST = 0;
             try
             {
                 List<GruntCommand> allCommands = await _context.GruntCommands

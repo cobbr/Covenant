@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 using Covenant.Core;
 using Covenant.Models;
@@ -20,12 +24,14 @@ namespace Covenant.Controllers
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens;
 
-        public ListenerController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration)
+        public ListenerController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             _context = context;
             _userManager = userManager;
             _configuration = configuration;
+            _ListenerCancellationTokens = ListenerCancellationTokens;
         }
 
         // GET: /listener/
@@ -65,7 +71,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                listener = await _context.CreateHttpListener(_userManager, _configuration, listener);
+                listener = await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -105,8 +111,9 @@ namespace Covenant.Controllers
                 {
                     return RedirectToAction(nameof(Index));
                 }
+                _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Active;
-                await _context.EditHttpListener(listener);
+                await _context.EditHttpListener(listener, _ListenerCancellationTokens);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -126,8 +133,25 @@ namespace Covenant.Controllers
                 {
                     return RedirectToAction(nameof(Index));
                 }
+                _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Stopped;
-                await _context.EditHttpListener(listener);
+                await _context.EditHttpListener(listener, _ListenerCancellationTokens);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: /listener/delete/{id}
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                HttpListener listener = await _context.GetHttpListener(id);
+                await _context.DeleteListener(listener.Id, _ListenerCancellationTokens);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

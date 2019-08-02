@@ -25,10 +25,9 @@ namespace Covenant.API.Models
         /// Initializes a new instance of the HttpProfile class.
         /// </summary>
         /// <param name="type">Possible values include: 'HTTP'</param>
-        public HttpProfile(IList<string> httpUrls = default(IList<string>), IList<string> httpCookies = default(IList<string>), string httpMessageTransform = default(string), IList<HttpProfileHeader> httpRequestHeaders = default(IList<HttpProfileHeader>), IList<HttpProfileHeader> httpResponseHeaders = default(IList<HttpProfileHeader>), string httpPostRequest = default(string), string httpGetResponse = default(string), string httpPostResponse = default(string), int? id = default(int?), string name = default(string), string description = default(string), ProfileType? type = default(ProfileType?))
+        public HttpProfile(IList<string> httpUrls = default(IList<string>), string httpMessageTransform = default(string), IList<HttpProfileHeader> httpRequestHeaders = default(IList<HttpProfileHeader>), IList<HttpProfileHeader> httpResponseHeaders = default(IList<HttpProfileHeader>), string httpPostRequest = default(string), string httpGetResponse = default(string), string httpPostResponse = default(string), int? id = default(int?), string name = default(string), string description = default(string), ProfileType? type = default(ProfileType?))
         {
             HttpUrls = httpUrls;
-            HttpCookies = httpCookies;
             HttpMessageTransform = httpMessageTransform;
             HttpRequestHeaders = httpRequestHeaders;
             HttpResponseHeaders = httpResponseHeaders;
@@ -51,11 +50,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "httpUrls")]
         public IList<string> HttpUrls { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "httpCookies")]
-        public IList<string> HttpCookies { get; set; }
 
         /// <summary>
         /// </summary>

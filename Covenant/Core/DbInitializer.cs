@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Identity;
 
@@ -15,17 +17,17 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-        public async static Task Initialize(CovenantContext context, RoleManager<IdentityRole> roleManager)
+        public async static Task Initialize(CovenantContext context, RoleManager<IdentityRole> roleManager, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             context.Database.EnsureCreated();
 
-            await InitializeListeners(context);
+            await InitializeListeners(context, ListenerCancellationTokens);
             await InitializeLaunchers(context);
             await InitializeTasks(context);
             await InitializeRoles(roleManager);
         }
 
-        public async static Task InitializeListeners(CovenantContext context)
+        public async static Task InitializeListeners(CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             if (!context.ListenerTypes.Any())
             {
@@ -43,8 +45,8 @@ namespace Covenant.Core
 
             foreach (Listener l in context.Listeners.Where(L => L.Status == ListenerStatus.Active))
             {
-                HttpProfile profile = await context.GetHttpProfile(l.ProfileId);
-                await context.StartListener(l.Id);
+                l.Profile = await context.GetHttpProfile(l.ProfileId);
+                await context.StartListener(l.Id, ListenerCancellationTokens);
             }
         }
 
@@ -607,7 +609,7 @@ namespace Covenant.Core
                                 Description = "Boolean, whether to ping hosts prior to port scanning.",
                                 Value = "False",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -881,7 +883,7 @@ namespace Covenant.Core
                                 Description = "LogonType to use. Defaults to LOGON32_LOGON_NEW_CREDENTIALS, which is suitable to perform actions that require remote authentication. LOGON32_LOGON_INTERACTIVE is suitable for local actions.",
                                 Value = "LOGON32_LOGON_NEW_CREDENTIALS",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -1419,7 +1421,7 @@ namespace Covenant.Core
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
-                                SuggestedValues = new List<string> { "Delay", "ConnectAttempts", "KillDate" },
+                                SuggestedValues = new List<string> { "Delay", "ConnectAttempts", "JitterPercent" },
                                 Optional = false,
                                 DisplayInCommand = true
                             }
@@ -1507,6 +1509,45 @@ namespace Covenant.Core
                                 Value = "",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PowerShellImport",
+                        AlternateNames = new List<string>(),
+                        Description = "Import a PowerShell script.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 73,
+                                Name = "Script",
+                                Description = "PowerShell Script to import.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Help",
+                        AlternateNames = new List<string>(),
+                        Description = "Show the help menu.",
+                        Code = "",
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 74,
+                                Name = "TaskName",
+                                Description = "The GruntTask name to retrieve help information for.",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }

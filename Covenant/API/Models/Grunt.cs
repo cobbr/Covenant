@@ -34,7 +34,7 @@ namespace Covenant.API.Models
         /// 'Disconnected'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(string name, string originalServerGuid, CommunicationType commType, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetFrameworkVersion, GruntStatus status, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), string cookieAuthKey = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>))
+        public Grunt(string name, string originalServerGuid, CommunicationType commType, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetFrameworkVersion, GruntStatus status, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>))
         {
             Id = id;
             Name = name;
@@ -65,9 +65,9 @@ namespace Covenant.API.Models
             GruntRSAPublicKey = gruntRSAPublicKey;
             GruntNegotiatedSessionKey = gruntNegotiatedSessionKey;
             GruntChallenge = gruntChallenge;
-            CookieAuthKey = cookieAuthKey;
             ActivationTime = activationTime;
             LastCheckIn = lastCheckIn;
+            PowerShellImport = powerShellImport;
             GruntCommands = gruntCommands;
             CustomInit();
         }
@@ -230,11 +230,6 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "cookieAuthKey")]
-        public string CookieAuthKey { get; set; }
-
-        /// <summary>
-        /// </summary>
         [JsonProperty(PropertyName = "activationTime")]
         public System.DateTime? ActivationTime { get; set; }
 
@@ -242,6 +237,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "lastCheckIn")]
         public System.DateTime? LastCheckIn { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "powerShellImport")]
+        public string PowerShellImport { get; set; }
 
         /// <summary>
         /// </summary>

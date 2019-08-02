@@ -4,6 +4,10 @@
     Layout = "_Layout";
 }
 
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create Indicator</h1>
+</div>
+
 <form asp-controller="Indicator" asp-action="CreateFileIndicator">
     <input asp-for="Id" value="@Model.Id" class="form-control" type="hidden">
     <div class="form-row">

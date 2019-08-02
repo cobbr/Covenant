@@ -159,10 +159,6 @@ namespace Covenant.API.Models
                 {
                     throw new ValidationException(ValidationRules.MinLength, "Name", 0);
                 }
-                if (!System.Text.RegularExpressions.Regex.IsMatch(Name, "^[a-zA-Z0-9]*$"))
-                {
-                    throw new ValidationException(ValidationRules.Pattern, "Name", "^[a-zA-Z0-9]*$");
-                }
             }
             if (Guid != null)
             {

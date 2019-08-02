@@ -534,16 +534,6 @@ namespace Covenant.API
         /// </param>
         Task<HttpOperationResponse<Grunt>> ApiGruntsOriginalguidByServerguidGetWithHttpMessagesAsync(string serverguid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='cookie'>
-        /// </param>
-        /// <param name='customHeaders'>
-        /// The headers that will be added to request.
-        /// </param>
-        /// <param name='cancellationToken'>
-        /// The cancellation token.
-        /// </param>
-        Task<HttpOperationResponse<Grunt>> ApiGruntsCookiekeyByCookieGetWithHttpMessagesAsync(string cookie, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
-
         /// <param name='id'>
         /// </param>
         /// <param name='cid'>

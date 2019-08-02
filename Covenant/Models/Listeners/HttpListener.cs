@@ -31,6 +31,7 @@ using NLog.Targets;
 using Newtonsoft.Json;
 
 using Covenant.API;
+using APIModels = Covenant.API.Models;
 using Covenant.Core;
 using Covenant.Models.Grunts;
 
@@ -92,6 +93,13 @@ namespace Covenant.Models.Listeners
         public HttpListener()
         {
             this.Description = "Listens on HTTP protocol.";
+            try
+            {
+                this.ConnectAddress = Dns.GetHostAddresses(Dns.GetHostName())
+                    .FirstOrDefault(A => A.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    .ToString();
+            }
+            catch (System.Net.Sockets.SocketException) { }
         }
 
         public HttpListener(int ListenerTypeId, int ProfileId) : this()
@@ -122,9 +130,13 @@ namespace Covenant.Models.Listeners
                 var services = scope.ServiceProvider;
                 HttpListenerContext context = services.GetRequiredService<HttpListenerContext>();
                 context.Database.EnsureCreated();
-                if (!context.Listener.Any())
+                if (!context.HttpListener.Any())
                 {
-                    context.Listener.Add(this);
+                    context.HttpListener.Add(context.ToHttpListener(this));
+                }
+                if (!context.HttpProfile.Any())
+                {
+                    context.HttpProfile.Add(context.ToHttpProfile((HttpProfile)this.Profile));
                 }
                 context.SaveChanges();
             }
@@ -195,7 +207,6 @@ namespace Covenant.Models.Listeners
                     })
                     .UseNLog()
                     .UseStartup<HttpListenerStartup>()
-                    .UseSetting("ListenerId", this.Id.ToString())
                     .UseSetting("CovenantToken", this.CovenantToken)
                     .UseSetting("ProfileUrls", JsonConvert.SerializeObject((this.Profile as HttpProfile).HttpUrls))
                     .UseSetting("ListenerStaticHostDirectory", this.ListenerStaticHostDirectory)
@@ -248,19 +259,15 @@ namespace Covenant.Models.Listeners
             string HttpHeaders = "";
             foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
             {
-                HttpHeaders += "ProfileHttpHeaderNames.Add(@\"" + this.FormatForVerbatimString(header.Name) + "\");\n";
-                HttpHeaders += "ProfileHttpHeaderValues.Add(@\"" + this.FormatForVerbatimString(header.Value) + "\");\n";
+                HttpHeaders += "ProfileHttpHeaderNames.Add(@\"" + this.FormatForVerbatimString(header.Name.Replace("{GUID}", grunt.GUID)) + "\");\n";
+                HttpHeaders += "ProfileHttpHeaderValues.Add(@\"" + this.FormatForVerbatimString(header.Value.Replace("{GUID}", grunt.GUID)) + "\");\n";
             }
             string HttpUrls = "";
             foreach (string url in profile.HttpUrls)
             {
-                HttpUrls += "ProfileHttpUrls.Add(@\"" + this.FormatForVerbatimString(url) + "\");\n";
+                HttpUrls += "ProfileHttpUrls.Add(@\"" + this.FormatForVerbatimString(url.Replace("{GUID}", grunt.GUID)) + "\");\n";
             }
             string HttpCookies = "";
-            foreach (string cookie in profile.HttpCookies)
-            {
-                HttpCookies += "ProfileHttpCookies.Add(@\"" + this.FormatForVerbatimString(cookie) + "\");\n";
-            }
 
             return CodeTemplate
                 .Replace("// {{REPLACE_PROFILE_HTTP_TRANSFORM}}", profile.HttpMessageTransform)
@@ -294,8 +301,8 @@ namespace Covenant.Models.Listeners
 
     public class HttpListenerContext : IdentityDbContext
     {
-        public DbSet<HttpListener> Listener { get; set; }
-        public DbSet<Profile> Profile { get; set; }
+        public DbSet<APIModels.HttpListener> HttpListener { get; set; }
+        public DbSet<APIModels.HttpProfile> HttpProfile { get; set; }
         public HttpListenerContext(DbContextOptions<HttpListenerContext> options) : base(options)
         {
 
@@ -306,30 +313,64 @@ namespace Covenant.Models.Listeners
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<HttpListener>().ToTable("HttpListener");
-            builder.Entity<HttpProfile>().HasBaseType<Profile>().ToTable("HttpProfile");
-
-            builder.Entity<HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
+            builder.Entity<APIModels.HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
             );
-            builder.Entity<HttpProfile>().Property(HP => HP.HttpCookies).HasConversion
+            builder.Entity<APIModels.HttpProfile>().Property(HP => HP.HttpRequestHeaders).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
-                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+                v => v == null ? new List<APIModels.HttpProfileHeader>() : JsonConvert.DeserializeObject<List<APIModels.HttpProfileHeader>>(v)
             );
-            builder.Entity<HttpProfile>().Property(HP => HP.HttpRequestHeaders).HasConversion
+            builder.Entity<APIModels.HttpProfile>().Property(HP => HP.HttpResponseHeaders).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
-                v => v == null ? new List<HttpProfileHeader>() : JsonConvert.DeserializeObject<List<HttpProfileHeader>>(v)
-            );
-            builder.Entity<HttpProfile>().Property(HP => HP.HttpResponseHeaders).HasConversion
-            (
-                v => JsonConvert.SerializeObject(v),
-                v => v == null ? new List<HttpProfileHeader>() : JsonConvert.DeserializeObject<List<HttpProfileHeader>>(v)
+                v => v == null ? new List<APIModels.HttpProfileHeader>() : JsonConvert.DeserializeObject<List<APIModels.HttpProfileHeader>>(v)
             );
             base.OnModelCreating(builder);
+        }
+
+        public APIModels.HttpListener ToHttpListener(HttpListener listener)
+        {
+            return new APIModels.HttpListener
+            {
+                BindAddress = listener.BindAddress,
+                BindPort = listener.BindPort,
+                ConnectAddress = listener.ConnectAddress,
+                CovenantToken = listener.CovenantToken,
+                Description = listener.Description,
+                Guid = listener.GUID,
+                Id = listener.Id,
+                ListenerTypeId = listener.ListenerTypeId,
+                Name = listener.Name,
+                ProfileId = listener.ProfileId,
+                // SslCertHash = listener.SSLCertHash,
+                SslCertificate = listener.SSLCertificate,
+                SslCertificatePassword = listener.SSLCertificatePassword,
+                StartTime = listener.StartTime,
+                Status = (APIModels.ListenerStatus)Enum.Parse(typeof(APIModels.ListenerStatus), listener.Status.ToString()),
+                Url = listener.Url,
+                UseSSL = listener.UseSSL
+            };
+        }
+
+        public APIModels.HttpProfile ToHttpProfile(HttpProfile profile)
+        {
+            return new APIModels.HttpProfile
+            {
+                Description = profile.Description,
+                HttpGetResponse = profile.HttpGetResponse,
+                HttpMessageTransform = profile.HttpMessageTransform,
+                HttpPostRequest = profile.HttpPostRequest,
+                HttpPostResponse = profile.HttpPostResponse,
+                HttpRequestHeaders = profile.HttpRequestHeaders.Select(HRH => new APIModels.HttpProfileHeader { Name = HRH.Name, Value = HRH.Value }).ToList(),
+                HttpResponseHeaders = profile.HttpResponseHeaders.Select(HRH => new APIModels.HttpProfileHeader { Name = HRH.Name, Value = HRH.Value }).ToList(),
+                HttpUrls = profile.HttpUrls,
+                Id = profile.Id,
+                Name = profile.Name,
+                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString())
+            };
         }
     }
 
@@ -384,8 +425,9 @@ namespace Covenant.Models.Listeners
             {
                 foreach (string route in JsonConvert.DeserializeObject<List<string>>(Configuration["ProfileUrls"]))
                 {
-                    routes.MapRoute(route, route, new { controller = "HttpListener", action = "Get" });
-                    routes.MapRoute(route + "Post", route, new { controller = "HttpListener", action = "Post" });
+                    string urlOnly = route.Split("?").First();
+                    routes.MapRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Get" });
+                    routes.MapRoute(urlOnly + "Post", urlOnly, new { controller = "HttpListener", action = "Post" });
                 }
             });
 

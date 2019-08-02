@@ -47,7 +47,7 @@ namespace Covenant.Models.Listeners
     {
         [Key]
         public int Id { get; set; }
-        [Required, StringLength(100), RegularExpression("^[a-zA-Z0-9]*$")]
+        [Required, StringLength(100)]
         public string Name { get; set; } = Utilities.CreateShortGuid();
         [Required, StringLength(100), RegularExpression("^[a-zA-Z0-9]*$")]
         public string GUID { get; set; } = Utilities.CreateShortGuid();
@@ -58,9 +58,7 @@ namespace Covenant.Models.Listeners
         [Required, Range(1, 65535)]
         public int BindPort { get; set; } = 80;
         [Required]
-        public string ConnectAddress { get; set; } = Dns.GetHostAddresses(Dns.GetHostName())
-            .FirstOrDefault(A => A.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-            .ToString();
+        public string ConnectAddress { get; set; }
         [Required]
         public int ProfileId { get; set; }
         public Profile Profile { get; set; }

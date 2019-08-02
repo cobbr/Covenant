@@ -22,11 +22,12 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CommandOutput class.
         /// </summary>
-        public CommandOutput(int? id = default(int?), string output = default(string), int? gruntCommandId = default(int?))
+        public CommandOutput(int gruntCommandId, int? id = default(int?), string output = default(string), GruntCommand gruntCommand = default(GruntCommand))
         {
             Id = id;
             Output = output;
             GruntCommandId = gruntCommandId;
+            GruntCommand = gruntCommand;
             CustomInit();
         }
 
@@ -48,7 +49,25 @@ namespace Covenant.API.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "gruntCommandId")]
-        public int? GruntCommandId { get; set; }
+        public int GruntCommandId { get; set; }
 
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntCommand")]
+        public GruntCommand GruntCommand { get; set; }
+
+        /// <summary>
+        /// Validate the object.
+        /// </summary>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown if validation fails
+        /// </exception>
+        public virtual void Validate()
+        {
+            if (GruntCommand != null)
+            {
+                GruntCommand.Validate();
+            }
+        }
     }
 }

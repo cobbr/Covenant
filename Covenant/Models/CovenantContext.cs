@@ -4,10 +4,11 @@
 
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
@@ -18,7 +19,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using Covenant.Hubs;
-
 using Covenant.Core;
 using Encrypt = Covenant.Core.Encryption;
 using Covenant.Models.Covenant;
@@ -50,9 +50,6 @@ namespace Covenant.Models
 
         public DbSet<CapturedCredential> Credentials { get; set; }
         public DbSet<Indicator> Indicators { get; set; }
-
-        // Dictionary of CancellationTokenSources for active listeners to stop them asynchronously
-        private readonly Dictionary<int, CancellationTokenSource> _ListenerCancellationTokens = new Dictionary<int, CancellationTokenSource>();
 
         public CovenantContext(DbContextOptions<CovenantContext> options) : base(options)
         {
@@ -176,11 +173,6 @@ namespace Covenant.Models
             );
 
             builder.Entity<HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
-            (
-                v => JsonConvert.SerializeObject(v),
-                v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
-            builder.Entity<HttpProfile>().Property(HP => HP.HttpCookies).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
@@ -590,16 +582,6 @@ namespace Covenant.Models
             return grunt;
         }
 
-        public async Task<Grunt> GetGruntByCookieAuthKey(string cookiekey)
-        {
-            Grunt grunt = await this.Grunts.FirstOrDefaultAsync(g => g.CookieAuthKey == cookiekey);
-            if (grunt == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Grunt with CookieAuthKey: {cookiekey}");
-            }
-            return grunt;
-        }
-
         public async Task<List<string>> GetPathToChildGrunt(int gruntId, int childId)
         {
             Grunt grunt = await this.GetGrunt(gruntId);
@@ -687,7 +669,9 @@ namespace Covenant.Models
                         CommandTime = DateTime.UtcNow,
                         User = user,
                         GruntId = grunt.Id,
-                        Grunt = grunt
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
                     }, grunthub);
                     await this.CreateGruntTasking(new GruntTasking
                     {
@@ -713,7 +697,9 @@ namespace Covenant.Models
                         CommandTime = DateTime.UtcNow,
                         User = user,
                         GruntId = grunt.Id,
-                        Grunt = grunt
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
                     }, grunthub);
                     await this.CreateGruntTasking(new GruntTasking
                     {
@@ -739,7 +725,9 @@ namespace Covenant.Models
                         CommandTime = DateTime.UtcNow,
                         User = user,
                         GruntId = grunt.Id,
-                        Grunt = grunt
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
                     }, grunthub);
                     await this.CreateGruntTasking(new GruntTasking
                     {
@@ -767,7 +755,7 @@ namespace Covenant.Models
             matching_grunt.GruntNegotiatedSessionKey = grunt.GruntNegotiatedSessionKey;
             matching_grunt.GruntRSAPublicKey = grunt.GruntRSAPublicKey;
             matching_grunt.GruntSharedSecretPassword = grunt.GruntSharedSecretPassword;
-
+            matching_grunt.PowerShellImport = grunt.PowerShellImport;
             this.Grunts.Update(matching_grunt);
 
             TargetIndicator indicator = (await this.GetTargetIndicators())
@@ -1200,7 +1188,13 @@ namespace Covenant.Models
         {
             this.GruntCommands.Add(command);
             await this.SaveChangesAsync();
-            GruntCommand createdCommand = await this.GetGruntCommand(command.Id);
+            GruntCommand createdCommand = await this.GruntCommands
+                .Where(GC => GC.Id == command.Id)
+                .Include(GC => GC.User)
+                .Include(GC => GC.CommandOutput)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GC => GC.GruntTask)
+                .FirstOrDefaultAsync();
             Event ev = new Event
             {
                 Time = createdCommand.CommandTime,
@@ -1211,18 +1205,25 @@ namespace Covenant.Models
             };
             await this.Events.AddAsync(ev);
             await this.SaveChangesAsync();
-            await HubProxy.SendCommandEvent(_grunthub, ev, command);
+            await HubProxy.SendCommandEvent(_grunthub, ev, createdCommand);
             return createdCommand;
         }
 
         public async Task<GruntCommand> EditGruntCommand(GruntCommand command, IHubContext<GruntHub> _grunthub)
         {
-            GruntCommand updatingCommand = await this.GetGruntCommand(command.Id);
+            GruntCommand updatingCommand = await this.GruntCommands
+                .Where(GC => GC.Id == command.Id)
+                .Include(GC => GC.User)
+                .Include(GC => GC.CommandOutput)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GC => GC.GruntTask)
+                .FirstOrDefaultAsync();
             updatingCommand.Command = command.Command;
             updatingCommand.CommandTime = command.CommandTime;
 
-            if (updatingCommand.CommandOutput != command.CommandOutput)
+            if (updatingCommand.CommandOutput.Output != command.CommandOutput.Output)
             {
+                updatingCommand.CommandOutputId = command.CommandOutputId;
                 updatingCommand.CommandOutput = command.CommandOutput;
                 Grunt g = await this.GetGrunt(updatingCommand.GruntId);
                 Event ev = new Event
@@ -1287,7 +1288,13 @@ namespace Covenant.Models
             if (updatingOutput.Output != output.Output)
             {
                 updatingOutput.Output = output.Output;
-                GruntCommand command = await this.GetGruntCommand(updatingOutput.GruntCommandId);
+                GruntCommand command = await this.GruntCommands
+                    .Where(GC => GC.Id == updatingOutput.GruntCommandId)
+                    .Include(GC => GC.User)
+                    .Include(GC => GC.CommandOutput)
+                    .Include(GC => GC.GruntTasking)
+                        .ThenInclude(GC => GC.GruntTask)
+                    .FirstOrDefaultAsync();
                 command.CommandOutput = updatingOutput;
                 Grunt g = await this.GetGrunt(command.GruntId);
                 Event ev = new Event
@@ -1397,7 +1404,14 @@ namespace Covenant.Models
                 if (!tasking.Parameters.Any())
                 {
                     List<string> parameters = task.Options.Select(O => O.Value).ToList();
-                    if (task.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
+                    if (task.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && parameters.Any())
+                    {
+                        if (!string.IsNullOrWhiteSpace(grunt.PowerShellImport))
+                        {
+                            parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(grunt.PowerShellImport)) + "\r\n" + parameters[0];
+                        }
+                    }
+                    else if (task.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
                     {
                         Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
                         if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
@@ -1682,7 +1696,6 @@ namespace Covenant.Models
                     await this.Events.AddAsync(ev);
                 }
             }
-
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
             updatingGruntTasking.Status = newStatus;
             updatingGruntTasking.GruntCommand.CommandOutput.Output = tasking.GruntCommand.CommandOutput.Output;
@@ -1691,6 +1704,13 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
             if (ev != null)
             {
+                tasking.GruntCommand = await this.GruntCommands
+                    .Where(GC => GC.Id == tasking.GruntCommandId)
+                    .Include(GC => GC.User)
+                    .Include(GC => GC.CommandOutput)
+                    .Include(GC => GC.GruntTasking)
+                        .ThenInclude(GC => GC.GruntTask)
+                    .FirstOrDefaultAsync();
                 await HubProxy.SendCommandEvent(_grunthub, ev, tasking.GruntCommand);
             }
             return updatingGruntTasking;
@@ -2070,16 +2090,23 @@ namespace Covenant.Models
             return profile;
         }
 
-        public async Task<Profile> CreateProfile(Profile profile)
+        public async Task<Profile> CreateProfile(Profile profile, CovenantUser currentUser)
         {
+            if (! await this.IsAdmin(currentUser))
+            {
+                throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+            }
             await this.Profiles.AddAsync(profile);
             await this.SaveChangesAsync();
             return await this.GetProfile(profile.Id);
         }
 
-        public async Task<Profile> EditProfile(Profile profile)
+        public async Task<Profile> EditProfile(Profile profile, CovenantUser currentUser)
         {
             Profile matchingProfile = await this.GetProfile(profile.Id);
+            matchingProfile.Description = profile.Description;
+            matchingProfile.Name = profile.Name;
+            matchingProfile.Type = profile.Type;
             this.Profiles.Update(matchingProfile);
             await this.SaveChangesAsync();
             return await this.GetProfile(profile.Id);
@@ -2107,22 +2134,42 @@ namespace Covenant.Models
             return (HttpProfile)profile;
         }
 
-        public async Task<HttpProfile> CreateHttpProfile(HttpProfile profile)
+        public async Task<HttpProfile> CreateHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
+            if (!await this.IsAdmin(currentUser))
+            {
+                throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+            }
             await this.Profiles.AddAsync(profile);
             await this.SaveChangesAsync();
             return await this.GetHttpProfile(profile.Id);
         }
 
-        public async Task<HttpProfile> EditHttpProfile(HttpProfile profile)
+        public async Task<HttpProfile> EditHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
             HttpProfile matchingProfile = await this.GetHttpProfile(profile.Id);
+            Listener l = await this.Listeners.FirstOrDefaultAsync(L => L.ProfileId == matchingProfile.Id && L.Status == ListenerStatus.Active);
+            if (l != null)
+            {
+                throw new ControllerBadRequestException($"BadRequest - Cannot edit a profile assigned to an Active Listener");
+            }
+            matchingProfile.Name = profile.Name;
+            matchingProfile.Type = profile.Type;
+            matchingProfile.Description = profile.Description;
             matchingProfile.HttpRequestHeaders = profile.HttpRequestHeaders;
+            matchingProfile.HttpResponseHeaders = profile.HttpResponseHeaders;
             matchingProfile.HttpUrls = profile.HttpUrls;
-            matchingProfile.HttpCookies = profile.HttpCookies;
-            matchingProfile.HttpGetResponse = profile.HttpGetResponse;
-            matchingProfile.HttpPostRequest = profile.HttpPostRequest;
-            matchingProfile.HttpPostResponse = profile.HttpPostResponse;
+            matchingProfile.HttpGetResponse = profile.HttpGetResponse.Replace("\r\n", "\n");
+            matchingProfile.HttpPostRequest = profile.HttpPostRequest.Replace("\r\n", "\n");
+            matchingProfile.HttpPostResponse = profile.HttpPostResponse.Replace("\r\n", "\n");
+            if (matchingProfile.HttpMessageTransform != profile.HttpMessageTransform)
+            {
+                if (!await this.IsAdmin(currentUser))
+                {
+                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+                }
+                matchingProfile.HttpMessageTransform = profile.HttpMessageTransform;
+            }
             this.Update(matchingProfile);
             await this.SaveChangesAsync();
             return await this.GetHttpProfile(profile.Id);
@@ -2149,7 +2196,7 @@ namespace Covenant.Models
             return listener;
         }
 
-        public async Task<Listener> EditListener(Listener listener)
+        public async Task<Listener> EditListener(Listener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             Listener matchingListener = await this.GetListener(listener.Id);
             matchingListener.Name = listener.Name;
@@ -2202,14 +2249,14 @@ namespace Covenant.Models
             return await this.GetListener(matchingListener.Id);
         }
 
-        public async Task StartListener(int listenerId)
+        public async Task StartListener(int listenerId, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             Listener listener = await this.GetListener(listenerId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             _ListenerCancellationTokens[listener.Id] = listener.Start();
         }
 
-        public async Task DeleteListener(int listenerId)
+        public async Task DeleteListener(int listenerId, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             Listener listener = await this.GetListener(listenerId);
             if (listener.Status == ListenerStatus.Active)
@@ -2240,7 +2287,7 @@ namespace Covenant.Models
             return (HttpListener)listener;
         }
 
-        private async Task<HttpListener> StartInitialHttpListener(HttpListener listener)
+        private async Task<HttpListener> StartInitialHttpListener(HttpListener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             listener.StartTime = DateTime.UtcNow;
             if (listener.UseSSL && string.IsNullOrWhiteSpace(listener.SSLCertificate))
@@ -2280,7 +2327,7 @@ namespace Covenant.Models
             return listener;
         }
 
-        public async Task<HttpListener> CreateHttpListener(UserManager<CovenantUser> userManager, IConfiguration configuration, HttpListener listener)
+        public async Task<HttpListener> CreateHttpListener(UserManager<CovenantUser> userManager, IConfiguration configuration, HttpListener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             listener.Profile = await this.GetHttpProfile(listener.ProfileId);
             // Append capital letter to appease Password complexity requirements, get rid of warning output
@@ -2302,7 +2349,7 @@ namespace Covenant.Models
                 await this.Listeners.AddAsync(listener);
                 await this.SaveChangesAsync();
                 listener.Status = ListenerStatus.Active;
-                listener = await this.StartInitialHttpListener(listener);
+                listener = await this.StartInitialHttpListener(listener, _ListenerCancellationTokens);
                 this.Listeners.Update(listener);
                 await this.SaveChangesAsync();
             }
@@ -2314,7 +2361,7 @@ namespace Covenant.Models
             return await this.GetHttpListener(listener.Id);
         }
 
-        public async Task<HttpListener> EditHttpListener(HttpListener listener)
+        public async Task<HttpListener> EditHttpListener(HttpListener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             HttpListener matchingListener = await this.GetHttpListener(listener.Id);
             // URL is calculated from BindAddress, BindPort, UseSSL components
@@ -2336,7 +2383,6 @@ namespace Covenant.Models
             matchingListener.GUID = listener.GUID;
             matchingListener.SSLCertificatePassword = listener.SSLCertificatePassword;
             matchingListener.SSLCertificate = listener.SSLCertificate;
-
             if (matchingListener.Status == ListenerStatus.Active && listener.Status == ListenerStatus.Stopped)
             {
                 matchingListener.Stop(_ListenerCancellationTokens[matchingListener.Id]);
@@ -2354,7 +2400,7 @@ namespace Covenant.Models
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
                 matchingListener.Status = ListenerStatus.Active;
-                matchingListener = await this.StartInitialHttpListener(matchingListener);
+                matchingListener = await this.StartInitialHttpListener(matchingListener, _ListenerCancellationTokens);
             }
 
             this.Listeners.Update(matchingListener);

@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
@@ -44,11 +43,10 @@ namespace Covenant.Models.Listeners
 
     public class HttpProfile : Profile
     {
-        public List<string> HttpUrls { get; set; } = new List<string>();
-        public List<string> HttpCookies { get; set; } = new List<string>();
+        public List<string> HttpUrls { get; set; } = new List<string> { "" };
         public string HttpMessageTransform { get; set; } = "";
-        public virtual List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader>();
-        public virtual List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader>();
+        public virtual List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
+        public virtual List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
 
         public string HttpPostRequest { get; set; } = "";
         public string HttpGetResponse { get; set; } = "";
@@ -106,6 +104,7 @@ namespace Covenant.Models.Listeners
         private class HttpProfileYaml
         {
             public string Name { get; set; }
+            public string Description { get; set; }
             public List<string> HttpUrls { get; set; } = new List<string>();
             public List<string> HttpCookies { get; set; } = new List<string>();
             public string HttpMessageTransform { get; set; } = "";
@@ -121,14 +120,14 @@ namespace Covenant.Models.Listeners
             return new HttpProfile
             {
                 Name = yaml.Name,
+                Description = yaml.Description,
                 HttpUrls = yaml.HttpUrls,
-                HttpCookies = yaml.HttpCookies,
                 HttpMessageTransform = yaml.HttpMessageTransform,
                 HttpRequestHeaders = yaml.HttpRequestHeaders,
-                HttpPostRequest = yaml.HttpPostRequest,
+                HttpPostRequest = yaml.HttpPostRequest.TrimEnd('\n'),
                 HttpResponseHeaders = yaml.HttpResponseHeaders,
-                HttpGetResponse = yaml.HttpGetResponse,
-                HttpPostResponse = yaml.HttpPostResponse
+                HttpGetResponse = yaml.HttpGetResponse.TrimEnd('\n'),
+                HttpPostResponse = yaml.HttpPostResponse.TrimEnd('\n')
             };
         }
     }

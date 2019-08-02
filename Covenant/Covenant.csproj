@@ -90,7 +90,10 @@
 
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.App">
+      <PrivateAssets Condition="'%(PackageReference.Version)' == ''">all</PrivateAssets>
+      <Publish Condition="'%(PackageReference.Version)' == ''">true</Publish>
+    </PackageReference>
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.5.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
@@ -104,17 +107,6 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.1.0-preview1-final" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="API\openapi12.json" />
-    <Content Remove="wwwroot\images\covenant revisi - white - edited.png" />
-    <Content Remove="wwwroot\images\covenant-white.png" />
-    <Content Remove="wwwroot\images\covenant - edited.png" />
-    <Content Remove="wwwroot\images\covenant-bluewhite.png" />
-    <Content Remove="API\openapi17.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="wwwroot\images\covenant revisi - black - edited.png" />
-  </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

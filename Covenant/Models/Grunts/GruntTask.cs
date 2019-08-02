@@ -18,6 +18,7 @@ namespace Covenant.Models.Grunts
 {
     public class GruntTaskOption
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Value { get; set; }
@@ -27,12 +28,12 @@ namespace Covenant.Models.Grunts
         public bool DisplayInCommand { get; set; } = true;
         
         public int GruntTaskId { get; set; }
-        [JsonIgnore]
         public GruntTask Task { get; set; }
     }
 
     public class GruntTask
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; } = "GenericTask";

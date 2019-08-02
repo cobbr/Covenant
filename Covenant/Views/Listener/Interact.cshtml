@@ -87,28 +87,20 @@
         </div>
 
         <div class="btn-group" role="group">
-            <form asp-action="Start" asp-route-id="@Model.Id">
-                <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
-                @if (Model.Status == ListenerStatus.Active)
-                {
-                    <button type="submit" class="btn btn-outline-primary mr-5" disabled>Start</button>
-                }
-                else
-                {
-                    <button type="submit" class="btn btn-primary mr-5">Start</button>
-                }
-            </form>
-
-            <form asp-action="Stop" asp-route-id="@Model.Id">
-                <input type="hidden" name="@Html.DisplayNameFor(model => model.Id)" value="@Html.DisplayFor(model => model.Id)">
-                @if (Model.Status == ListenerStatus.Active)
-                {
-                    <button type="submit" class="btn btn-danger ml-5">Stop</button>
-                }
-                else
-                {
-                    <button type="submit" class="btn btn-outline-danger ml-5" disabled>Stop</button>
-                }
+            @if (Model.Status == ListenerStatus.Active)
+            {
+                <form asp-action="Stop" asp-route-id="@Model.Id">
+                    <button type="submit" class="btn btn-warning"><span data-feather="stop-circle"></span> Stop</button>
+                </form>
+            }
+            else
+            {
+                <form asp-action="Start" asp-route-id="@Model.Id">
+                    <button type="submit" class="btn btn-primary"><span data-feather="play"></span> Start</button>
+                </form>
+            }
+            <form asp-action="Delete" asp-route-id="@Model.Id">
+                <button type="submit" class="btn btn-danger ml-2"><span data-feather="x"></span> Delete</button>
             </form>
         </div>
     </div>

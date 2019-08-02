@@ -30,28 +30,34 @@ namespace Covenant.Controllers
         }
 
         // GET: /covenantuser/login
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         // POST: /covenantuser/login
         [HttpPost]
-        public async Task<IActionResult> Login(CovenantUserLogin login)
+        public async Task<IActionResult> Login(CovenantUserLogin login, string returnUrl = "")
         {
             try
             {
                 var result = await _signInManager.PasswordSignInAsync(login.UserName, login.Password, true, lockoutOnFailure: false);
                 if (!result.Succeeded == true)
                 {
-                    ModelState.AddModelError(string.Empty, "Login Failed");
+                    ModelState.AddModelError(string.Empty, "Incorrect username or password");
+                    return View();
+                }
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
                 }
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                return RedirectToAction("Index", "Home");
+                return View();
             }
         }
 

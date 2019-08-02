@@ -20,7 +20,7 @@
     }
     else
     {
-        <form asp-controller="CovenantUser" asp-action="Login" class="form-signin">
+        <form asp-controller="CovenantUser" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" class="form-signin">
             <div asp-validation-summary="All" class="text-danger"></div>
             <input asp-for="UserName" class="form-control" placeholder="Username" required autofocus>
             <input asp-for="Password" class="form-control mb-3" placeholder="Password" type="password" required>

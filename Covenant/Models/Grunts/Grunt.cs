@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 using Covenant.Core;
 using Covenant.Models.Listeners;
@@ -42,11 +43,12 @@ namespace Covenant.Models.Grunts
     public class Grunt
     {
         // Information to uniquely identify this Grunt
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
-        public string Name { get; set; } = GenerateName();
+        public string Name { get; set; } = Utilities.CreateShortGuid();
         [Required]
-        public string OriginalServerGuid { get; set; } = GenerateName();
+        public string OriginalServerGuid { get; set; } = Utilities.CreateShortGuid();
         [DisplayName("GUID")]
         public string GUID { get; set; }
 
@@ -60,8 +62,7 @@ namespace Covenant.Models.Grunts
         public bool ValidateCert { get; set; } = true;
         [Required]
         public bool UseCertPinning { get; set; } = true;
-        [Required]
-        [DisplayName("SMBPipeName")]
+        [Required, DisplayName("SMBPipeName")]
         public string SMBPipeName { get; set; } = "gruntsvc";
 
         // Information about the Listener
@@ -70,14 +71,11 @@ namespace Covenant.Models.Grunts
 
         // Settings that can be configured
         public string Note { get; set; } = "";
-        [Required]
-        [Range(0, int.MaxValue)]
+        [Required, Range(0, int.MaxValue)]
         public int Delay { get; set; } = 10;
-        [Required]
-        [Range(0, 100)]
+        [Required, Range(0, 100)]
         public int JitterPercent { get; set; } = 10;
-        [Required]
-        [Range(0, int.MaxValue)]
+        [Required, Range(0, int.MaxValue)]
         public int ConnectAttempts { get; set; } = 5000;
         [Required]
         public DateTime KillDate { get; set; } = DateTime.MaxValue;
@@ -102,12 +100,12 @@ namespace Covenant.Models.Grunts
         public string GruntRSAPublicKey { get; set; } = "";
         public string GruntNegotiatedSessionKey { get; set; } = "";
         public string GruntChallenge { get; set; } = "";
-        public string CookieAuthKey { get; set; } = Utilities.CreateSecretPassword();
 
         // Time information
         public DateTime ActivationTime { get; set; } = DateTime.MinValue;
         public DateTime LastCheckIn { get; set; } = DateTime.MinValue;
 
+        public string PowerShellImport { get; set; } = "";
         public List<GruntCommand> GruntCommands { get; set; } = new List<GruntCommand>();
 
         public void AddChild(Grunt grunt)
@@ -121,11 +119,6 @@ namespace Covenant.Models.Grunts
         public bool RemoveChild(Grunt grunt)
         {
             return this.Children.Remove(grunt.GUID);
-        }
-
-        private static string GenerateName()
-        {
-            return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
         }
     }
 }

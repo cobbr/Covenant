@@ -1,25 +1,23 @@
 ﻿// set up SVG for D3
-const width = 400;
+const width = 600;
 const height = 600;
 const colors = d3.scaleOrdinal(d3.schemeCategory10);
+const arrowColor = '#999999';
 
 const svg = d3.select('#graph-box')
   .append('svg')
   .on('contextmenu', () => { d3.event.preventDefault(); })
   .attr('width', width)
-  .attr('height', height);
+  .attr('height', height)
+  .attr('fill', '#999999');
 
 // set up initial nodes and links
 //  - nodes are known by 'id', not by index in array.
 //  - reflexive edges are indicated on the node (as a bold black circle).
 //  - links are always source < target; edge directions are set by 'left' and 'right'.
-const nodes = [
-];
+const nodes = [];
 let lastNodeId = 0;
-const links = [
-  // { source: nodes[0], target: nodes[1], left: false, right: true },
-  // { source: nodes[1], target: nodes[2], left: false, right: true }
-];
+const links = [];
 
 // init D3 force layout
 const force = d3.forceSimulation()
@@ -60,7 +58,7 @@ svg.append('svg:defs').append('svg:marker')
     .attr('orient', 'auto')
   .append('svg:path')
     .attr('d', 'M0,-5L10,0L0,5')
-    .attr('fill', '#000');
+    .attr('fill', arrowColor);
 
 svg.append('svg:defs').append('svg:marker')
     .attr('id', 'start-arrow')
@@ -71,7 +69,7 @@ svg.append('svg:defs').append('svg:marker')
     .attr('orient', 'auto')
   .append('svg:path')
     .attr('d', 'M10,-5L0,0L10,5')
-    .attr('fill', '#000');
+    .attr('fill', arrowColor);
 
 // line displayed when dragging new nodes
 const dragLine = svg.append('svg:path')
@@ -117,17 +115,44 @@ function tick() {
   circle.attr('transform', (d) => `translate(${d.x},${d.y})`);
 }
 
+function assignCoordinates() {
+    var currX = new Array(nodes.length);
+    nodes.forEach(function (element) {
+        currX.push(0);
+    });
+
+    const rootNodes = nodes.filter(node => links.filter(link => link.target.id == node.id).length == 0);
+    rootNodes.forEach(function (element) {
+        function getDepth(node, currDepth) {
+            const childLinks = links.filter(link => link.source.id == node.id);
+            if (childLinks.length == 0) {
+                return currDepth;
+            }
+            var depths = childLinks.filter(function (link) {
+                var nextDepth = currDepth + 1;
+                return getDepth(link.target, nextDepth);
+            });
+            return Math.max(depths);
+        }
+
+        var depth = getDepth(element, 1);
+        currX[depth]++;
+        element.x = depth * 50;
+        element.y = depth * 50;
+    });
+}
+
 // update graph (called when needed)
 function restart() {
+  // assignCoordinates();
   // path (link) group
   path = path.data(links);
 
   // update existing links
-  path.classed('selected', (d) => d === selectedLink)
-    .style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
+  path.style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
     .style('marker-end', (d) => d.right ? 'url(#end-arrow)' : '')
-    .style('fill', (d) => (d === selectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
-    .style('stroke', (d) => d3.rgb(d.color).darker().toString());
+    .style('fill', (d) => (d === selectedLink) ? d3.rgb(arrowColor).brighter().toString() : arrowColor)
+    .style('stroke', (d) => (d === selectedLink) ? d3.rgb(arrowColor).brighter().toString() : arrowColor);
 
   // remove old links
   path.exit().remove();
@@ -135,11 +160,10 @@ function restart() {
   // add new links
   path = path.enter().append('svg:path')
     .attr('class', 'link')
-    .classed('selected', (d) => d === selectedLink)
     .style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
     .style('marker-end', (d) => d.right ? 'url(#end-arrow)' : '')
-    .style('fill', (d) => (d === selectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
-    .style('stroke', (d) => d3.rgb(d.color).darker().toString())
+    .style('fill', (d) => (d === selectedLink) ? d3.rgb(arrowColor).brighter().toString() : arrowColor)
+    .style('stroke', (d) => (d === selectedLink) ? d3.rgb(arrowColor).brighter().toString() : arrowColor)
     .on('mousedown', (d) => {
       if (d3.event.ctrlKey) return;
 
@@ -150,7 +174,6 @@ function restart() {
       restart();
     })
     .merge(path);
-
   // circle (node) group
   // NB: the function arg is crucial here! nodes are known by id, not by index!
   circle = circle.data(nodes, (d) => d.id);
@@ -190,12 +213,12 @@ function restart() {
       mousedownNode = d;
       selectedNode = (mousedownNode === selectedNode) ? null : mousedownNode;
       selectedLink = null;
-      $("#" + mousedownNode.name + "-tab").tab('show');
+      $("#" + mousedownNode.id + "-tab").tab('show');
       // reposition drag line
-      dragLine
-        .style('marker-end', 'url(#end-arrow)')
-        .classed('hidden', false)
-        .attr('d', `M${mousedownNode.x},${mousedownNode.y}L${mousedownNode.x},${mousedownNode.y}`);
+      // dragLine
+      //  .style('marker-end', 'url(#end-arrow)')
+      //   .classed('hidden', false)
+      //  .attr('d', `M${mousedownNode.x},${mousedownNode.y}L${mousedownNode.x},${mousedownNode.y}`);
 
       restart();
     })
@@ -203,9 +226,9 @@ function restart() {
       if (!mousedownNode) return;
 
       // needed by FF
-      dragLine
-        .classed('hidden', true)
-        .style('marker-end', '');
+      // dragLine
+      //   .classed('hidden', true)
+      //   .style('marker-end', '');
 
       // check for drag-to-self
       mouseupNode = d;
@@ -213,7 +236,7 @@ function restart() {
         resetMouseVars();
         return;
       }
-
+      
       // unenlarge target node
       d3.select(this).attr('transform', '');
 
@@ -223,12 +246,12 @@ function restart() {
       const source = isRight ? mousedownNode : mouseupNode;
       const target = isRight ? mouseupNode : mousedownNode;
 
-      const link = links.filter((l) => l.source === source && l.target === target)[0];
-      if (link) {
-        link[isRight ? 'right' : 'left'] = true;
-      } else {
-        links.push({ source, target, left: !isRight, right: isRight });
-      }
+      // const link = links.filter((l) => l.source === source && l.target === target)[0];
+      // if (link) {
+      //   link[isRight ? 'right' : 'left'] = true;
+      // } else {
+      //   links.push({ source, target, left: !isRight, right: isRight });
+      // }
       
       // select new link
       selectedLink = link;
@@ -241,6 +264,7 @@ function restart() {
     .attr('x', 0)
     .attr('y', 4)
     .attr('class', 'id')
+    .style('fill','rgba(255,255,255,0.8)')
     .text((d) => d.name);
 
   circle = g.merge(circle);

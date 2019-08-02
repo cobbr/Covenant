@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 
 using Microsoft.AspNetCore.Hosting;
@@ -65,7 +66,7 @@ namespace Covenant
             services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(120);
 
                 options.LoginPath = "/CovenantUser/Login";
                 options.LogoutPath = "/CovenantUser/Logout";
@@ -106,7 +107,10 @@ namespace Covenant
                 });
             });
 
-            services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
+            services.AddMvc().AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
             services.AddRouting(options => options.LowercaseUrls = true);
 
             services.AddSwaggerGen(c =>
@@ -122,8 +126,13 @@ namespace Covenant
                 c.SchemaFilter<EnumSchemaFilter>();
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
-            
-            services.AddSignalR();
+
+            services.AddSignalR().AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+
+            services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -164,7 +173,7 @@ namespace Covenant
             {
                 routes.MapHub<GruntHub>("/grunthub", options =>
                 {
-                    options.ApplicationMaxBufferSize = 500 * 1024;
+                    options.ApplicationMaxBufferSize = 2000 * 1024;
                 });
             });
         }

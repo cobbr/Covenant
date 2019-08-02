@@ -27,7 +27,6 @@ namespace Covenant.Core
     {
         private readonly CovenantContext _context;
         private readonly IHubContext<GruntHub> _grunthub;
-        public string PowerShellImport { get; set; } = "";
 
         public Interaction(CovenantContext context, IHubContext<GruntHub> grunthub)
         {
@@ -140,12 +139,20 @@ namespace Covenant.Core
                     return UserInput.Replace(parameters[2].Value, "");
                 }
             }
+            else if (UserInput.StartsWith("PowerShellImport", StringComparison.OrdinalIgnoreCase))
+            {
+                List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
+                if (parameters.Count >= 2)
+                {
+                    return UserInput.Replace(parameters[1].Value, "");
+                }
+            }
             return UserInput;
         }
 
         public async Task<GruntCommand> Input(CovenantUser user, Grunt grunt, string UserInput)
         {
-            GruntCommand GruntCommand = new GruntCommand
+            GruntCommand GruntCommand = await _context.CreateGruntCommand(new GruntCommand
             {
                 Command = GetCommandFromInput(UserInput),
                 CommandTime = DateTime.UtcNow,
@@ -154,12 +161,7 @@ namespace Covenant.Core
                 Grunt = grunt,
                 CommandOutputId = 0,
                 CommandOutput = new CommandOutput()
-            };
-            try
-            {
-                await _context.CreateGruntCommand(GruntCommand, _grunthub);
-            }
-            catch (Exception) { }
+            }, _grunthub);
 
             List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
             GruntTask commandTask = null;
@@ -182,12 +184,16 @@ namespace Covenant.Core
                     };
                 }
             }
-            catch (Exception) { }
+            catch (ControllerNotFoundException) { }
 
             string output = "";
             if (parameters.FirstOrDefault().Value.ToLower() == "show")
             {
                 output = await Show(grunt);
+            }
+            else if (parameters.FirstOrDefault().Value.ToLower() == "help")
+            {
+                output = await Help(parameters);
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "sharpshell")
             {
@@ -199,7 +205,7 @@ namespace Covenant.Core
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "set")
             {
-                output = await Set(user, grunt, parameters);
+                output = await Set(grunt, GruntCommand, parameters);
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "history")
             {
@@ -222,6 +228,12 @@ namespace Covenant.Core
                 grunt.Note = string.Join(" ", parameters.Skip(1).Select(P => P.Value).ToArray());
                 await _context.EditGrunt(grunt, user, _grunthub);
                 output = "Note: " + grunt.Note;
+            }
+            else if (parameters.FirstOrDefault().Value.ToLower() == "powershellimport")
+            {
+                grunt.PowerShellImport = parameters.Count >= 2 ? parameters[1].Value : "";
+                await _context.EditGrunt(grunt, user, _grunthub);
+                output = "PowerShell Imported";
             }
             else if (commandTask != null)
             {
@@ -327,6 +339,48 @@ namespace Covenant.Core
             return menu.Print();
         }
 
+        public async Task<string> Help(List<ParsedParameter> parameters)
+        {
+            string Name = "Help";
+            if ((parameters.Count() != 1 && parameters.Count() != 2 ) || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
+            {
+                StringBuilder toPrint1 = new StringBuilder();
+                toPrint1.Append(EliteConsole.PrintFormattedErrorLine("Usage: Help <task_name>"));
+                return toPrint1.ToString();
+            }
+            StringBuilder toPrint = new StringBuilder();
+            foreach (GruntTask t in await _context.GetGruntTasks())
+            {
+                if (parameters.Count() == 1)
+                {
+                    toPrint.AppendLine($"{t.Name}\t\t{t.Description}");
+                }
+                else if(parameters.Count() == 2 && t.Name.Equals(parameters[1].Value, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    string usage = t.Name;
+                    t.Options.ForEach(O =>
+                    {
+                        usage += O.Optional ? $" [ <{O.Name.Replace(" ", "_").ToLower()}> ]" : $" <{O.Name.Replace(" ", "_").ToLower()}>";
+                    });
+                    string libraries = string.Join(",", t.ReferenceSourceLibraries.Select(RSL => RSL.Name));
+                    string assemblies = string.Join(",", t.ReferenceAssemblies.Select(RA => RA.Name));
+                    string resources = string.Join(",", t.EmbeddedResources.Select(ER => ER.Name));
+                    toPrint.AppendLine($"Name: {t.Name}");
+                    toPrint.AppendLine($"Description: {t.Description}");
+                    toPrint.AppendLine($"Usage: {usage}");
+                    toPrint.AppendLine($"ReferenceSourceLibraries: " + (string.IsNullOrEmpty(libraries) ? "None" : libraries));
+                    toPrint.AppendLine($"ReferenceAssemblies: " + (string.IsNullOrEmpty(assemblies) ? "None" : assemblies));
+                    toPrint.AppendLine($"EmbeddedResources: " + (string.IsNullOrEmpty(resources) ? "None" : resources));
+                    if (!string.IsNullOrEmpty(t.Help))
+                    {
+                        toPrint.AppendLine($"Help: {t.Help}");
+                    }
+                    break;
+                }
+            }
+            return toPrint.ToString();
+        }
+
         public async Task<GruntTasking> StartTask(Grunt grunt, GruntTask task, GruntCommand command)
         {
             return await _context.CreateGruntTasking(new GruntTasking
@@ -418,7 +472,7 @@ public static class Task
             return "";
         }
 
-        public async Task<string> Set(CovenantUser user, Grunt grunt, List<ParsedParameter> parameters)
+        public async Task<string> Set(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
         {
             if (parameters.Count != 3)
             {
@@ -427,19 +481,58 @@ public static class Task
 
             if (int.TryParse(parameters[2].Value, out int n))
             {
+                GruntTask setTask = await _context.GetGruntTaskByName("Set");
                 if (parameters[1].Value.Equals("delay", StringComparison.OrdinalIgnoreCase))
                 {
                     grunt.Delay = n;
+                    await _context.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetDelay,
+                        Parameters = new List<string> { grunt.Delay.ToString() },
+                        GruntCommand = command,
+                        GruntCommandId = command.Id
+                    });
                 }
                 else if (parameters[1].Value.Equals("jitterpercent", StringComparison.OrdinalIgnoreCase))
                 {
                     grunt.JitterPercent = n;
+                    await _context.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetJitter,
+                        Parameters = new List<string> { grunt.JitterPercent.ToString() },
+                        GruntCommand = command,
+                        GruntCommandId = command.Id
+                    });
                 }
                 else if (parameters[1].Value.Equals("connectattempts", StringComparison.OrdinalIgnoreCase))
                 {
                     grunt.ConnectAttempts = n;
+                    await _context.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetConnectAttempts,
+                        Parameters = new List<string> { grunt.ConnectAttempts.ToString() },
+                        GruntCommand = command,
+                        GruntCommandId = command.Id
+                    });
                 }
-                await _context.EditGrunt(grunt, user, _grunthub);
                 return "";
             }
             return EliteConsole.PrintFormattedErrorLine("Usage: Set (Delay | JitterPercent | ConnectAttempts) <value>");
