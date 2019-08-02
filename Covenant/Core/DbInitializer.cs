@@ -1339,7 +1339,6 @@ namespace Covenant.Core
                             {
                                 Id = 63,
                                 Name = "RegPath",
->>>>>>> cf426f412b31053a65277bedc47f5a13dd6f5b3f
                                 Description = "The full path to the registry value to be read.",
                                 Value = "HKEY_CURRENT_USER\\Environment\\Path",
                                 SuggestedValues = new List<string>(),
