@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -99,8 +100,9 @@ namespace Covenant
                     var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
+                    var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
-                    DbInitializer.Initialize(context, roleManager).Wait();
+                    DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
                     if (!context.Users.Any() && UserNameOption.HasValue() && !string.IsNullOrEmpty(password))
                     {
                         // TODO: create user

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
@@ -49,9 +50,6 @@ namespace Covenant.Models
 
         public DbSet<CapturedCredential> Credentials { get; set; }
         public DbSet<Indicator> Indicators { get; set; }
-
-        // Dictionary of CancellationTokenSources for active listeners to stop them asynchronously
-        private readonly Dictionary<int, CancellationTokenSource> _ListenerCancellationTokens = new Dictionary<int, CancellationTokenSource>();
 
         public CovenantContext(DbContextOptions<CovenantContext> options) : base(options)
         {
@@ -2198,7 +2196,7 @@ namespace Covenant.Models
             return listener;
         }
 
-        public async Task<Listener> EditListener(Listener listener)
+        public async Task<Listener> EditListener(Listener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             Listener matchingListener = await this.GetListener(listener.Id);
             matchingListener.Name = listener.Name;
@@ -2251,14 +2249,14 @@ namespace Covenant.Models
             return await this.GetListener(matchingListener.Id);
         }
 
-        public async Task StartListener(int listenerId)
+        public async Task StartListener(int listenerId, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             Listener listener = await this.GetListener(listenerId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             _ListenerCancellationTokens[listener.Id] = listener.Start();
         }
 
-        public async Task DeleteListener(int listenerId)
+        public async Task DeleteListener(int listenerId, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             Listener listener = await this.GetListener(listenerId);
             if (listener.Status == ListenerStatus.Active)
@@ -2289,7 +2287,7 @@ namespace Covenant.Models
             return (HttpListener)listener;
         }
 
-        private async Task<HttpListener> StartInitialHttpListener(HttpListener listener)
+        private async Task<HttpListener> StartInitialHttpListener(HttpListener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             listener.StartTime = DateTime.UtcNow;
             if (listener.UseSSL && string.IsNullOrWhiteSpace(listener.SSLCertificate))
@@ -2329,7 +2327,7 @@ namespace Covenant.Models
             return listener;
         }
 
-        public async Task<HttpListener> CreateHttpListener(UserManager<CovenantUser> userManager, IConfiguration configuration, HttpListener listener)
+        public async Task<HttpListener> CreateHttpListener(UserManager<CovenantUser> userManager, IConfiguration configuration, HttpListener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             listener.Profile = await this.GetHttpProfile(listener.ProfileId);
             // Append capital letter to appease Password complexity requirements, get rid of warning output
@@ -2351,7 +2349,7 @@ namespace Covenant.Models
                 await this.Listeners.AddAsync(listener);
                 await this.SaveChangesAsync();
                 listener.Status = ListenerStatus.Active;
-                listener = await this.StartInitialHttpListener(listener);
+                listener = await this.StartInitialHttpListener(listener, _ListenerCancellationTokens);
                 this.Listeners.Update(listener);
                 await this.SaveChangesAsync();
             }
@@ -2363,7 +2361,7 @@ namespace Covenant.Models
             return await this.GetHttpListener(listener.Id);
         }
 
-        public async Task<HttpListener> EditHttpListener(HttpListener listener)
+        public async Task<HttpListener> EditHttpListener(HttpListener listener, ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens)
         {
             HttpListener matchingListener = await this.GetHttpListener(listener.Id);
             // URL is calculated from BindAddress, BindPort, UseSSL components
@@ -2402,7 +2400,7 @@ namespace Covenant.Models
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
                 matchingListener.Status = ListenerStatus.Active;
-                matchingListener = await this.StartInitialHttpListener(matchingListener);
+                matchingListener = await this.StartInitialHttpListener(matchingListener, _ListenerCancellationTokens);
             }
 
             this.Listeners.Update(matchingListener);

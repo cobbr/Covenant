@@ -221,7 +221,7 @@ namespace Covenant.Controllers
 
         private string FormatForVerbatimString(string replacement)
         {
-            return replacement.Replace("\"", "\"\"").Replace("{", "{{").Replace("}", "}}").Replace("{{0}}", "{0}");
+            return string.IsNullOrEmpty(replacement) ? "" : replacement.Replace("\"", "\"\"").Replace("{", "{{").Replace("}", "}}").Replace("{{0}}", "{0}");
         }
 
         private static readonly string GruntExecutorTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "Grunt" + ".cs"));

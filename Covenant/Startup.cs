@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 
 using Microsoft.AspNetCore.Hosting;
@@ -130,6 +131,8 @@ namespace Covenant
             {
                 options.PayloadSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             });
+
+            services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

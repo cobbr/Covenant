@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Identity;
 
@@ -15,17 +17,17 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-        public async static Task Initialize(CovenantContext context, RoleManager<IdentityRole> roleManager)
+        public async static Task Initialize(CovenantContext context, RoleManager<IdentityRole> roleManager, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             context.Database.EnsureCreated();
 
-            await InitializeListeners(context);
+            await InitializeListeners(context, ListenerCancellationTokens);
             await InitializeLaunchers(context);
             await InitializeTasks(context);
             await InitializeRoles(roleManager);
         }
 
-        public async static Task InitializeListeners(CovenantContext context)
+        public async static Task InitializeListeners(CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             if (!context.ListenerTypes.Any())
             {
@@ -44,7 +46,7 @@ namespace Covenant.Core
             foreach (Listener l in context.Listeners.Where(L => L.Status == ListenerStatus.Active))
             {
                 l.Profile = await context.GetHttpProfile(l.ProfileId);
-                await context.StartListener(l.Id);
+                await context.StartListener(l.Id, ListenerCancellationTokens);
             }
         }
 

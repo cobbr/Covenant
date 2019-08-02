@@ -2,9 +2,11 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -25,12 +27,14 @@ namespace Covenant.Controllers
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens;
 
-        public ListenerApiController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration)
+        public ListenerApiController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             _context = context;
             _userManager = userManager;
             _configuration = configuration;
+            _ListenerCancellationTokens = ListenerCancellationTokens;
         }
 
         // GET: api/listeners/types
@@ -104,7 +108,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditListener(listener);
+                return await _context.EditListener(listener, _ListenerCancellationTokens);
             }
             catch (ControllerNotFoundException e)
             {
@@ -125,7 +129,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteListener(id);
+                await _context.DeleteListener(id, _ListenerCancellationTokens);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)
@@ -168,7 +172,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.CreateHttpListener(_userManager, _configuration, listener);
+                return await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens);
             }
             catch (ControllerNotFoundException e)
             {
@@ -189,7 +193,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHttpListener(listener);
+                return await _context.EditHttpListener(listener, _ListenerCancellationTokens);
             }
             catch (ControllerNotFoundException e)
             {
