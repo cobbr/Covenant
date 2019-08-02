@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -65,17 +66,17 @@ namespace Covenant
                 }
 
                 string username = UserNameOption.Value();
-                string password = PasswordOption.Value();
-                if (!UserNameOption.HasValue())
-                {
-                    Console.Write("Username: ");
-                    username = Console.ReadLine();
-                }
-                if (!PasswordOption.HasValue())
+                string password = "";
+
+                if (UserNameOption.HasValue() && !PasswordOption.HasValue())
                 {
                     Console.Write("Password: ");
                     password = GetPassword();
                     Console.WriteLine();
+                }
+                else if (PasswordOption.HasValue())
+                {
+                    password = PasswordOption.Value();
                 }
 
                 string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : "0.0.0.0";
@@ -90,34 +91,38 @@ namespace Covenant
                 }
                 IPEndPoint CovenantEndpoint = new IPEndPoint(address, Common.CovenantHTTPSPort);
                 string CovenantUri = (CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + Common.CovenantHTTPSPort : "https://" + CovenantEndpoint);
-                var host = BuildWebHost(
-                    CovenantEndpoint,
-                    CovenantUri,
-                    username,
-                    password
-                );
+                var host = BuildWebHost(CovenantEndpoint, CovenantUri);
                 using (var scope = host.Services.CreateScope())
                 {
                     var services = scope.ServiceProvider;
                     var context = services.GetRequiredService<CovenantContext>();
                     var userManager = services.GetRequiredService<UserManager<CovenantUser>>();
                     var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
-                    context.Database.EnsureCreated();
-                    if (context.Users.Any())
-                    {
-                        CovenantUser user = context.Users.FirstOrDefault(CU => CU.UserName == username);
-                        Task<bool> task = userManager.CheckPasswordAsync(user, password);
-                        task.Wait();
-                        if (!task.Result)
-                        {
-                            Console.Error.WriteLine($"Error: Incorrect password for user: {username}");
-                            return -2;
-                        }
-                    }
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
-					var cancellationTokens = services.GetRequiredService<Dictionary<int, CancellationTokenSource>>();
-                    DbInitializer.Initialize(context, userManager, roleManager, configuration, cancellationTokens);
+                    var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
+                    context.Database.EnsureCreated();
+                    DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
+                    if (!context.Users.Any() && UserNameOption.HasValue() && !string.IsNullOrEmpty(password))
+                    {
+                        // TODO: create user
+                        CovenantUser user = new CovenantUser { UserName = UserNameOption.Value() };
+                        Task<IdentityResult> task = userManager.CreateAsync(user, password);
+                        task.Wait();
+                        IdentityResult userResult = task.Result;
+                        if (userResult.Succeeded)
+                        {
+                            Task t = userManager.AddToRoleAsync(user, "User");
+                            t.Wait();
+                            Task t2 = userManager.AddToRoleAsync(user, "Administrator");
+                            t2.Wait();
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"Error creating user: {user.UserName}");
+                            return -1;
+                        }
+                    }
                 }
                 
                 LoggingConfiguration loggingConfig = new LoggingConfiguration();
@@ -151,7 +156,7 @@ namespace Covenant
             app.Execute(args);
         }
 
-        public static IWebHost BuildWebHost(IPEndPoint CovenantEndpoint, string CovenantUri, string CovenantUsername, string CovenantPassword) =>
+        public static IWebHost BuildWebHost(IPEndPoint CovenantEndpoint, string CovenantUri) =>
             new WebHostBuilder()
                 .UseKestrel(options =>
                 {
@@ -172,7 +177,7 @@ namespace Covenant
                             }
                             catch (CryptographicException)
                             {
-                                Console.Error.WriteLine("Error importing Covenant certificate. Wrong password? Must use initial user/password.");
+                                Console.Error.WriteLine("Error importing Covenant certificate.");
                             }
                             httpsOptions.SslProtocols = SslProtocols.Tls12;
                             Console.WriteLine("Using Covenant certificate with hash: " + httpsOptions.ServerCertificate.GetCertHashString());
@@ -203,8 +208,6 @@ namespace Covenant
                 })
                 .UseStartup<Startup>()
                 .UseSetting("CovenantUri", CovenantUri)
-                .UseSetting("CovenantUsername", CovenantUsername)
-                .UseSetting("CovenantPassword", CovenantPassword)
                 .Build();
 
         private static string GetPassword()

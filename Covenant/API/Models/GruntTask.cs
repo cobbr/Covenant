@@ -6,6 +6,7 @@
 
 namespace Covenant.API.Models
 {
+    using Microsoft.Rest;
     using Newtonsoft.Json;
     using System.Collections;
     using System.Collections.Generic;
@@ -24,18 +25,19 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        public GruntTask(int? id = default(int?), string name = default(string), string description = default(string), string help = default(string), bool? tokenTask = default(bool?), string code = default(string), IList<string> referenceAssemblies = default(IList<string>), IList<string> referenceSourceLibraries = default(IList<string>), IList<string> embeddedResources = default(IList<string>), bool? unsafeCompile = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
+        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), string code = default(string), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
+            AlternateNames = alternateNames;
             Description = description;
             Help = help;
-            TokenTask = tokenTask;
             Code = code;
-            ReferenceAssemblies = referenceAssemblies;
             ReferenceSourceLibraries = referenceSourceLibraries;
+            ReferenceAssemblies = referenceAssemblies;
             EmbeddedResources = embeddedResources;
             UnsafeCompile = unsafeCompile;
+            TokenTask = tokenTask;
             Options = options;
             CustomInit();
         }
@@ -57,6 +59,11 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "alternateNames")]
+        public IList<string> AlternateNames { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
 
@@ -67,28 +74,23 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "tokenTask")]
-        public bool? TokenTask { get; set; }
-
-        /// <summary>
-        /// </summary>
         [JsonProperty(PropertyName = "code")]
         public string Code { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "referenceAssemblies")]
-        public IList<string> ReferenceAssemblies { get; set; }
+        [JsonProperty(PropertyName = "referenceSourceLibraries")]
+        public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; private set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "referenceSourceLibraries")]
-        public IList<string> ReferenceSourceLibraries { get; set; }
+        [JsonProperty(PropertyName = "referenceAssemblies")]
+        public IList<ReferenceAssembly> ReferenceAssemblies { get; private set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "embeddedResources")]
-        public IList<string> EmbeddedResources { get; set; }
+        public IList<EmbeddedResource> EmbeddedResources { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -97,8 +99,36 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "tokenTask")]
+        public bool? TokenTask { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "options")]
         public IList<GruntTaskOption> Options { get; set; }
 
+        /// <summary>
+        /// Validate the object.
+        /// </summary>
+        /// <exception cref="ValidationException">
+        /// Thrown if validation fails
+        /// </exception>
+        public virtual void Validate()
+        {
+            if (Name == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "Name");
+            }
+            if (Options != null)
+            {
+                foreach (var element in Options)
+                {
+                    if (element != null)
+                    {
+                        element.Validate();
+                    }
+                }
+            }
+        }
     }
 }

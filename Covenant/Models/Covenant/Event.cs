@@ -9,23 +9,23 @@ using Covenant.Core;
 
 namespace Covenant.Models.Covenant
 {
+    public enum EventLevel
+    {
+        Silent,
+        Info,
+        Warning,
+        Highlight,
+        Error
+    }
+
+    public enum EventType
+    {
+        Normal,
+        Download
+    }
+
     public class Event
     {
-		public enum EventLevel
-		{
-            Silent,
-			Info,
-			Warning,
-			Highlight,
-			Error
-		}
-
-        public enum EventType
-        {
-            Normal,
-            Download
-        }
-
         public int Id { get; set; }
         public DateTime Time { get; set; } = DateTime.UtcNow;
         public string MessageHeader { get; set; }

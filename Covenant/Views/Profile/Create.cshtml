@@ -1,0 +1,212 @@
+﻿@using System.Linq
+@using Covenant.Core
+@using Covenant.Models.Listeners
+@model HttpProfile
+@{
+    Layout = "../Listener/_ListenerLayout";
+    ViewData["Title"] = "Profile";
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Create HttpProfile</h1>
+</div>
+
+<form asp-controller="Profile" asp-action="Create">
+    <div asp-validation-summary="All"></div>
+    <input asp-for="Id" type="hidden">
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" value="@Model.Name" class="form-control">
+        </div>
+        <div class="form-group">
+            <label asp-for="Type"></label><br />
+            <select asp-for="Type" asp-items="@Html.GetEnumSelectList<ProfileType>()" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto"></select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" class="form-control">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpUrls[0]">HttpUrls</label>
+        </div> 
+    </div>
+    <div class="form-row httpurl-row">
+        <div class="form-group col-md-6">
+            <input asp-for="HttpUrls[0]" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpurl-button"><span data-feather="x"></span></button>
+        </div>
+    </div>
+    <button type="button" id="add-httpurl-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpMessageTransform"></label>
+            <textarea asp-for="HttpMessageTransform" value="@Model.HttpMessageTransform" rows="10" class="form-control"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpRequestHeaders[0]">HttpRequestHeaders</label><br />
+        </div>
+    </div>
+    <div class="form-row httprequestheader-row">
+        <div class="form-group col-md-6">
+            <label asp-for="HttpRequestHeaders[0].Name"></label>
+            <input asp-for="HttpRequestHeaders[0].Name" class="form-control">
+            <label asp-for="HttpRequestHeaders[0].Value"></label>
+            <input asp-for="HttpRequestHeaders[0].Value" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httprequestheader-button"><span data-feather="x"></span></button>
+        </div>
+    </div>
+    <button type="button" id="add-httprequestheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpResponseHeaders[0]">HttpResponseHeaders</label><br />
+        </div>
+    </div>
+    <div class="form-row httpresponseheader-row">
+        <div class="form-group col-md-6">
+            <label asp-for="HttpResponseHeaders[0].Name"></label>
+            <input asp-for="HttpResponseHeaders[0].Name" class="form-control">
+            <label asp-for="HttpResponseHeaders[0].Value"></label>
+            <input asp-for="HttpResponseHeaders[0].Value" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpresponseheader-button"><span data-feather="x"></span></button>
+        </div>
+    </div>
+    <button type="button" id="add-httpresponseheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpPostRequest"></label>
+            <textarea asp-for="HttpPostRequest" value="@Model.HttpPostRequest" rows="20" class="form-control"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpGetResponse"></label>
+            <textarea asp-for="HttpGetResponse" value="@Model.HttpGetResponse" rows="20" class="form-control"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpPostResponse"></label>
+            <textarea asp-for="HttpPostResponse" value="@Model.HttpPostResponse" rows="20" class="form-control"></textarea>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+</form>
+
+@section Scripts {
+<script type="text/javascript">
+    $(document).ready(function () {
+        var addUrl = function () {
+            var num = $(".httpurl-row").length;
+            var newitem = '<div class="form-row httpurl-row">' +
+                          '    <div class="form-group col-md-6">' +
+                          '        <input id="HttpUrls_' + num + '_" name="HttpUrls[' + num + ']" class="form-control" type="text">' +
+                          '    </div>' +
+                          '    <div class="col-auto align-self-center">' +
+                          '        <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpurl-button"><span data-feather="x"></span></button>' +
+                          '    </div>' +
+                          '</div>';
+            $(this).before(newitem);
+            feather.replace();
+            console.log($(this).prev().find("button"));
+            $(this).prev().find("button").click(removeUrl);
+        }
+        var addRequest = function () {
+            var num = $(".httprequestheader-row").length;
+            var newitem = '<div class="form-row httprequestheader-row">' +
+                          '    <div class="form-group col-md-6">' +
+                          '        <label for="HttpRequestHeaders_' + num + '__Name">Name</label>' +
+                          '        <input id="HttpRequestHeaders_' + num + '__Name" name="HttpRequestHeaders[' + num + '].Name" class="form-control" type="text">' +
+                          '        <label for="HttpRequestHeaders_' + num + '__Value">Value</label>' +
+                          '        <input id="HttpRequestHeaders_' + num + '__Value" name="HttpRequestHeaders[' + num + '].Value" class="form-control" type="text">' +
+                          '    </div>' +
+                          '    <div class="col-auto align-self-center">' +
+                          '        <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httprequestheader-button"><span data-feather="x"></span></button>' +
+                          '    </div>' +
+                          '</div>';
+            $(this).before(newitem);
+            feather.replace();
+            $(this).prev().find("button").click(removeRequest);
+        }
+        var addResponse = function () {
+            var num = $(".httpresponseheader-row").length;
+            var newitem = '<div class="form-row httpresponseheader-row">' +
+                          '    <div class="form-group col-md-6">' +
+                          '        <label for="HttpResponseHeaders_' + num + '__Name">Name</label>' +
+                          '        <input id="HttpResponseHeaders_' + num + '__Name" name="HttpResponseHeaders[' + num + '].Name" class="form-control" type="text">' +
+                          '        <label for="HttpResponseHeaders_' + num + '__Value">Value</label>' +
+                          '        <input id="HttpResponseHeaders_' + num + '__Value" name="HttpResponseHeaders[' + num + '].Value" class="form-control" type="text">' +
+                          '    </div>' +
+                          '    <div class="col-auto align-self-center">' +
+                          '        <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpresponseheader-button"><span data-feather="x"></span></button>' +
+                          '    </div>' +
+                          '</div>';
+            $(this).before(newitem);
+            feather.replace();
+            $(this).prev().find("button").click(removeResponse);
+        }
+
+        var removeUrl = function () {
+            var row = $(this).parent().parent();
+            var num = row.find("input").attr("id").replace("HttpUrls_", "").replace("_", "");
+            $(".httpurl-row").each(function()
+            {
+                var currNum = $(this).find("input").attr("id").replace("HttpUrls_", "").replace("_", "");
+                console.log("num: " + parseInt(num));
+                console.log("currNum: " + parseInt(currNum));
+                if (parseInt(currNum) > parseInt(num)) {
+                    $(this).find("input").attr("id", "HttpUrls_" + (parseInt(currNum) - 1) + "_");
+                    $(this).find("input").attr("name", "HttpUrls[" + (parseInt(currNum) - 1) + "]");
+                }
+            });
+            row.remove();
+        }
+        var removeRequest = function () {
+            var row = $(this).parent().parent();
+            var num = row.find("input").attr("id").replace("HttpRequestHeaders_", "").replace("_", "");
+            $(".httprequestheader-row").each(function()
+            {
+                var currNum = $(this).find("input").attr("id").replace("HttpRequestHeaders_", "").replace("_", "");
+                if (parseInt(currNum) > parseInt(num)) {
+                    $(this).find("input").attr("id", "HttpRequestHeaders_" + (parseInt(currNum) - 1) + "_");
+                    $(this).find("input").attr("name", "HttpRequestHeaders[" + (parseInt(currNum) - 1) + "]");
+                }
+            });
+            row.remove();
+        }
+        var removeResponse = function () {
+            var row = $(this).parent().parent();
+            var num = row.find("input").attr("id").replace("HttpResponseHeaders_", "").replace("_", "");
+            $(".httpresponseheader-row").each(function()
+            {
+                var currNum = $(this).find("input").attr("id").replace("HttpResponseHeaders_", "").replace("_", "");
+                if (parseInt(currNum) > parseInt(num)) {
+                    $(this).find("input").attr("id", "HttpResponseHeaders_" + (parseInt(currNum) - 1) + "_");
+                    $(this).find("input").attr("name", "HttpResponseHeaders[" + (parseInt(currNum) - 1) + "]");
+                }
+            });
+            row.remove();
+        }
+        
+        $('#add-httpurl-button').click(addUrl);
+        $('#add-httprequestheader-button').click(addRequest);
+        $('#add-httpresponseheader-button').click(addResponse);
+
+        $('.remove-httpurl-button').click(removeUrl);
+        $('.remove-httprequestheader-button').click(removeRequest);
+        $('.remove-httpresponseheader-button').click(removeResponse);
+    });
+    </script>
+}

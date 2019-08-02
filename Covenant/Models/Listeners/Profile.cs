@@ -4,11 +4,9 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
-using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using APIModels = Covenant.API.Models;
@@ -16,84 +14,69 @@ using Covenant.Core;
 
 namespace Covenant.Models.Listeners
 {
+    public enum ProfileType
+    {
+        HTTP
+    }
+
     public class Profile
     {
         public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public ProfileType Type { get; set; }
+    }
+
+    public class HttpProfileHeader
+    {
+        public string Name { get; set; } = "";
+        public string Value { get; set; } = "";
+        public static HttpProfileHeader CreateHeader(APIModels.HttpProfileHeader httpHeaderModel)
+        {
+            return new HttpProfileHeader
+            {
+                Name = httpHeaderModel.Name,
+                Value = httpHeaderModel.Value
+            };
+        }
     }
 
     public class HttpProfile : Profile
     {
-        public class HttpProfileHeader
-        {
-            public string Name { get; set; } = "";
-            public string Value { get; set; } = "";
-        }
-
-        private List<string> _HttpUrls { get; set; } = new List<string>();
-        private List<string> _HttpCookies { get; set; } = new List<string>();
-        private List<HttpProfileHeader> _HttpHeaders { get; set; } = new List<HttpProfileHeader>();
-
-        public string Name { get; set; }
-        public string HttpUrls
-        {
-            get { return JsonConvert.SerializeObject(this._HttpUrls); }
-            set { this._HttpUrls = JsonConvert.DeserializeObject<List<string>>(value); }
-        }
-        public string HttpCookies
-        {
-            get { return JsonConvert.SerializeObject(this._HttpCookies); }
-            set { this._HttpCookies = JsonConvert.DeserializeObject<List<string>>(value); }
-        }
+        public List<string> HttpUrls { get; set; } = new List<string> { "" };
         public string HttpMessageTransform { get; set; } = "";
-        public string HttpRequestHeaders
-        {
-            get { return JsonConvert.SerializeObject(this._HttpHeaders); }
-            set { this._HttpHeaders = JsonConvert.DeserializeObject<List<HttpProfileHeader>>(value); }
-        }
-        public string HttpPostRequest { get; set; } = "";
+        public virtual List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
+        public virtual List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
 
-        public string HttpResponseHeaders
-        {
-            get { return JsonConvert.SerializeObject(this._HttpHeaders); }
-            set { this._HttpHeaders = JsonConvert.DeserializeObject<List<HttpProfileHeader>>(value); }
-        }
+        public string HttpPostRequest { get; set; } = "";
         public string HttpGetResponse { get; set; } = "";
         public string HttpPostResponse { get; set; } = "";
 
-        public List<string> GetUrls()
+        public HttpProfile()
         {
-            return this._HttpUrls;
-        }
-        public List<string> GetCookies()
-        {
-            return this._HttpCookies;
-        }
-        public List<HttpProfileHeader> GetHeaders()
-        {
-            return this._HttpHeaders;
+            this.Type = ProfileType.HTTP;
         }
 
-        private byte[] _TransformCoreAssemblyBytes { get; set; } = null;
-        private Assembly _TransformCoreAssembly { get; set; } = null;
+        private byte[] TransformCoreAssemblyBytes { get; set; }
+        private Assembly TransformCoreAssembly { get; set; }
 
         private Assembly GetTransformCoreAssembly()
         {
-            if (this._TransformCoreAssembly == null)
+            if (this.TransformCoreAssembly == null)
             {
-                if (this._TransformCoreAssemblyBytes == null)
+                if (this.TransformCoreAssemblyBytes == null)
                 {
                     string[] refLocationPieces = typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar);
-                    this._TransformCoreAssemblyBytes = Compiler.Compile(new Compiler.CompilationRequest
+                    this.TransformCoreAssemblyBytes = Compiler.Compile(new Compiler.CompilationRequest
                     {
                         Source = this.HttpMessageTransform,
-                        ReferenceDirectory = String.Join(Path.DirectorySeparatorChar, refLocationPieces.Take(refLocationPieces.Count() - 1)),
                         TargetDotNetVersion = Common.DotNetVersion.NetCore21,
-                        References = Common.NetCore21References
+                        References = Common.DefaultReferencesCore21
                     });
                 }
-                this._TransformCoreAssembly = Assembly.Load(this._TransformCoreAssemblyBytes);
+                this.TransformCoreAssembly = Assembly.Load(this.TransformCoreAssemblyBytes);
             }
-            return this._TransformCoreAssembly;
+            return this.TransformCoreAssembly;
         }
 
         public string Transform(byte[] bytes)
@@ -108,36 +91,6 @@ namespace Covenant.Models.Listeners
             return (byte[])t.GetMethod("Invert").Invoke(null, new object[] { str });
         }
 
-        private class HttpProfileYaml
-        {
-            public string Name { get; set; }
-            public List<string> HttpUrls { get; set; } = new List<string>();
-            public List<string> HttpCookies { get; set; } = new List<string>();
-            public string HttpMessageTransform { get; set; } = "";
-            public List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader>();
-            public string HttpPostRequest { get; set; } = "";
-            public List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader>();
-            public string HttpGetResponse { get; set; } = "";
-            public string HttpPostResponse { get; set; } = "";
-        }
-
-        public static HttpProfile Create(APIModels.HttpProfile httpProfileModel)
-        {
-            return new HttpProfile
-            {
-                Id = httpProfileModel.Id ?? default,
-                Name = httpProfileModel.Name,
-                HttpUrls = httpProfileModel.HttpUrls,
-                HttpCookies = httpProfileModel.HttpCookies,
-                HttpMessageTransform = httpProfileModel.HttpMessageTransform,
-                HttpRequestHeaders = httpProfileModel.HttpRequestHeaders,
-                HttpPostRequest = httpProfileModel.HttpPostRequest,
-                HttpResponseHeaders = httpProfileModel.HttpResponseHeaders,
-                HttpGetResponse = httpProfileModel.HttpGetResponse,
-                HttpPostResponse = httpProfileModel.HttpPostResponse
-            };
-        }
-
         public static HttpProfile Create(string ProfileFilePath)
         {
             using (TextReader reader = File.OpenText(ProfileFilePath))
@@ -148,19 +101,33 @@ namespace Covenant.Models.Listeners
             }
         }
 
+        private class HttpProfileYaml
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public List<string> HttpUrls { get; set; } = new List<string>();
+            public List<string> HttpCookies { get; set; } = new List<string>();
+            public string HttpMessageTransform { get; set; } = "";
+            public List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader>();
+            public string HttpPostRequest { get; set; } = "";
+            public List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader>();
+            public string HttpGetResponse { get; set; } = "";
+            public string HttpPostResponse { get; set; } = "";
+        }
+
         private static HttpProfile CreateFromHttpProfileYaml(HttpProfileYaml yaml)
         {
             return new HttpProfile
             {
                 Name = yaml.Name,
-                HttpUrls = JsonConvert.SerializeObject(yaml.HttpUrls),
-                HttpCookies = JsonConvert.SerializeObject(yaml.HttpCookies),
+                Description = yaml.Description,
+                HttpUrls = yaml.HttpUrls,
                 HttpMessageTransform = yaml.HttpMessageTransform,
-                HttpRequestHeaders = JsonConvert.SerializeObject(yaml.HttpRequestHeaders),
-                HttpPostRequest = yaml.HttpPostRequest,
-                HttpResponseHeaders = JsonConvert.SerializeObject(yaml.HttpResponseHeaders),
-                HttpGetResponse = yaml.HttpGetResponse,
-                HttpPostResponse = yaml.HttpPostResponse
+                HttpRequestHeaders = yaml.HttpRequestHeaders,
+                HttpPostRequest = yaml.HttpPostRequest.TrimEnd('\n'),
+                HttpResponseHeaders = yaml.HttpResponseHeaders,
+                HttpGetResponse = yaml.HttpGetResponse.TrimEnd('\n'),
+                HttpPostResponse = yaml.HttpPostResponse.TrimEnd('\n')
             };
         }
     }

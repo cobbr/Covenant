@@ -13,30 +13,30 @@ using Covenant.Models.Listeners;
 
 namespace Covenant.Models.Launchers
 {
+    public enum LauncherType
+    {
+        Wmic,
+        Regsvr32,
+        Mshta,
+        Cscript,
+        Wscript,
+        PowerShell,
+        Binary,
+        MSBuild,
+        InstallUtil
+    }
+
     public class Launcher
     {
-        public enum LauncherType
-        {
-            Wmic,
-            Regsvr32,
-            Mshta,
-            Cscript,
-            Wscript,
-            PowerShell,
-            Binary,
-            MSBuild,
-            InstallUtil
-        }
-
         public int Id { get; set; }
         public int ListenerId { get; set; }
-        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
-        public LauncherType Type { get; set; }
-
         public string Name { get; set; } = "GenericLauncher";
         public string Description { get; set; } = "A generic launcher.";
+
+        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
+        public LauncherType Type { get; set; }
         
-        public Grunt.CommunicationType CommType { get; set; } = Grunt.CommunicationType.HTTP;
+        public CommunicationType CommType { get; set; } = CommunicationType.HTTP;
         public bool ValidateCert { get; set; } = true;
         public bool UseCertPinning { get; set; } = true;
         public string SMBPipeName { get; set; } = "gruntsvc";
@@ -44,7 +44,7 @@ namespace Covenant.Models.Launchers
         public int Delay { get; set; } = 5;
         public int JitterPercent { get; set; } = 10;
         public int ConnectAttempts { get; set; } = 5000;
-        public DateTime KillDate { get; set; } = DateTime.MaxValue;
+        public DateTime KillDate { get; set; } = new DateTime(2020, 12, 31);
 
         public string LauncherString { get; set; } = "";
         public string StagerCode { get; set; } = "";
@@ -61,22 +61,22 @@ namespace Covenant.Models.Launchers
         public string DiskCode { get; set; }
     }
 
+    public enum ScriptingLanguage
+    {
+        JScript,
+        VBScript
+    }
+
+    public enum ScriptletType
+    {
+        Plain,
+        Scriptlet,
+        TaggedScript,
+        Stylesheet
+    }
+
     public abstract class ScriptletLauncher : DiskLauncher
     {
-        public enum ScriptingLanguage
-        {
-            JScript,
-            VBScript
-        }
-
-        protected enum ScriptletType
-        {
-            Plain,
-            Scriptlet,
-            TaggedScript,
-            Stylesheet
-        }
-
         public ScriptingLanguage ScriptLanguage { get; set; } = ScriptingLanguage.JScript;
         public string ProgId { get; set; } = Utilities.CreateSecureGuid().ToString();
 

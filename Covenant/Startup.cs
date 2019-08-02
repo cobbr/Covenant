@@ -3,24 +3,27 @@
 // License: GNU GPLv3
 
 using System;
-using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Threading;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
+using System.IdentityModel.Tokens.Jwt;
+
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
+using Covenant.Hubs;
+using Covenant.API;
 using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Covenant;
@@ -39,29 +42,40 @@ namespace Covenant
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<CovenantContext>(opt =>
-			{
-				opt.UseSqlite("Data Source=" + Common.CovenantDatabaseFile);
-			});
-            
-            services.AddIdentity<CovenantUser, IdentityRole>(options =>
+            services.AddDbContext<CovenantContext>();
+
+            services.AddIdentity<CovenantUser, IdentityRole>()
+            .AddEntityFrameworkStores<CovenantContext>()
+            .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(options =>
             {
-                options.Stores.MaxLengthForKeys = 128;
                 options.Password.RequireDigit = false;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 1;
-            }).AddEntityFrameworkStores<CovenantContext>()
-            .AddDefaultTokenProviders();
+
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+                options.Lockout.MaxFailedAccessAttempts = 10;
+                options.Lockout.AllowedForNewUsers = true;
+
+                options.User.RequireUniqueEmail = false;
+            });
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(120);
+
+                options.LoginPath = "/CovenantUser/Login";
+                options.LogoutPath = "/CovenantUser/Logout";
+                options.AccessDeniedPath = "/Login/AccessDenied";
+                options.SlidingExpiration = true;
+            });
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-			services.AddAuthentication(options =>
-			{
-				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-				options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-			}).AddJwtBearer(cfg =>
+			services.AddAuthentication().AddJwtBearer(cfg =>
 			{
 				cfg.RequireHttpsMetadata = false;
 				cfg.SaveToken = true;
@@ -74,13 +88,30 @@ namespace Covenant
 				};
 			});
 
-            services.AddMvc();
-            services.AddRouting(options => options.LowercaseUrls = true);
-
-			services.AddAuthorization(options =>
-			{
-				options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
+                options.AddPolicy("RequireJwtBearer", policy =>
+                {
+                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireAuthenticatedUser();
+                });
+                options.AddPolicy("RequireJwtBearerRequireAdministratorRole", policy =>
+                {
+                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireRole("Administrator");
+                });
+                options.AddPolicy("RequireAdministratorRole", policy =>
+                {
+                    policy.RequireRole("Administrator");
+                });
             });
+
+            services.AddMvc().AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
+            services.AddRouting(options => options.LowercaseUrls = true);
 
             services.AddSwaggerGen(c =>
             {
@@ -96,7 +127,12 @@ namespace Covenant
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
 
-			services.AddSingleton<Dictionary<int, CancellationTokenSource>>();
+            services.AddSignalR().AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+
+            services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -118,7 +154,28 @@ namespace Covenant
             }
 
 			app.UseAuthentication();
-            app.UseMvc();
+
+            app.UseStaticFiles();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "defaultWithoutAction",
+                    template: "{controller=Home}/{id?}"
+                );
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}"
+                );
+
+            });
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<GruntHub>("/grunthub", options =>
+                {
+                    options.ApplicationMaxBufferSize = 2000 * 1024;
+                });
+            });
         }
 
         public class AutoRestSchemaFilter : ISchemaFilter
@@ -133,7 +190,7 @@ namespace Covenant
                         "x-ms-enum",
                         new { name = typeInfo.Name, modelAsString = false }
                     );
-                };
+                }
             }
         }
 

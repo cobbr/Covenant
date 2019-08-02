@@ -22,10 +22,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CovenantUserLoginResult class.
         /// </summary>
-        public CovenantUserLoginResult(bool? success = default(bool?), string token = default(string))
+        public CovenantUserLoginResult(bool? success = default(bool?), string covenantToken = default(string))
         {
             Success = success;
-            Token = token;
+            CovenantToken = covenantToken;
             CustomInit();
         }
 
@@ -41,8 +41,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "token")]
-        public string Token { get; set; }
+        [JsonProperty(PropertyName = "covenantToken")]
+        public string CovenantToken { get; set; }
 
     }
 }

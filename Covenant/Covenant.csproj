@@ -16,70 +16,97 @@
   <ItemGroup>
     <Compile Remove="Data\Grunt\*" />
     <Compile Remove="Data\Tasks\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\LateralMovement\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Credentials\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Enumeration\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Execution\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Generic\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit\Misc\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\LateralMovement\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Credentials\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Enumeration\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Execution\*" />
-    <Compile Remove="Data\Tasks\src\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Properties\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\lib\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\lib\krb_structures\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Asn1\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Commands\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Domain\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\Properties\*" />
-    <Compile Remove="Data\Tasks\src\Rubeus\Rubeus\*" />
-    <Compile Remove="Data\Tasks\src\SharpDPAPI\SharpDPAPI\Commands\*" />
-    <Compile Remove="Data\Tasks\src\SharpDPAPI\SharpDPAPI\Domain\*" />
-    <Compile Remove="Data\Tasks\src\SharpDPAPI\SharpDPAPI\lib\*" />
-    <Compile Remove="Data\Tasks\src\SharpDPAPI\SharpDPAPI\Properties\*" />
-    <Compile Remove="Data\Tasks\src\SharpDPAPI\SharpDPAPI\*" />
-    <Compile Remove="Data\Tasks\src\SharpUp\SharpUp\Properties\*" />
-    <Compile Remove="Data\Tasks\src\SharpUp\SharpUp\*" />
-    <Compile Remove="Data\Tasks\src\SafetyKatz\SafetyKatz\Properties\*" />
-    <Compile Remove="Data\Tasks\src\SafetyKatz\SafetyKatz\*" />
-    <Compile Remove="Data\Tasks\src\Seatbelt\Seatbelt\Properties\*" />
-    <Compile Remove="Data\Tasks\src\Seatbelt\Seatbelt\*" />
-    <Compile Remove="Data\Tasks\src\SharpDump\SharpDump\Properties\*" />
-    <Compile Remove="Data\Tasks\src\SharpDump\SharpDump\*" />
-    <Compile Remove="Data\Tasks\src\SharpWMI\SharpWMI\Properties\*" />
-    <Compile Remove="Data\Tasks\src\SharpWMI\SharpWMI\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\LateralMovement\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\Credentials\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\Enumeration\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\Execution\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\Generic\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\Misc\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\LateralMovement\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Credentials\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Enumeration\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Execution\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit.Tests\SharpSploit.Tests\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\lib\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\lib\krb_structures\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\Asn1\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\Commands\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\Domain\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Rubeus\Rubeus\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDPAPI\SharpDPAPI\Commands\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDPAPI\SharpDPAPI\Domain\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDPAPI\SharpDPAPI\lib\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDPAPI\SharpDPAPI\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDPAPI\SharpDPAPI\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpUp\SharpUp\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpUp\SharpUp\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SafetyKatz\SafetyKatz\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SafetyKatz\SafetyKatz\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Seatbelt\Seatbelt\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\Seatbelt\Seatbelt\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDump\SharpDump\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpDump\SharpDump\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpWMI\SharpWMI\Properties\*" />
+    <Compile Remove="Data\ReferenceSourceLibraries\SharpWMI\SharpWMI\*" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="Data\Grunt\*" />
+    <None Include="wwwroot\css\bootstrap-datetimepicker.css" />
+    <None Include="wwwroot\css\bootstrap-datetimepicker.min.css" />
+    <None Include="wwwroot\js\bootstrap-datetimepicker.min.js" />
+    <None Include="wwwroot\js\bootstrap-datetimepicker.js" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\" />
     <Folder Include="Data\Tasks\" />
     <Folder Include="Models\Indicators\" />
+    <Folder Include="Views\" />
+    <Folder Include="Views\Grunt\" />
+    <Folder Include="Views\Shared\" />
+    <Folder Include="Views\Indicator\" />
+    <Folder Include="Views\Launcher\" />
+    <Folder Include="Views\Listener\" />
+    <Folder Include="Views\Credential\" />
+    <Folder Include="Views\CovenantUser\" />
+    <Folder Include="Hubs\" />
+    <Folder Include="Controllers\ApiControllers\" />
+    <Folder Include="Controllers\ListenerControllers\" />
+    <Folder Include="Controllers\ViewControllers\" />
+    <Folder Include="Views\Home\" />
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="Views\GruntTask\" />
+    <Folder Include="Views\GruntTasking\" />
+    <Folder Include="Views\Data\" />
+    <Folder Include="Views\ReferenceSourceLibrary\" />
+    <Folder Include="Views\ReferenceAssembly\" />
+    <Folder Include="Views\EmbeddedResource\" />
+    <Folder Include="Views\HostedFile\" />
+    <Folder Include="Views\Profile\" />
+    <Folder Include="Views\Graph\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.App">
+      <PrivateAssets Condition="'%(PackageReference.Version)' == ''">all</PrivateAssets>
+      <Publish Condition="'%(PackageReference.Version)' == ''">true</Publish>
+    </PackageReference>
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.5.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.3" />
     <PackageReference Include="YamlDotNet" Version="5.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.4" />
   </ItemGroup>
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.1.0-preview1-final" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="API\openapi4.json" />
-    <Content Remove="API\openapi5.json" />
-  </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -110,5 +137,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Data\covenant.db-journal" />
+    <None Remove="Data\covenant.db" />
   </ItemGroup>
 </Project>

@@ -13,8 +13,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HTTPS_PORT": "7443"
+        "ASPNETCORE_HTTPS_PORT": "7443",
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "Covenant": {
@@ -22,8 +22,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:7443;http://localhost:7442"
+        "ASPNETCORE_URLS": "https://localhost:7443;http://localhost:7442",
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }

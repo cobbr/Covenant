@@ -2,7 +2,8 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
 using Microsoft.AspNetCore.Identity;
 
 namespace Covenant.Models.Covenant
@@ -14,13 +15,21 @@ namespace Covenant.Models.Covenant
 
     public class CovenantUserLogin
     {
+        [Required]
         public string UserName { get; set; }
+        [Required]
         public string Password { get; set; }
+    }
+
+    public class CovenantUserRegister : CovenantUserLogin
+    {
+        [Required]
+        public string ConfirmPassword { get; set; }
     }
 
     public class CovenantUserLoginResult
     {
-        public bool success { get; set; } = true;
-        public string token { get; set; } = default;
+        public bool Success { get; set; } = true;
+        public string CovenantToken { get; set; } = default;
     }
 }

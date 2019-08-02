@@ -1,0 +1,37 @@
+﻿@using Covenant.Models.Listeners
+@model IEnumerable<Listener>
+
+<div class="table-responsive">
+    <table id="listeners-table" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Name)</th>
+                <th>@Html.DisplayNameFor(model => model.ListenerType)</th>
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
+                <th>@Html.DisplayNameFor(model => model.StartTime)</th>
+                <th>@Html.DisplayNameFor(model => model.BindAddress)</th>
+                <th>@Html.DisplayNameFor(model => model.BindPort)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                @if (item.Status != ListenerStatus.Uninitialized)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Listener" asp-action="interact" asp-route-id="@item.Id">
+                                @Html.DisplayFor(modelItem => item.Name)
+                            </a>
+                        </td>
+                        <td>@Html.DisplayFor(modelItem => item.ListenerType.Name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                        <td>@Html.DisplayFor(modelItem => item.StartTime)</td>
+                        <td>@Html.DisplayFor(modelItem => item.BindAddress)</td>
+                        <td>@Html.DisplayFor(modelItem => item.BindPort)</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

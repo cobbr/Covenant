@@ -36,7 +36,7 @@ namespace Covenant.Models.Launchers
                 this.LauncherString = launcher;
                 return launcher;
             }
-            else { return ""; }
+            return "";
         }
     }
 }

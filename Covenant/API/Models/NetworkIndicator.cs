@@ -22,7 +22,9 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the NetworkIndicator class.
         /// </summary>
-        public NetworkIndicator(string protocol = default(string), string domain = default(string), string ipAddress = default(string), int? port = default(int?), string uri = default(string), int? id = default(int?), string name = default(string))
+        /// <param name="type">Possible values include: 'FileIndicator',
+        /// 'NetworkIndicator', 'TargetIndicator'</param>
+        public NetworkIndicator(string protocol = default(string), string domain = default(string), string ipAddress = default(string), int? port = default(int?), string uri = default(string), int? id = default(int?), IndicatorType? type = default(IndicatorType?))
         {
             Protocol = protocol;
             Domain = domain;
@@ -30,7 +32,7 @@ namespace Covenant.API.Models
             Port = port;
             Uri = uri;
             Id = id;
-            Name = name;
+            Type = type;
             CustomInit();
         }
 
@@ -70,9 +72,11 @@ namespace Covenant.API.Models
         public int? Id { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'FileIndicator',
+        /// 'NetworkIndicator', 'TargetIndicator'
         /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "type")]
+        public IndicatorType? Type { get; set; }
 
     }
 }

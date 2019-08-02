@@ -22,7 +22,9 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the FileIndicator class.
         /// </summary>
-        public FileIndicator(string fileName = default(string), string filePath = default(string), string shA2 = default(string), string shA1 = default(string), string mD5 = default(string), int? id = default(int?), string name = default(string))
+        /// <param name="type">Possible values include: 'FileIndicator',
+        /// 'NetworkIndicator', 'TargetIndicator'</param>
+        public FileIndicator(string fileName = default(string), string filePath = default(string), string shA2 = default(string), string shA1 = default(string), string mD5 = default(string), int? id = default(int?), IndicatorType? type = default(IndicatorType?))
         {
             FileName = fileName;
             FilePath = filePath;
@@ -30,7 +32,7 @@ namespace Covenant.API.Models
             ShA1 = shA1;
             MD5 = mD5;
             Id = id;
-            Name = name;
+            Type = type;
             CustomInit();
         }
 
@@ -70,9 +72,11 @@ namespace Covenant.API.Models
         public int? Id { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'FileIndicator',
+        /// 'NetworkIndicator', 'TargetIndicator'
         /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "type")]
+        public IndicatorType? Type { get; set; }
 
     }
 }

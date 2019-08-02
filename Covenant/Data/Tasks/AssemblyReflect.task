@@ -6,7 +6,7 @@ using SharpSploit.Execution;
 
 public static class Task
 {
-    public static string Execute(string EncodedAssembly, string TypeName, string MethodName, string Parameters = "")
+    public static string Execute(string AssemblyName, string EncodedAssembly, string TypeName, string MethodName, string Parameters = "")
     {
         string output = "";
         try

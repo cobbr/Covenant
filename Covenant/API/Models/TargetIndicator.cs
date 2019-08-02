@@ -22,12 +22,14 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the TargetIndicator class.
         /// </summary>
-        public TargetIndicator(string computerName = default(string), string userName = default(string), int? id = default(int?), string name = default(string))
+        /// <param name="type">Possible values include: 'FileIndicator',
+        /// 'NetworkIndicator', 'TargetIndicator'</param>
+        public TargetIndicator(string computerName = default(string), string userName = default(string), int? id = default(int?), IndicatorType? type = default(IndicatorType?))
         {
             ComputerName = computerName;
             UserName = userName;
             Id = id;
-            Name = name;
+            Type = type;
             CustomInit();
         }
 
@@ -52,9 +54,11 @@ namespace Covenant.API.Models
         public int? Id { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'FileIndicator',
+        /// 'NetworkIndicator', 'TargetIndicator'
         /// </summary>
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "type")]
+        public IndicatorType? Type { get; set; }
 
     }
 }

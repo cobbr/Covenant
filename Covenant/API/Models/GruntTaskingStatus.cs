@@ -24,7 +24,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "Progressed")]
         Progressed,
         [EnumMember(Value = "Completed")]
-        Completed
+        Completed,
+        [EnumMember(Value = "Aborted")]
+        Aborted
     }
     internal static class GruntTaskingStatusEnumExtension
     {
@@ -45,6 +47,8 @@ namespace Covenant.API.Models
                     return "Progressed";
                 case GruntTaskingStatus.Completed:
                     return "Completed";
+                case GruntTaskingStatus.Aborted:
+                    return "Aborted";
             }
             return null;
         }
@@ -61,6 +65,8 @@ namespace Covenant.API.Models
                     return GruntTaskingStatus.Progressed;
                 case "Completed":
                     return GruntTaskingStatus.Completed;
+                case "Aborted":
+                    return GruntTaskingStatus.Aborted;
             }
             return null;
         }

