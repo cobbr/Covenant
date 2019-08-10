@@ -29,14 +29,17 @@ namespace Covenant.Models.Launchers
     public class Launcher
     {
         public int Id { get; set; }
+
         public int ListenerId { get; set; }
+
         public string Name { get; set; } = "GenericLauncher";
         public string Description { get; set; } = "A generic launcher.";
 
         public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
         public LauncherType Type { get; set; }
-        
-        public CommunicationType CommType { get; set; } = CommunicationType.HTTP;
+
+        public int ImplantTemplateId { get; set; }
+
         public bool ValidateCert { get; set; } = true;
         public bool UseCertPinning { get; set; } = true;
         public string SMBPipeName { get; set; } = "gruntsvc";
@@ -50,7 +53,7 @@ namespace Covenant.Models.Launchers
         public string StagerCode { get; set; } = "";
         public string Base64ILByteString { get; set; } = "";
 
-        public virtual string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile) { return ""; }
+        public virtual string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template) { return ""; }
         public virtual string GetHostedLauncher(Listener listener, HostedFile hostedFile) { return ""; }
 
         protected OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
@@ -82,10 +85,10 @@ namespace Covenant.Models.Launchers
 
         protected ScriptletType ScriptType { get; set; } = ScriptletType.Scriptlet;
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile)
+        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, this.OutputKind, false);
+            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
+            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, false);
 
             // Credit DotNetToJscript (tyranid - James Forshaw)
             byte[] serializedDelegate = Convert.FromBase64String(FrontBinaryFormattedDelegate).Concat(Convert.FromBase64String(this.Base64ILByteString)).Concat(Convert.FromBase64String(EndBinaryFormattedDelegate)).ToArray();

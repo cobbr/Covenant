@@ -1,0 +1,6 @@
+*
+!.gitignore
+!GruntHTTPStager.cs
+!GruntHTTP.cs
+!GruntSMBStager.cs
+!GruntSMB.cs

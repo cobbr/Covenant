@@ -21,10 +21,36 @@ namespace Covenant.Core
         {
             context.Database.EnsureCreated();
 
+            await InitializeImplantTemplates(context);
             await InitializeListeners(context, ListenerCancellationTokens);
             await InitializeLaunchers(context);
             await InitializeTasks(context);
             await InitializeRoles(roleManager);
+        }
+
+        public async static Task InitializeImplantTemplates(CovenantContext context)
+        {
+            if (!context.ImplantTemplates.Any())
+            {
+                var templates = new List<ImplantTemplate>
+                {
+                    new ImplantTemplate
+                    {
+                        Name = "GruntHTTP",
+                        Description = "A Windows implant written in C# that communicates over HTTP.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.HTTP
+                    },
+                    new ImplantTemplate
+                    {
+                        Name = "GruntSMB",
+                        Description = "A Windows implant written in C# that communicates over SMB.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.SMB
+                    }
+                };
+                await context.ImplantTemplates.AddRangeAsync(templates);
+            }
         }
 
         public async static Task InitializeListeners(CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
@@ -1032,7 +1058,7 @@ namespace Covenant.Core
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -1072,7 +1098,7 @@ namespace Covenant.Core
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -1409,6 +1435,76 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "PrivExchange",
+                        AlternateNames = new List<string>(),
+                        Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PrivExchange" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 68,
+                                Name = "EWSUri",
+                                Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
+                                Value = "https://exchange.example.local:443/EWS/Exchange.asmx",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 69,
+                                Name = "RelayUri",
+                                Description = "The URI of the external relay of the Exchange authentication.",
+                                Value = "https://relay.example.local:443/relay",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 70,
+                                Name = "ExchangeVersion",
+                                Description = "Microsoft Exchange version. Defaults to Exchange2010.",
+                                Value = "Exchange2010",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PersistCOMHijack",
+                        AlternateNames = new List<string>(),
+                        Description = "Hijacks a CLSID key to execute a payload for persistence.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PersistCOMHijack" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 71,
+                                Name = "CLSID",
+                                Description = "Missing CLSID to abuse.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 72,
+                                Name = "ExecutablePath",
+                                Description = "Path to the executable path.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
@@ -1417,7 +1513,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 68,
+                                Id = 73,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -1453,7 +1549,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 69,
+                                Id = 74,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -1463,7 +1559,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 70,
+                                Id = 75,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -1483,7 +1579,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 71,
+                                Id = 76,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -1503,7 +1599,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 72,
+                                Id = 77,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -1523,7 +1619,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 73,
+                                Id = 78,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -1543,81 +1639,11 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 74,
+                                Id = 79,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
-                                DisplayInCommand = true
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Name = "PrivExchange",
-                        AlternateNames = new List<string>(),
-                        Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PrivExchange" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 75,
-				Name = "EWSUri",
-                                Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
-                                Value = "https://exchange.example.local:443/EWS/Exchange.asmx",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 76,
-                                Name = "RelayUri",
-                                Description = "The URI of the external relay of the Exchange authentication.",
-                                Value = "https://relay.example.local:443/relay",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 77,
-				Name = "ExchangeVersion",
-                                Description = "Microsoft Exchange version. Defaults to Exchange2010.",
-                                Value = "Exchange2010",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Name = "PersistCOMHijack",
-                        AlternateNames = new List<string>(),
-                        Description = "Hijacks a CLSID key to execute a payload for persistence.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PersistCOMHijack" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 78,
-			        Name = "CLSID",
-                                Description = "Missing CLSID to abuse.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 79,
-			        Name = "ExecutablePath",
-                                Description = "Path to the executable path.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
                                 DisplayInCommand = true
                             }
                         }
@@ -1706,7 +1732,7 @@ namespace Covenant.Core
                 );
                 var upload = await context.GetGruntTaskByName("Upload");
                 var download = await context.GetGruntTaskByName("Download");
-                var privexchange = await context.GetGruntTaskByName("privexchange");
+                var privexchange = await context.GetGruntTaskByName("PrivExchange");
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },

@@ -156,6 +156,7 @@ namespace Covenant.Controllers
                 {
                     this.TransformCoreAssemblyBytes = Compiler.Compile(new Compiler.CompilationRequest
                     {
+                        Language = Models.Grunts.ImplantLanguage.CSharp,
                         Source = profile.HttpMessageTransform,
                         TargetDotNetVersion = Common.DotNetVersion.NetCore21,
                         References = Common.DefaultReferencesCore21
@@ -178,9 +179,9 @@ namespace Covenant.Controllers
             return (byte[])t.GetMethod("Invert").Invoke(null, new object[] { str });
         }
 
-        public string ListenerGetGruntExecutorCode(HttpListener listener, Grunt grunt, HttpProfile profile)
+        public string ListenerGetGruntExecutorCode(HttpListener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
         {
-            return this.ListenerGruntTemplateReplace(listener, GruntExecutorTemplateCode, grunt, profile);
+            return this.ListenerGruntTemplateReplace(listener, template.ExecutorCode, grunt, profile);
         }
 
         private string ListenerGruntTemplateReplace(HttpListener listener, string CodeTemplate, Grunt grunt, HttpProfile profile)
@@ -224,9 +225,7 @@ namespace Covenant.Controllers
             return string.IsNullOrEmpty(replacement) ? "" : replacement.Replace("\"", "\"\"").Replace("{", "{{").Replace("}", "}}").Replace("{{0}}", "{0}");
         }
 
-        private static readonly string GruntExecutorTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "Grunt" + ".cs"));
-
-        public string ListenerCompileGruntExecutorCode(HttpListener listener, Grunt grunt, HttpProfile profile, bool Compress = false)
+        public string ListenerCompileGruntExecutorCode(HttpListener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template, bool Compress = false)
         {
             Common.DotNetVersion version = Common.DotNetVersion.Net35;
             switch (grunt.DotNetFrameworkVersion)
@@ -243,7 +242,8 @@ namespace Covenant.Controllers
             }
             byte[] ILBytes = Compiler.Compile(new Compiler.CompilationRequest
             {
-                Source = this.ListenerGetGruntExecutorCode(listener, grunt, profile),
+                Language = (Covenant.Models.Grunts.ImplantLanguage)grunt.Language,
+                Source = this.ListenerGetGruntExecutorCode(listener, grunt, profile, template),
                 TargetDotNetVersion = version,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,
                 References = grunt.DotNetFrameworkVersion == DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References
@@ -836,7 +836,8 @@ namespace Covenant.Controllers
             targetGrunt.Status = GruntStatus.Stage2;
             targetGrunt.LastCheckIn = DateTime.UtcNow;
             await _client.ApiGruntsPutAsync(targetGrunt);
-            string GruntExecutorAssembly = this._utilities.ListenerCompileGruntExecutorCode(_context.HttpListener.First(), targetGrunt, _context.HttpProfile.First());
+            ImplantTemplate template = await this._client.ApiImplanttemplatesGruntByIdGetAsync(targetGrunt.Id ?? default);
+            string GruntExecutorAssembly = this._utilities.ListenerCompileGruntExecutorCode(_context.HttpListener.First(), targetGrunt, _context.HttpProfile.First(), template);
 
             ModelUtilities.GruntEncryptedMessage message;
             try

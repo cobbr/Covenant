@@ -11,8 +11,8 @@ public static class Task
             DCOM.DCOMMethod theMethod = DCOM.DCOMMethod.MMC20_Application;
             if (Method.ToLower() == "shellwindows") { theMethod = DCOM.DCOMMethod.ShellWindows; }
             else if (Method.ToLower() == "shellbrowserwindow") { theMethod = DCOM.DCOMMethod.ShellBrowserWindow; }
-            else if (Method == "ExcelDDE") { theMethod = DCOM.DCOMMethod.ExcelDDE; }
-            else if (Method != "MMC20_Application" && Method != "MMC20.Application") { return "DCOM Execution failed. Invalid DCOMMethod specified."; }
+            else if (Method.ToLower() == "ExcelDDE") { theMethod = DCOM.DCOMMethod.ExcelDDE; }
+            else if (Method.ToLower() != "MMC20_Application" && Method.ToLower() != "MMC20.Application") { return "DCOM Execution failed. Invalid DCOMMethod specified."; }
 
             if (DCOM.DCOMExecute(ComputerName, Command, Parameters, Directory, theMethod))
             {

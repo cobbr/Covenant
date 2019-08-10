@@ -114,7 +114,8 @@ namespace Covenant.Controllers
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Active;
                 await _context.EditHttpListener(listener, _ListenerCancellationTokens);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Interact), new { id = id });
+
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -136,7 +137,7 @@ namespace Covenant.Controllers
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Stopped;
                 await _context.EditHttpListener(listener, _ListenerCancellationTokens);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Interact), new { id = id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {

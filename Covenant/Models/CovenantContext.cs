@@ -37,6 +37,7 @@ namespace Covenant.Models
         public DbSet<HostedFile> HostedFiles { get; set; }
 
         public DbSet<Launcher> Launchers { get; set; }
+        public DbSet<ImplantTemplate> ImplantTemplates { get; set; }
         public DbSet<Grunt> Grunts { get; set; }
         public DbSet<GruntTask> GruntTasks { get; set; }
         public DbSet<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
@@ -533,6 +534,78 @@ namespace Covenant.Models
             await this.Events.AddAsync(downloadEvent);
             await this.SaveChangesAsync();
             return await this.GetDownloadEvent(downloadEvent.Id);
+        }
+        #endregion
+
+        #region ImplantTemplate Actions
+
+        public async Task<IEnumerable<ImplantTemplate>> GetImplantTemplates()
+        {
+            return await this.ImplantTemplates.ToListAsync();
+        }
+
+        public async Task<ImplantTemplate> GetImplantTemplate(int id)
+        {
+            ImplantTemplate template = await this.ImplantTemplates.FindAsync(id);
+            if (template == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ImplantTemplate with id: {id}");
+            }
+            return template;
+        }
+
+        public async Task<ImplantTemplate> GetImplantTemplateByName(string name)
+        {
+            ImplantTemplate template = await this.ImplantTemplates
+                .Where(IT => IT.Name == name)
+                .FirstOrDefaultAsync();
+            if (template == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ImplantTemplate with Name: {name}");
+            }
+            return template;
+        }
+
+        public async Task<ImplantTemplate> GetImplantTemplateForGrunt(Grunt grunt)
+        {
+            ImplantTemplate template = await this.ImplantTemplates
+                .Where(IT => IT.CommType == grunt.CommType && IT.Language == grunt.Language)
+                .FirstOrDefaultAsync();
+            if (template == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ImplantTemplate not found for Grunt: {grunt.Id}");
+            }
+            return template;
+        }
+
+        public async Task<ImplantTemplate> CreateImplantTemplate(ImplantTemplate template)
+        {
+            await this.ImplantTemplates.AddAsync(template);
+            await this.SaveChangesAsync();
+            template.WriteToDisk();
+            return await this.GetImplantTemplate(template.Id);
+        }
+
+        public async Task<ImplantTemplate> EditImplantTemplate(ImplantTemplate template)
+        {
+            ImplantTemplate matchingTemplate = await this.GetImplantTemplate(template.Id);
+            matchingTemplate.Name = template.Name;
+            matchingTemplate.Description = template.Description;
+            matchingTemplate.Language = template.Language;
+            matchingTemplate.StagerCode = template.StagerCode;
+            matchingTemplate.ExecutorCode = template.ExecutorCode;
+            matchingTemplate.WriteToDisk();
+
+            this.ImplantTemplates.Update(matchingTemplate);
+            await this.SaveChangesAsync();
+            return await this.GetImplantTemplate(matchingTemplate.Id);
+        }
+
+        public async Task DeleteImplantTemplate(int id)
+        {
+            ImplantTemplate matchingTemplate = await this.GetImplantTemplate(id);
+            this.ImplantTemplates.Remove(matchingTemplate);
+            await this.SaveChangesAsync();
         }
         #endregion
 
@@ -2263,6 +2336,13 @@ namespace Covenant.Models
             {
                 listener.Stop(_ListenerCancellationTokens[listener.Id]);
             }
+			this.Launchers.Where(L => L.ListenerId == listener.Id).ToList().ForEach(L =>
+			{
+				L.LauncherString = "";
+				L.StagerCode = "";
+				L.Base64ILByteString = "";
+				this.Launchers.Update(L);
+			});
             this.Listeners.Remove(listener);
             await this.SaveChangesAsync();
         }
@@ -2530,12 +2610,13 @@ namespace Covenant.Models
         {
             BinaryLauncher launcher = await this.GetBinaryLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2549,7 +2630,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetBinaryLauncher();
@@ -2571,7 +2652,7 @@ namespace Covenant.Models
             BinaryLauncher matchingLauncher = await this.GetBinaryLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -2600,12 +2681,13 @@ namespace Covenant.Models
         {
             PowerShellLauncher launcher = await this.GetPowerShellLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2619,7 +2701,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetPowerShellLauncher();
@@ -2641,7 +2723,7 @@ namespace Covenant.Models
             PowerShellLauncher matchingLauncher = await this.GetPowerShellLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -2670,12 +2752,13 @@ namespace Covenant.Models
         {
             MSBuildLauncher launcher = await this.GetMSBuildLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2689,7 +2772,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetMSBuildLauncher();
@@ -2711,7 +2794,7 @@ namespace Covenant.Models
             MSBuildLauncher matchingLauncher = await this.GetMSBuildLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -2740,12 +2823,13 @@ namespace Covenant.Models
         {
             InstallUtilLauncher launcher = await this.GetInstallUtilLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2759,7 +2843,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetInstallUtilLauncher();
@@ -2781,7 +2865,7 @@ namespace Covenant.Models
             InstallUtilLauncher matchingLauncher = await this.GetInstallUtilLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -2812,12 +2896,13 @@ namespace Covenant.Models
         {
             WmicLauncher launcher = await this.GetWmicLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2831,7 +2916,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetWmicLauncher();
@@ -2853,7 +2938,7 @@ namespace Covenant.Models
             WmicLauncher matchingLauncher = await this.GetWmicLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -2885,12 +2970,13 @@ namespace Covenant.Models
         {
             Regsvr32Launcher launcher = await this.GetRegsvr32Launcher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2904,7 +2990,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetRegsvr32Launcher();
@@ -2926,7 +3012,7 @@ namespace Covenant.Models
             Regsvr32Launcher matchingLauncher = await this.GetRegsvr32Launcher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -2960,12 +3046,13 @@ namespace Covenant.Models
         {
             MshtaLauncher launcher = await this.GetMshtaLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -2979,7 +3066,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetMshtaLauncher();
@@ -3001,7 +3088,7 @@ namespace Covenant.Models
             MshtaLauncher matchingLauncher = await this.GetMshtaLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3033,12 +3120,13 @@ namespace Covenant.Models
         {
             CscriptLauncher launcher = await this.GetCscriptLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -3052,7 +3140,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetCscriptLauncher();
@@ -3074,7 +3162,7 @@ namespace Covenant.Models
             CscriptLauncher matchingLauncher = await this.GetCscriptLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3106,12 +3194,13 @@ namespace Covenant.Models
         {
             WscriptLauncher launcher = await this.GetWscriptLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
                 Listener = listener,
-                CommType = launcher.CommType,
+                CommType = template.CommType,
                 SMBPipeName = launcher.SMBPipeName,
                 ValidateCert = launcher.ValidateCert,
                 UseCertPinning = launcher.UseCertPinning,
@@ -3125,7 +3214,7 @@ namespace Covenant.Models
             await this.Grunts.AddAsync(grunt);
             await this.SaveChangesAsync();
 
-            launcher.GetLauncher(listener, grunt, profile);
+            launcher.GetLauncher(listener, grunt, profile, template);
             this.Launchers.Update(launcher);
             await this.SaveChangesAsync();
             return await this.GetWscriptLauncher();
@@ -3147,7 +3236,7 @@ namespace Covenant.Models
             WscriptLauncher matchingLauncher = await this.GetWscriptLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.CommType = launcher.CommType;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;

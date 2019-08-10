@@ -4,13 +4,9 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 using System.Collections.Generic;
 
 using YamlDotNet.Serialization;
-
-using APIModels = Covenant.API.Models;
-using Covenant.Core;
 
 namespace Covenant.Models.Listeners
 {
@@ -31,14 +27,6 @@ namespace Covenant.Models.Listeners
     {
         public string Name { get; set; } = "";
         public string Value { get; set; } = "";
-        public static HttpProfileHeader CreateHeader(APIModels.HttpProfileHeader httpHeaderModel)
-        {
-            return new HttpProfileHeader
-            {
-                Name = httpHeaderModel.Name,
-                Value = httpHeaderModel.Value
-            };
-        }
     }
 
     public class HttpProfile : Profile
@@ -55,40 +43,6 @@ namespace Covenant.Models.Listeners
         public HttpProfile()
         {
             this.Type = ProfileType.HTTP;
-        }
-
-        private byte[] TransformCoreAssemblyBytes { get; set; }
-        private Assembly TransformCoreAssembly { get; set; }
-
-        private Assembly GetTransformCoreAssembly()
-        {
-            if (this.TransformCoreAssembly == null)
-            {
-                if (this.TransformCoreAssemblyBytes == null)
-                {
-                    string[] refLocationPieces = typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar);
-                    this.TransformCoreAssemblyBytes = Compiler.Compile(new Compiler.CompilationRequest
-                    {
-                        Source = this.HttpMessageTransform,
-                        TargetDotNetVersion = Common.DotNetVersion.NetCore21,
-                        References = Common.DefaultReferencesCore21
-                    });
-                }
-                this.TransformCoreAssembly = Assembly.Load(this.TransformCoreAssemblyBytes);
-            }
-            return this.TransformCoreAssembly;
-        }
-
-        public string Transform(byte[] bytes)
-        {
-            Type t = this.GetTransformCoreAssembly().GetType("HttpMessageTransform");
-            return (string)t.GetMethod("Transform").Invoke(null, new object[] { bytes });
-        }
-
-        public byte[] Invert(string str)
-        {
-            Type t = this.GetTransformCoreAssembly().GetType("HttpMessageTransform");
-            return (byte[])t.GetMethod("Invert").Invoke(null, new object[] { str });
         }
 
         public static HttpProfile Create(string ProfileFilePath)

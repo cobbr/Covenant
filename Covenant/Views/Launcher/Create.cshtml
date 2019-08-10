@@ -108,21 +108,21 @@
                 }
                 window.location.href = '../@url';
             });
-            function swapCommType(){
-                var comm = $(this).children("option:selected").val();
-                if (comm == "HTTP")
+            function swapOptions() {
+                var comm = $("#ImplantTemplateId").children("option:selected").text();
+                if (comm.includes("HTTP"))
                 {
                     $("#http-div").removeAttr("hidden");
                     $("#smb-div").attr("hidden", "true");
                 }
-                else if (comm == "SMB")
+                else if (comm.includes("SMB"))
                 {
                     $("#http-div").attr("hidden", "true");
                     $("#smb-div").removeAttr("hidden");
                 }
             };
-            $("#CommType").change(swapCommType);
-            swapCommType();
+            $("#ImplantTemplateId").change(swapOptions);
+            swapOptions();
         });
     </script>
 }

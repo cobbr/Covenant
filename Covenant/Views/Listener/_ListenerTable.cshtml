@@ -9,8 +9,8 @@
                 <th>@Html.DisplayNameFor(model => model.ListenerType)</th>
                 <th>@Html.DisplayNameFor(model => model.Status)</th>
                 <th>@Html.DisplayNameFor(model => model.StartTime)</th>
-                <th>@Html.DisplayNameFor(model => model.BindAddress)</th>
-                <th>@Html.DisplayNameFor(model => model.BindPort)</th>
+                <th>@Html.DisplayNameFor(model => model.ConnectAddress)</th>
+                <th>@Html.DisplayNameFor(model => model.ConnectPort)</th>
             </tr>
         </thead>
         <tbody>
@@ -27,8 +27,8 @@
                         <td>@Html.DisplayFor(modelItem => item.ListenerType.Name)</td>
                         <td>@Html.DisplayFor(modelItem => item.Status)</td>
                         <td>@Html.DisplayFor(modelItem => item.StartTime)</td>
-                        <td>@Html.DisplayFor(modelItem => item.BindAddress)</td>
-                        <td>@Html.DisplayFor(modelItem => item.BindPort)</td>
+                        <td>@Html.DisplayFor(modelItem => item.ConnectAddress)</td>
+                        <td>@Html.DisplayFor(modelItem => item.ConnectPort)</td>
                     </tr>
                 }
             }
