@@ -59,6 +59,8 @@ namespace Covenant.Models.Listeners
         public int BindPort { get; set; } = 80;
         [Required]
         public string ConnectAddress { get; set; }
+        [Required, Range(1, 65535)]
+        public int ConnectPort { get; set; } = 80;
         [Required]
         public int ProfileId { get; set; }
         public Profile Profile { get; set; }
@@ -75,15 +77,16 @@ namespace Covenant.Models.Listeners
 
         public virtual CancellationTokenSource Start() { return null; }
         public virtual void Stop(CancellationTokenSource cancellationTokenSource) { }
-        public virtual string GetGruntStagerCode(Grunt grunt, HttpProfile profile) { return ""; }
+        public virtual string GetGruntStagerCode(Grunt grunt, HttpProfile profile, ImplantTemplate template) { return ""; }
 
         protected string ListenerDirectory { get { return Common.CovenantListenersDirectory + this.GUID + Path.DirectorySeparatorChar; } }
 
-        public string CompileGruntStagerCode(Grunt grunt, HttpProfile profile, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
+        public string CompileGruntStagerCode(Grunt grunt, HttpProfile profile, ImplantTemplate template, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
         {
             byte[] ILBytes = Compiler.Compile(new Compiler.CompilationRequest
             {
-                Source = this.GetGruntStagerCode(grunt, profile),
+                Language = grunt.Language,
+                Source = this.GetGruntStagerCode(grunt, profile, template),
                 TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 OutputKind = outputKind,
                 References = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References

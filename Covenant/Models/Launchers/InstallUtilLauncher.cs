@@ -23,10 +23,10 @@ namespace Covenant.Models.Launchers
             this.OutputKind = OutputKind.WindowsApplication;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile)
+        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, this.OutputKind, true);
+            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
+            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, true);
             string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
 
             List<Compiler.Reference> references = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
@@ -38,6 +38,7 @@ namespace Covenant.Models.Launchers
             });
             this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CompilationRequest
             {
+                Language = grunt.Language,
                 Source = code,
                 TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,

@@ -1854,6 +1854,181 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            public static IList<ImplantTemplate> ApiImplanttemplatesGet(this ICovenantAPI operations)
+            {
+                return operations.ApiImplanttemplatesGetAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<ImplantTemplate>> ApiImplanttemplatesGetAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiImplanttemplatesGetWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='template'>
+            /// </param>
+            public static ImplantTemplate ApiImplanttemplatesPut(this ICovenantAPI operations, ImplantTemplate template = default(ImplantTemplate))
+            {
+                return operations.ApiImplanttemplatesPutAsync(template).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='template'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ImplantTemplate> ApiImplanttemplatesPutAsync(this ICovenantAPI operations, ImplantTemplate template = default(ImplantTemplate), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiImplanttemplatesPutWithHttpMessagesAsync(template, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='template'>
+            /// </param>
+            public static ImplantTemplate ApiImplanttemplatesPost(this ICovenantAPI operations, ImplantTemplate template = default(ImplantTemplate))
+            {
+                return operations.ApiImplanttemplatesPostAsync(template).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='template'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ImplantTemplate> ApiImplanttemplatesPostAsync(this ICovenantAPI operations, ImplantTemplate template = default(ImplantTemplate), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiImplanttemplatesPostWithHttpMessagesAsync(template, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static ImplantTemplate ApiImplanttemplatesByIdGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiImplanttemplatesByIdGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ImplantTemplate> ApiImplanttemplatesByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiImplanttemplatesByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static void ApiImplanttemplatesByIdDelete(this ICovenantAPI operations, int id)
+            {
+                operations.ApiImplanttemplatesByIdDeleteAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task ApiImplanttemplatesByIdDeleteAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.ApiImplanttemplatesByIdDeleteWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='name'>
+            /// </param>
+            public static ImplantTemplate ApiImplanttemplatesByNameGet(this ICovenantAPI operations, string name)
+            {
+                return operations.ApiImplanttemplatesByNameGetAsync(name).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='name'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ImplantTemplate> ApiImplanttemplatesByNameGetAsync(this ICovenantAPI operations, string name, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiImplanttemplatesByNameGetWithHttpMessagesAsync(name, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static ImplantTemplate ApiImplanttemplatesGruntByIdGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiImplanttemplatesGruntByIdGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ImplantTemplate> ApiImplanttemplatesGruntByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiImplanttemplatesGruntByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static string ApiIndicatorsResultsGet(this ICovenantAPI operations)
             {
                 return operations.ApiIndicatorsResultsGetAsync().GetAwaiter().GetResult();

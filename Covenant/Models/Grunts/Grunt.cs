@@ -3,6 +3,7 @@
 // License: GNU GPLv3
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -40,6 +41,88 @@ namespace Covenant.Models.Grunts
         System
     }
 
+    public enum ImplantLanguage
+    {
+        CSharp,
+        // C++,
+        // C,
+        // PowerShell
+    }
+
+    public class ImplantTemplate
+    {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
+        public string Name { get; set; } = "";
+        public string Description { get; set; }
+        public ImplantLanguage Language { get; set; }
+        public CommunicationType CommType { get; set; }
+
+        private string StagerLocation
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.Name))
+                {
+                    return "";
+                }
+                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
+                string file = Utilities.GetSanitizedFilename(this.Name) + "Stager" + Utilities.GetExtensionForLanguage(this.Language);
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                if (!File.Exists(dir + file))
+                {
+                    var fs = File.Create(dir + file);
+                    fs.Close();
+                }
+                return dir + file;
+            }
+        }
+
+        private string ExecutorLocation
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.Name))
+                {
+                    return "";
+                }
+                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
+                string file = Utilities.GetSanitizedFilename(this.Name) + Utilities.GetExtensionForLanguage(this.Language);
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                if (!File.Exists(dir + file))
+                {
+                    var fs = File.Create(dir + file);
+                    fs.Close();
+                }
+                return dir + file;
+            }
+        }
+
+        public string StagerCode { get; set; }
+
+        public string ExecutorCode { get; set; }
+
+        public void WriteToDisk()
+        {
+            if (!string.IsNullOrEmpty(this.StagerLocation) && File.Exists(this.StagerLocation) && !string.IsNullOrWhiteSpace(this.StagerCode))
+            {
+                File.WriteAllText(StagerLocation, this.StagerCode);
+            }
+
+            if (!string.IsNullOrEmpty(this.ExecutorLocation) && File.Exists(this.ExecutorLocation) && !string.IsNullOrWhiteSpace(this.ExecutorCode))
+            {
+                File.WriteAllText(ExecutorLocation, this.ExecutorCode);
+            }
+        }
+    }
+
     public class Grunt
     {
         // Information to uniquely identify this Grunt
@@ -64,6 +147,7 @@ namespace Covenant.Models.Grunts
         public bool UseCertPinning { get; set; } = true;
         [Required, DisplayName("SMBPipeName")]
         public string SMBPipeName { get; set; } = "gruntsvc";
+        public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
 
         // Information about the Listener
         public int ListenerId { get; set; }

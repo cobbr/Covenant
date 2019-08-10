@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="~/images/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="~/images/favicon.ico" type="image/x-icon">
     @if (!(SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User)))
     {
         ViewData["Title"] = "Login";
@@ -96,8 +96,14 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a asp-controller="Template" asp-action="Index" id="nav-templates" class="nav-link">
+                                    <span data-feather="codepen"></span>
+                                    Templates
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a asp-controller="GruntTask" asp-action="Index" id="nav-tasks" class="nav-link">
-                                    <span data-feather="box"></span>
+                                    <span data-feather="package"></span>
                                     Tasks
                                 </a>
                             </li>

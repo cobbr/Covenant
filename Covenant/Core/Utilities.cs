@@ -126,6 +126,26 @@ namespace Covenant.Core
         {
             return IPAddress.TryParse(ComputerName, out IPAddress address);
         }
+
+        public static string GetSanitizedFilename(string filename)
+        {
+            foreach (char invalid in Path.GetInvalidFileNameChars())
+            {
+                filename = filename.Replace(invalid, '_');
+            }
+            return filename;
+        }
+
+        public static string GetExtensionForLanguage(Models.Grunts.ImplantLanguage language)
+        {
+            switch (language)
+            {
+                case Models.Grunts.ImplantLanguage.CSharp:
+                    return ".cs";
+                default:
+                    return ".cs";
+            }
+        }
     }
 
     // http://www.mikeobrien.net/blog/parseexact-for-strings

@@ -34,6 +34,7 @@ namespace Covenant.Controllers
             try
             {
                 ViewBag.Listeners = await _context.GetListeners();
+                ViewBag.ImplantTemplates = await _context.GetImplantTemplates();
                 switch (id.ToLower())
                 {
                     case "binary":

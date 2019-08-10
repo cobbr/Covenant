@@ -45,7 +45,6 @@ namespace Covenant.Core
         public static string CovenantCompiledTaskNet35Directory = CovenantCompiledTaskDirectory + "net35" + Path.DirectorySeparatorChar;
         public static string CovenantCompiledTaskNet40Directory = CovenantCompiledTaskDirectory + "net40" + Path.DirectorySeparatorChar;
 
-        public static string CovenantGruntDirectory = CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar;
         public static string CovenantLogDirectory = CovenantDataDirectory + "Logs" + Path.DirectorySeparatorChar;
         public static string CovenantLogFile = CovenantLogDirectory + "covenant.log";
         public static string CovenantPrivateCertFile = CovenantDataDirectory + "covenant-dev-private.pfx";

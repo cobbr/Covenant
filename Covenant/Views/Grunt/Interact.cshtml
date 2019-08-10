@@ -321,7 +321,11 @@
             </div>
             <div class="w-100 border border-primary p-0 m-0">
                 <div class="interact-width d-flex flex-row">
-                    <input class="d-inline form-control form-control-dark bg-dark text-white typeahead border-0" id="interact-input" type="text" autocomplete="off" placeholder="Interact..." aria-label="Interact">
+                    <div class="d-inline d-flex flex-column justify-content-center text-muted ml-1">
+                        <div id="history-up" class="mb-n1 p-0 border-0 hover-white" style="z-index: 1"><span data-feather="chevron-up"></span></div>
+                        <div id="history-down" class="mt-n1 p-0 border-0 hover-white"><span data-feather="chevron-down"></span></div>
+                    </div>
+                    <input class="d-inline form-control form-control-dark bg-dark text-white typeahead pl-1 border-0" id="interact-input" type="text" autocomplete="off" placeholder="Interact..." aria-label="Interact">
                     <button type="button" class="d-inline btn btn-dark rounded-0 border-primary" id="interact-button">Send</button>
                 </div>
             </div>
@@ -385,34 +389,48 @@
 
             var cmdHistoryIndex = 0;
             var cmdHistory = [];
+
+            var historyUp = function () {
+                if (cmdHistoryIndex == cmdHistory.length && $("#interact-input").val() != "") {
+                    cmdHistory.push($("#interact-input").val());
+                }
+                if (cmdHistoryIndex != 0) {
+                    cmdHistoryIndex--;
+                    $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
+                    $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
+                }
+            };
+
+            var historyDown = function () {
+                if (cmdHistoryIndex < cmdHistory.length) {
+                    cmdHistoryIndex++;
+                    $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
+                    $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
+                }
+                else if (cmdHistoryIndex == cmdHistory.length) {
+                    cmdHistoryIndex++;
+                    $("#interact-input").val("");
+                    $('.typeahead').typeahead('val', '');
+                }
+                else {
+                    $("#interact-input").val("");
+                    $('.typeahead').typeahead('val', '');
+                }
+            };
+
+            $("#history-up").click(historyUp);
+            $("#history-down").click(historyDown);
+
             $("#interact-input").keyup(function (event) {
                 if (event.keyCode === 13) {
                     $("#interact-button").click();
                 }
-                else if (event.keyCode === 38) {
-                    if (cmdHistoryIndex == cmdHistory.length && $("#interact-input").val() != "") {
-                        cmdHistory.push($("#interact-input").val());
+                if ($(".tt-empty").length == 1) {
+                    if (event.keyCode === 38) {
+                        historyUp();
                     }
-                    if (cmdHistoryIndex != 0) {
-                        cmdHistoryIndex--;
-                        $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
-                        $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
-                    }
-                }
-                else if (event.keyCode === 40) {
-                    if (cmdHistoryIndex < cmdHistory.length) {
-                        cmdHistoryIndex++;
-                        $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
-                        $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
-                    }
-                    else if (cmdHistoryIndex == cmdHistory.length) {
-                        cmdHistoryIndex++;
-                        $("#interact-input").val("");
-                        $('.typeahead').typeahead('val', '');
-                    }
-                    else {
-                        $("#interact-input").val("");
-                        $('.typeahead').typeahead('val', '');
+                    else if (event.keyCode === 40) {
+                        historyDown();
                     }
                 }
             });
@@ -479,7 +497,7 @@
                     // iterate through the pool of strings and for any string that
                     // contains the substring `q`, add it to the `matches` array
                     $.each(strs, function (i, str) {
-                        if (substrRegex.test(str)) {
+                        if (substrRegex.test(str) && str.toLowerCase() != q.toLowerCase()) {
                             matches.push(str);
                         }
                     });

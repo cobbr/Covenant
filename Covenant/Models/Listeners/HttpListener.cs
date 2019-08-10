@@ -77,7 +77,7 @@ namespace Covenant.Models.Listeners
             get
             {
                 string scheme = UseSSL ? "https://" : "http://";
-                return scheme + this.ConnectAddress + ":" + this.BindPort; 
+                return scheme + this.ConnectAddress + ":" + this.ConnectPort; 
             }
             set
             {
@@ -220,11 +220,7 @@ namespace Covenant.Models.Listeners
             string FullPath = Path.GetFullPath(Path.Combine(this.ListenerStaticHostDirectory, hostFileRequest.Path));
             if (!FullPath.StartsWith(this.ListenerStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
             FileInfo file1 = new FileInfo(FullPath);
-            string filename = file1.Name;
-            foreach (char invalid in Path.GetInvalidFileNameChars())
-            {
-                filename = filename.Replace(invalid, '_');
-            }
+            string filename = Utilities.GetSanitizedFilename(file1.Name);
             FileInfo file = new FileInfo(file1.DirectoryName + Path.DirectorySeparatorChar + filename);
             if (!file.Directory.Exists)
             {
@@ -248,14 +244,13 @@ namespace Covenant.Models.Listeners
             }
         }
 
-        public override string GetGruntStagerCode(Grunt grunt, HttpProfile profile)
+        public override string GetGruntStagerCode(Grunt grunt, HttpProfile profile, ImplantTemplate template)
         {
-            return this.GruntTemplateReplace(GruntStagerTemplateCode, grunt, profile);
+            return this.GruntTemplateReplace(template.StagerCode, grunt, profile);
         }
 
         private string GruntTemplateReplace(string CodeTemplate, Grunt grunt, HttpProfile profile)
         {
-            string ConnectUrl = (this.UseSSL ? "https://" : "http://") + this.ConnectAddress + ":" + this.BindPort;
             string HttpHeaders = "";
             foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
             {
@@ -281,7 +276,7 @@ namespace Covenant.Models.Listeners
                 .Replace("{{REPLACE_VALIDATE_CERT}}", grunt.ValidateCert ? "true" : "false")
                 .Replace("{{REPLACE_USE_CERT_PINNING}}", grunt.UseCertPinning ? "true" : "false")
                 .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
-                .Replace("{{REPLACE_COVENANT_URI}}", this.FormatForVerbatimString(ConnectUrl))
+                .Replace("{{REPLACE_COVENANT_URI}}", this.FormatForVerbatimString(this.Url))
                 .Replace("{{REPLACE_COVENANT_CERT_HASH}}", this.FormatForVerbatimString(this.UseSSL ? this.SSLCertHash : ""))
                 .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
                 .Replace("{{REPLACE_DELAY}}", this.FormatForVerbatimString(grunt.Delay.ToString()))
@@ -295,8 +290,6 @@ namespace Covenant.Models.Listeners
         {
             return replacement.Replace("\"", "\"\"").Replace("{", "{{").Replace("}", "}}").Replace("{{0}}", "{0}");
         }
-
-        private static readonly string GruntStagerTemplateCode = File.ReadAllText(Path.Combine(Common.CovenantGruntDirectory, "GruntStager" + ".cs"));
     }
 
     public class HttpListenerContext : IdentityDbContext

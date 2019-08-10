@@ -19,13 +19,14 @@ using Confuser.Core.Project;
 
 namespace Covenant.Core
 {
-    public class Compiler
+    public static class Compiler
     {
         public class CompilationRequest
         {
             public string Source { get; set; } = null;
             public List<string> SourceDirectories { get; set; } = null;
 
+            public Covenant.Models.Grunts.ImplantLanguage Language { get; set; } = Models.Grunts.ImplantLanguage.CSharp;
             public Common.DotNetVersion TargetDotNetVersion { get; set; } = Common.DotNetVersion.Net35;
             public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
             public Platform Platform { get; set; } = Platform.AnyCpu;
@@ -61,6 +62,17 @@ namespace Covenant.Core
         }
 
         public static byte[] Compile(CompilationRequest request)
+        {
+            switch(request.Language)
+            {
+                case Models.Grunts.ImplantLanguage.CSharp:
+                    return CompileCSharp(request);
+                default:
+                    return CompileCSharp(request);
+            }
+        }
+
+        private static byte[] CompileCSharp(CompilationRequest request)
         {
             // Gather SyntaxTrees for compilation
             List<SourceSyntaxTree> sourceSyntaxTrees = new List<SourceSyntaxTree>();
@@ -184,12 +196,12 @@ namespace Covenant.Core
             }
             if (request.Confuse)
             {
-                return Confuse(ILbytes);
+                return ConfuseAssembly(ILbytes);
             }
             return ILbytes;
         }
 
-        private static byte[] Confuse(byte[] ILBytes)
+        private static byte[] ConfuseAssembly(byte[] ILBytes)
         {
             ConfuserProject project = new ConfuserProject();
             System.Xml.XmlDocument doc = new System.Xml.XmlDocument();

@@ -128,3 +128,12 @@
     padding-top: 0;
     padding-bottom: 0;
 }
+
+.hover-white:hover {
+    color: white;
+}
+
+#interact-input:focus {
+    -webkit-box-shadow: none;
+    outline: -webkit-focus-ring-color auto 0px;
+} 
