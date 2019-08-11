@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 
 using Covenant.Core;
+using Covenant.Hubs;
 using Covenant.Models;
 using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
@@ -25,13 +27,15 @@ namespace Covenant.Controllers
         private readonly UserManager<CovenantUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public ListenerController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public ListenerController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens, IHubContext<EventHub> eventhub)
         {
             _context = context;
             _userManager = userManager;
             _configuration = configuration;
             _ListenerCancellationTokens = ListenerCancellationTokens;
+            _eventhub = eventhub;
         }
 
         // GET: /listener/
@@ -71,7 +75,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                listener = await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens);
+                listener = await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens, _eventhub);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -113,8 +117,8 @@ namespace Covenant.Controllers
                 }
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Active;
-                await _context.EditHttpListener(listener, _ListenerCancellationTokens);
-                return RedirectToAction(nameof(Index));
+                await _context.EditHttpListener(listener, _ListenerCancellationTokens, _eventhub);
+                return RedirectToAction(nameof(Interact), new { id = id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -135,8 +139,8 @@ namespace Covenant.Controllers
                 }
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Stopped;
-                await _context.EditHttpListener(listener, _ListenerCancellationTokens);
-                return RedirectToAction(nameof(Index));
+                await _context.EditHttpListener(listener, _ListenerCancellationTokens, _eventhub);
+                return RedirectToAction(nameof(Interact), new { id = id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {

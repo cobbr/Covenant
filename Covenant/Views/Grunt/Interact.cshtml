@@ -15,6 +15,11 @@
     });
 }
 
+@section Sheets
+{
+    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro&display=swap" rel="stylesheet">
+}
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Grunt: <span id="grunt-name" class="text-primary">@Html.DisplayFor(model => model.Name)</span></h1>
 </div>
@@ -51,7 +56,7 @@
 
 <div class="tab-content" id="grunt-tab-content">
     <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
-        <form asp-controller="Grunt" asp-action="Edit">
+        <form id="grunt-edit-form" asp-controller="Grunt" asp-action="Edit">
             <div asp-validation-summary="All" class="text-danger"></div>
             <input asp-for="Id" value="@Model.Id" type="hidden" readonly>
             <div class="form-row">
@@ -170,11 +175,6 @@
                     <input asp-for="OperatingSystem" value="@Model.OperatingSystem" class="form-control" readonly>
                 </div>
             </div>
-            <input asp-for="GruntSharedSecretPassword" value="@Model.GruntSharedSecretPassword" class="form-control" type="hidden" readonly>
-            <input asp-for="GruntRSAPublicKey" value="@Model.GruntRSAPublicKey" class="form-control" type="hidden" readonly>
-            <input asp-for="GruntNegotiatedSessionKey" value="@Model.GruntNegotiatedSessionKey" class="form-control" type="hidden" readonly>
-            <input asp-for="GruntChallenge" value="@Model.GruntChallenge" class="form-control" type="hidden" readonly>
-            <input asp-for="PowerShellImport" value="@Model.PowerShellImport" class="form-control" type="hidden" readonly>
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="set-activation-time">@Html.DisplayNameFor(model => model.ActivationTime)</label>
@@ -185,7 +185,7 @@
                     <input id="set-last-checkin" name="@Html.DisplayNameFor(model => model.LastCheckIn)" value="@Html.DisplayFor(model => model.LastCheckIn)" class="form-control" readonly>
                 </div>
             </div>
-            <hr/>
+            <hr />
             <div class="form-row">
                 <div class="form-group col-md-4">
                     <label asp-for="Name"></label>
@@ -228,11 +228,22 @@
                 <label for="set-kill-date">@Html.DisplayNameFor(model => model.KillDate)</label>
                 <input type="text" id="set-kill-date" name="@Html.DisplayNameFor(model => model.KillDate)" value="@Html.DisplayFor(model => model.KillDate)" class="form-control">
             </div>
-            <button type="submit" class="btn btn-primary">
-                <span data-feather="edit"></span>
-                Edit
-            </button>
         </form>
+        <div class="btn-group" role="group">
+            <button type="button" id="grunt-edit-button" class="btn btn-primary"><span data-feather="edit"></span> Edit</button>
+            @if (Model.Status == GruntStatus.Hidden)
+            {
+                <form asp-action="Hide" asp-route-id="@Model.Id">
+                    <button type="submit" class="btn btn-success ml-2"><span data-feather="eye"></span> Unhide</button>
+                </form>
+            }
+            else
+            {
+                <form asp-action="Hide" asp-route-id="@Model.Id">
+                    <button type="submit" class="btn btn-warning ml-2"><span data-feather="eye-off"></span> Hide</button>
+                </form>
+            }
+        </div>
     </div>
     <div class="tab-pane fade" id="interact" role="tabpanel" aria-labelledby="interact-tab">
         <div class="modal fade" id="file-modal" tabindex="-1" role="dialog" aria-labelledby="file-modal-label" aria-hidden="true">
@@ -321,11 +332,15 @@
             </div>
             <div class="w-100 border border-primary p-0 m-0">
                 <div class="interact-width d-flex flex-row">
-                    <input class="d-inline form-control form-control-dark bg-dark text-white typeahead border-0" id="interact-input" type="text" autocomplete="off" placeholder="Interact..." aria-label="Interact">
+                    <div class="d-inline d-flex flex-column justify-content-center text-muted ml-1">
+                        <div id="history-up" class="mb-n1 p-0 border-0 hover-white" style="z-index: 1"><span data-feather="chevron-up"></span></div>
+                        <div id="history-down" class="mt-n1 p-0 border-0 hover-white"><span data-feather="chevron-down"></span></div>
+                    </div>
+                    <input class="d-inline form-control form-control-dark bg-dark text-white typeahead pl-1 border-0" id="interact-input" type="text" autocomplete="off" placeholder="Interact..." aria-label="Interact">
                     <button type="button" class="d-inline btn btn-dark rounded-0 border-primary" id="interact-button">Send</button>
                 </div>
             </div>
-        </div><br/><br/><br/><br/><br/>
+        </div><br /><br /><br /><br /><br />
     </div>
     <div class="tab-pane fade" id="task" role="tabpanel" aria-labelledby="task-tab">
         @{
@@ -350,6 +365,10 @@
     <script type="text/javascript">"use strict";
 
         $(document).ready(function () {
+            $("#grunt-edit-button").click(function() {
+                $("#grunt-edit-form").submit();
+            });
+
             function scrollDown() {
                 $("#interact-scroll").animate({
                     scrollTop: $("#interact-scroll")[0].scrollHeight
@@ -385,34 +404,48 @@
 
             var cmdHistoryIndex = 0;
             var cmdHistory = [];
+
+            var historyUp = function () {
+                if (cmdHistoryIndex == cmdHistory.length && $("#interact-input").val() != "") {
+                    cmdHistory.push($("#interact-input").val());
+                }
+                if (cmdHistoryIndex != 0) {
+                    cmdHistoryIndex--;
+                    $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
+                    $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
+                }
+            };
+
+            var historyDown = function () {
+                if (cmdHistoryIndex < cmdHistory.length) {
+                    cmdHistoryIndex++;
+                    $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
+                    $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
+                }
+                else if (cmdHistoryIndex == cmdHistory.length) {
+                    cmdHistoryIndex++;
+                    $("#interact-input").val("");
+                    $('.typeahead').typeahead('val', '');
+                }
+                else {
+                    $("#interact-input").val("");
+                    $('.typeahead').typeahead('val', '');
+                }
+            };
+
+            $("#history-up").click(historyUp);
+            $("#history-down").click(historyDown);
+
             $("#interact-input").keyup(function (event) {
                 if (event.keyCode === 13) {
                     $("#interact-button").click();
                 }
-                else if (event.keyCode === 38) {
-                    if (cmdHistoryIndex == cmdHistory.length && $("#interact-input").val() != "") {
-                        cmdHistory.push($("#interact-input").val());
+                if ($(".tt-empty").length == 1) {
+                    if (event.keyCode === 38) {
+                        historyUp();
                     }
-                    if (cmdHistoryIndex != 0) {
-                        cmdHistoryIndex--;
-                        $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
-                        $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
-                    }
-                }
-                else if (event.keyCode === 40) {
-                    if (cmdHistoryIndex < cmdHistory.length) {
-                        cmdHistoryIndex++;
-                        $("#interact-input").val(cmdHistory[cmdHistoryIndex]);
-                        $('.typeahead').typeahead('val', cmdHistory[cmdHistoryIndex]);
-                    }
-                    else if (cmdHistoryIndex == cmdHistory.length) {
-                        cmdHistoryIndex++;
-                        $("#interact-input").val("");
-                        $('.typeahead').typeahead('val', '');
-                    }
-                    else {
-                        $("#interact-input").val("");
-                        $('.typeahead').typeahead('val', '');
+                    else if (event.keyCode === 40) {
+                        historyDown();
                     }
                 }
             });
@@ -479,7 +512,7 @@
                     // iterate through the pool of strings and for any string that
                     // contains the substring `q`, add it to the `matches` array
                     $.each(strs, function (i, str) {
-                        if (substrRegex.test(str)) {
+                        if (substrRegex.test(str) && str.toLowerCase() != q.toLowerCase()) {
                             matches.push(str);
                         }
                     });

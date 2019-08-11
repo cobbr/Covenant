@@ -3,7 +3,7 @@
 @using Covenant.Models.Launchers
 @model Launcher
 @{
-    Layout = "_Layout";
+    Layout = "_LauncherLayout";
     ViewData["Title"] = "Launchers";
     IEnumerable<Listener> Listeners = ViewBag.Listeners;
 }
@@ -78,11 +78,11 @@
     </div>
     <div class="tab-pane fade" id="code" role="tabpanel" aria-labelledby="code-tab">
         <div class="form-group col-md-12">
-            <label for="copy-stager-code">Grunt StagerCode</label>
-            <textarea id="copy-stager-code" name="copy-stager-code" rows="20" class="form-control mb-3" readonly>@Model.StagerCode</textarea>
+            <label for="copy-stager-code">StagerCode</label>
+            <textarea id="copy-stager-code" name="copy-stager-code">@Model.StagerCode</textarea>
         </div>
         <div class="form-group col-md-12">
-            <button type="button" class="btn btn-primary" data-clipboard-target="#copy-stager-code">
+            <button type="button" class="btn btn-primary copy-code-button">
                 <span data-feather="clipboard"></span>
                 Copy
             </button>
@@ -95,7 +95,41 @@
     <script src="~/dist/clipboard.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            var clipboard = new ClipboardJS('.btn');
+            var editor = CodeMirror.fromTextArea(document.getElementById("copy-stager-code"), {
+                lineNumbers: true,
+                readOnly: true,
+                mode: "text/x-csharp"
+            });
+            
+            function getCodeMirrorNative(target) {
+                var _target = target;
+                if (typeof _target === 'string') {
+                    _target = document.querySelector(_target);
+                }
+                if (_target === null || !_target.tagName === undefined) {
+                    throw new Error('Element does not reference a CodeMirror instance.');
+                }
+
+                if (_target.className.indexOf('CodeMirror') > -1) {
+                    return _target.CodeMirror;
+                }
+
+                if (_target.tagName === 'TEXTAREA') {
+                    return _target.nextSibling.CodeMirror;
+                }
+
+                return null;
+            };
+
+            var clipboard = new ClipboardJS('.copy-code-button', {
+                text: function(trigger) {
+                    return getCodeMirrorNative($("#copy-stager-code")[0]).getDoc().getValue();
+                }
+            });
+
+            $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
+                editor.refresh();
+            });
 
             $(".nav-link").removeClass("active");
             $("#nav-launchers").addClass("active");
@@ -108,21 +142,21 @@
                 }
                 window.location.href = '../@url';
             });
-            function swapCommType(){
-                var comm = $(this).children("option:selected").val();
-                if (comm == "HTTP")
+            function swapOptions() {
+                var comm = $("#ImplantTemplateId").children("option:selected").text();
+                if (comm.includes("HTTP"))
                 {
                     $("#http-div").removeAttr("hidden");
                     $("#smb-div").attr("hidden", "true");
                 }
-                else if (comm == "SMB")
+                else if (comm.includes("SMB"))
                 {
                     $("#http-div").attr("hidden", "true");
                     $("#smb-div").removeAttr("hidden");
                 }
             };
-            $("#CommType").change(swapCommType);
-            swapCommType();
+            $("#ImplantTemplateId").change(swapOptions);
+            swapOptions();
         });
     </script>
 }

@@ -27,13 +27,9 @@
     </div>
     <div class="form-group">
         <label asp-for="Url"></label>
-        <input asp-for="Url" value="@Model.Url" class="form-control">
+        <input asp-for="Url" value="@Model.Url" class="form-control" readonly>
     </div>
     <div class="form-row">
-        <div class="form-group col-md-3">
-            <label asp-for="ConnectAddress"></label>
-            <input asp-for="ConnectAddress" value="@Model.ConnectAddress" class="form-control form-control-sm">
-        </div>
         <div class="form-group col-md-3">
             <label asp-for="BindAddress"></label>
             <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control-sm">
@@ -43,11 +39,30 @@
             <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control-sm">
         </div>
         <div class="form-group col-md-3">
+            <label asp-for="ConnectAddress"></label>
+            <input asp-for="ConnectAddress" value="@Model.ConnectAddress" class="form-control form-control-sm">
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="ConnectPort"></label>
+            <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control form-control-sm">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
             <label asp-for="UseSSL"></label>
             <select asp-for="UseSSL" class="form-control form-control-sm">
                 <option>False</option>
                 <option>True</option>
             </select>
+        </div>
+        <div class="form-group col-md-3 cert-div" hidden>
+            <label for="SSLCertificateFile">SSLCertificate</label>
+            <input id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file" type="file">
+            <input asp-for="SSLCertificate" class="form-control file-filler" type="hidden" disabled>
+        </div>
+        <div class="form-group col-md-6 cert-div" hidden>
+            <label asp-for="SSLCertificatePassword"></label>
+            <input asp-for="SSLCertificatePassword" class="form-control form-control-sm">
         </div>
     </div>
     <div class="form-group">
@@ -58,17 +73,6 @@
                 <option value="@item.Id">@item.Name</option>
             }
         </select>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label for="SSLCertificateFile">SSLCertificate</label>
-            <input id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file" type="file">
-            <input asp-for="SSLCertificate" class="form-control file-filler" type="hidden" disabled>
-        </div>
-        <div class="form-group col-md-6">
-            <label asp-for="SSLCertificatePassword"></label>
-            <input asp-for="SSLCertificatePassword" class="form-control form-control-sm">
-        </div>
     </div>
     <button id="submit-listener-button" type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
 </form>
@@ -89,6 +93,34 @@
                     $("#submit-listener-form").submit();
                 }
             });
+            var useSSL = "False";
+            function swapOptions() {
+                useSSL = $("#UseSSL").children("option:selected").text();
+                if (useSSL.includes("False"))
+                {
+                    $(".cert-div").attr("hidden", "true");
+                }
+                else if (useSSL.includes("True"))
+                {
+                    $(".cert-div").removeAttr("hidden");
+                }
+            };
+            function setUrl() {
+                console.log("setUrl");
+                var connectAddress = $("#ConnectAddress").val();
+                var connectPort = $("#ConnectPort").val();
+                var protocol = "http://";
+                if (useSSL.includes("True"))
+                {
+                    protocol = "https://"
+                }
+                $("#Url").val(protocol + connectAddress + ":" + connectPort);
+            }
+            $("#UseSSL").change(swapOptions);
+            $("#ConnectAddress").change(setUrl);
+            $("#ConnectPort").change(setUrl);
+            swapOptions();
+            setUrl();
         });
     </script>
 }

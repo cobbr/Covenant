@@ -16,7 +16,9 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $('#grunt-table').DataTable({
-                "pageLength": 50
+                "pageLength": 50,
+                "info": false,
+                "order": [[ 5, "desc" ]]
             });
         } );
     </script>

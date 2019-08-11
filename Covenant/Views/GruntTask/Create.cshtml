@@ -120,12 +120,17 @@
         <label asp-for="Code"></label>
         <textarea asp-for="Code" rows="20" class="form-control"></textarea>
     </div>
-    <button id="edit-task-submit" type="button" class="btn btn-primary">Create</button>
+    <button id="edit-task-submit" type="button" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
 </form>
 
 @section Scripts {
 <script type="text/javascript">
     $(document).ready(function () {
+        var editor = CodeMirror.fromTextArea(document.getElementById("Code"), {
+            lineNumbers: true,
+            mode: "text/x-csharp"
+        });
+
         $("#edit-task-submit").click(function () {
             $(".form-check-input").each(function () {
                 if ($(this).is(":checked")) {

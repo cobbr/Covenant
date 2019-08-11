@@ -20,14 +20,16 @@ namespace Covenant.Controllers
     public class GruntTaskingController : Controller
     {
         private readonly CovenantContext _context;
-        private readonly IHubContext<GruntHub> _grunthub;
         private readonly UserManager<CovenantUser> _userManager;
+        private readonly IHubContext<GruntHub> _grunthub;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public GruntTaskingController(CovenantContext context, IHubContext<GruntHub> grunthub, UserManager<CovenantUser> userManager)
+        public GruntTaskingController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
             _context = context;
-            _grunthub = grunthub;
             _userManager = userManager;
+            _grunthub = grunthub;
+            _eventhub = eventhub;
         }
 
         // GET: /grunttasking
@@ -98,7 +100,7 @@ namespace Covenant.Controllers
                     User = currentUser,
                     GruntId = tasking.Grunt.Id,
                     Grunt = tasking.Grunt
-                }, _grunthub);
+                }, _grunthub, _eventhub);
                 tasking.GruntCommand = createdCommand;
                 tasking.GruntCommandId = createdCommand.Id;
 

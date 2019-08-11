@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Data\Grunt\*" />
+    <Compile Remove="Data\Grunt\**" />
     <Compile Remove="Data\Tasks\*" />
     <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\LateralMovement\*" />
     <Compile Remove="Data\ReferenceSourceLibraries\SharpSploit\SharpSploit\Credentials\*" />
@@ -86,6 +86,10 @@
     <Folder Include="Views\HostedFile\" />
     <Folder Include="Views\Profile\" />
     <Folder Include="Views\Graph\" />
+    <Folder Include="Views\Template\" />
+    <Folder Include="Data\Tasks\CSharp\" />
+    <Folder Include="Data\Tasks\CSharp\Compiled\" />
+    <Folder Include="wwwroot\webfonts\" />
   </ItemGroup>
 
   <ItemGroup>

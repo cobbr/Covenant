@@ -21,10 +21,37 @@ namespace Covenant.Core
         {
             context.Database.EnsureCreated();
 
+            await InitializeImplantTemplates(context);
             await InitializeListeners(context, ListenerCancellationTokens);
             await InitializeLaunchers(context);
             await InitializeTasks(context);
             await InitializeRoles(roleManager);
+        }
+
+        public async static Task InitializeImplantTemplates(CovenantContext context)
+        {
+            if (!context.ImplantTemplates.Any())
+            {
+                var templates = new List<ImplantTemplate>
+                {
+                    new ImplantTemplate
+                    {
+                        Name = "GruntHTTP",
+                        Description = "A Windows implant written in C# that communicates over HTTP.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.HTTP
+                    },
+                    new ImplantTemplate
+                    {
+                        Name = "GruntSMB",
+                        Description = "A Windows implant written in C# that communicates over SMB.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.SMB
+                    }
+                };
+				templates.ForEach(T => T.ReadFromDisk());
+                await context.ImplantTemplates.AddRangeAsync(templates);
+            }
         }
 
         public async static Task InitializeListeners(CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
@@ -56,15 +83,15 @@ namespace Covenant.Core
             {
                 var launchers = new List<Launcher>
                 {
+                    new BinaryLauncher(),
+                    new PowerShellLauncher(),
+                    new MSBuildLauncher(),
+                    new InstallUtilLauncher(),
                     new WmicLauncher(),
                     new Regsvr32Launcher(),
                     new MshtaLauncher(),
                     new CscriptLauncher(),
-                    new WscriptLauncher(),
-                    new InstallUtilLauncher(),
-                    new MSBuildLauncher(),
-                    new PowerShellLauncher(),
-                    new BinaryLauncher()
+                    new WscriptLauncher()
                 };
                 await context.Launchers.AddRangeAsync(launchers);
                 await context.SaveChangesAsync();
@@ -263,7 +290,7 @@ namespace Covenant.Core
                         Name = "Shell",
                         AlternateNames = new List<string>(),
                         Description = "Execute a Shell command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Shell" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Shell" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -283,7 +310,7 @@ namespace Covenant.Core
                         Name = "ShellCmd",
                         AlternateNames = new List<string>(),
                         Description = "Execute a Shell command using \"cmd.exe /c\"",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ShellCmd" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ShellCmd" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -303,7 +330,7 @@ namespace Covenant.Core
                         Name = "PowerShell",
                         AlternateNames = new List<string>(),
                         Description = "Execute a PowerShell command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PowerShell" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PowerShell" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -323,7 +350,7 @@ namespace Covenant.Core
                         Name = "Assembly",
                         AlternateNames = new List<string>(),
                         Description = "Execute a dotnet Assembly EntryPoint.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Assembly" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Assembly" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -362,7 +389,7 @@ namespace Covenant.Core
                         Name = "AssemblyReflect",
                         AlternateNames = new List<string>(),
                         Description = "Execute a dotnet Assembly method using reflection.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "AssemblyReflect" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "AssemblyReflect" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -422,7 +449,7 @@ namespace Covenant.Core
                         Name = "ListDirectory",
                         AlternateNames = new List<string> { "ls" },
                         Description = "Get a listing of the current directory.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ListDirectory" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ListDirectory" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -442,7 +469,7 @@ namespace Covenant.Core
                         Name = "ChangeDirectory",
                         AlternateNames = new List<string> { "cd" },
                         Description = "Change the current directory.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ChangeDirectory" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ChangeDirectory" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -462,7 +489,7 @@ namespace Covenant.Core
                         Name = "ProcessList",
                         AlternateNames = new List<string> { "ps" },
                         Description = "Get a list of currently running processes.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ProcessList" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ProcessList" + ".task")),
                         Options = new List<GruntTaskOption> { }
                     },
                     new GruntTask
@@ -470,7 +497,7 @@ namespace Covenant.Core
                         Name = "Upload",
                         AlternateNames = new List<string>(),
                         Description = "Upload a file.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Upload" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Upload" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -499,7 +526,7 @@ namespace Covenant.Core
                         Name = "Download",
                         AlternateNames = new List<string>(),
                         Description = "Download a file.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Download" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Download" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -519,7 +546,7 @@ namespace Covenant.Core
                         Name = "Mimikatz",
                         AlternateNames = new List<string>(),
                         Description = "Execute a mimikatz command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Mimikatz" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Mimikatz" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -539,7 +566,7 @@ namespace Covenant.Core
                         Name = "LogonPasswords",
                         AlternateNames = new List<string>(),
                         Description = "Execute the 'privilege::debug sekurlsa::logonPasswords' Mimikatz command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "LogonPasswords" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "LogonPasswords" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -547,7 +574,7 @@ namespace Covenant.Core
                         Name = "LsaSecrets",
                         AlternateNames = new List<string>(),
                         Description = "Execute the 'privilege::debug lsadump::secrets' Mimikatz command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "LsaSecrets" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "LsaSecrets" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -555,7 +582,7 @@ namespace Covenant.Core
                         Name = "LsaCache",
                         AlternateNames = new List<string>(),
                         Description = "Execute the 'privilege::debug lsadump::cache' Mimikatz command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "LsaCache" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "LsaCache" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -563,7 +590,7 @@ namespace Covenant.Core
                         Name = "SamDump",
                         AlternateNames = new List<string>(),
                         Description = "Execute the 'privilege::debug lsadump::sam' Mimikatz command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SamDump" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SamDump" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -571,7 +598,7 @@ namespace Covenant.Core
                         Name = "Wdigest",
                         AlternateNames = new List<string>(),
                         Description = "Execute the 'sekurlsa::wdigest' Mimikatz command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Wdigest" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Wdigest" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -579,7 +606,7 @@ namespace Covenant.Core
                         Name = "PortScan",
                         AlternateNames = new List<string>(),
                         Description = "Perform a TCP port scan.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PortScan" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PortScan" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -619,7 +646,7 @@ namespace Covenant.Core
                         Name = "Rubeus",
                         AlternateNames = new List<string>(),
                         Description = "Use a rubeus command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Rubeus" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Rubeus" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -639,7 +666,7 @@ namespace Covenant.Core
                         Name = "Kerberoast",
                         AlternateNames = new List<string>(),
                         Description = "Perform a \"Kerberoast\" attack that retrieves crackable service tickets for Domain User's w/ an SPN set.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Kerberoast" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Kerberoast" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -669,7 +696,7 @@ namespace Covenant.Core
                         Name = "SafetyKatz",
                         AlternateNames = new List<string>(),
                         Description = "Use SafetyKatz.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SafetyKatz" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SafetyKatz" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -677,7 +704,7 @@ namespace Covenant.Core
                         Name = "SharpDPAPI",
                         AlternateNames = new List<string>(),
                         Description = "Use a SharpDPAPI command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpDPAPI" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpDPAPI" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -697,7 +724,7 @@ namespace Covenant.Core
                         Name = "SharpUp",
                         AlternateNames = new List<string>(),
                         Description = "Use a SharpUp command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpUp" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpUp" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -717,7 +744,7 @@ namespace Covenant.Core
                         Name = "SharpDump",
                         AlternateNames = new List<string>(),
                         Description = "Use a SharpDump command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpDump" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpDump" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -737,7 +764,7 @@ namespace Covenant.Core
                         Name = "Seatbelt",
                         AlternateNames = new List<string>(),
                         Description = "Use a Seatbelt command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "Seatbelt" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Seatbelt" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -763,7 +790,7 @@ namespace Covenant.Core
                         Name = "SharpWMI",
                         AlternateNames = new List<string>(),
                         Description = "Use a SharpWMI command.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SharpWMI" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpWMI" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -783,7 +810,7 @@ namespace Covenant.Core
                         Name = "WhoAmI",
                         AlternateNames = new List<string>(),
                         Description = "Gets the username of the currently used/impersonated token.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WhoAmI" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "WhoAmI" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -792,7 +819,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Find a process owned by the specified user and impersonate the token. Used to execute subsequent commands as the specified user.",
                         TokenTask = true,
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ImpersonateUser" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ImpersonateUser" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -813,7 +840,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Impersonate the token of the specified process. Used to execute subsequent commands as the user associated with the token of the specified process.",
                         TokenTask = true,
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ImpersonateUser" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ImpersonateUser" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -834,7 +861,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Impersonate the SYSTEM user. Equates to ImpersonateUser(\"NT AUTHORITY\\SYSTEM\").",
                         TokenTask = true,
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetSystem" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetSystem" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -843,7 +870,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Makes a new token with a specified username and password, and impersonates it to conduct future actions as the specified user.",
                         TokenTask = true,
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "MakeToken" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "MakeToken" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -894,7 +921,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string> { "RevToSelf" },
                         Description = "Ends the impersonation of any token, reverting back to the initial token associated with the current process. Useful in conjuction with functions impersonate a token and do not automatically RevertToSelf, such as ImpersonateUser(), ImpersonateProcess(), GetSystem(), and MakeToken().",
                         TokenTask = true,
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "RevertToSelf" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "RevertToSelf" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -902,7 +929,7 @@ namespace Covenant.Core
                         Name = "WMICommand",
                         AlternateNames = new List<string>(),
                         Description = "Execute a process on a remote system using Win32_Process Create, optionally with alternate credentials.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WMI" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "WMI" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -952,7 +979,7 @@ namespace Covenant.Core
                         Name = "WMIGrunt",
                         AlternateNames = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using Win32_Process Create, optionally with alternate credentials.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "WMI" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "WMI" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1002,7 +1029,7 @@ namespace Covenant.Core
                         Name = "DCOMCommand",
                         AlternateNames = new List<string>(),
                         Description = "Execute a process on a remote system using various DCOM methods.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "DCOM" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "DCOM" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1032,7 +1059,7 @@ namespace Covenant.Core
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -1042,7 +1069,7 @@ namespace Covenant.Core
                         Name = "DCOMGrunt",
                         AlternateNames = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using various DCOM methods.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "DCOM" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "DCOM" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1072,7 +1099,7 @@ namespace Covenant.Core
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
                                 DisplayInCommand = true
                             }
                         }
@@ -1082,7 +1109,7 @@ namespace Covenant.Core
                         Name = "BypassUACCommand",
                         AlternateNames = new List<string>(),
                         Description = "Bypasses UAC through token duplication and executes a command with high integrity.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "BypassUAC" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassUAC" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1102,7 +1129,7 @@ namespace Covenant.Core
                         Name = "BypassUACGrunt",
                         AlternateNames = new List<string>(),
                         Description = "Bypasses UAC through token duplication and executes a Grunt Launcher with high integrity.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "BypassUAC" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassUAC" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1122,7 +1149,7 @@ namespace Covenant.Core
                         Name = "GetDomainUser",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of specified (or all) user `DomainObject`s in the current Domain.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetDomainUser" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetDomainUser" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1142,7 +1169,7 @@ namespace Covenant.Core
                         Name = "GetDomainGroup",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of specified (or all) group `DomainObject`s in the current Domain.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetDomainGroup" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetDomainGroup" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1162,7 +1189,7 @@ namespace Covenant.Core
                         Name = "GetDomainComputer",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of specified (or all) computer `DomainObject`s in the current Domain.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetDomainComputer" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetDomainComputer" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1182,7 +1209,7 @@ namespace Covenant.Core
                         Name = "GetNetLocalGroup",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of `LocalGroup`s from specified remote computer(s).",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroup" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetLocalGroup" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1202,7 +1229,7 @@ namespace Covenant.Core
                         Name = "GetNetLocalGroupMember",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of `LocalGroupMember`s from specified remote computer(s).",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLocalGroupMember" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetLocalGroupMember" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1232,7 +1259,7 @@ namespace Covenant.Core
                         Name = "GetNetLoggedOnUser",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of `LoggedOnUser`s from specified remote computer(s).",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetLoggedOnUser" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetLoggedOnUser" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1252,7 +1279,7 @@ namespace Covenant.Core
                         Name = "GetNetSession",
                         AlternateNames = new List<string>(),
                         Description = "Gets a list of `SessionInfo`s from specified remote computer(s).",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetNetSession" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetSession" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1272,7 +1299,7 @@ namespace Covenant.Core
                         Name = "GetRegistryKey",
                         AlternateNames = new List<string>(),
                         Description = "Gets a value stored in registry.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetRegistryKey" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1292,7 +1319,7 @@ namespace Covenant.Core
                         Name = "SetRegistryKey",
                         AlternateNames = new List<string>(),
                         Description = "Sets a value into the registry.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SetRegistryKey" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1322,7 +1349,7 @@ namespace Covenant.Core
                         Name = "GetRemoteRegistryKey",
                         AlternateNames = new List<string>(),
                         Description = "Gets a value stored in registry on a remote system.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "GetRemoteRegistryKey" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetRemoteRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1352,7 +1379,7 @@ namespace Covenant.Core
                         Name = "SetRemoteRegistryKey",
                         AlternateNames = new List<string>(),
                         Description = "Sets a value into the registry on a remote system.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "SetRemoteRegistryKey" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRemoteRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1392,7 +1419,7 @@ namespace Covenant.Core
                         Name = "ShellCode",
                         AlternateNames = new List<string>(),
                         Description = "Executes a specified shellcode byte array by copying it to pinned memory, modifying the memory permissions, and executing.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "ShellCode" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ShellCode" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1400,6 +1427,76 @@ namespace Covenant.Core
                                 Id = 67,
                                 Name = "Hex",
                                 Description = "Hex string representing the Shellcode bytes to execute.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PrivExchange",
+                        AlternateNames = new List<string>(),
+                        Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PrivExchange" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 68,
+                                Name = "EWSUri",
+                                Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
+                                Value = "https://exchange.example.local:443/EWS/Exchange.asmx",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 69,
+                                Name = "RelayUri",
+                                Description = "The URI of the external relay of the Exchange authentication.",
+                                Value = "https://relay.example.local:443/relay",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 70,
+                                Name = "ExchangeVersion",
+                                Description = "Microsoft Exchange version. Defaults to Exchange2010.",
+                                Value = "Exchange2010",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PersistCOMHijack",
+                        AlternateNames = new List<string>(),
+                        Description = "Hijacks a CLSID key to execute a payload for persistence.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistCOMHijack" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 71,
+                                Name = "CLSID",
+                                Description = "Missing CLSID to abuse.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 72,
+                                Name = "ExecutablePath",
+                                Description = "Path to the executable path.",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
@@ -1417,7 +1514,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 68,
+                                Id = 73,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -1453,7 +1550,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 69,
+                                Id = 74,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -1463,7 +1560,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 70,
+                                Id = 75,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -1483,7 +1580,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 71,
+                                Id = 76,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -1503,7 +1600,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 72,
+                                Id = 77,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -1523,7 +1620,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 73,
+                                Id = 78,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -1543,81 +1640,11 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 74,
+                                Id = 79,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
-                                DisplayInCommand = true
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Name = "PrivExchange",
-                        AlternateNames = new List<string>(),
-                        Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PrivExchange" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 75,
-				Name = "EWSUri",
-                                Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
-                                Value = "https://exchange.example.local:443/EWS/Exchange.asmx",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 76,
-                                Name = "RelayUri",
-                                Description = "The URI of the external relay of the Exchange authentication.",
-                                Value = "https://relay.example.local:443/relay",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 77,
-				Name = "ExchangeVersion",
-                                Description = "Microsoft Exchange version. Defaults to Exchange2010.",
-                                Value = "Exchange2010",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Name = "PersistCOMHijack",
-                        AlternateNames = new List<string>(),
-                        Description = "Hijacks a CLSID key to execute a payload for persistence.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskDirectory, "PersistCOMHijack" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 78,
-			        Name = "CLSID",
-                                Description = "Missing CLSID to abuse.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 79,
-			        Name = "ExecutablePath",
-                                Description = "Path to the executable path.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
                                 DisplayInCommand = true
                             }
                         }
@@ -1706,7 +1733,7 @@ namespace Covenant.Core
                 );
                 var upload = await context.GetGruntTaskByName("Upload");
                 var download = await context.GetGruntTaskByName("Download");
-                var privexchange = await context.GetGruntTaskByName("privexchange");
+                var privexchange = await context.GetGruntTaskByName("PrivExchange");
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },

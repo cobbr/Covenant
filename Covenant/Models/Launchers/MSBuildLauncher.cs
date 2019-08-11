@@ -24,10 +24,10 @@ namespace Covenant.Models.Launchers
             this.OutputKind = OutputKind.WindowsApplication;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile)
+        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, this.OutputKind, true);
+            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
+            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, true);
             this.DiskCode = XMLTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
             this.DiskCode = DiskCode.Replace("{{TARGET_NAME}}", this.TargetName);
             this.DiskCode = DiskCode.Replace("{{TASK_NAME}}", this.TaskName);

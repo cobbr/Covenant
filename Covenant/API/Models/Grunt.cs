@@ -34,7 +34,8 @@ namespace Covenant.API.Models
         /// 'Disconnected'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(string name, string originalServerGuid, CommunicationType commType, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetFrameworkVersion, GruntStatus status, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>))
+        /// <param name="language">Possible values include: 'CSharp'</param>
+        public Grunt(string name, string originalServerGuid, CommunicationType commType, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetFrameworkVersion, GruntStatus status, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), ImplantLanguage? language = default(ImplantLanguage?), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>))
         {
             Id = id;
             Name = name;
@@ -45,6 +46,7 @@ namespace Covenant.API.Models
             ValidateCert = validateCert;
             UseCertPinning = useCertPinning;
             SmbPipeName = smbPipeName;
+            Language = language;
             ListenerId = listenerId;
             Listener = listener;
             Note = note;
@@ -122,6 +124,12 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "smbPipeName")]
         public string SmbPipeName { get; set; }
+
+        /// <summary>
+        /// Gets or sets possible values include: 'CSharp'
+        /// </summary>
+        [JsonProperty(PropertyName = "language")]
+        public ImplantLanguage? Language { get; set; }
 
         /// <summary>
         /// </summary>

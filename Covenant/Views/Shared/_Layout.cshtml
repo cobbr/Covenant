@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="~/images/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="~/images/favicon.ico" type="image/x-icon">
     @if (!(SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User)))
     {
         ViewData["Title"] = "Login";
@@ -21,7 +21,7 @@
         <link rel="stylesheet" href="~/css/bootstrap-datetimepicker.min.css" />
         <link rel="stylesheet" href="~/css/bootstrap-select.min.css" />
         <link rel="stylesheet" href="~/css/bootstrap-multiselect.css" />
-        <link rel="stylesheet" href="~/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="~/css/all.css" />
         <link rel="stylesheet" href="~/css/jquery.typeahead.min.css" />
         <link rel="stylesheet" href="~/css/datatables.min.css" />
         <link rel="stylesheet" href="~/css/dashboard.css" />
@@ -36,7 +36,7 @@
         <link rel="stylesheet" href="~/css/bootstrap-datetimepicker.min.css" />
         <link rel="stylesheet" href="~/css/bootstrap-select.min.css" />
         <link rel="stylesheet" href="~/css/bootstrap-multiselect.css" />
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="~/css/all.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-typeahead/2.10.6/jquery.typeahead.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.css" />
         <link rel="stylesheet" href="~/css/dashboard.css" />
@@ -66,6 +66,18 @@
                 }
             </ul>
         </nav>
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="position: absolute; top: 60px; right: 10px; z-index: 1;" data-delay="15000">
+            <div class="toast-header">
+                <strong class="mr-auto">Event</strong>
+                <small>Now</small>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body">
+                Message
+            </div>
+        </div>
         <div id="covenant-container" class="container-fluid">
             <div class="d-flex flex-row">
                 <nav class="col-sm-2 bg-light sidebar">
@@ -96,8 +108,14 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a asp-controller="Template" asp-action="Index" id="nav-templates" class="nav-link">
+                                    <span data-feather="code"></span>
+                                    Templates
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a asp-controller="GruntTask" asp-action="Index" id="nav-tasks" class="nav-link">
-                                    <span data-feather="box"></span>
+                                    <span data-feather="package"></span>
                                     Tasks
                                 </a>
                             </li>
@@ -178,6 +196,26 @@
         <script src="~/js/bootstrap-multiselect.js"></script>
         <script src="~/js/bootstrap-select.min.js"></script>
     </environment>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var displayEvent = function (event) {
+                var msg = event.messageHeader.substring(event.messageHeader.indexOf("UTC] ") + 5, event.messageHeader.length)
+                $(".toast-body").text(msg);
+                $(".toast").toast('show');
+            }
+
+            var connection = new signalR.HubConnectionBuilder().withUrl("/eventHub").build();
+
+            connection.on("ReceiveEvent", displayEvent);
+
+            connection.start()
+                .then(function () {
+                    connection.invoke("JoinGroup", "*").catch(function (err) {
+                        return console.error(err.toString());
+                    });
+                });
+        });
+    </script>
 
     @RenderSection("Scripts", required: false)
 </body>

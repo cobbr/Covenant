@@ -15,6 +15,7 @@ namespace Covenant.Models.Covenant
 
     public class CovenantUserLogin
     {
+        public string Id { get; set; }
         [Required]
         public string UserName { get; set; }
         [Required]

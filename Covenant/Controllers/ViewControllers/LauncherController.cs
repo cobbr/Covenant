@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
@@ -34,6 +35,7 @@ namespace Covenant.Controllers
             try
             {
                 ViewBag.Listeners = await _context.GetListeners();
+                ViewBag.ImplantTemplates = await _context.GetImplantTemplates();
                 switch (id.ToLower())
                 {
                     case "binary":

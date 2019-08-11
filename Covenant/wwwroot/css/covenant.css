@@ -99,6 +99,8 @@
 
 .task-card {
     background: rgba(255, 255, 255, 0);
+    font-family: 'Source Code Pro', monospace;
+    letter-spacing: -0.25px;
 }
 
 .task-card:hover, .task-card:focus {
@@ -128,3 +130,12 @@
     padding-top: 0;
     padding-bottom: 0;
 }
+
+.hover-white:hover {
+    color: white;
+}
+
+#interact-input:focus {
+    -webkit-box-shadow: none;
+    outline: -webkit-focus-ring-color auto 0px;
+} 

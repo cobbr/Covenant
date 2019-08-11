@@ -2,7 +2,7 @@
 @model IEnumerable<Grunt>
 
 <div class="table-responsive">
-    <table id="grunt-table" class="table table-bordered">
+    <table id="grunt-table" class="table table-hover">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.Name)</th>
@@ -19,23 +19,44 @@
         <tbody>
             @foreach (var item in Model)
             {
-                @if (item.Status != GruntStatus.Uninitialized)
+                @if (item.Status != GruntStatus.Uninitialized && item.Status != GruntStatus.Hidden)
                 {
-                    <tr>
-                        <td>
-                            <a asp-controller="Grunt" asp-action="Interact" asp-route-id="@item.Id">
-                                @Html.DisplayFor(modelItem => item.Name)
-                            </a>
-                        </td>
-                        <td>@Html.DisplayFor(modelItem => item.CommType)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
-                        <td>@Html.DisplayFor(modelItem => item.UserName)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Status)</td>
-                        <td>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Integrity)</td>
-                        <td>@Html.DisplayFor(modelItem => item.OperatingSystem)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Process)</td>
-                    </tr>
+                    @if (item.Status == GruntStatus.Active)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="Grunt" asp-action="Interact" asp-route-id="@item.Id">
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </a>
+                            </td>
+                            <td>@Html.DisplayFor(modelItem => item.CommType)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
+                            <td>@Html.DisplayFor(modelItem => item.UserName)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                            <td>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Integrity)</td>
+                            <td>@Html.DisplayFor(modelItem => item.OperatingSystem)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Process)</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr style="opacity: 0.3;">
+                            <td>
+                                <a asp-controller="Grunt" asp-action="Interact" asp-route-id="@item.Id">
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </a>
+                            </td>
+                            <td>@Html.DisplayFor(modelItem => item.CommType)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
+                            <td>@Html.DisplayFor(modelItem => item.UserName)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                            <td>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Integrity)</td>
+                            <td>@Html.DisplayFor(modelItem => item.OperatingSystem)</td>
+                            <td>@Html.DisplayFor(modelItem => item.Process)</td>
+                        </tr>
+                    }
                 }
             }
         </tbody>

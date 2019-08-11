@@ -143,12 +143,12 @@ namespace Covenant.Controllers
                 {
                     return new UnauthorizedResult();
                 }
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction(nameof(Index));
             }
         }
 
@@ -166,7 +166,7 @@ namespace Covenant.Controllers
                 }).ToList();
                 ViewBag.RolesSelected = rolesSelected;
                 ViewBag.RolesNotSelected = (await _context.GetRoles()).Where(R => !rolesSelected.Contains(R.Name)).Select(R => R.Name);
-                return View(new CovenantUserLogin { UserName = user.UserName, Password = "12345678" });
+                return View(new CovenantUserLogin { Id = user.Id, UserName = user.UserName, Password = "12345678" });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -186,7 +186,7 @@ namespace Covenant.Controllers
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
-                return View(new CovenantUserLogin { UserName = login.UserName, Password = "12345678" });
+                return View(new CovenantUserLogin { Id = login.Id, UserName = login.UserName, Password = "12345678" });
             }
         }
 
@@ -232,6 +232,21 @@ namespace Covenant.Controllers
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [Authorize(Policy = "RequireAdministratorRole")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            try
+            {
+                await _context.DeleteUser(id);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
                 return RedirectToAction(nameof(Index));
             }
         }

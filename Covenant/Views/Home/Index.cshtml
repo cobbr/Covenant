@@ -42,12 +42,15 @@
             $('#grunt-table').DataTable({
                 "pageLength": 5,
                 "lengthChange": false,
-                "searching": false
+                "searching": false,
+                "info": false,
+                "order": [[ 5, "desc" ]]
             });
             $('#tasking-table').DataTable({
                 "pageLength": 5,
                 "lengthChange": false,
-                "searching": false
+                "searching": false,
+                "info": false,
             });
         });
     </script>

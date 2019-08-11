@@ -7,9 +7,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
+using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
-using Covenant.Core;
 
 namespace Covenant.Models.Launchers
 {
@@ -23,21 +23,23 @@ namespace Covenant.Models.Launchers
             this.OutputKind = OutputKind.WindowsApplication;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile)
+        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, this.OutputKind, true);
+            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
+            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, true);
             string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
 
             List<Compiler.Reference> references = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
             references.Add(new Compiler.Reference
             {
-                File = "System.Configuration.Install.dll",
+                File = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.CovenantAssemblyReferenceNet35Directory + "System.Configuration.Install.dll" :
+                                                                                    Common.CovenantAssemblyReferenceNet40Directory + "System.Configuration.Install.dll",
                 Framework = grunt.DotNetFrameworkVersion,
                 Enabled = true
             });
             this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CompilationRequest
             {
+                Language = grunt.Language,
                 Source = code,
                 TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,

@@ -5,15 +5,15 @@
 @model IEnumerable<CovenantUser>
 @{
     Layout = "_CovenantUserLayout";
-    ViewData["Title"] = "CovenantUsers";
+    ViewData["Title"] = "Users";
     Dictionary<string, string> UserRoleDict = ViewBag.UserRoleDict;
 }
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
-    <h1 class="h2">CovenantUsers</h1>
+    <h1 class="h2">Users</h1>
 </div>
 
 <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-hover">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.UserName)</th>
@@ -23,14 +23,17 @@
         <tbody>
             @foreach (var item in Model)
             {
-                <tr>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id">
-                            @Html.DisplayFor(modelItem => item.UserName)
-                        </a>
-                    </td>
-                    <td>@UserRoleDict[item.UserName]</td>
-                </tr>
+                if (!UserRoleDict[item.UserName].Contains("Listener") || UserRoleDict[item.UserName].Contains("User"))
+                {
+                    <tr>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id">
+                                @Html.DisplayFor(modelItem => item.UserName)
+                            </a>
+                        </td>
+                        <td>@UserRoleDict[item.UserName]</td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
