@@ -15,6 +15,11 @@
     });
 }
 
+@section Sheets
+{
+    <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro&display=swap" rel="stylesheet">
+}
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Grunt: <span id="grunt-name" class="text-primary">@Html.DisplayFor(model => model.Name)</span></h1>
 </div>
@@ -51,7 +56,7 @@
 
 <div class="tab-content" id="grunt-tab-content">
     <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
-        <form asp-controller="Grunt" asp-action="Edit">
+        <form id="grunt-edit-form" asp-controller="Grunt" asp-action="Edit">
             <div asp-validation-summary="All" class="text-danger"></div>
             <input asp-for="Id" value="@Model.Id" type="hidden" readonly>
             <div class="form-row">
@@ -170,11 +175,6 @@
                     <input asp-for="OperatingSystem" value="@Model.OperatingSystem" class="form-control" readonly>
                 </div>
             </div>
-            <input asp-for="GruntSharedSecretPassword" value="@Model.GruntSharedSecretPassword" class="form-control" type="hidden" readonly>
-            <input asp-for="GruntRSAPublicKey" value="@Model.GruntRSAPublicKey" class="form-control" type="hidden" readonly>
-            <input asp-for="GruntNegotiatedSessionKey" value="@Model.GruntNegotiatedSessionKey" class="form-control" type="hidden" readonly>
-            <input asp-for="GruntChallenge" value="@Model.GruntChallenge" class="form-control" type="hidden" readonly>
-            <input asp-for="PowerShellImport" value="@Model.PowerShellImport" class="form-control" type="hidden" readonly>
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="set-activation-time">@Html.DisplayNameFor(model => model.ActivationTime)</label>
@@ -185,7 +185,7 @@
                     <input id="set-last-checkin" name="@Html.DisplayNameFor(model => model.LastCheckIn)" value="@Html.DisplayFor(model => model.LastCheckIn)" class="form-control" readonly>
                 </div>
             </div>
-            <hr/>
+            <hr />
             <div class="form-row">
                 <div class="form-group col-md-4">
                     <label asp-for="Name"></label>
@@ -228,11 +228,22 @@
                 <label for="set-kill-date">@Html.DisplayNameFor(model => model.KillDate)</label>
                 <input type="text" id="set-kill-date" name="@Html.DisplayNameFor(model => model.KillDate)" value="@Html.DisplayFor(model => model.KillDate)" class="form-control">
             </div>
-            <button type="submit" class="btn btn-primary">
-                <span data-feather="edit"></span>
-                Edit
-            </button>
         </form>
+        <div class="btn-group" role="group">
+            <button type="button" id="grunt-edit-button" class="btn btn-primary"><span data-feather="edit"></span> Edit</button>
+            @if (Model.Status == GruntStatus.Hidden)
+            {
+                <form asp-action="Hide" asp-route-id="@Model.Id">
+                    <button type="submit" class="btn btn-success ml-2"><span data-feather="eye"></span> Unhide</button>
+                </form>
+            }
+            else
+            {
+                <form asp-action="Hide" asp-route-id="@Model.Id">
+                    <button type="submit" class="btn btn-warning ml-2"><span data-feather="eye-off"></span> Hide</button>
+                </form>
+            }
+        </div>
     </div>
     <div class="tab-pane fade" id="interact" role="tabpanel" aria-labelledby="interact-tab">
         <div class="modal fade" id="file-modal" tabindex="-1" role="dialog" aria-labelledby="file-modal-label" aria-hidden="true">
@@ -329,7 +340,7 @@
                     <button type="button" class="d-inline btn btn-dark rounded-0 border-primary" id="interact-button">Send</button>
                 </div>
             </div>
-        </div><br/><br/><br/><br/><br/>
+        </div><br /><br /><br /><br /><br />
     </div>
     <div class="tab-pane fade" id="task" role="tabpanel" aria-labelledby="task-tab">
         @{
@@ -354,6 +365,10 @@
     <script type="text/javascript">"use strict";
 
         $(document).ready(function () {
+            $("#grunt-edit-button").click(function() {
+                $("#grunt-edit-form").submit();
+            });
+
             function scrollDown() {
                 $("#interact-scroll").animate({
                     scrollTop: $("#interact-scroll")[0].scrollHeight

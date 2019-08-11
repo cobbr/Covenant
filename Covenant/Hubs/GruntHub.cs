@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -15,7 +19,7 @@ using Covenant.Models.Listeners;
 
 namespace Covenant.Hubs
 {
-    public static class HubProxy
+    public static class GruntHubProxy
     {
         public async static Task SendCommandEvent(IHubContext<GruntHub> context, Event taskingEvent, GruntCommand command)
         {
@@ -30,10 +34,10 @@ namespace Covenant.Hubs
         private readonly CovenantContext _context;
         private readonly Interaction interact;
 
-        public GruntHub(CovenantContext context, IHubContext<GruntHub> grunthub)
+        public GruntHub(CovenantContext context, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
             _context = context;
-            interact = new Interaction(_context, grunthub);
+            interact = new Interaction(_context, grunthub, eventhub);
         }
 
         public async Task JoinGroup(string gruntName)

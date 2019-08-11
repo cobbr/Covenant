@@ -27,11 +27,13 @@ namespace Covenant.Core
     {
         private readonly CovenantContext _context;
         private readonly IHubContext<GruntHub> _grunthub;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public Interaction(CovenantContext context, IHubContext<GruntHub> grunthub)
+        public Interaction(CovenantContext context, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
             _context = context;
             _grunthub = grunthub;
+            _eventhub = eventhub;
         }
 
         private static string GetUsage(GruntTask task)
@@ -161,7 +163,7 @@ namespace Covenant.Core
                 Grunt = grunt,
                 CommandOutputId = 0,
                 CommandOutput = new CommandOutput()
-            }, _grunthub);
+            }, _grunthub, _eventhub);
 
             List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
             GruntTask commandTask = null;
@@ -226,13 +228,13 @@ namespace Covenant.Core
             else if (parameters.FirstOrDefault().Value.ToLower() == "note")
             {
                 grunt.Note = string.Join(" ", parameters.Skip(1).Select(P => P.Value).ToArray());
-                await _context.EditGrunt(grunt, user, _grunthub);
+                await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
                 output = "Note: " + grunt.Note;
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "powershellimport")
             {
                 grunt.PowerShellImport = parameters.Count >= 2 ? parameters[1].Value : "";
-                await _context.EditGrunt(grunt, user, _grunthub);
+                await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
                 output = "PowerShell Imported";
             }
             else if (commandTask != null)
@@ -242,7 +244,7 @@ namespace Covenant.Core
                 {
                     _context.Entry(GruntCommand).State = EntityState.Detached;
                     GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask));
-                    return await _context.EditGruntCommand(GruntCommand, _grunthub);
+                    return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
                 }
                 // All options begin unassigned
                 List<bool> OptionAssignments = commandTask.Options.Select(O => false).ToList();
@@ -273,7 +275,7 @@ namespace Covenant.Core
                             // This is an extra parameter
                             _context.Entry(GruntCommand).State = EntityState.Detached;
                             GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask));
-                            return await _context.EditGruntCommand(GruntCommand, _grunthub);
+                            return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
                         }
                         nextOption.Value = parameters[i].Value;
                     }
@@ -290,7 +292,7 @@ namespace Covenant.Core
                         toPrint.Append(EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask)));
                         _context.Entry(GruntCommand).State = EntityState.Detached;
                         GruntCommand.CommandOutput.Output = toPrint.ToString();
-                        return await _context.EditGruntCommand(GruntCommand, _grunthub);
+                        return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
                     }
                 }
                 // Parameters have parsed successfully
@@ -303,7 +305,7 @@ namespace Covenant.Core
             }
             _context.Entry(GruntCommand).State = EntityState.Detached;
             GruntCommand.CommandOutput.Output = output;
-            return await _context.EditGruntCommand(GruntCommand, _grunthub);
+            return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
         }
 
         public async Task<string> Show(Grunt grunt)

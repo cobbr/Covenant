@@ -25,15 +25,13 @@ namespace Covenant.API.Models
         /// <param name="language">Possible values include: 'CSharp'</param>
         /// <param name="commType">Possible values include: 'HTTP',
         /// 'SMB'</param>
-        public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), string stagerLocation = default(string), string executorLocation = default(string), string stagerCode = default(string), string executorCode = default(string))
+        public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), string stagerCode = default(string), string executorCode = default(string))
         {
             Id = id;
             Name = name;
             Description = description;
             Language = language;
             CommType = commType;
-            StagerLocation = stagerLocation;
-            ExecutorLocation = executorLocation;
             StagerCode = stagerCode;
             ExecutorCode = executorCode;
             CustomInit();
@@ -70,16 +68,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "commType")]
         public CommunicationType? CommType { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "stagerLocation")]
-        public string StagerLocation { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "executorLocation")]
-        public string ExecutorLocation { get; set; }
 
         /// <summary>
         /// </summary>

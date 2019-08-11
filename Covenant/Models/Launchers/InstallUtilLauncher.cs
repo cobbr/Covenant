@@ -7,9 +7,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
+using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
-using Covenant.Core;
 
 namespace Covenant.Models.Launchers
 {
@@ -32,7 +32,8 @@ namespace Covenant.Models.Launchers
             List<Compiler.Reference> references = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
             references.Add(new Compiler.Reference
             {
-                File = "System.Configuration.Install.dll",
+                File = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.CovenantAssemblyReferenceNet35Directory + "System.Configuration.Install.dll" :
+                                                                                    Common.CovenantAssemblyReferenceNet40Directory + "System.Configuration.Install.dll",
                 Framework = grunt.DotNetFrameworkVersion,
                 Enabled = true
             });

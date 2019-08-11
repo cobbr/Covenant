@@ -87,6 +87,9 @@
     <Folder Include="Views\Profile\" />
     <Folder Include="Views\Graph\" />
     <Folder Include="Views\Template\" />
+    <Folder Include="Data\Tasks\CSharp\" />
+    <Folder Include="Data\Tasks\CSharp\Compiled\" />
+    <Folder Include="wwwroot\webfonts\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -111,6 +114,10 @@
   <ItemGroup>
     <Content Remove="API\openapi2.json" />
     <Content Remove="API\openapi3.json" />
+    <Content Remove="wwwroot\AUTHORS" />
+    <Content Remove="wwwroot\CHANGELOG.md" />
+    <Content Remove="wwwroot\dist\codemirror\package.json" />
+    <Content Remove="wwwroot\dist\codemirror\CHANGELOG.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">

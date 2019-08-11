@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 
 using Covenant.Core;
+using Covenant.Hubs;
 using Covenant.Models;
 using Covenant.Models.Covenant;
 
@@ -24,17 +26,17 @@ namespace Covenant.Controllers
     {
 		private readonly CovenantContext _context;
 		private readonly UserManager<CovenantUser> _userManager;
-		private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<CovenantUser> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly IHubContext<EventHub> _eventhub;
 
-		public CovenantUserApiController(CovenantContext context, UserManager<CovenantUser> userManager, RoleManager<IdentityRole> roleManager, SignInManager<CovenantUser> signInManager, IConfiguration configuration)
+		public CovenantUserApiController(CovenantContext context, UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, IConfiguration configuration, IHubContext<EventHub> eventhub)
         {
 			_context = context;
             _userManager = userManager;
-			_roleManager = roleManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _eventhub = eventhub;
         }
 
         // GET: api/users
@@ -148,7 +150,7 @@ namespace Covenant.Controllers
 		{
             try
             {
-                CovenantUser user = await _context.CreateUser(_userManager, login);
+                CovenantUser user = await _context.CreateUser(_userManager, login, _eventhub);
                 return CreatedAtRoute(nameof(GetUser), new { id = user.Id }, user);
             }
             catch (ControllerNotFoundException e)

@@ -48,5 +48,16 @@
 </form>
 
 @section Scripts {
-
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var editor1 = CodeMirror.fromTextArea(document.getElementById("StagerCode"), {
+                lineNumbers: true,
+                mode: "text/x-csharp"
+            });
+            var editor2 = CodeMirror.fromTextArea(document.getElementById("ExecutorCode"), {
+                lineNumbers: true,
+                mode: "text/x-csharp"
+            });
+        });
+    </script>
 }
