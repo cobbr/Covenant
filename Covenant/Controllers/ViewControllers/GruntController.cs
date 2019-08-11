@@ -23,12 +23,14 @@ namespace Covenant.Controllers
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
         private readonly IHubContext<GruntHub> _grunthub;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public GruntController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub)
+        public GruntController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
             _context = context;
             _userManager = userManager;
             _grunthub = grunthub;
+            _eventhub = eventhub;
         }
 
         // GET: /grunt
@@ -68,12 +70,44 @@ namespace Covenant.Controllers
         {
             try
             {
-                Grunt editedGrunt = await _context.EditGrunt(grunt, _userManager, HttpContext.User, _grunthub);
+                Grunt original = await _context.GetGrunt(grunt.Id);
+                grunt.GruntChallenge = original.GruntChallenge;
+                grunt.GruntNegotiatedSessionKey = original.GruntNegotiatedSessionKey;
+                grunt.GruntRSAPublicKey = original.GruntRSAPublicKey;
+                grunt.GruntSharedSecretPassword = original.GruntSharedSecretPassword;
+                grunt.PowerShellImport = original.PowerShellImport;
+
+                Grunt editedGrunt = await _context.EditGrunt(grunt, _userManager, HttpContext.User, _grunthub, _eventhub);
                 return RedirectToAction(nameof(Interact), new { id = editedGrunt.Id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+            }
+        }
+
+        // GET: /grunt/hide/{id}
+        public async Task<IActionResult> Hide(int id)
+        {
+            try
+            {
+                Grunt g = await _context.GetGrunt(id);
+                _context.Entry(g).State = EntityState.Deleted;
+                if (g.Status == GruntStatus.Hidden)
+                {
+                    g.Status = GruntStatus.Active;
+                }
+                else
+                {
+                    g.Status = GruntStatus.Hidden;
+                }
+                await _context.EditGrunt(g, _userManager, HttpContext.User, _grunthub, _eventhub);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
             }
         }
     }

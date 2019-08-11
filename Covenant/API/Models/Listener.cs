@@ -25,7 +25,7 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Active', 'Stopped'</param>
-        public Listener(string name, string guid, string description, string bindAddress, int bindPort, string connectAddress, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
+        public Listener(string name, string guid, string description, string bindAddress, int bindPort, string connectAddress, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             Id = id;
             Name = name;
@@ -34,6 +34,7 @@ namespace Covenant.API.Models
             BindAddress = bindAddress;
             BindPort = bindPort;
             ConnectAddress = connectAddress;
+            ConnectPort = connectPort;
             ProfileId = profileId;
             Profile = profile;
             ListenerTypeId = listenerTypeId;
@@ -83,6 +84,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "connectAddress")]
         public string ConnectAddress { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "connectPort")]
+        public int ConnectPort { get; set; }
 
         /// <summary>
         /// </summary>
@@ -189,6 +195,14 @@ namespace Covenant.API.Models
             if (BindPort < 1)
             {
                 throw new ValidationException(ValidationRules.InclusiveMinimum, "BindPort", 1);
+            }
+            if (ConnectPort > 65535)
+            {
+                throw new ValidationException(ValidationRules.InclusiveMaximum, "ConnectPort", 65535);
+            }
+            if (ConnectPort < 1)
+            {
+                throw new ValidationException(ValidationRules.InclusiveMinimum, "ConnectPort", 1);
             }
         }
     }

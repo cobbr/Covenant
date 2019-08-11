@@ -25,14 +25,15 @@ namespace Covenant.Controllers
     {
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
-
         private readonly IHubContext<GruntHub> _grunthub;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public GruntCommandApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub)
+        public GruntCommandApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
             _context = context;
             _userManager = userManager;
             _grunthub = grunthub;
+            _eventhub = eventhub;
         }
 
         // GET: api/commands
@@ -76,7 +77,7 @@ namespace Covenant.Controllers
             try
             {
                 gruntCommand.Grunt = await _context.GetGrunt(gruntCommand.GruntId);
-                GruntCommand createdCommand = await _context.CreateGruntCommand(gruntCommand, _grunthub);
+                GruntCommand createdCommand = await _context.CreateGruntCommand(gruntCommand, _grunthub, _eventhub);
                 return CreatedAtRoute(nameof(GetGruntCommand), new { id = createdCommand.Id }, createdCommand);
             }
             catch (ControllerNotFoundException e)
@@ -98,7 +99,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditGruntCommand(gruntCommand, _grunthub);
+                return await _context.EditGruntCommand(gruntCommand, _grunthub, _eventhub);
             }
             catch (ControllerNotFoundException e)
             {

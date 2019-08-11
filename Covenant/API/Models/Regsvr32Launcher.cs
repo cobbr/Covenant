@@ -29,9 +29,7 @@ namespace Covenant.API.Models
         /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil'</param>
-        /// <param name="commType">Possible values include: 'HTTP',
-        /// 'SMB'</param>
-        public Regsvr32Launcher(string parameterString = default(string), string dllName = default(string), ScriptingLanguage? scriptLanguage = default(ScriptingLanguage?), string progId = default(string), string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), string name = default(string), string description = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), CommunicationType? commType = default(CommunicationType?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string))
+        public Regsvr32Launcher(string parameterString = default(string), string dllName = default(string), ScriptingLanguage? scriptLanguage = default(ScriptingLanguage?), string progId = default(string), string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), string name = default(string), string description = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), int? implantTemplateId = default(int?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string))
         {
             ParameterString = parameterString;
             DllName = dllName;
@@ -44,7 +42,7 @@ namespace Covenant.API.Models
             Description = description;
             DotNetFrameworkVersion = dotNetFrameworkVersion;
             Type = type;
-            CommType = commType;
+            ImplantTemplateId = implantTemplateId;
             ValidateCert = validateCert;
             UseCertPinning = useCertPinning;
             SmbPipeName = smbPipeName;
@@ -124,10 +122,9 @@ namespace Covenant.API.Models
         public LauncherType? Type { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'HTTP', 'SMB'
         /// </summary>
-        [JsonProperty(PropertyName = "commType")]
-        public CommunicationType? CommType { get; set; }
+        [JsonProperty(PropertyName = "implantTemplateId")]
+        public int? ImplantTemplateId { get; set; }
 
         /// <summary>
         /// </summary>

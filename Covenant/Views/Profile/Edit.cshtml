@@ -122,6 +122,24 @@
 @section Scripts {
 <script type="text/javascript">
     $(document).ready(function () {
+        var editor1 = CodeMirror.fromTextArea(document.getElementById("HttpMessageTransform"), {
+            lineNumbers: true,
+            mode: "text/x-csharp"
+        });
+
+        var editor2 = CodeMirror.fromTextArea(document.getElementById("HttpPostRequest"), {
+            lineNumbers: true,
+            mode: "htmlmixed"
+        });
+        var editor3 = CodeMirror.fromTextArea(document.getElementById("HttpGetResponse"), {
+            lineNumbers: true,
+            mode: "htmlmixed"
+        });
+        var editor4 = CodeMirror.fromTextArea(document.getElementById("HttpPostResponse"), {
+            lineNumbers: true,
+            mode: "htmlmixed"
+        });
+
         var addUrl = function () {
             var num = $(".httpurl-row").length;
             var newitem = '<div class="form-row httpurl-row">' +

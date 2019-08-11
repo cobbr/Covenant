@@ -29,7 +29,8 @@ namespace Covenant.Models.Grunts
         Active,
         Lost,
         Killed,
-        Disconnected
+        Disconnected,
+        Hidden
     }
 
     public enum IntegrityLevel
@@ -43,10 +44,13 @@ namespace Covenant.Models.Grunts
 
     public enum ImplantLanguage
     {
-        CSharp,
+        CSharp
         // C++,
         // C,
-        // PowerShell
+        // PowerShell,
+        // Python,
+        // Swift,
+        // ObjectiveC
     }
 
     public class ImplantTemplate
@@ -59,7 +63,10 @@ namespace Covenant.Models.Grunts
         public ImplantLanguage Language { get; set; }
         public CommunicationType CommType { get; set; }
 
-        private string StagerLocation
+        public string StagerCode { get; set; }
+		public string ExecutorCode { get; set; }
+
+		private string StagerLocation
         {
             get
             {
@@ -105,22 +112,18 @@ namespace Covenant.Models.Grunts
             }
         }
 
-        public string StagerCode { get; set; }
+		public void ReadFromDisk()
+		{
+			if (!string.IsNullOrEmpty(this.StagerLocation) && File.Exists(this.StagerLocation))
+			{
+				this.StagerCode = File.ReadAllText(this.StagerLocation);
+			}
 
-        public string ExecutorCode { get; set; }
-
-        public void WriteToDisk()
-        {
-            if (!string.IsNullOrEmpty(this.StagerLocation) && File.Exists(this.StagerLocation) && !string.IsNullOrWhiteSpace(this.StagerCode))
-            {
-                File.WriteAllText(StagerLocation, this.StagerCode);
-            }
-
-            if (!string.IsNullOrEmpty(this.ExecutorLocation) && File.Exists(this.ExecutorLocation) && !string.IsNullOrWhiteSpace(this.ExecutorCode))
-            {
-                File.WriteAllText(ExecutorLocation, this.ExecutorCode);
-            }
-        }
+			if (!string.IsNullOrEmpty(this.ExecutorLocation) && File.Exists(this.ExecutorLocation))
+			{
+				this.ExecutorCode = File.ReadAllText(this.ExecutorLocation);
+			}
+		}
     }
 
     public class Grunt

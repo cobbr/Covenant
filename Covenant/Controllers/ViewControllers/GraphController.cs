@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
 
-using Covenant.Hubs;
 using Covenant.Models;
-using Covenant.Models.Listeners;
 using Covenant.Models.Covenant;
 using Covenant.Models.Grunts;
 
@@ -21,13 +17,11 @@ namespace Covenant.Controllers
     {
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
-        private readonly IHubContext<GruntHub> _grunthub;
 
-        public GraphController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub)
+        public GraphController(CovenantContext context, UserManager<CovenantUser> userManager)
         {
             _context = context;
             _userManager = userManager;
-            _grunthub = grunthub;
         }
 
         // GET: /graph

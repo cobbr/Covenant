@@ -9,7 +9,7 @@
 </div>
 
 <div class="table-responsive">
-    <table id="implant-table" class="table table-bordered">
+    <table id="implant-table" class="table table-hover">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.Name)</th>
@@ -45,7 +45,8 @@
     <script type="text/javascript">
     $(document).ready(function() {
         $('#implant-table').DataTable({
-            "pageLength": 50
+            "pageLength": 50,
+            "info": false
         });
     });
     </script>

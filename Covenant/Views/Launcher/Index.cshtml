@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<Covenant.Models.Launchers.Launcher>
 @{
-    Layout = "_Layout";
+    Layout = "_LauncherLayout";
     ViewData["Title"] = "Launchers";
 }
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
@@ -8,7 +8,7 @@
 </div>
 
 <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-hover">
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.Name)</th>
@@ -30,11 +30,3 @@
         </tbody>
     </table>
 </div>
-
-@section  Scripts
-{
-<script type="text/javascript">
-    $(".nav-link").removeClass("active");
-    $("#nav-launchers").addClass("active");
-</script>
-}

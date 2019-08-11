@@ -429,12 +429,12 @@ namespace Covenant.Controllers
 
         private byte[] GetCompressedILAssembly35(string taskname)
         {
-            return System.IO.File.ReadAllBytes(Common.CovenantCompiledTaskNet35Directory + taskname + ".compiled");
+            return System.IO.File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet35Directory + taskname + ".compiled");
         }
 
         private byte[] GetCompressedILAssembly40(string taskname)
         {
-            return System.IO.File.ReadAllBytes(Common.CovenantCompiledTaskNet40Directory + taskname + ".compiled");
+            return System.IO.File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + taskname + ".compiled");
         }
 
         private GruntTaskingMessage GetGruntTaskingMessage(GruntTasking tasking, DotNetVersion version)
@@ -508,7 +508,7 @@ namespace Covenant.Controllers
                     grunt = await _client.ApiGruntsGuidByGuidGetAsync(guid);
                 }
                 catch (HttpOperationException) { grunt = null; }
-                if (grunt == null || grunt.Status != GruntStatus.Active)
+                if (grunt == null)
                 {
                     // Invalid GUID. May not be legitimate Grunt request, respond Ok
                     return Ok();
@@ -621,6 +621,8 @@ namespace Covenant.Controllers
                             return await this.RegisterGrunt(egressGrunt, targetGrunt, message);
                         case GruntStatus.Active:
                             return await this.PostTask(egressGrunt, targetGrunt, message, guid);
+                        case GruntStatus.Lost:
+                            return await this.PostTask(egressGrunt, targetGrunt, message, guid);
                         default:
                             return NotFound();
                     }
@@ -635,7 +637,7 @@ namespace Covenant.Controllers
         // post task
 		private async Task<ActionResult> PostTask(Grunt egressGrunt, Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage outputMessage, string guid)
         {
-            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Active || egressGrunt == null || egressGrunt.Guid != guid)
+            if (targetGrunt == null || egressGrunt == null || egressGrunt.Guid != guid)
             {
                 // Invalid GUID. May not be legitimate Grunt request, respond NotFound
                 return NotFound();
@@ -658,7 +660,7 @@ namespace Covenant.Controllers
                 return NotFound();
             }
 
-            if (targetGrunt == null || targetGrunt.Status != GruntStatus.Active)
+            if (targetGrunt == null)
             {
                 // Invalid Grunt. May not be legitimate Grunt request, respond NotFound
                 return NotFound();

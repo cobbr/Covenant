@@ -11,23 +11,15 @@
       ]
     },
     {
-      "library": "font-awesome@4.7.0",
-      "destination": "wwwroot",
-      "files": [
-        "fonts/FontAwesome.otf",
-        "fonts/fontawesome-webfont.eot",
-        "fonts/fontawesome-webfont.svg",
-        "fonts/fontawesome-webfont.ttf",
-        "fonts/fontawesome-webfont.woff",
-        "fonts/fontawesome-webfont.woff2"
-      ]
-    },
-    {
       "library": "clipboard@2",
       "destination": "wwwroot",
       "files": [
         "dist/clipboard.min.js"
       ]
+    },
+    {
+      "library": "codemirror@5.48.2",
+      "destination": "wwwroot/dist/codemirror"
     }
   ]
 }

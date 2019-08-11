@@ -25,7 +25,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), string code = default(string), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
+        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), string code = default(string), bool? compiled = default(bool?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
@@ -33,6 +33,7 @@ namespace Covenant.API.Models
             Description = description;
             Help = help;
             Code = code;
+            Compiled = compiled;
             ReferenceSourceLibraries = referenceSourceLibraries;
             ReferenceAssemblies = referenceAssemblies;
             EmbeddedResources = embeddedResources;
@@ -76,6 +77,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "code")]
         public string Code { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "compiled")]
+        public bool? Compiled { get; set; }
 
         /// <summary>
         /// </summary>

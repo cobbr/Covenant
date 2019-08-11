@@ -87,6 +87,9 @@
     <Folder Include="Views\Profile\" />
     <Folder Include="Views\Graph\" />
     <Folder Include="Views\Template\" />
+    <Folder Include="Data\Tasks\CSharp\" />
+    <Folder Include="Data\Tasks\CSharp\Compiled\" />
+    <Folder Include="wwwroot\webfonts\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -108,10 +111,6 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.1.0-preview1-final" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="API\openapi2.json" />
-    <Content Remove="API\openapi3.json" />
-  </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -40,8 +40,10 @@ namespace Covenant.Models.Grunts
         public List<string> AlternateNames { get; set; } = new List<string>();
         public string Description { get; set; } = "A generic GruntTask.";
         public string Help { get; set; }
+        public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
 
         public string Code { get; set; } = "";
+        public bool Compiled { get; set; } = false;
 
         private List<GruntTaskReferenceSourceLibrary> GruntTaskReferenceSourceLibraries { get; set; } = new List<GruntTaskReferenceSourceLibrary>();
         private List<GruntTaskReferenceAssembly> GruntTaskReferenceAssemblies { get; set; } = new List<GruntTaskReferenceAssembly>();
@@ -111,12 +113,12 @@ namespace Covenant.Models.Grunts
 
         public byte[] GetCompressedILAssembly35()
         {
-            return File.ReadAllBytes(Common.CovenantCompiledTaskNet35Directory + this.Name + ".compiled");
+            return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet35Directory + this.Name + ".compiled");
         }
 
         public byte[] GetCompressedILAssembly40()
         {
-            return File.ReadAllBytes(Common.CovenantCompiledTaskNet40Directory + this.Name + ".compiled");
+            return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + this.Name + ".compiled");
         }
 
         public void Compile()
@@ -146,7 +148,7 @@ namespace Covenant.Models.Grunts
                     })
                 );
             });
-            if (!File.Exists(Common.CovenantCompiledTaskNet35Directory + this.Name + ".compiled"))
+            if (!this.Compiled)
             {
                 List<Compiler.Reference> references35 = new List<Compiler.Reference>();
                 this.ReferenceSourceLibraries.ToList().ForEach(RSL =>
@@ -165,7 +167,7 @@ namespace Covenant.Models.Grunts
                     })
                 );
 
-                File.WriteAllBytes(Common.CovenantCompiledTaskNet35Directory + this.Name + ".compiled",
+                File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet35Directory + this.Name + ".compiled",
                     Utilities.Compress(Compiler.Compile(new Compiler.CompilationRequest
                     {
                         Source = this.Code,
@@ -184,9 +186,6 @@ namespace Covenant.Models.Grunts
                                !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI")
                     }))
                 );
-            }
-            if (!File.Exists(Common.CovenantCompiledTaskNet40Directory + this.Name + ".compiled"))
-            {
                 List<Compiler.Reference> references40 = new List<Compiler.Reference>();
                 this.ReferenceSourceLibraries.ToList().ForEach(RSL =>
                 {
@@ -203,7 +202,7 @@ namespace Covenant.Models.Grunts
                         return new Compiler.Reference { File = RA.Location, Framework = Common.DotNetVersion.Net40, Enabled = true };
                     })
                 );
-                File.WriteAllBytes(Common.CovenantCompiledTaskNet40Directory + this.Name + ".compiled",
+                File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + this.Name + ".compiled",
                     Utilities.Compress(Compiler.Compile(new Compiler.CompilationRequest
                     {
                         Source = this.Code,

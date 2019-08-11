@@ -99,6 +99,8 @@
 
 .task-card {
     background: rgba(255, 255, 255, 0);
+    font-family: 'Source Code Pro', monospace;
+    letter-spacing: -0.25px;
 }
 
 .task-card:hover, .task-card:focus {

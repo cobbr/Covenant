@@ -10,9 +10,11 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 
 using Covenant.Core;
+using Covenant.Hubs;
 using Covenant.Models;
 using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
@@ -28,13 +30,15 @@ namespace Covenant.Controllers
         private readonly UserManager<CovenantUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public ListenerApiController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public ListenerApiController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens, IHubContext<EventHub> eventhub)
         {
             _context = context;
             _userManager = userManager;
             _configuration = configuration;
             _ListenerCancellationTokens = ListenerCancellationTokens;
+            _eventhub = eventhub;
         }
 
         // GET: api/listeners/types
@@ -108,7 +112,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditListener(listener, _ListenerCancellationTokens);
+                return await _context.EditListener(listener, _ListenerCancellationTokens, _eventhub);
             }
             catch (ControllerNotFoundException e)
             {
@@ -172,7 +176,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens);
+                return await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens, _eventhub);
             }
             catch (ControllerNotFoundException e)
             {
@@ -193,7 +197,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHttpListener(listener, _ListenerCancellationTokens);
+                return await _context.EditHttpListener(listener, _ListenerCancellationTokens, _eventhub);
             }
             catch (ControllerNotFoundException e)
             {

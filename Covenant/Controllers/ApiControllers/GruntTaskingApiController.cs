@@ -27,14 +27,15 @@ namespace Covenant.Controllers
     {
         private readonly CovenantContext _context;
         private readonly UserManager<CovenantUser> _userManager;
-
         private readonly IHubContext<GruntHub> _grunthub;
+        private readonly IHubContext<EventHub> _eventhub;
 
-        public GruntTaskingApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub)
+        public GruntTaskingApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
             _context = context;
             _userManager = userManager;
             _grunthub = grunthub;
+            _eventhub = eventhub;
         }
 
         // GET: api/taskings
@@ -164,7 +165,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditGruntTasking(_grunthub, gruntTasking);
+                return await _context.EditGruntTasking(gruntTasking, _grunthub, _eventhub);
             }
             catch (ControllerNotFoundException e)
             {

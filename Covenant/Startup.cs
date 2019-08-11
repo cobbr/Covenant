@@ -166,7 +166,6 @@ namespace Covenant
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}"
                 );
-
             });
 
             app.UseSignalR(routes =>
@@ -175,6 +174,7 @@ namespace Covenant
                 {
                     options.ApplicationMaxBufferSize = 2000 * 1024;
                 });
+                routes.MapHub<EventHub>("/eventhub");
             });
         }
 
