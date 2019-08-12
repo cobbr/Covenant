@@ -1,4 +1,5 @@
-*
+/*
+/*/
 !.gitignore
-!GruntHTTP/*
-!GruntSMB/*
+!/GruntHTTP/
+!/GruntSMB/
