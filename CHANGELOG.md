@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Lost grunts faded in table
+- Modularized Listeners to make adding new listener types easier
+
+### Fixed
+- Fixed Download task to work with remote downloads over shares
 
 ## [v0.3] - 2019-08-02
 ### Added
