@@ -53,10 +53,11 @@ namespace Covenant.Models.Launchers
         public string StagerCode { get; set; } = "";
         public string Base64ILByteString { get; set; } = "";
 
-        public virtual string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template) { return ""; }
+        public virtual string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template) { return ""; }
         public virtual string GetHostedLauncher(Listener listener, HostedFile hostedFile) { return ""; }
 
-        protected OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
+        public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
+        public bool CompressStager { get; set; } = false;
     }
 
     public abstract class DiskLauncher : Launcher
@@ -85,13 +86,13 @@ namespace Covenant.Models.Launchers
 
         protected ScriptletType ScriptType { get; set; } = ScriptletType.Scriptlet;
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, false);
+            this.StagerCode = StagerCode;
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
 
             // Credit DotNetToJscript (tyranid - James Forshaw)
-            byte[] serializedDelegate = Convert.FromBase64String(FrontBinaryFormattedDelegate).Concat(Convert.FromBase64String(this.Base64ILByteString)).Concat(Convert.FromBase64String(EndBinaryFormattedDelegate)).ToArray();
+            byte[] serializedDelegate = Convert.FromBase64String(FrontBinaryFormattedDelegate).Concat(StagerAssembly).Concat(Convert.FromBase64String(EndBinaryFormattedDelegate)).ToArray();
             int ofs = serializedDelegate.Length % 3;
             if (ofs != 0)
             {
@@ -156,10 +157,10 @@ namespace Covenant.Models.Launchers
             {
                 this.DiskCode = this.DiskCode.Replace("{{REPLACE_VERSION_SETTER}}", JScriptNet40VersionSetter);
             }
-            return GetLauncher(this.DiskCode);
+            return GetLauncher();
         }
 
-        protected abstract String GetLauncher(String code);
+        protected abstract string GetLauncher();
 
         // Super ghetto - BinaryFormatter cannot seralize a Delegate in dotnet core. Instead, using a
         // raw, previously binary-formatted Delegate created in dotnet framework, and replacing the assembly bytes.

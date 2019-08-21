@@ -29,7 +29,11 @@ namespace Covenant.API.Models
         /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil'</param>
-        public WmicLauncher(ScriptingLanguage? scriptLanguage = default(ScriptingLanguage?), string progId = default(string), string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), string name = default(string), string description = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), int? implantTemplateId = default(int?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string))
+        /// <param name="outputKind">Possible values include:
+        /// 'ConsoleApplication', 'WindowsApplication',
+        /// 'DynamicallyLinkedLibrary', 'NetModule', 'WindowsRuntimeMetadata',
+        /// 'WindowsRuntimeApplication'</param>
+        public WmicLauncher(ScriptingLanguage? scriptLanguage = default(ScriptingLanguage?), string progId = default(string), string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), string name = default(string), string description = default(string), DotNetVersion? dotNetFrameworkVersion = default(DotNetVersion?), LauncherType? type = default(LauncherType?), int? implantTemplateId = default(int?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), string base64ILByteString = default(string), OutputKind? outputKind = default(OutputKind?), bool? compressStager = default(bool?))
         {
             ScriptLanguage = scriptLanguage;
             ProgId = progId;
@@ -51,6 +55,8 @@ namespace Covenant.API.Models
             LauncherString = launcherString;
             StagerCode = stagerCode;
             Base64ILByteString = base64ILByteString;
+            OutputKind = outputKind;
+            CompressStager = compressStager;
             CustomInit();
         }
 
@@ -163,6 +169,19 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "base64ILByteString")]
         public string Base64ILByteString { get; set; }
+
+        /// <summary>
+        /// Gets or sets possible values include: 'ConsoleApplication',
+        /// 'WindowsApplication', 'DynamicallyLinkedLibrary', 'NetModule',
+        /// 'WindowsRuntimeMetadata', 'WindowsRuntimeApplication'
+        /// </summary>
+        [JsonProperty(PropertyName = "outputKind")]
+        public OutputKind? OutputKind { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "compressStager")]
+        public bool? CompressStager { get; set; }
 
     }
 }

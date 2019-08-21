@@ -6,7 +6,7 @@
     ViewData["Title"] = "ImplantTemplates";
 }
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
-    <h1 class="h2">Create ImplantTemplate</h1>
+    <h1 class="h2">Create Implant Template</h1>
 </div>
 
 <form asp-action="Create">
@@ -35,13 +35,13 @@
     <div class="form-row">
         <div class="form-group col-md-12">
             <label asp-for="StagerCode"></label>
-            <textarea asp-for="StagerCode" value="@Model.StagerCode" rows="5" class="form-control"></textarea>
+            <textarea asp-for="StagerCode" value="@Model.StagerCode" rows="5" class="form-control border-1"></textarea>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label asp-for="ExecutorCode"></label>
-            <textarea asp-for="ExecutorCode" value="@Model.ExecutorCode" rows="5" class="form-control"></textarea>
+            <textarea asp-for="ExecutorCode" value="@Model.ExecutorCode" rows="5" class="form-control border-1"></textarea>
         </div>
     </div>
     <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>

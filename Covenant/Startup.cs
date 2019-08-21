@@ -45,8 +45,8 @@ namespace Covenant
             services.AddDbContext<CovenantContext>();
 
             services.AddIdentity<CovenantUser, IdentityRole>()
-            .AddEntityFrameworkStores<CovenantContext>()
-            .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<CovenantContext>()
+                .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -75,36 +75,53 @@ namespace Covenant
             });
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-			services.AddAuthentication().AddJwtBearer(cfg =>
-			{
-				cfg.RequireHttpsMetadata = false;
-				cfg.SaveToken = true;
-				cfg.TokenValidationParameters = new TokenValidationParameters
-				{
-					ValidIssuer = Configuration["JwtIssuer"],
-					ValidAudience = Configuration["JwtAudience"],
-					IssuerSigningKey = new SymmetricSecurityKey(Common.CovenantEncoding.GetBytes(Configuration["JwtKey"])),
-					ClockSkew = TimeSpan.Zero
-				};
-			});
+            services.AddAuthentication()
+                .AddJwtBearer("JwtBearer", options =>
+                {
+                    options.RequireHttpsMetadata = false;
+                    options.SaveToken = true;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = Configuration["JwtIssuer"],
+                        ValidAudience = Configuration["JwtAudience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Common.CovenantEncoding.GetBytes(Configuration["JwtKey"])),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && (context.HttpContext.WebSockets.IsWebSocketRequest || context.Request.Headers["accept"] == "text/event-stream"))
+                            {
+                                context.Token = context.Request.Query["access_token"];
+                            }
+                            return System.Threading.Tasks.Task.CompletedTask;
+                        }
+                    };
+                });
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
-                options.AddPolicy("RequireJwtBearer", policy =>
-                {
-                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireAuthenticatedUser();
-                });
-                options.AddPolicy("RequireJwtBearerRequireAdministratorRole", policy =>
-                {
-                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
-                    policy.RequireRole("Administrator");
-                });
-                options.AddPolicy("RequireAdministratorRole", policy =>
-                {
-                    policy.RequireRole("Administrator");
-                });
+                options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes("JwtBearer", "Identity.Application")
+                    .Build();
+                options.AddPolicy("RequireAdministratorRole", new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes("JwtBearer", "Identity.Application")
+                    .RequireRole("Administrator")
+                    .Build());
+                options.AddPolicy("RequireJwtBearer", new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes("JwtBearer")
+                    .Build());
+                options.AddPolicy("RequireJwtBearerRequireAdministratorRole", new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddAuthenticationSchemes("JwtBearer")
+                    .RequireRole("Administrator")
+                    .Build());
             });
 
             services.AddMvc().AddJsonOptions(options =>

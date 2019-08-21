@@ -12,7 +12,8 @@ namespace Covenant.Models.Listeners
 {
     public enum ProfileType
     {
-        HTTP
+        HTTP,
+        Bridge
     }
 
     public class Profile
@@ -21,6 +22,50 @@ namespace Covenant.Models.Listeners
         public string Name { get; set; }
         public string Description { get; set; }
         public ProfileType Type { get; set; }
+        public string MessageTransform { get; set; }
+    }
+
+    public class BridgeProfile : Profile
+    {
+        public string ReadFormat { get; set; }
+        public string WriteFormat { get; set; }
+
+        public BridgeProfile()
+        {
+            this.Type = ProfileType.Bridge;
+        }
+
+        public static BridgeProfile Create(string ProfileFilePath)
+        {
+            Console.WriteLine("Create bridge profile: " + ProfileFilePath);
+            using (TextReader reader = File.OpenText(ProfileFilePath))
+            {
+                var deserializer = new DeserializerBuilder().Build();
+                BridgeProfileYaml yaml = deserializer.Deserialize<BridgeProfileYaml>(reader);
+                return CreateFromBridgeProfileYaml(yaml);
+            }
+        }
+
+        private class BridgeProfileYaml
+        {
+            public string Name { get; set; } = "";
+            public string Description { get; set; } = "";
+            public string MessageTransform { get; set; } = "";
+            public string ReadFormat { get; set; } = "";
+            public string WriteFormat { get; set; } = "";
+        }
+
+        private static BridgeProfile CreateFromBridgeProfileYaml(BridgeProfileYaml yaml)
+        {
+            return new BridgeProfile
+            {
+                Name = yaml.Name,
+                Description = yaml.Description,
+                MessageTransform = yaml.MessageTransform,
+                ReadFormat = yaml.ReadFormat.TrimEnd('\n'),
+                WriteFormat = yaml.WriteFormat.TrimEnd('\n')
+            };
+        }
     }
 
     public class HttpProfileHeader
@@ -32,7 +77,6 @@ namespace Covenant.Models.Listeners
     public class HttpProfile : Profile
     {
         public List<string> HttpUrls { get; set; } = new List<string> { "" };
-        public string HttpMessageTransform { get; set; } = "";
         public virtual List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
         public virtual List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
 
@@ -59,12 +103,12 @@ namespace Covenant.Models.Listeners
         {
             public string Name { get; set; }
             public string Description { get; set; }
+            public string MessageTransform { get; set; } = "";
+
             public List<string> HttpUrls { get; set; } = new List<string>();
-            public List<string> HttpCookies { get; set; } = new List<string>();
-            public string HttpMessageTransform { get; set; } = "";
             public List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader>();
-            public string HttpPostRequest { get; set; } = "";
             public List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader>();
+            public string HttpPostRequest { get; set; } = "";
             public string HttpGetResponse { get; set; } = "";
             public string HttpPostResponse { get; set; } = "";
         }
@@ -76,7 +120,7 @@ namespace Covenant.Models.Listeners
                 Name = yaml.Name,
                 Description = yaml.Description,
                 HttpUrls = yaml.HttpUrls,
-                HttpMessageTransform = yaml.HttpMessageTransform,
+                MessageTransform = yaml.MessageTransform,
                 HttpRequestHeaders = yaml.HttpRequestHeaders,
                 HttpPostRequest = yaml.HttpPostRequest.TrimEnd('\n'),
                 HttpResponseHeaders = yaml.HttpResponseHeaders,

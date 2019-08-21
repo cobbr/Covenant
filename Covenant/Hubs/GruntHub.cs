@@ -23,8 +23,16 @@ namespace Covenant.Hubs
     {
         public async static Task SendCommandEvent(IHubContext<GruntHub> context, Event taskingEvent, GruntCommand command)
         {
-            await context.Clients.Group(taskingEvent.Context)
-                .SendAsync("ReceiveCommandEvent", command, taskingEvent);
+            await context.Clients.Group(taskingEvent.Context).SendAsync("ReceiveCommandEvent", command, taskingEvent);
+            if (taskingEvent.Context != "*")
+            {
+                await context.Clients.Group("*").SendAsync("ReceiveCommandEvent", command, taskingEvent);
+            }
+        }
+
+        public async static Task NotifyListener(IHubContext<GruntHub> context, Grunt egressGrunt)
+        {
+            await context.Clients.Group(egressGrunt.Listener.GUID).SendAsync("NotifyListener", egressGrunt.GUID);
         }
     }
 
@@ -40,9 +48,9 @@ namespace Covenant.Hubs
             interact = new Interaction(_context, grunthub, eventhub);
         }
 
-        public async Task JoinGroup(string gruntName)
+        public async Task JoinGroup(string groupname)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, gruntName);
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupname);
         }
 
         public async Task GetGrunts()

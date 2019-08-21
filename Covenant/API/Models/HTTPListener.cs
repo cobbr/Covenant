@@ -8,6 +8,8 @@ namespace Covenant.API.Models
 {
     using Microsoft.Rest;
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class HttpListener
@@ -25,20 +27,20 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Active', 'Stopped'</param>
-        public HttpListener(bool useSSL, string url, string name, string guid, string description, string bindAddress, int bindPort, string connectAddress, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, string sslCertificate = default(string), string sslCertificatePassword = default(string), string sslCertHash = default(string), int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
+        public HttpListener(bool useSSL, IList<string> urls, string name, string guid, string description, string bindAddress, int bindPort, IList<string> connectAddresses, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, string sslCertificate = default(string), string sslCertificatePassword = default(string), string sslCertHash = default(string), int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             UseSSL = useSSL;
             SslCertificate = sslCertificate;
             SslCertificatePassword = sslCertificatePassword;
             SslCertHash = sslCertHash;
-            Url = url;
+            Urls = urls;
             Id = id;
             Name = name;
             Guid = guid;
             Description = description;
             BindAddress = bindAddress;
             BindPort = bindPort;
-            ConnectAddress = connectAddress;
+            ConnectAddresses = connectAddresses;
             ConnectPort = connectPort;
             ProfileId = profileId;
             Profile = profile;
@@ -73,12 +75,12 @@ namespace Covenant.API.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "sslCertHash")]
-        public string SslCertHash { get; private set; }
+        public string SslCertHash { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "url")]
-        public string Url { get; set; }
+        [JsonProperty(PropertyName = "urls")]
+        public IList<string> Urls { get; set; }
 
         /// <summary>
         /// </summary>
@@ -112,8 +114,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "connectAddress")]
-        public string ConnectAddress { get; set; }
+        [JsonProperty(PropertyName = "connectAddresses")]
+        public IList<string> ConnectAddresses { get; set; }
 
         /// <summary>
         /// </summary>
@@ -165,9 +167,9 @@ namespace Covenant.API.Models
         /// </exception>
         public virtual void Validate()
         {
-            if (Url == null)
+            if (Urls == null)
             {
-                throw new ValidationException(ValidationRules.CannotBeNull, "Url");
+                throw new ValidationException(ValidationRules.CannotBeNull, "Urls");
             }
             if (Name == null)
             {
@@ -185,9 +187,9 @@ namespace Covenant.API.Models
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "BindAddress");
             }
-            if (ConnectAddress == null)
+            if (ConnectAddresses == null)
             {
-                throw new ValidationException(ValidationRules.CannotBeNull, "ConnectAddress");
+                throw new ValidationException(ValidationRules.CannotBeNull, "ConnectAddresses");
             }
             if (Name != null)
             {

@@ -546,6 +546,16 @@ namespace Covenant.API
         /// </param>
         Task<HttpOperationResponse<IList<string>>> ApiGruntsByIdPathByCidGetWithHttpMessagesAsync(int id, int cid, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
+        /// <param name='id'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        Task<HttpOperationResponse<byte[]>> ApiGruntsByIdCompileexecutorGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
         /// </param>
@@ -807,16 +817,6 @@ namespace Covenant.API
         /// The cancellation token.
         /// </param>
         Task<HttpOperationResponse<ImplantTemplate>> ApiImplanttemplatesByNameGetWithHttpMessagesAsync(string name, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
-
-        /// <param name='id'>
-        /// </param>
-        /// <param name='customHeaders'>
-        /// The headers that will be added to request.
-        /// </param>
-        /// <param name='cancellationToken'>
-        /// The cancellation token.
-        /// </param>
-        Task<HttpOperationResponse<ImplantTemplate>> ApiImplanttemplatesGruntByIdGetWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <param name='customHeaders'>
         /// The headers that will be added to request.

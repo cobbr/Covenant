@@ -218,5 +218,26 @@ namespace Covenant.Controllers
                 return BadRequest(e.Message);
             }
         }
+
+        // GET api/grunts/{id}/compileexecutor
+        // <summary>
+        // Compile an ImplantTemplate for a given Grunt
+        // </summary>
+        [HttpGet("{id}/compileexecutor", Name = "CompileGruntExecutor")]
+        public async Task<ActionResult<byte[]>> CompileGruntExecutor(int id)
+        {
+            try
+            {
+                return await _context.CompileGruntExecutorCode(id, Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary, false);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

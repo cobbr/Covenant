@@ -4,11 +4,7 @@
 
 Name: CustomHttpProfile.yaml
 Description: A custom profile that does not require any cookies.
-HttpUrls:
-    - /en-us/index.html?page={GUID}&v=1
-    - /en-us/docs.html?type={GUID}&v=1
-    - /en-us/test.html?message={GUID}&v=1
-HttpMessageTransform: |
+MessageTransform: |
     public static class HttpMessageTransform
     {
         public static string Transform(byte[] bytes)
@@ -20,6 +16,10 @@ HttpMessageTransform: |
             return System.Convert.FromBase64String(str);
         }
     }
+HttpUrls:
+    - /en-us/index.html?page={GUID}&v=1
+    - /en-us/docs.html?type={GUID}&v=1
+    - /en-us/test.html?message={GUID}&v=1
 HttpRequestHeaders:
     - Name: User-Agent
       Value: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36

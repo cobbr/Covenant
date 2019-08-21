@@ -72,8 +72,8 @@
                             <input asp-for="@g.Note" value="@g.Note" class="form-control" readonly disabled>
                         </div>
                         <div class="form-group">
-                            <label asp-for="@g.CommType"></label>
-                            <select asp-for="@g.CommType" asp-items="Html.GetEnumSelectList<CommunicationType>()" class="form-control" readonly disabled></select>
+                            <label asp-for="@g.ImplantTemplate.CommType"></label>
+                            <input asp-for="@g.ImplantTemplate.CommType" asp-items="Html.GetEnumSelectList<CommunicationType>()" class="form-control" readonly disabled>
                         </div>
                         <div class="form-group">
                             @{
@@ -102,8 +102,9 @@
                             <input asp-for="@l.Description" value="@l.Description" class="form-control" readonly disabled>
                         </div>
                         <div class="form-group">
-                            <label asp-for="@l.Url"></label>
-                            <input asp-for="@l.Url" value="@l.Url" class="form-control" readonly disabled>
+                            <label asp-for="@l.Urls[0]">Urls</label>
+                            @{ var urls = string.Join(",", l.Urls); }
+                            <input asp-for="@l.Urls[0]" value="@urls" class="form-control" readonly disabled>
                         </div>
                     </div>
                 }

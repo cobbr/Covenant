@@ -69,6 +69,29 @@ namespace Covenant.Controllers
             }
         }
 
+        // GET: /listener/createbridge
+        public async Task<IActionResult> CreateBridge()
+        {
+            try
+            {
+                ListenerType bridgeType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "Bridge");
+                BridgeProfile profile = (await _context.GetBridgeProfiles()).FirstOrDefault();
+                ViewBag.Profiles = await _context.GetBridgeProfiles();
+                ViewBag.ListenerType = bridgeType;
+                return View(new BridgeListener
+                {
+                    ListenerTypeId = bridgeType.Id,
+                    ProfileId = profile.Id,
+                    Profile = profile
+                });
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         // POST: /listener/create
         [HttpPost]
         public async Task<IActionResult> Create(HttpListener listener)
@@ -81,9 +104,39 @@ namespace Covenant.Controllers
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                ViewBag.Profiles = await _context.GetHttpProfiles();
+                ViewBag.Profiles = (await _context.GetHttpProfiles()).FirstOrDefault().Id;
                 ViewBag.ListenerType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "HTTP");
-                return View(listener);
+                HttpProfile profile = (await _context.GetHttpProfiles()).FirstOrDefault();
+                return View(new HttpListener
+                {
+                    ListenerTypeId = ViewBag.ListenerType.Id,
+                    ProfileId = profile.Id,
+                    Profile = profile
+                });
+            }
+        }
+
+        // POST: /listener/createbridge
+        [HttpPost]
+        public async Task<IActionResult> CreateBridge(BridgeListener listener)
+        {
+            try
+            {
+                listener = await _context.CreateBridgeListener(_userManager, _configuration, listener, _ListenerCancellationTokens, _eventhub);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                ViewBag.Profiles = (await _context.GetBridgeProfiles()).FirstOrDefault().Id;
+                ViewBag.ListenerType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "Bridge");
+                BridgeProfile profile = (await _context.GetBridgeProfiles()).FirstOrDefault();
+                return View(new BridgeListener
+                {
+                    ListenerTypeId = ViewBag.ListenerType.Id,
+                    ProfileId = profile.Id,
+                    Profile = profile
+                });
             }
         }
 

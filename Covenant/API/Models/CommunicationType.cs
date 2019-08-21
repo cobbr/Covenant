@@ -20,7 +20,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "HTTP")]
         HTTP,
         [EnumMember(Value = "SMB")]
-        SMB
+        SMB,
+        [EnumMember(Value = "Bridge")]
+        Bridge
     }
     internal static class CommunicationTypeEnumExtension
     {
@@ -37,6 +39,8 @@ namespace Covenant.API.Models
                     return "HTTP";
                 case CommunicationType.SMB:
                     return "SMB";
+                case CommunicationType.Bridge:
+                    return "Bridge";
             }
             return null;
         }
@@ -49,6 +53,8 @@ namespace Covenant.API.Models
                     return CommunicationType.HTTP;
                 case "SMB":
                     return CommunicationType.SMB;
+                case "Bridge":
+                    return CommunicationType.Bridge;
             }
             return null;
         }

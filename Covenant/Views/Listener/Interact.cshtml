@@ -41,49 +41,59 @@
             <label asp-for="Name"></label>
             <input asp-for="Name" value="@Model.Name" class="form-control" disabled>
         </div>
-        <div class="form-group">
-            <label asp-for="Url"></label>
-            <input asp-for="Url" value="@Model.Url" class="form-control" disabled>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label asp-for="BindAddress"></label>
+                <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control" disabled>
+            </div>
+            <div class="form-group col-md-4">
+                <label asp-for="BindPort"></label>
+                <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control" disabled>
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group col-md-3">
-                <label asp-for="ConnectAddress"></label>
-                <input asp-for="ConnectAddress" value="@Model.ConnectAddress" class="form-control form-control-sm" disabled>
+                <label asp-for="ConnectPort"></label>
+                <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control form-control" disabled>
             </div>
-            <div class="form-group col-md-3">
-                <label asp-for="BindAddress"></label>
-                <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control-sm" disabled>
+        </div>
+        <div class="form-row">
+            <div class="addresses">
+                @for (int i = 0; i < Model.ConnectAddresses.Count; i++)
+                {
+                    <div class="form-group col-md-4">
+                        <label asp-for="ConnectAddresses[i]"></label>
+                        <input asp-for="ConnectAddresses[i]" value="@Model.ConnectAddresses[i]" class="form-control form-control address" disabled>
+                    </div>
+                }
             </div>
-            <div class="form-group col-md-3">
-                <label asp-for="BindPort"></label>
-                <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control-sm" disabled>
+            <div class="urls">
+                @for (int i = 0; i < Model.Urls.Count; i++)
+                {
+                    <div class="form-group">
+                        <label asp-for="Urls[i]"></label>
+                        <input asp-for="Urls[i]" value="@Model.Urls[i]" class="form-control" readonly>
+                    </div>
+                }
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group col-md-3">
                 <label asp-for="UseSSL"></label>
                 <select asp-for="UseSSL" class="form-control form-control-sm" disabled>
-                    <option>False</option>
-                    <option>True</option>
+                    <option>@Model.UseSSL.ToString()</option>
                 </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label asp-for="ProfileId">HttpProfile</label>
-            <select asp-for="ProfileId" class="form-control" disabled>
-                @foreach (var item in Profiles)
-                {
-                    <option value="@item.Id">@item.Name</option>
-                }
-            </select>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label asp-for="SSLCertificate"></label>
-                <input asp-for="SSLCertificate" class="form-control-file" type="file" disabled>
             </div>
             <div class="form-group col-md-6">
                 <label asp-for="SSLCertificatePassword"></label>
                 <input asp-for="SSLCertificatePassword" class="form-control form-control-sm" disabled>
             </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="ProfileId">HttpProfile</label>
+            <select asp-for="ProfileId" class="form-control" disabled>
+                <option>@Model.Profile.Name</option>
+            </select>
         </div>
 
         <div class="btn-group" role="group">

@@ -22,12 +22,13 @@ namespace Covenant.Models.Launchers
             this.Type = LauncherType.MSBuild;
             this.Description = "Uses msbuild.exe to launch a Grunt using an in-line task.";
             this.OutputKind = OutputKind.WindowsApplication;
+            this.CompressStager = true;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, true);
+            this.StagerCode = StagerCode;
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
             this.DiskCode = XMLTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
             this.DiskCode = DiskCode.Replace("{{TARGET_NAME}}", this.TargetName);
             this.DiskCode = DiskCode.Replace("{{TASK_NAME}}", this.TaskName);

@@ -9,7 +9,7 @@
                 <th>@Html.DisplayNameFor(model => model.ListenerType)</th>
                 <th>@Html.DisplayNameFor(model => model.Status)</th>
                 <th>@Html.DisplayNameFor(model => model.StartTime)</th>
-                <th>@Html.DisplayNameFor(model => model.ConnectAddress)</th>
+                <th>@Html.DisplayNameFor(model => model.ConnectAddresses)</th>
                 <th>@Html.DisplayNameFor(model => model.ConnectPort)</th>
             </tr>
         </thead>
@@ -27,7 +27,8 @@
                         <td>@Html.DisplayFor(modelItem => item.ListenerType.Name)</td>
                         <td>@Html.DisplayFor(modelItem => item.Status)</td>
                         <td>@Html.DisplayFor(modelItem => item.StartTime)</td>
-                        <td>@Html.DisplayFor(modelItem => item.ConnectAddress)</td>
+                        @{ var connectaddresses = string.Join(",", item.ConnectAddresses); }
+                        <td>@Html.DisplayFor(modelItem => connectaddresses)</td>
                         <td>@Html.DisplayFor(modelItem => item.ConnectPort)</td>
                     </tr>
                 }

@@ -104,7 +104,7 @@ namespace Covenant.Controllers
                 tasking.GruntCommand = createdCommand;
                 tasking.GruntCommandId = createdCommand.Id;
 
-                GruntTasking created = await _context.CreateGruntTasking(tasking);
+                GruntTasking created = await _context.CreateGruntTasking(tasking, _grunthub);
                 return RedirectToAction(nameof(Interact), new { id = created.Id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

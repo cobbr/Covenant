@@ -1,6 +1,9 @@
 ﻿.grunt-interact {
-    overflow-y: scroll;
-    overflow-x: scroll;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    height: 575px;
+    resize: vertical;
 }
 
 .grunt-interact::-webkit-scrollbar {
@@ -138,4 +141,30 @@
 #interact-input:focus {
     -webkit-box-shadow: none;
     outline: -webkit-focus-ring-color auto 0px;
-} 
+}
+
+.CodeMirror {
+    /* Bootstrap Settings */
+    box-sizing: border-box;
+    margin: 0;
+    overflow: auto;
+    display: block;
+    width: 100%;
+    padding: 0px 12px 6px 0px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #fff;
+    background-image: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+.CodeMirror-focused {
+    /* Bootstrap Settings */
+    border-color: #66afe9;
+    outline: 0;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}

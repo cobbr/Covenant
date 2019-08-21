@@ -8,6 +8,8 @@ namespace Covenant.API.Models
 {
     using Microsoft.Rest;
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class Listener
@@ -25,7 +27,7 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Active', 'Stopped'</param>
-        public Listener(string name, string guid, string description, string bindAddress, int bindPort, string connectAddress, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
+        public Listener(string name, string guid, string description, string bindAddress, int bindPort, IList<string> connectAddresses, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             Id = id;
             Name = name;
@@ -33,7 +35,7 @@ namespace Covenant.API.Models
             Description = description;
             BindAddress = bindAddress;
             BindPort = bindPort;
-            ConnectAddress = connectAddress;
+            ConnectAddresses = connectAddresses;
             ConnectPort = connectPort;
             ProfileId = profileId;
             Profile = profile;
@@ -82,8 +84,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "connectAddress")]
-        public string ConnectAddress { get; set; }
+        [JsonProperty(PropertyName = "connectAddresses")]
+        public IList<string> ConnectAddresses { get; set; }
 
         /// <summary>
         /// </summary>
@@ -151,9 +153,9 @@ namespace Covenant.API.Models
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "BindAddress");
             }
-            if (ConnectAddress == null)
+            if (ConnectAddresses == null)
             {
-                throw new ValidationException(ValidationRules.CannotBeNull, "ConnectAddress");
+                throw new ValidationException(ValidationRules.CannotBeNull, "ConnectAddresses");
             }
             if (Name != null)
             {

@@ -8,8 +8,8 @@ using System.Net;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -140,6 +140,10 @@ namespace Covenant
                 try
                 {
                     logger.Debug("Starting Covenant API");
+                    if (!IsElevated())
+                    {
+                        Console.Error.WriteLine("WARNING: Running Covenant non-elevated. You may not have permission to start Listeners on low-numbered ports. Consider running Covenant elevated.");
+                    }
                     host.Run();
                 }
                 catch (Exception ex)
@@ -209,6 +213,18 @@ namespace Covenant
                 .UseStartup<Startup>()
                 .UseSetting("CovenantUri", CovenantUri)
                 .Build();
+
+        private static bool IsElevated()
+        {
+
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+                var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                return principal.IsInRole("Administrators");
+            }
+            return Environment.UserName.Equals("root", StringComparison.CurrentCultureIgnoreCase);
+        }
 
         private static string GetPassword()
         {

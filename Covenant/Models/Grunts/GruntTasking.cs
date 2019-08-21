@@ -39,6 +39,7 @@ namespace Covenant.Models.Grunts
         public CommandOutput CommandOutput { get; set; }
 
         [Required]
+        public string UserId { get; set; }
         public CovenantUser User { get; set; }
 
         public int GruntId { get; set; }

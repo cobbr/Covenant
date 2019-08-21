@@ -7,6 +7,8 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class ImplantTemplate
@@ -23,9 +25,9 @@ namespace Covenant.API.Models
         /// Initializes a new instance of the ImplantTemplate class.
         /// </summary>
         /// <param name="language">Possible values include: 'CSharp'</param>
-        /// <param name="commType">Possible values include: 'HTTP',
-        /// 'SMB'</param>
-        public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), string stagerCode = default(string), string executorCode = default(string))
+        /// <param name="commType">Possible values include: 'HTTP', 'SMB',
+        /// 'Bridge'</param>
+        public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), string stagerCode = default(string), string executorCode = default(string), IList<Grunt> grunts = default(IList<Grunt>))
         {
             Id = id;
             Name = name;
@@ -34,6 +36,7 @@ namespace Covenant.API.Models
             CommType = commType;
             StagerCode = stagerCode;
             ExecutorCode = executorCode;
+            Grunts = grunts;
             CustomInit();
         }
 
@@ -64,7 +67,7 @@ namespace Covenant.API.Models
         public ImplantLanguage? Language { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'HTTP', 'SMB'
+        /// Gets or sets possible values include: 'HTTP', 'SMB', 'Bridge'
         /// </summary>
         [JsonProperty(PropertyName = "commType")]
         public CommunicationType? CommType { get; set; }
@@ -78,6 +81,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "executorCode")]
         public string ExecutorCode { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "grunts")]
+        public IList<Grunt> Grunts { get; set; }
 
     }
 }

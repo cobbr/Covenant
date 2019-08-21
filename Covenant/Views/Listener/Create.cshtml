@@ -25,28 +25,47 @@
         <label asp-for="Name"></label>
         <input asp-for="Name" value="@Model.Name" class="form-control">
     </div>
-    <div class="form-group">
-        <label asp-for="Url"></label>
-        <input asp-for="Url" value="@Model.Url" class="form-control" readonly>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label asp-for="BindAddress"></label>
+            <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+            <label asp-for="BindPort"></label>
+            <input asp-for="BindPort" value="@Model.BindPort" class="form-control">
+        </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-3">
-            <label asp-for="BindAddress"></label>
-            <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-md-3">
-            <label asp-for="BindPort"></label>
-            <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-md-3">
-            <label asp-for="ConnectAddress"></label>
-            <input asp-for="ConnectAddress" value="@Model.ConnectAddress" class="form-control form-control-sm">
-        </div>
-        <div class="form-group col-md-3">
             <label asp-for="ConnectPort"></label>
-            <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control form-control-sm">
+            <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control">
         </div>
     </div>
+    <div class="d-flex flex-row address-row">
+        <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+            <label asp-for="ConnectAddresses[0]">ConnectAddress</label>
+            <input asp-for="ConnectAddresses[0]" value="@Model.ConnectAddresses[0]" class="form-control address">
+        </div>
+        <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+            <label asp-for="Urls[0]">Url</label>
+            <input asp-for="Urls[0]" value="@Model.Urls[0]" class="form-control" readonly>
+        </div>
+    </div>
+    @for (int i = 1; i < Model.ConnectAddresses.Count; i++)
+    {
+        <div class="d-flex flex-row address-row">
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <input asp-for="ConnectAddresses[i]" value="@Model.ConnectAddresses[i]" class="form-control address">
+            </div>
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <input asp-for="Urls[i]" value="@Model.Urls[i]" class="form-control url" readonly>
+            </div>
+            <div class="col-auto align-self-center">
+                <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-connectaddress-button"><span data-feather="x"></span></button>
+            </div>
+        </div>
+    }
+    <button type="button" id="add-connectaddress-button" class="btn btn-outline-primary btn-sm mt-2 mb-4"><span data-feather="plus"></span> Add</button>
     <div class="form-row">
         <div class="form-group col-md-3">
             <label asp-for="UseSSL"></label>
@@ -80,6 +99,41 @@
 @section Scripts {
     <script type="text/javascript">
         $(document).ready(function () {
+            var addAddress = function () {
+                var num = $(".address-row").length;
+                var newitem = '<div class="d-flex flex-row address-row">' +
+                              '    <div class="form-group col-md-4 pl-0 mt-1 mb-1">' +
+                              '        <input id="ConnectAddresses_' + num + '_" name="ConnectAddresses[' + num + ']" class="form-control address">' +
+                              '    </div>' +
+                              '    <div class="form-group col-md-4 pl-0 mt-1 mb-1">' +
+                              '        <input id="Urls_' + num + '_" name="Urls[' + num + ']" class="form-control url" readonly>' +
+                              '    </div>' +
+                              '    <div class="col-auto align-self-center">' +
+                              '        <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-connectaddress-button"><span data-feather="x"></span></button>' +
+                              '    </div>' +
+                              '</div>';
+                $(this).before(newitem);
+                feather.replace();
+                $(this).prev().find("button").click(removeAddress);
+                $(".address").change(setUrls);
+            }
+
+            var removeAddress = function () {
+                var row = $(this).parent().parent();
+                var num = row.find("input").attr("id").replace("ConnectAddresses_", "").replace("_", "");
+                $(".address-row").each(function()
+                {
+                    var currNum = $(this).find("input").attr("id").replace("ConnectAddresses_", "").replace("_", "");
+                    if (parseInt(currNum) > parseInt(num)) {
+                        $(this).find("input.address").attr("id", "ConnectAddresses_" + (parseInt(currNum) - 1) + "_");
+                        $(this).find("input.address").attr("name", "ConnectAddresses[" + (parseInt(currNum) - 1) + "]");
+                        $(this).find("input.url").attr("id", "Urls_" + (parseInt(currNum) - 1) + "_");
+                        $(this).find("input.url").attr("name", "Urls[" + (parseInt(currNum) - 1) + "]");
+                    }
+                });
+                row.remove();
+            }
+
             $('#submit-listener-button').click(function () {
                 var filecontrol = $("input.form-control-file")[0];
                 var file = filecontrol.files[0];
@@ -105,22 +159,27 @@
                     $(".cert-div").removeAttr("hidden");
                 }
             };
-            function setUrl() {
-                console.log("setUrl");
-                var connectAddress = $("#ConnectAddress").val();
+            function setUrls() {
                 var connectPort = $("#ConnectPort").val();
                 var protocol = "http://";
                 if (useSSL.includes("True"))
                 {
                     protocol = "https://"
                 }
-                $("#Url").val(protocol + connectAddress + ":" + connectPort);
+                $(".address").each(function() {
+                    var connectaddress = $(this).val();
+                    $($(this).parent().next().children("input")[0]).val(protocol + connectaddress + ":" + connectPort);
+                });
             }
             $("#UseSSL").change(swapOptions);
-            $("#ConnectAddress").change(setUrl);
-            $("#ConnectPort").change(setUrl);
+            $(".address").change(setUrls);
+            $("#ConnectPort").change(setUrls);
+
+            $('#add-connectaddress-button').click(addAddress);
+            $('.remove-connectaddress-button').click(removeAddress);
+
             swapOptions();
-            setUrl();
+            setUrls();
         });
     </script>
 }

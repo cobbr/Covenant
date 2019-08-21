@@ -6,7 +6,7 @@
         <thead>
             <tr>
                 <th>@Html.DisplayNameFor(model => model.Name)</th>
-                <th>@Html.DisplayNameFor(model => model.CommType)</th>
+                <th>@Html.DisplayNameFor(model => model.ImplantTemplate)</th>
                 <th>@Html.DisplayNameFor(model => model.Hostname)</th>
                 <th>@Html.DisplayNameFor(model => model.UserName)</th>
                 <th>@Html.DisplayNameFor(model => model.Status)</th>
@@ -29,7 +29,7 @@
                                     @Html.DisplayFor(modelItem => item.Name)
                                 </a>
                             </td>
-                            <td>@Html.DisplayFor(modelItem => item.CommType)</td>
+                            <td>@Html.DisplayFor(modelItem => item.ImplantTemplate.Name)</td>
                             <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
                             <td>@Html.DisplayFor(modelItem => item.UserName)</td>
                             <td>@Html.DisplayFor(modelItem => item.Status)</td>
@@ -47,7 +47,7 @@
                                     @Html.DisplayFor(modelItem => item.Name)
                                 </a>
                             </td>
-                            <td>@Html.DisplayFor(modelItem => item.CommType)</td>
+                            <td>@Html.DisplayFor(modelItem => item.ImplantTemplate.Name)</td>
                             <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
                             <td>@Html.DisplayFor(modelItem => item.UserName)</td>
                             <td>@Html.DisplayFor(modelItem => item.Status)</td>

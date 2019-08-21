@@ -1329,6 +1329,32 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static byte[] ApiGruntsByIdCompileexecutorGet(this ICovenantAPI operations, int id)
+            {
+                return operations.ApiGruntsByIdCompileexecutorGetAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<byte[]> ApiGruntsByIdCompileexecutorGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsByIdCompileexecutorGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static IList<GruntCommand> ApiCommandsGet(this ICovenantAPI operations)
             {
                 return operations.ApiCommandsGetAsync().GetAwaiter().GetResult();
@@ -1995,32 +2021,6 @@ namespace Covenant.API
             public static async Task<ImplantTemplate> ApiImplanttemplatesByNameGetAsync(this ICovenantAPI operations, string name, CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.ApiImplanttemplatesByNameGetWithHttpMessagesAsync(name, null, cancellationToken).ConfigureAwait(false))
-                {
-                    return _result.Body;
-                }
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
-            /// <param name='id'>
-            /// </param>
-            public static ImplantTemplate ApiImplanttemplatesGruntByIdGet(this ICovenantAPI operations, int id)
-            {
-                return operations.ApiImplanttemplatesGruntByIdGetAsync(id).GetAwaiter().GetResult();
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
-            /// <param name='id'>
-            /// </param>
-            /// <param name='cancellationToken'>
-            /// The cancellation token.
-            /// </param>
-            public static async Task<ImplantTemplate> ApiImplanttemplatesGruntByIdGetAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                using (var _result = await operations.ApiImplanttemplatesGruntByIdGetWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }

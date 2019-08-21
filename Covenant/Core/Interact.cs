@@ -319,7 +319,7 @@ namespace Covenant.Core
 
             EliteConsoleMenu menu = new EliteConsoleMenu(EliteConsoleMenu.EliteConsoleMenuType.Parameter, "Grunt: " + grunt.Name);
             menu.Rows.Add(new List<string> { "Name:", grunt.Name });
-            menu.Rows.Add(new List<string> { "CommType:", grunt.CommType.ToString() });
+            menu.Rows.Add(new List<string> { "CommType:", grunt.ImplantTemplate.CommType.ToString() });
             menu.Rows.Add(new List<string> { "Connected Grunts:", String.Join(",", children.Select(C => C.Name)) });
             menu.Rows.Add(new List<string> { "Hostname:", grunt.Hostname });
             menu.Rows.Add(new List<string> { "IPAdress:", grunt.IPAddress });
@@ -393,7 +393,7 @@ namespace Covenant.Core
                 Status = GruntTaskingStatus.Uninitialized,
                 GruntCommandId = command.Id,
                 GruntCommand = command
-            });
+            }, _grunthub);
         }
 
         public async Task<string> SharpShell(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
@@ -446,7 +446,7 @@ public static class Task
                 Status = GruntTaskingStatus.Uninitialized,
                 GruntCommandId = command.Id,
                 GruntCommand = command
-            });
+            }, _grunthub);
             return "";
         }
 
@@ -470,7 +470,7 @@ public static class Task
                 Type = GruntTaskingType.Kill,
                 GruntCommand = command,
                 GruntCommandId = command.Id
-            });
+            }, _grunthub);
             return "";
         }
 
@@ -499,7 +499,7 @@ public static class Task
                         Parameters = new List<string> { grunt.Delay.ToString() },
                         GruntCommand = command,
                         GruntCommandId = command.Id
-                    });
+                    }, _grunthub);
                 }
                 else if (parameters[1].Value.Equals("jitterpercent", StringComparison.OrdinalIgnoreCase))
                 {
@@ -516,7 +516,7 @@ public static class Task
                         Parameters = new List<string> { grunt.JitterPercent.ToString() },
                         GruntCommand = command,
                         GruntCommandId = command.Id
-                    });
+                    }, _grunthub);
                 }
                 else if (parameters[1].Value.Equals("connectattempts", StringComparison.OrdinalIgnoreCase))
                 {
@@ -533,7 +533,7 @@ public static class Task
                         Parameters = new List<string> { grunt.ConnectAttempts.ToString() },
                         GruntCommand = command,
                         GruntCommandId = command.Id
-                    });
+                    }, _grunthub);
                 }
                 return "";
             }
@@ -594,7 +594,7 @@ public static class Task
                 Parameters = new List<string> { parameters[1].Value, PipeName },
                 GruntCommand = command,
                 GruntCommandId = command.Id
-            });
+            }, _grunthub);
             return toPrint.ToString();
         }
 
@@ -633,7 +633,7 @@ public static class Task
                 Parameters = new List<string> { disconnectGrunt.GUID },
                 GruntCommand = command,
                 GruntCommandId = command.Id
-            });
+            }, _grunthub);
             return toPrint.ToString();
         }
 
@@ -657,7 +657,7 @@ public static class Task
                 Parameters = new List<string> { "Jobs" },
                 GruntCommand = command,
                 GruntCommandId = command.Id
-            });
+            }, _grunthub);
             return "";
         }
     }

@@ -47,6 +47,13 @@ namespace Covenant.Core
                         Description = "A Windows implant written in C# that communicates over SMB.",
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.SMB
+                    },
+                    new ImplantTemplate
+                    {
+                        Name = "GruntBridge",
+                        Description = "A customizable implant written in C# that communicates with a custom C2Bridge.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.Bridge
                     }
                 };
 				templates.ForEach(T => T.ReadFromDisk());
@@ -58,21 +65,32 @@ namespace Covenant.Core
         {
             if (!context.ListenerTypes.Any())
             {
-                await context.ListenerTypes.AddAsync(ListenerType.HttpListenerType);
+                var listenerTypes = new List<ListenerType>
+                {
+                    new ListenerType { Name = "HTTP", Description = "Listens on HTTP protocol." },
+                    new ListenerType { Name = "Bridge", Description = "Creates a C2 Bridge for custom listeners." }
+                };
+                await context.ListenerTypes.AddRangeAsync(listenerTypes);
                 await context.SaveChangesAsync();
             }
             if (!context.Profiles.Any())
             {
-                List<HttpProfile> profiles = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
+                List<HttpProfile> httpProfiles = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
+                                                 .Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
                                                  .Select(F => HttpProfile.Create(F))
                                                  .ToList();
-                await context.Profiles.AddRangeAsync(profiles);
+                List<BridgeProfile> bridgeProfiles = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
+                                                 .Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
+                                                 .Select(F => BridgeProfile.Create(F))
+                                                 .ToList();
+                await context.Profiles.AddRangeAsync(httpProfiles);
+                await context.Profiles.AddRangeAsync(bridgeProfiles);
                 await context.SaveChangesAsync();
             }
 
             foreach (Listener l in context.Listeners.Where(L => L.Status == ListenerStatus.Active))
             {
-                l.Profile = await context.GetHttpProfile(l.ProfileId);
+                l.Profile = await context.GetProfile(l.ProfileId);
                 await context.StartListener(l.Id, ListenerCancellationTokens);
             }
         }

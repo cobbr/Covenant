@@ -7,8 +7,7 @@ public static class Task
     {
         try
         {
-            string FilePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + FileName;
-            return Convert.ToBase64String(File.ReadAllBytes(FilePath));
+            return Convert.ToBase64String(File.ReadAllBytes(FileName));
         }
         catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }

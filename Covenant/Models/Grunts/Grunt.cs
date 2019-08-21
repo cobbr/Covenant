@@ -17,7 +17,8 @@ namespace Covenant.Models.Grunts
     public enum CommunicationType
     {
         HTTP,
-        SMB
+        SMB,
+        Bridge
     }
 
     public enum GruntStatus
@@ -51,6 +52,7 @@ namespace Covenant.Models.Grunts
         // Python,
         // Swift,
         // ObjectiveC
+        // Go
     }
 
     public class ImplantTemplate
@@ -66,7 +68,9 @@ namespace Covenant.Models.Grunts
         public string StagerCode { get; set; }
 		public string ExecutorCode { get; set; }
 
-		private string StagerLocation
+        public List<Grunt> Grunts { get; set; } = new List<Grunt>();
+
+        private string StagerLocation
         {
             get
             {
@@ -143,14 +147,14 @@ namespace Covenant.Models.Grunts
 
         // Communication information
         [Required]
-        public CommunicationType CommType { get; set; } = CommunicationType.HTTP;
+        public int ImplantTemplateId { get; set; }
+        public ImplantTemplate ImplantTemplate { get; set; }
         [Required]
         public bool ValidateCert { get; set; } = true;
         [Required]
         public bool UseCertPinning { get; set; } = true;
         [Required, DisplayName("SMBPipeName")]
         public string SMBPipeName { get; set; } = "gruntsvc";
-        public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
 
         // Information about the Listener
         public int ListenerId { get; set; }

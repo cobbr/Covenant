@@ -154,6 +154,11 @@
                     $("#http-div").attr("hidden", "true");
                     $("#smb-div").removeAttr("hidden");
                 }
+                else
+                {
+                    $("#http-div").attr("hidden", "true");
+                    $("#smb-div").attr("hidden", "true");
+                }
             };
             $("#ImplantTemplateId").change(swapOptions);
             swapOptions();

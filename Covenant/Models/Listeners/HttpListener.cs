@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
@@ -20,6 +19,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,10 +30,8 @@ using NLog.Targets;
 
 using Newtonsoft.Json;
 
-using Covenant.API;
-using APIModels = Covenant.API.Models;
 using Covenant.Core;
-using Covenant.Models.Grunts;
+using APIModels = Covenant.API.Models;
 
 namespace Covenant.Models.Listeners
 {
@@ -69,22 +67,33 @@ namespace Covenant.Models.Listeners
                 }
                 catch (Exception) { return ""; }
             }
+            set { _ = value; }
         }
 
         [Required]
-        public string Url
+        public List<string> Urls
         {
             get
             {
-                string scheme = UseSSL ? "https://" : "http://";
-                return scheme + this.ConnectAddress + ":" + this.ConnectPort; 
+                List<string> urls = new List<string>();
+                foreach (string ConnectAddress in this.ConnectAddresses)
+                {
+                    string scheme = UseSSL ? "https://" : "http://";
+                    urls.Add(scheme + ConnectAddress + ":" + this.ConnectPort);
+                }
+                return urls;
             }
             set
             {
-                Uri uri = new Uri(value);
-                this.UseSSL = uri.Scheme == "https";
-                this.ConnectAddress = uri.Host;
-                this.BindPort = uri.Port;
+                List<string> addresses = new List<string>();
+                foreach (string url in value)
+                {
+                    Uri uri = new Uri(url);
+                    this.UseSSL = uri.Scheme == "https";
+                    addresses.Add(uri.Host);
+                    this.BindPort = uri.Port;
+                }
+                this.ConnectAddresses = addresses;
             }
         }
 
@@ -95,11 +104,16 @@ namespace Covenant.Models.Listeners
             this.Description = "Listens on HTTP protocol.";
             try
             {
-                this.ConnectAddress = Dns.GetHostAddresses(Dns.GetHostName())
-                    .FirstOrDefault(A => A.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                    .ToString();
+                this.ConnectAddresses = new List<string> {
+                    Dns.GetHostAddresses(Dns.GetHostName())
+                        .FirstOrDefault(A => A.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        .ToString()
+                };
             }
-            catch (System.Net.Sockets.SocketException) { }
+            catch (Exception)
+            {
+                this.ConnectAddresses = new List<string> { "" };
+            }
         }
 
         public HttpListener(int ListenerTypeId, int ProfileId) : this()
@@ -130,39 +144,42 @@ namespace Covenant.Models.Listeners
                 var services = scope.ServiceProvider;
                 HttpListenerContext context = services.GetRequiredService<HttpListenerContext>();
                 context.Database.EnsureCreated();
-                if (!context.HttpListener.Any())
+                if (!context.HttpProfiles.Any())
                 {
-                    context.HttpListener.Add(context.ToHttpListener(this));
-                }
-                if (!context.HttpProfile.Any())
-                {
-                    context.HttpProfile.Add(context.ToHttpProfile((HttpProfile)this.Profile));
+                    context.HttpProfiles.Add(context.ToHttpProfile((HttpProfile)this.Profile));
                 }
                 context.SaveChanges();
+                InternalListener internalListener = services.GetRequiredService<InternalListener>();
+                IConfiguration configuration = services.GetRequiredService<IConfiguration>();
+                _ = internalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, configuration["CovenantToken"]);
             }
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             LoggingConfiguration loggingConfig = new LoggingConfiguration();
-            var consoleTarget = new ColoredConsoleTarget();
-            var fileTarget = new FileTarget();
-            loggingConfig.AddTarget("console", consoleTarget);
-            loggingConfig.AddTarget("file", fileTarget);
-            consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-            fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-            fileTarget.FileName = Common.CovenantLogDirectory + "covenant-http.log";
-            loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "console");
-            loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "file");
-
-            var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
-
-            System.Threading.Tasks.Task task = host.RunAsync(cancellationTokenSource.Token);
-            // Don't love this, but we wait to see if the Listener throws an error on Startup
-            Thread.Sleep(100);
-            if (task.Status != System.Threading.Tasks.TaskStatus.Faulted)
+            using (var consoleTarget = new ColoredConsoleTarget())
             {
-                this.Status = ListenerStatus.Active;
-                return cancellationTokenSource;
+                using (var fileTarget = new FileTarget())
+                {
+                    loggingConfig.AddTarget("console", consoleTarget);
+                    loggingConfig.AddTarget("file", fileTarget);
+                    consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
+                    fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
+                    fileTarget.FileName = Common.CovenantLogDirectory + "covenant-http.log";
+                    loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "console");
+                    loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "file");
+
+                    var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
+
+                    System.Threading.Tasks.Task task = host.RunAsync(cancellationTokenSource.Token);
+                    // Don't love this, but we wait to see if the Listener throws an error on Startup
+                    Thread.Sleep(500);
+                    if (task.Status == System.Threading.Tasks.TaskStatus.Faulted)
+                    {
+                        throw new ListenerStartException(task.Exception.Message);
+                    }
+                    this.Status = ListenerStatus.Active;
+                    return cancellationTokenSource;
+                }
             }
-            return null;
         }
 
         public override void Stop(CancellationTokenSource cancellationTokenSource)
@@ -227,7 +244,7 @@ namespace Covenant.Models.Listeners
                 file.Directory.Create();
             }
             string uriPath = file.FullName.Replace(this.ListenerStaticHostDirectory, "");
-            Uri uri = new Uri(this.Url + "/" + uriPath);
+            Uri uri = new Uri(this.Urls + "/" + uriPath);
             hostFileRequest.Path = uri.AbsolutePath;
             File.WriteAllBytes(file.FullName, Convert.FromBase64String(hostFileRequest.Content));
             return hostFileRequest;
@@ -243,59 +260,12 @@ namespace Covenant.Models.Listeners
                 file.Delete();
             }
         }
-
-        public override string GetGruntStagerCode(Grunt grunt, HttpProfile profile, ImplantTemplate template)
-        {
-            return this.GruntTemplateReplace(template.StagerCode, grunt, profile);
-        }
-
-        private string GruntTemplateReplace(string CodeTemplate, Grunt grunt, HttpProfile profile)
-        {
-            string HttpHeaders = "";
-            foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
-            {
-                HttpHeaders += "ProfileHttpHeaderNames.Add(@\"" + this.FormatForVerbatimString(header.Name.Replace("{GUID}", grunt.GUID)) + "\");\n";
-                HttpHeaders += "ProfileHttpHeaderValues.Add(@\"" + this.FormatForVerbatimString(header.Value.Replace("{GUID}", grunt.GUID)) + "\");\n";
-            }
-            string HttpUrls = "";
-            foreach (string url in profile.HttpUrls)
-            {
-                HttpUrls += "ProfileHttpUrls.Add(@\"" + this.FormatForVerbatimString(url.Replace("{GUID}", grunt.GUID)) + "\");\n";
-            }
-            string HttpCookies = "";
-
-            return CodeTemplate
-                .Replace("// {{REPLACE_PROFILE_HTTP_TRANSFORM}}", profile.HttpMessageTransform)
-                .Replace("// {{REPLACE_PROFILE_HTTP_HEADERS}}", HttpHeaders)
-                .Replace("// {{REPLACE_PROFILE_HTTP_URLS}}", HttpUrls)
-                .Replace("// {{REPLACE_PROFILE_HTTP_COOKIES}}", HttpCookies)
-                .Replace("{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}", this.FormatForVerbatimString(profile.HttpGetResponse))
-                .Replace("{{REPLACE_PROFILE_HTTP_POST_REQUEST}}", this.FormatForVerbatimString(profile.HttpPostRequest))
-                .Replace("{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}", this.FormatForVerbatimString(profile.HttpPostResponse))
-                .Replace("{{REPLACE_COMM_TYPE}}", grunt.CommType.ToString())
-                .Replace("{{REPLACE_VALIDATE_CERT}}", grunt.ValidateCert ? "true" : "false")
-                .Replace("{{REPLACE_USE_CERT_PINNING}}", grunt.UseCertPinning ? "true" : "false")
-                .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
-                .Replace("{{REPLACE_COVENANT_URI}}", this.FormatForVerbatimString(this.Url))
-                .Replace("{{REPLACE_COVENANT_CERT_HASH}}", this.FormatForVerbatimString(this.UseSSL ? this.SSLCertHash : ""))
-                .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
-                .Replace("{{REPLACE_DELAY}}", this.FormatForVerbatimString(grunt.Delay.ToString()))
-                .Replace("{{REPLACE_JITTER_PERCENT}}", this.FormatForVerbatimString(grunt.JitterPercent.ToString()))
-                .Replace("{{REPLACE_CONNECT_ATTEMPTS}}", this.FormatForVerbatimString(grunt.ConnectAttempts.ToString()))
-                .Replace("{{REPLACE_KILL_DATE}}", this.FormatForVerbatimString(grunt.KillDate.ToBinary().ToString()))
-                .Replace("{{REPLACE_GRUNT_SHARED_SECRET_PASSWORD}}", this.FormatForVerbatimString(grunt.GruntSharedSecretPassword));
-        }
-
-        private string FormatForVerbatimString(string replacement)
-        {
-            return replacement.Replace("\"", "\"\"").Replace("{", "{{").Replace("}", "}}").Replace("{{0}}", "{0}");
-        }
     }
 
     public class HttpListenerContext : IdentityDbContext
     {
-        public DbSet<APIModels.HttpListener> HttpListener { get; set; }
-        public DbSet<APIModels.HttpProfile> HttpProfile { get; set; }
+        public DbSet<APIModels.HttpProfile> HttpProfiles { get; set; }
+        
         public HttpListenerContext(DbContextOptions<HttpListenerContext> options) : base(options)
         {
 
@@ -324,45 +294,21 @@ namespace Covenant.Models.Listeners
             base.OnModelCreating(builder);
         }
 
-        public APIModels.HttpListener ToHttpListener(HttpListener listener)
-        {
-            return new APIModels.HttpListener
-            {
-                BindAddress = listener.BindAddress,
-                BindPort = listener.BindPort,
-                ConnectAddress = listener.ConnectAddress,
-                CovenantToken = listener.CovenantToken,
-                Description = listener.Description,
-                Guid = listener.GUID,
-                Id = listener.Id,
-                ListenerTypeId = listener.ListenerTypeId,
-                Name = listener.Name,
-                ProfileId = listener.ProfileId,
-                // SslCertHash = listener.SSLCertHash,
-                SslCertificate = listener.SSLCertificate,
-                SslCertificatePassword = listener.SSLCertificatePassword,
-                StartTime = listener.StartTime,
-                Status = (APIModels.ListenerStatus)Enum.Parse(typeof(APIModels.ListenerStatus), listener.Status.ToString()),
-                Url = listener.Url,
-                UseSSL = listener.UseSSL
-            };
-        }
-
         public APIModels.HttpProfile ToHttpProfile(HttpProfile profile)
         {
             return new APIModels.HttpProfile
             {
+                Id = profile.Id,
+                Name = profile.Name,
+                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString()),
                 Description = profile.Description,
+                MessageTransform = profile.MessageTransform,
                 HttpGetResponse = profile.HttpGetResponse,
-                HttpMessageTransform = profile.HttpMessageTransform,
                 HttpPostRequest = profile.HttpPostRequest,
                 HttpPostResponse = profile.HttpPostResponse,
                 HttpRequestHeaders = profile.HttpRequestHeaders.Select(HRH => new APIModels.HttpProfileHeader { Name = HRH.Name, Value = HRH.Value }).ToList(),
                 HttpResponseHeaders = profile.HttpResponseHeaders.Select(HRH => new APIModels.HttpProfileHeader { Name = HRH.Name, Value = HRH.Value }).ToList(),
-                HttpUrls = profile.HttpUrls,
-                Id = profile.Id,
-                Name = profile.Name,
-                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString())
+                HttpUrls = profile.HttpUrls
             };
         }
     }
@@ -378,22 +324,8 @@ namespace Covenant.Models.Listeners
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<ICovenantAPI, CovenantAPI>(api => {
-                X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-                HttpClientHandler clientHandler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
-                    {
-                        return cert.GetCertHashString() == covenantCert.GetCertHashString();
-                    }
-                };
-                return new CovenantAPI(
-                    new Uri("https://localhost:7443"),
-                    new Microsoft.Rest.TokenCredentials(Configuration["CovenantToken"]),
-                    clientHandler
-                );
-            });
             services.AddDbContext<HttpListenerContext>();
+            services.AddSingleton<InternalListener>(IL => new InternalListener());
             services.AddMvc();
             services.AddAuthorization(options =>
             {
@@ -412,7 +344,7 @@ namespace Covenant.Models.Listeners
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
             app.UseMvc(routes =>
             {
@@ -424,19 +356,18 @@ namespace Covenant.Models.Listeners
                 }
             });
 
-            var ContentTypeProvider = new FileExtensionContentTypeProvider(contentTypeMappings);
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Configuration["ListenerStaticHostDirectory"]),
                 RequestPath = "",
-                ContentTypeProvider = ContentTypeProvider,
+                ContentTypeProvider = new FileExtensionContentTypeProvider(contentTypeMappings),
                 ServeUnknownFileTypes = true,
                 DefaultContentType = "text/plain"
             });
         }
 
         // Credit - https://github.com/samuelneff/MimeTypeMap
-        private static IDictionary<string, string> contentTypeMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly IDictionary<string, string> contentTypeMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
                 {".323", "text/h323"},
                 {".3g2", "video/3gpp2"},

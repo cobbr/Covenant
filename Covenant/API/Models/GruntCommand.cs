@@ -23,13 +23,14 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntCommand class.
         /// </summary>
-        public GruntCommand(string command, System.DateTime commandTime, CovenantUser user, int? id = default(int?), int? commandOutputId = default(int?), CommandOutput commandOutput = default(CommandOutput), int? gruntId = default(int?), Grunt grunt = default(Grunt), int? gruntTaskingId = default(int?), GruntTasking gruntTasking = default(GruntTasking))
+        public GruntCommand(string command, System.DateTime commandTime, string userId, int? id = default(int?), int? commandOutputId = default(int?), CommandOutput commandOutput = default(CommandOutput), CovenantUser user = default(CovenantUser), int? gruntId = default(int?), Grunt grunt = default(Grunt), int? gruntTaskingId = default(int?), GruntTasking gruntTasking = default(GruntTasking))
         {
             Id = id;
             Command = command;
             CommandTime = commandTime;
             CommandOutputId = commandOutputId;
             CommandOutput = commandOutput;
+            UserId = userId;
             User = user;
             GruntId = gruntId;
             Grunt = grunt;
@@ -70,6 +71,11 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "userId")]
+        public string UserId { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "user")]
         public CovenantUser User { get; set; }
 
@@ -105,9 +111,9 @@ namespace Covenant.API.Models
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "Command");
             }
-            if (User == null)
+            if (UserId == null)
             {
-                throw new ValidationException(ValidationRules.CannotBeNull, "User");
+                throw new ValidationException(ValidationRules.CannotBeNull, "UserId");
             }
             if (CommandOutput != null)
             {

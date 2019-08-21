@@ -19,12 +19,13 @@ namespace Covenant.Models.Launchers
             this.Description = "Uses a generated .NET Framework binary to launch a Grunt.";
             this.Name = "Binary";
             this.OutputKind = OutputKind.ConsoleApplication;
+            this.CompressStager = false;
         }
 
-        public override string GetLauncher(Listener listener, Grunt grunt, HttpProfile profile, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
-            this.StagerCode = listener.GetGruntStagerCode(grunt, profile, template);
-            this.Base64ILByteString = listener.CompileGruntStagerCode(grunt, profile, template, this.OutputKind);
+            this.StagerCode = StagerCode;
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
             this.LauncherString = this.Base64ILByteString;
             return this.LauncherString;
         }
@@ -34,7 +35,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-				Uri hostedLocation = new Uri(httpListener.Url + hostedFile.Path);
+				Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
                 this.LauncherString = hostedFile.Path.Split("\\").Last().Split("/").Last();
                 return hostedLocation.ToString();
             }

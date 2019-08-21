@@ -46,14 +46,14 @@
     <button type="button" id="add-httpurl-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
     <div class="form-row">
         <div class="form-group col-md-12">
-            <label asp-for="HttpMessageTransform"></label>
+            <label asp-for="MessageTransform"></label>
             @if (User.IsInRole("Administrator"))
             {
-                <textarea asp-for="HttpMessageTransform" value="@Model.HttpMessageTransform" rows="10" class="form-control"></textarea>
+                <textarea asp-for="MessageTransform" value="@Model.MessageTransform" rows="10" class="form-control"></textarea>
             }
             else
             {
-                <textarea asp-for="HttpMessageTransform" value="@Model.HttpMessageTransform" rows="10" class="form-control" hidden></textarea>
+                <textarea asp-for="MessageTransform" value="@Model.MessageTransform" rows="10" class="form-control" hidden></textarea>
             }
         </div>
     </div>

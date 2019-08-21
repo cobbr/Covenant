@@ -24,11 +24,11 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the HttpProfile class.
         /// </summary>
-        /// <param name="type">Possible values include: 'HTTP'</param>
-        public HttpProfile(IList<string> httpUrls = default(IList<string>), string httpMessageTransform = default(string), IList<HttpProfileHeader> httpRequestHeaders = default(IList<HttpProfileHeader>), IList<HttpProfileHeader> httpResponseHeaders = default(IList<HttpProfileHeader>), string httpPostRequest = default(string), string httpGetResponse = default(string), string httpPostResponse = default(string), int? id = default(int?), string name = default(string), string description = default(string), ProfileType? type = default(ProfileType?))
+        /// <param name="type">Possible values include: 'HTTP',
+        /// 'Bridge'</param>
+        public HttpProfile(IList<string> httpUrls = default(IList<string>), IList<HttpProfileHeader> httpRequestHeaders = default(IList<HttpProfileHeader>), IList<HttpProfileHeader> httpResponseHeaders = default(IList<HttpProfileHeader>), string httpPostRequest = default(string), string httpGetResponse = default(string), string httpPostResponse = default(string), int? id = default(int?), string name = default(string), string description = default(string), ProfileType? type = default(ProfileType?), string messageTransform = default(string))
         {
             HttpUrls = httpUrls;
-            HttpMessageTransform = httpMessageTransform;
             HttpRequestHeaders = httpRequestHeaders;
             HttpResponseHeaders = httpResponseHeaders;
             HttpPostRequest = httpPostRequest;
@@ -38,6 +38,7 @@ namespace Covenant.API.Models
             Name = name;
             Description = description;
             Type = type;
+            MessageTransform = messageTransform;
             CustomInit();
         }
 
@@ -50,11 +51,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "httpUrls")]
         public IList<string> HttpUrls { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "httpMessageTransform")]
-        public string HttpMessageTransform { get; set; }
 
         /// <summary>
         /// </summary>
@@ -97,10 +93,15 @@ namespace Covenant.API.Models
         public string Description { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'HTTP'
+        /// Gets or sets possible values include: 'HTTP', 'Bridge'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public ProfileType? Type { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "messageTransform")]
+        public string MessageTransform { get; set; }
 
     }
 }

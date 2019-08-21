@@ -78,11 +78,11 @@
             </div>
             <div class="form-row">
                 <div class="form-group col-md-4">
-                    <label asp-for="CommType"></label>
-                    <select asp-for="CommType" asp-items="Html.GetEnumSelectList<CommunicationType>()" class="form-control" disabled></select>
-                    <input asp-for="CommType" value="@Model.CommType" class="form-control" type="hidden" readonly>
+                    <label asp-for="ImplantTemplate.CommType"></label>
+                    <select asp-for="ImplantTemplate.CommType" asp-items="Html.GetEnumSelectList<CommunicationType>()" class="form-control" disabled></select>
+                    <input asp-for="ImplantTemplate.CommType" value="@Model.ImplantTemplate.CommType" class="form-control" type="hidden" readonly>
                 </div>
-                @if (Model.CommType == CommunicationType.HTTP)
+                @if (Model.ImplantTemplate.CommType == CommunicationType.HTTP)
                 {
                     <div class="form-group col-md-4">
                         <label asp-for="ValidateCert"></label>
@@ -122,7 +122,7 @@
                     <input asp-for="ValidateCert" value="@Model.ValidateCert" class="form-control" type="hidden" readonly>
                     <input asp-for="UseCertPinning" value="@Model.UseCertPinning" class="form-control" type="hidden" readonly>
                 }
-                @if (Model.CommType == CommunicationType.SMB)
+                @if (Model.ImplantTemplate.CommType == CommunicationType.SMB)
                 {
                     <div class="form-group col-md-4">
                         <label asp-for="SMBPipeName"></label>
@@ -290,8 +290,8 @@
             </div>
         </div>
         <div class="d-flex flex-column rounded-lg border border-primary bg-dark">
-            <div id="interact-scroll" class="bg-dark grunt-interact" style="height: 575px; resize: vertical;">
-                <div class="accordion" id="interact-accordion">
+            <div id="interact-scroll" class="grunt-interact overflow-auto bg-dark">
+                <div id="interact-accordion" class="accordion w-100">
                     @foreach (var command in GruntCommands)
                     {
                         <div class="card task-card w-100 border-right-0 border-top-1" id="tasking-card-@command.Id">
@@ -318,11 +318,11 @@
                                 <div class="card-body">
                                     @if (command.CommandOutput != null)
                                     {
-                                        <p class="text-white task-text-body" style="white-space:pre">@command.CommandOutput.Output</p>
+                                        <p class="text-white task-text-body" style="white-space:pre-wrap">@command.CommandOutput.Output</p>
                                     }
                                     else
                                     {
-                                        <p class="text-white task-text-body" style="white-space:pre"></p>
+                                        <p class="text-white task-text-body" style="white-space:pre-wrap"></p>
                                     }
                                 </div>
                             </div>
@@ -566,7 +566,7 @@
             var displayCommandEvent = function (command, taskingEvent) {
                 var taskingcard = $("#tasking-card-" + command.id)[0];
                 var headerClass = "text-info task-text-head";
-                var outp = '<p class="text-white task-text-body" style="white-space:pre">' + $('<div>').text(command.commandOutput.output).html() + '</p>';
+                var outp = '<p class="text-white task-text-body" style="white-space:pre-wrap">' + $('<div>').text(command.commandOutput.output).html() + '</p>';
                 if (taskingcard !== undefined) {
                     if (taskingEvent !== undefined) {
                         var head = '<p class="' + headerClass + '">' + $('<div>').text(taskingEvent.messageHeader).html() + '</p>';

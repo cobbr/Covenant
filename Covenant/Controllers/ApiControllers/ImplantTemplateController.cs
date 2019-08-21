@@ -83,27 +83,6 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET api/implanttemplates/grunt/{id}
-        // <summary>
-        // Get an ImplantTemplate for a Grunt
-        // </summary>
-        [HttpGet("grunt/{id}", Name = "GetImplantTemplateForGrunt")]
-        public async Task<ActionResult<ImplantTemplate>> GetImplantTemplateForGrunt(int id)
-        {
-            try
-            {
-                return await _context.GetImplantTemplateForGrunt(await _context.GetGrunt(id));
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
         // POST api/implanttemplates
         // <summary>
         // Create an ImplantTemplate

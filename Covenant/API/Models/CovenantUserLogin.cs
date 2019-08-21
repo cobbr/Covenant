@@ -23,8 +23,9 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CovenantUserLogin class.
         /// </summary>
-        public CovenantUserLogin(string userName, string password)
+        public CovenantUserLogin(string userName, string password, string id = default(string))
         {
+            Id = id;
             UserName = userName;
             Password = password;
             CustomInit();
@@ -34,6 +35,11 @@ namespace Covenant.API.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "id")]
+        public string Id { get; set; }
 
         /// <summary>
         /// </summary>
