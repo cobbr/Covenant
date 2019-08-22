@@ -115,7 +115,7 @@
                 $(this).before(newitem);
                 feather.replace();
                 $(this).prev().find("button").click(removeAddress);
-                $(".address").change(setUrls);
+                $(".address").change(setUrl);
             }
 
             var removeAddress = function () {
@@ -174,14 +174,14 @@
                 });
             }
             $("#UseSSL").change(swapOptions);
-            $(".address").change(setUrls);
-            $("#ConnectPort").change(setUrls);
+            $(".address").change(setUrl);
+            $("#ConnectPort").change(setUrl);
 
             $('#add-connectaddress-button').click(addAddress);
             $('.remove-connectaddress-button').click(removeAddress);
 
             swapOptions();
-            setUrls();
+            setUrl();
         });
     </script>
 }
