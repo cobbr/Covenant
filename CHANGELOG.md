@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Lost grunts faded in table
 
+### Fixed
+- Fix https URL calculation for Listener Create
+- Fix SSLCertificate upload error
+
 ## [v0.3] - 2019-08-02
 ### Added
 - Added web interface
