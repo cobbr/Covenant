@@ -137,10 +137,16 @@
             $('#submit-listener-button').click(function () {
                 var filecontrol = $("input.form-control-file")[0];
                 var file = filecontrol.files[0];
-                var fr = new FileReader();
-                fr.onload = receivedFileBuffer;
-                fr.readAsDataURL(file);
-
+                if (file == undefined)
+                {
+                    $("#submit-listener-form").submit();
+                }
+                else
+                {
+                    var fr = new FileReader();
+                    fr.onload = receivedFileBuffer;
+                    fr.readAsDataURL(file);
+                }
                 function receivedFileBuffer() {
                     $("input.file-filler").val(fr.result.split(",").pop()).prop("disabled", false);
                     $("input.form-control-file").prop("disabled", true);
