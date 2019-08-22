@@ -93,7 +93,7 @@
             }
         </select>
     </div>
-    <button id="submit-listener-button" type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+    <button id="submit-listener-button" type="button" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
 </form>
 
 @section Scripts {
@@ -158,8 +158,10 @@
                 {
                     $(".cert-div").removeAttr("hidden");
                 }
+                setUrl();
             };
-            function setUrls() {
+            function setUrl() {
+                var connectAddress = $("#ConnectAddress").val();
                 var connectPort = $("#ConnectPort").val();
                 var protocol = "http://";
                 if (useSSL.includes("True"))
