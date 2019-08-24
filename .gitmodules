@@ -1,6 +1,6 @@
 [submodule "Covenant/Data/ReferenceSourceLibraries/Rubeus"]
 	path = Covenant/Data/ReferenceSourceLibraries/Rubeus
-	url = http://github.com/GhostPack/Rubeus.git
+	url = https://github.com/GhostPack/Rubeus
 [submodule "Covenant/Data/ReferenceSourceLibraries/SharpSploit"]
 	path = Covenant/Data/ReferenceSourceLibraries/SharpSploit
 	url = https://github.com/cobbr/SharpSploit
