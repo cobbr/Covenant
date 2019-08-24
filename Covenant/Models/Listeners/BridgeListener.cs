@@ -97,10 +97,10 @@ namespace Covenant.Models.Listeners
             while (!token.IsCancellationRequested)
             {
                 Console.WriteLine("Bridge Listener: Reading client");
-                string guid = await NetworkReadString(stream, token);
+                string guid = NetworkReadString(stream, token);
                 Console.WriteLine("Bridge Listener: Read guid: " + guid);
                 _guids.Add(guid);
-                string data = await NetworkReadString(stream, token);
+                string data = NetworkReadString(stream, token);
                 Console.WriteLine("Bridge Listener: Read data: " + data);
                 string ExtractedMessage = data.ParseExact(((BridgeProfile)this.Profile).WriteFormat).FirstOrDefault();
                 await this.InternalListener.Write(guid, ExtractedMessage);
@@ -148,7 +148,7 @@ namespace Covenant.Models.Listeners
             }
         }
 
-        private async Task<string> NetworkReadString(NetworkStream stream, CancellationToken token)
+        private string NetworkReadString(NetworkStream stream, CancellationToken token)
         {
             byte[] size = new byte[4];
             int totalReadBytes = 0;
