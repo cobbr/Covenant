@@ -1595,7 +1595,7 @@ namespace Covenant.Core
                                 Name = "TargetHive",
                                 Description = "Target hive to install autorun.",
                                 Value = "CurrentUser",
-                                SuggestedValues = new List<string>{"CurrentUser", "LocalMachine"},
+                                SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
                             },
@@ -1643,7 +1643,7 @@ namespace Covenant.Core
                                 Name = "EventFilter",
                                 Description = "Specifies the event trigger to use.",
                                 Value = "ProcessStart",
-                                SuggestedValues = new List<string>{"ProcessStart"},
+                                SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
                             },
@@ -1653,7 +1653,7 @@ namespace Covenant.Core
                                 Name = "EventConsumer",
                                 Description = "Specifies the action to carry out.",
                                 Value = "CommandLine",
-                                SuggestedValues = new List<string>{"CommandLine", "ActiveScript"},
+                                SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
                             },
@@ -1683,7 +1683,7 @@ namespace Covenant.Core
                                 Name = "ScriptingEngine",
                                 Description = "Specifies the scripting engine when the ActiveScript consumer is selected.",
                                 Value = "VBScript",
-                                SuggestedValues = new List<string>{ "JScript", "VBScript" },
+                                SuggestedValues = new List<string>(),
                                 Optional = true,
                                 DisplayInCommand = true
                             }
