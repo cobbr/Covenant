@@ -1613,9 +1613,77 @@ namespace Covenant.Core
                             {
                                 Id = 78,
                                 Name = "Name",
-                                Description "Name for the registy value.",
+                                Description = "Name for the registy value.",
                                 Value = "Updater",
                                 SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PersistWMI",
+                        Description = "Creates a WMI Event, Consumer and Binding to execute a payload.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistWMI" + ".task")),
+                        Options = new List<GruntTaskOption>{
+                            new GruntTaskOption
+                            {
+                                Id = 79,
+                                Name = "EventName",
+                                Description = "An arbitrary name to be assigned to the new WMI Event.",
+                                Value = "Evil Persistence",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 80,
+                                Name = "EventFilter",
+                                Description = "Specifies the event trigger to use.",
+                                Value = "ProcessStart",
+                                SuggestedValues = new List<string>{"ProcessStart"},
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 81,
+                                Name = "EventConsumer",
+                                Description = "Specifies the action to carry out.",
+                                Value = "CommandLine",
+                                SuggestedValues = new List<string>{"CommandLine", "ActiveScript"},
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 82,
+                                Name = "Payload",
+                                Description = "Specifies the CommandLine or ActiveScript payload to run.",
+                                Value = "powershell -sta -nop -w hidden -enc blah",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 83,
+                                Name = "ProcessName",
+                                Description = "Specifies the process name when the ProcessStart trigger is selected.",
+                                Value = "notepad.exe",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = false
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 84,
+                                Name = "ScriptingEngine",
+                                Description = "Specifies the scripting engine when the ActiveScript consumer is selected.",
+                                Value = "VBScript",
+                                SuggestedValues = new List<string>{ "JScript", "VBScript" },
                                 Optional = true,
                                 DisplayInCommand = true
                             }
