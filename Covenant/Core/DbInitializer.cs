@@ -1553,6 +1553,36 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "PersistStartup",
+                        AlternateNames = new List<string>(),
+                        Description = "Installs a payload into the current users startup folder.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistStartup" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 74,
+                                Name = "Payload",
+                                Description = "Payload to write to a file.",
+                                Value = "powershell -sta -nop -w hidden -enc blah",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 75,
+                                Name = "FileName",
+                                Description = "Name of the file to write.",
+                                Value = "startup.bat",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
