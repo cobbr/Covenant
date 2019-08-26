@@ -69,11 +69,9 @@ namespace Covenant.Models.Listeners
             listener.Start();
             while (!token.IsCancellationRequested)
             {
-                Console.WriteLine("Bridge Listener: waiting to accept client");
                 using (TcpClient client = await listener.AcceptTcpClientAsync())
                 {
                     client.ReceiveTimeout = Timeout.Infinite;
-                    Console.WriteLine("Accepted client");
                     if (clientSource != null)
                     {
                         clientSource.Cancel();
@@ -90,18 +88,14 @@ namespace Covenant.Models.Listeners
 
         private async Task RunClient(TcpClient client, CancellationToken token)
         {
-            Console.WriteLine("RunClient");
             NetworkStream stream = client.GetStream();
             stream.ReadTimeout = Timeout.Infinite;
             _ = Task.Run(() => _ = RunClientReadPoll(stream, token));
             while (!token.IsCancellationRequested)
             {
-                Console.WriteLine("Bridge Listener: Reading client");
                 string guid = NetworkReadString(stream, token);
-                Console.WriteLine("Bridge Listener: Read guid: " + guid);
                 _guids.Add(guid);
                 string data = NetworkReadString(stream, token);
-                Console.WriteLine("Bridge Listener: Read data: " + data);
                 string ExtractedMessage = data.ParseExact(((BridgeProfile)this.Profile).WriteFormat).FirstOrDefault();
                 await this.InternalListener.Write(guid, ExtractedMessage);
             }
@@ -109,7 +103,6 @@ namespace Covenant.Models.Listeners
 
         private async Task RunClientReadPoll(NetworkStream stream, CancellationToken token)
         {
-            Console.WriteLine("Bridge Listener: RunClientReadPoll");
             while (!token.IsCancellationRequested)
             {
                 Thread.Sleep(10000);

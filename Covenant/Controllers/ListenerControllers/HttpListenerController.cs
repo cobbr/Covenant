@@ -66,7 +66,9 @@ namespace Covenant.Controllers
                 {
                     string body = reader.ReadToEnd();
                     string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest).FirstOrDefault();
-                    string response = String.Format(_context.HttpProfiles.First().HttpPostResponse, await _internalListener.Write(guid, ExtractedMessage));
+                    string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
+                    string postRead = await _internalListener.Read(guidToRead);
+                    string response = String.Format(_context.HttpProfiles.First().HttpPostResponse, postRead);
                     return Ok(response);
                 }
             }
