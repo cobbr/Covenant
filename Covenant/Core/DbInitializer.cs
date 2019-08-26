@@ -1583,6 +1583,46 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "PersistAutorun",
+                        AlternateNames = new List<string>(),
+                        Description = "Installs an autorun value in HKCU or HKLM to execute a payload.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistAutorun" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 76,
+                                Name = "TargetHive",
+                                Description = "Target hive to install autorun.",
+                                Value = "CurrentUser",
+                                SuggestedValues = new List<string>{"CurrentUser", "LocalMachine"},
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 77,
+                                Name = "Value",
+                                Description = "Value to set in the registry.",
+                                Value = "C:\\GruntStager.exe",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 78,
+                                Name = "Name",
+                                Description "Name for the registy value.",
+                                Value = "Updater",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
