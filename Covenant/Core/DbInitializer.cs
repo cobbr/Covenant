@@ -1699,7 +1699,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 74,
+                                Id = 85,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -1735,7 +1735,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 75,
+                                Id = 86,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -1745,7 +1745,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 76,
+                                Id = 87,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -1765,7 +1765,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 77,
+                                Id = 88,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -1785,7 +1785,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 78,
+                                Id = 89,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -1805,7 +1805,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 79,
+                                Id = 90,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -1825,7 +1825,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 80,
+                                Id = 91,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
