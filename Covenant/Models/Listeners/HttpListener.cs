@@ -244,7 +244,7 @@ namespace Covenant.Models.Listeners
                 file.Directory.Create();
             }
             string uriPath = file.FullName.Replace(this.ListenerStaticHostDirectory, "");
-            Uri uri = new Uri(this.Urls + "/" + uriPath);
+            Uri uri = new Uri(this.Urls.FirstOrDefault() + "/" + uriPath);
             hostFileRequest.Path = uri.AbsolutePath;
             File.WriteAllBytes(file.FullName, Convert.FromBase64String(hostFileRequest.Content));
             return hostFileRequest;

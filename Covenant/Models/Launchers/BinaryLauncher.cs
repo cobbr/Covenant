@@ -35,7 +35,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-				Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
+				Uri hostedLocation = new Uri(httpListener.Urls.FirstOrDefault() + hostedFile.Path);
                 this.LauncherString = hostedFile.Path.Split("\\").Last().Split("/").Last();
                 return hostedLocation.ToString();
             }

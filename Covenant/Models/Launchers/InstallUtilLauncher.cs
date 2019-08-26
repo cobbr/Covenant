@@ -56,7 +56,7 @@ namespace Covenant.Models.Launchers
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)
             {
-                Uri hostedLocation = new Uri(httpListener.Urls + hostedFile.Path);
+                Uri hostedLocation = new Uri(httpListener.Urls.First() + hostedFile.Path);
                 this.LauncherString = "InstallUtil.exe" + " " + "/U" + " " + hostedFile.Path.Split('/').Last();
                 return hostedLocation.ToString();
             }
