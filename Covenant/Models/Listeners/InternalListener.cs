@@ -298,6 +298,7 @@ namespace Covenant.Models.Listeners
 
         public async Task<string> Read(string guid)
         {
+            Console.WriteLine("READ: " + guid);
             if (string.IsNullOrEmpty(guid))
             {
                 return "";
@@ -305,14 +306,17 @@ namespace Covenant.Models.Listeners
             await CheckInGrunt(await GetGruntForGuid(guid));
             if (this.GruntMessageCache.TryGetValue(guid, out ConcurrentQueue<GruntMessageCacheInfo> cache))
             {
+                Console.WriteLine("got value from cache");
                 if (cache.TryDequeue(out GruntMessageCacheInfo cacheEntry))
                 {
+                    Console.WriteLine("Dequeued entry");
                     switch (cacheEntry.Status)
                     {
                         case GruntMessageCacheStatus.NotFound:
                             await this.MarkTasked(cacheEntry.Tasking);
                             throw new ControllerNotFoundException(cacheEntry.Message);
                         case GruntMessageCacheStatus.Ok:
+                            Console.WriteLine("status ok: " + cacheEntry.Message);
                             await this.MarkTasked(cacheEntry.Tasking);
                             return cacheEntry.Message;
                     }
@@ -325,6 +329,7 @@ namespace Covenant.Models.Listeners
 
         private async Task InternalRead(string guid)
 		{
+            Console.WriteLine("INTERNALREAD");
             try
 			{
                 APIModels.Grunt grunt = await CheckInGrunt(await GetGruntForGuid(guid));
@@ -381,6 +386,7 @@ namespace Covenant.Models.Listeners
 
         public async Task<string> Write(string guid, string data)
 		{
+            Console.WriteLine("WRITE");
             try
 			{
 				ModelUtilities.GruntEncryptedMessage message = null;
@@ -392,8 +398,8 @@ namespace Covenant.Models.Listeners
 				catch (Exception)
 				{
                     // Request not formatted correctly. May not be legitimate Grunt request, respond NotFound
-                    string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                    throw new ControllerNotFoundException(emptyTransformed);
+                    this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                    return guid;
 				}
                 APIModels.Grunt egressGrunt;
                 try
@@ -412,59 +418,71 @@ namespace Covenant.Models.Listeners
 				catch (HttpOperationException)
 				{
 					targetGrunt = null;
-					// Stage0 Guid is OriginalServerGuid + Guid
-					if (message.GUID.Length == 20)
-					{
-                        APIModels.Grunt originalGeneratedGrunt = await _client.ApiGruntsOriginalguidByServerguidGetAsync(message.GUID.Substring(0, 10));
-						return await this.PostStage0(egressGrunt, originalGeneratedGrunt, message);
-					}
-                    string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                    throw new ControllerNotFoundException(emptyTransformed);
-				}
-
+                    // Stage0 Guid is OriginalServerGuid + Guid
+                    if (message.GUID.Length == 20)
+                    {
+                        Console.WriteLine("Should be Stage0");
+                        string originalServerGuid = message.GUID.Substring(0, 10);
+                        string newGuid = message.GUID.Substring(10, 10);
+                        targetGrunt = await _client.ApiGruntsOriginalguidByServerguidGetAsync(originalServerGuid);
+                        targetGrunt.Status = APIModels.GruntStatus.Uninitialized;
+                        guid = newGuid;
+                    }
+                    else
+                    {
+                        this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                        return guid;
+                    }
+                }
 				switch (targetGrunt.Status)
 				{
 					case APIModels.GruntStatus.Uninitialized:
-						return await this.PostStage0(egressGrunt, targetGrunt, message);
+						await this.PostStage0(egressGrunt, targetGrunt, message, guid);
+                        return guid;
 					case APIModels.GruntStatus.Stage0:
-						return await this.PostStage1(egressGrunt, targetGrunt, message);
+                        Console.WriteLine("Calling PostStage1 with guid: " + message.GUID);
+						await this.PostStage1(egressGrunt, targetGrunt, message, message.GUID);
+                        return message.GUID;
 					case APIModels.GruntStatus.Stage1:
-						return await this.PostStage2(egressGrunt, targetGrunt, message);
+						await this.PostStage2(egressGrunt, targetGrunt, message, message.GUID);
+                        return message.GUID;
 					case APIModels.GruntStatus.Stage2:
-						return await this.RegisterGrunt(egressGrunt, targetGrunt, message);
+						await this.RegisterGrunt(egressGrunt, targetGrunt, message, message.GUID);
+                        return message.GUID;
 					case APIModels.GruntStatus.Active:
-						return await this.PostTask(egressGrunt, targetGrunt, message, egressGrunt.Guid);
+						await this.PostTask(egressGrunt, targetGrunt, message, egressGrunt.Guid);
+                        return guid;
 					case APIModels.GruntStatus.Lost:
-						return await this.PostTask(egressGrunt, targetGrunt, message, egressGrunt.Guid);
+						await this.PostTask(egressGrunt, targetGrunt, message, egressGrunt.Guid);
+                        return guid;
 					default:
-                        string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                        throw new ControllerNotFoundException(emptyTransformed);
-				}
+                        this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                        return guid;
+                }
 			}
 			catch
 			{
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return guid;
+            }
 		}
 
-		// post task
-		private async Task<string> PostTask(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage outputMessage, string guid)
+		private async Task PostTask(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage outputMessage, string guid)
 		{
 			if (targetGrunt == null || egressGrunt == null || egressGrunt.Guid != guid)
 			{
                 // Invalid GUID. May not be legitimate Grunt request, respond NotFound
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 
 			string TaskName = outputMessage.Meta;
 			if (string.IsNullOrWhiteSpace(TaskName))
 			{
                 // Invalid task response. This happens on post-register write
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
             APIModels.GruntTasking gruntTasking;
 			try
 			{
@@ -473,22 +491,22 @@ namespace Covenant.Models.Listeners
 			catch (HttpOperationException)
 			{
                 // Invalid taskname. May not be legitimate Grunt request, respond NotFound
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 
 			if (targetGrunt == null)
 			{
                 // Invalid Grunt. May not be legitimate Grunt request, respond NotFound
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 			if (!outputMessage.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
 			{
                 // Invalid signature. Almost certainly not a legitimate Grunt request, respond NotFound
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 			string taskOutput = Common.CovenantEncoding.GetString(_utilities.GruntSessionDecrypt(targetGrunt, outputMessage));
 			gruntTasking.GruntCommand.CommandOutput = new APIModels.CommandOutput
 			{
@@ -506,20 +524,21 @@ namespace Covenant.Models.Listeners
                 this.CacheTaskHashCodes.Remove(GetTaskingHashCode(gruntTasking));
             }
             await CheckInGrunt(targetGrunt);
-            return await Read(guid);
+            return;
 		}
 
-		private async Task<string> PostStage0(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage0Response)
+		private async Task PostStage0(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage0Response, string guid)
 		{
+            Console.WriteLine("PostStage0");
 			if (targetGrunt == null || !gruntStage0Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntSharedSecretPassword)))
 			{
                 // Always return NotFound, don't give away unnecessary info
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
             }
 			bool egressGruntExists = egressGrunt != null;
 
-			string guid = gruntStage0Response.GUID.Substring(10);
+			string cutGuid = gruntStage0Response.GUID.Substring(10);
 			if (targetGrunt.Status != APIModels.GruntStatus.Uninitialized)
 			{
                 // We create a new Grunt if this one is not uninitialized
@@ -527,7 +546,7 @@ namespace Covenant.Models.Listeners
 				{
 					Id = 0,
 					Name = Utilities.CreateShortGuid(),
-					Guid = guid,
+					Guid = cutGuid,
 					OriginalServerGuid = Utilities.CreateShortGuid(),
 					Status = APIModels.GruntStatus.Stage0,
 					ListenerId = targetGrunt.ListenerId,
@@ -548,7 +567,7 @@ namespace Covenant.Models.Listeners
 			else
 			{
 				targetGrunt.Status = APIModels.GruntStatus.Stage0;
-				targetGrunt.Guid = guid;
+				targetGrunt.Guid = cutGuid;
 				targetGrunt.LastCheckIn = DateTime.UtcNow;
 				targetGrunt = await _client.ApiGruntsPutAsync(targetGrunt);
 			}
@@ -578,9 +597,9 @@ namespace Covenant.Models.Listeners
                 APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
 				if (connectTasking == null)
 				{
-                    string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                    throw new ControllerNotFoundException(emptyTransformed);
-				}
+                    this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                    return;
+                }
                 APIModels.GruntTaskingMessage tmessage = this.GetGruntTaskingMessage(connectTasking, targetGrunt.DotNetFrameworkVersion);
 				targetGrunt.Hostname = tmessage.Message.Split(",")[0];
 				await _client.ApiGruntsPutAsync(targetGrunt);
@@ -596,23 +615,31 @@ namespace Covenant.Models.Listeners
 			}
 			catch (HttpOperationException)
 			{
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
+            Console.WriteLine("Transforming");
             // Transform response
             // Stage0Response: "Id,Name,Base64(IV),Base64(AES(RSA(SessionKey))),Base64(HMAC)"
             string transformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
-            return transformed;
-		}
+            Console.WriteLine("return Stage0: " + transformed);
+            this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.Ok, Message = transformed, Tasking = null });
+            return;
+        }
 
-		private async Task<string> PostStage1(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage1Response)
+		private async Task PostStage1(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage1Response, string guid)
 		{
-			if (targetGrunt == null || targetGrunt.Status != APIModels.GruntStatus.Stage0 || !gruntStage1Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
+            Console.WriteLine("PostStage1");
+            if (targetGrunt == null || targetGrunt.Status != APIModels.GruntStatus.Stage0 || !gruntStage1Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
 			{
+                if (targetGrunt == null) { Console.WriteLine("NotFound Reason1"); }
+                if (targetGrunt.Status != APIModels.GruntStatus.Stage0) { Console.WriteLine("NotFound Reason2"); }
+                if (!gruntStage1Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey))) { Console.WriteLine("NotFound Reason3"); }
                 // Always return NotFound, don't give away unnecessary info
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                Console.WriteLine("NotFound1");
+                return;
+            }
 			if (egressGrunt == null)
 			{
 				egressGrunt = targetGrunt;
@@ -636,23 +663,28 @@ namespace Covenant.Models.Listeners
 			}
 			catch (HttpOperationException)
 			{
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                Console.WriteLine("NotFound2");
+                return;
+            }
 
             // Transform response
             // Stage1Response: "Base64(IV),Base64(AES(challenge1 + challenge2)),Base64(HMAC)"
-            return this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
-		}
+            string transformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+            this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.Ok, Message = transformed, Tasking = null });
+            Console.WriteLine("Stage1 returned: " + transformed);
+            return;
+        }
 
-		private async Task<string> PostStage2(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage2Response)
+		private async Task PostStage2(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage2Response, string guid)
 		{
-			if (targetGrunt == null || targetGrunt.Status != APIModels.GruntStatus.Stage1 || !gruntStage2Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
+            Console.WriteLine("PostStage2");
+            if (targetGrunt == null || targetGrunt.Status != APIModels.GruntStatus.Stage1 || !gruntStage2Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
 			{
                 // Always return NotFound, don't give away unnecessary info
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 			if (egressGrunt == null)
 			{
 				egressGrunt = targetGrunt;
@@ -661,9 +693,9 @@ namespace Covenant.Models.Listeners
 			if (targetGrunt.GruntChallenge != Convert.ToBase64String(challenge2test))
 			{
                 // Always return NotFound, don't give away unnecessary info
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 			targetGrunt.Status = APIModels.GruntStatus.Stage2;
 			targetGrunt.LastCheckIn = DateTime.UtcNow;
 			await _client.ApiGruntsPutAsync(targetGrunt);
@@ -682,17 +714,22 @@ namespace Covenant.Models.Listeners
 
             // Transform response
             // returns: "Base64(IV),Base64(AES(GruntExecutorAssembly)),Base64(HMAC)"
-            return this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
-		}
+            string transformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+            this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.Ok, Message = transformed, Tasking = null });
+            Console.WriteLine("stage2 transformed: " + transformed);
+            return;
+        }
 
-		private async Task<string> RegisterGrunt(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntMessage)
+		private async Task RegisterGrunt(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntMessage, string guid)
 		{
+            Console.WriteLine("RegisterGrunt");
 			if (targetGrunt == null || targetGrunt.Status != APIModels.GruntStatus.Stage2 || !gruntMessage.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey)))
 			{
                 // Always return NotFound, don't give away unnecessary info
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                Console.WriteLine("NotFound1");
+                return;
+            }
 			if (egressGrunt == null)
 			{
 				egressGrunt = targetGrunt;
@@ -700,8 +737,7 @@ namespace Covenant.Models.Listeners
 			string message = Common.CovenantEncoding.GetString(_utilities.GruntSessionDecrypt(targetGrunt, gruntMessage));
             // todo: try/catch on deserialize?
             APIModels.Grunt grunt = JsonConvert.DeserializeObject<APIModels.Grunt>(message);
-
-			targetGrunt.IpAddress = grunt.IpAddress;
+            targetGrunt.IpAddress = grunt.IpAddress;
 			targetGrunt.Hostname = grunt.Hostname;
 			targetGrunt.OperatingSystem = grunt.OperatingSystem;
 			targetGrunt.UserDomainName = grunt.UserDomainName;
@@ -725,16 +761,19 @@ namespace Covenant.Models.Listeners
 			try
 			{
 				responseMessage = this.CreateMessageForGrunt(egressGrunt, targetGrunt, tasking);
-			}
+            }
 			catch (HttpOperationException)
 			{
-                string emptyTransformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject("")));
-                throw new ControllerNotFoundException(emptyTransformed);
-			}
+                this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+                return;
+            }
 
 			// Transform response
-			return this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(responseMessage)));
-		}
+			string transformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(responseMessage)));
+            this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.Ok, Message = transformed, Tasking = null });
+            Console.WriteLine("Register: " + transformed);
+            return;
+        }
 
         internal static class EncryptUtilities
         {

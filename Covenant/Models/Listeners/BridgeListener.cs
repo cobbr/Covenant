@@ -70,19 +70,18 @@ namespace Covenant.Models.Listeners
             while (!token.IsCancellationRequested)
             {
                 Console.WriteLine("Bridge Listener: waiting to accept client");
-                using (TcpClient client = await listener.AcceptTcpClientAsync())
+                TcpClient client = await listener.AcceptTcpClientAsync();
+                client.ReceiveTimeout = 0;
+                client.SendTimeout = 0;
+                Console.WriteLine("Accepted client");
+                if (clientSource != null)
                 {
-                    client.ReceiveTimeout = Timeout.Infinite;
-                    Console.WriteLine("Accepted client");
-                    if (clientSource != null)
-                    {
-                        clientSource.Cancel();
-                        clientSource.Dispose();
-                    }
-                    clientSource = new CancellationTokenSource();
-                    
-                    _ = Task.Run(async () => await RunClient(client, token));
+                    clientSource.Cancel();
+                    clientSource.Dispose();
                 }
+                clientSource = new CancellationTokenSource();
+                    
+                _ = Task.Run(async () => await RunClient(client, token));
             }
             clientSource.Cancel();
             clientSource.Dispose();
@@ -93,17 +92,20 @@ namespace Covenant.Models.Listeners
             Console.WriteLine("RunClient");
             NetworkStream stream = client.GetStream();
             stream.ReadTimeout = Timeout.Infinite;
+            stream.WriteTimeout = Timeout.Infinite;
             _ = Task.Run(() => _ = RunClientReadPoll(stream, token));
             while (!token.IsCancellationRequested)
             {
                 Console.WriteLine("Bridge Listener: Reading client");
-                string guid = await NetworkReadString(stream, token);
-                Console.WriteLine("Bridge Listener: Read guid: " + guid);
-                _guids.Add(guid);
-                string data = await NetworkReadString(stream, token);
+                string data = NetworkReadString(stream, token);
                 Console.WriteLine("Bridge Listener: Read data: " + data);
-                string ExtractedMessage = data.ParseExact(((BridgeProfile)this.Profile).WriteFormat).FirstOrDefault();
-                await this.InternalListener.Write(guid, ExtractedMessage);
+                List<string> parsed = data.ParseExact(((BridgeProfile)this.Profile).WriteFormat.Replace("{GUID}", "{0}").Replace("{DATA}", "{1}")).ToList();
+                if (parsed.Count == 2)
+                {
+                    Console.WriteLine("Parsed guid: " + parsed[0]);
+                    _guids.Add(parsed[0]);
+                    await this.InternalListener.Write(parsed[0], parsed[1]);
+                }
             }
         }
 
@@ -112,22 +114,38 @@ namespace Covenant.Models.Listeners
             Console.WriteLine("Bridge Listener: RunClientReadPoll");
             while (!token.IsCancellationRequested)
             {
+                Console.WriteLine("RunClientReadPoll Sleep");
                 Thread.Sleep(10000);
+                Console.WriteLine("RunClientReadPoll EndSleep");
                 foreach(string guid in _guids)
                 {
                     try
                     {
+                        Console.WriteLine("reading: " + guid);
                         string data = await this.InternalListener.Read(guid);
-                        string formatted = string.Format(((BridgeProfile)this.Profile).ReadFormat, data);
-                        await this.NetworkWriteString(stream, guid, token);
-                        await this.NetworkWriteString(stream, formatted, token);
+                        Console.WriteLine("read data from internal: " + data);
+                        if (!string.IsNullOrEmpty(data))
+                        {
+                            Console.WriteLine("Data not null or empty");
+                            string formatted = "";
+                            formatted = string.Format(((BridgeProfile)this.Profile).ReadFormat.Replace("{GUID}", "{0}").Replace("{DATA}", "{1}"), guid, data);
+                            Console.WriteLine("formatted: " + formatted);
+                            this.NetworkWriteString(stream, formatted);
+                        }
                     }
-                    catch { }
+                    catch (ControllerNotFoundException e)
+                    {
+                        this.NetworkWriteString(stream, e.Message);
+                    }
+                    catch (Exception)
+                    {
+
+                    }
                 }
             }
         }
 
-        private async Task NetworkWriteString(NetworkStream stream, string data, CancellationToken token)
+        private void NetworkWriteString(NetworkStream stream, string data)
         {
             if (!string.IsNullOrEmpty(data))
             {
@@ -137,27 +155,33 @@ namespace Covenant.Models.Listeners
                 size[1] = (byte)(dataBytes.Length >> 16);
                 size[2] = (byte)(dataBytes.Length >> 8);
                 size[3] = (byte)dataBytes.Length;
-                await stream.WriteAsync(dataBytes, token);
+                stream.Write(size);
                 int writtenBytes = 0;
                 while (writtenBytes < dataBytes.Length)
                 {
                     int bytesToWrite = Math.Min(dataBytes.Length - writtenBytes, 1024);
-                    await stream.WriteAsync(dataBytes, writtenBytes, bytesToWrite, token);
+                    stream.Write(dataBytes, writtenBytes, bytesToWrite);
                     writtenBytes += bytesToWrite;
                 }
             }
         }
 
-        private async Task<string> NetworkReadString(NetworkStream stream, CancellationToken token)
+        private string NetworkReadString(NetworkStream stream, CancellationToken token)
         {
+            Console.WriteLine("NetworkReadString");
             byte[] size = new byte[4];
             int totalReadBytes = 0;
             do
             {
                 totalReadBytes += stream.Read(size, totalReadBytes, size.Length - totalReadBytes);
+                Console.WriteLine("Read1: " + totalReadBytes);
             } while (totalReadBytes < size.Length);
             int len = (size[0] << 24) + (size[1] << 16) + (size[2] << 8) + size[3];
-
+            Console.WriteLine("Len: " + len);
+            Console.WriteLine("size[0]: " + size[0]);
+            Console.WriteLine("size[1]: " + size[1]);
+            Console.WriteLine("size[2]: " + size[2]);
+            Console.WriteLine("size[3]: " + size[3]);
             byte[] buffer = new byte[1024];
             using (var ms = new MemoryStream())
             {
@@ -168,7 +192,9 @@ namespace Covenant.Models.Listeners
                     readBytes = stream.Read(buffer, 0, buffer.Length);
                     ms.Write(buffer, 0, readBytes);
                     totalReadBytes += readBytes;
+                    Console.WriteLine("Read2: " + totalReadBytes);
                 } while (totalReadBytes < len);
+                Console.WriteLine("Done Reading");
                 return Common.CovenantEncoding.GetString(ms.ToArray());
             }
         }
