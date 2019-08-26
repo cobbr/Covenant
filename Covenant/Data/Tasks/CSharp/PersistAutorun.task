@@ -8,7 +8,7 @@ public static class Task
     {
         try
         {
-            if (targetHive.ToLower() != "currentuser" || targetHive.ToLower() != "localmachine")
+            if (targetHive.ToLower() != "currentuser" && targetHive.ToLower() != "localmachine")
 				return "Autorun Persistence failed. Invalid Target Hive specified.";
 
             if (Autorun.InstallAutorun(targetHive, value, name))
