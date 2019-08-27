@@ -89,7 +89,6 @@ namespace Covenant.Models.Listeners
 
         private async Task RunClient(TcpClient client, CancellationToken token)
         {
-            Console.WriteLine("RunClient");
             NetworkStream stream = client.GetStream();
             stream.ReadTimeout = Timeout.Infinite;
             stream.WriteTimeout = Timeout.Infinite;
@@ -111,7 +110,6 @@ namespace Covenant.Models.Listeners
 
         private async Task RunClientReadPoll(NetworkStream stream, CancellationToken token)
         {
-            Console.WriteLine("Bridge Listener: RunClientReadPoll");
             while (!token.IsCancellationRequested)
             {
                 Console.WriteLine("RunClientReadPoll Sleep");

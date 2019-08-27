@@ -93,7 +93,7 @@
             }
         </select>
     </div>
-    <button id="submit-listener-button" type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+    <button id="submit-listener-button" type="button" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
 </form>
 
 @section Scripts {
@@ -115,7 +115,7 @@
                 $(this).before(newitem);
                 feather.replace();
                 $(this).prev().find("button").click(removeAddress);
-                $(".address").change(setUrls);
+                $(".address").change(setUrl);
             }
 
             var removeAddress = function () {
@@ -137,10 +137,16 @@
             $('#submit-listener-button').click(function () {
                 var filecontrol = $("input.form-control-file")[0];
                 var file = filecontrol.files[0];
-                var fr = new FileReader();
-                fr.onload = receivedFileBuffer;
-                fr.readAsDataURL(file);
-
+                if (file == undefined)
+                {
+                    $("#submit-listener-form").submit();
+                }
+                else
+                {
+                    var fr = new FileReader();
+                    fr.onload = receivedFileBuffer;
+                    fr.readAsDataURL(file);
+                }
                 function receivedFileBuffer() {
                     $("input.file-filler").val(fr.result.split(",").pop()).prop("disabled", false);
                     $("input.form-control-file").prop("disabled", true);
@@ -158,9 +164,9 @@
                 {
                     $(".cert-div").removeAttr("hidden");
                 }
-                setUrls();
+                setUrl();
             };
-            function setUrls() {
+            function setUrl() {
                 var connectPort = $("#ConnectPort").val();
                 var protocol = "http://";
                 if (useSSL.includes("True"))
@@ -173,14 +179,14 @@
                 });
             }
             $("#UseSSL").change(swapOptions);
-            $(".address").change(setUrls);
-            $("#ConnectPort").change(setUrls);
+            $(".address").change(setUrl);
+            $("#ConnectPort").change(setUrl);
 
             $('#add-connectaddress-button').click(addAddress);
             $('.remove-connectaddress-button').click(removeAddress);
 
             swapOptions();
-            setUrls();
+            setUrl();
         });
     </script>
 }

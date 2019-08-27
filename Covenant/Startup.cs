@@ -18,7 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-
+using Microsoft.AspNetCore.HttpOverrides;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -27,6 +27,7 @@ using Covenant.API;
 using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Covenant;
+using System.Net;
 
 namespace Covenant
 {
@@ -61,6 +62,10 @@ namespace Covenant
                 options.Lockout.AllowedForNewUsers = true;
 
                 options.User.RequireUniqueEmail = false;
+            });
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.KnownProxies.Add(IPAddress.Parse(Configuration["TrustedProxies"]));
             });
 
             services.ConfigureApplicationCookie(options =>
@@ -129,7 +134,6 @@ namespace Covenant
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
             }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_2);
             services.AddRouting(options => options.LowercaseUrls = true);
-
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Covenant API", Version = "v0.1" });
@@ -169,6 +173,10 @@ namespace Covenant
                     return next();
                 });
             }
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+            });
 
 			app.UseAuthentication();
 

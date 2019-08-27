@@ -5,11 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- Fixed hosting files issue
+
+## [v0.3.1] - 2019-08-26
 ### Added
 - Added codemirror code editing
 - Added ability to hide a Grunt
 - Added lost grunt calculations
 - Added toast notifications on events
+- Added multiple connectaddresses to HttpListener
 
 ### Changed
 - Lost grunts faded in table
@@ -17,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed Download task to work with remote downloads over shares
+- ReferenceSourceLibraries converted back to git submodules
+- Fix https URL calculation for Listener Create
+- Fix SSLCertificate upload error
 
 ## [v0.3] - 2019-08-02
 ### Added

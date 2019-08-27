@@ -37,7 +37,6 @@ namespace Covenant.Models.Listeners
 
         public static BridgeProfile Create(string ProfileFilePath)
         {
-            Console.WriteLine("Create bridge profile: " + ProfileFilePath);
             using (TextReader reader = File.OpenText(ProfileFilePath))
             {
                 var deserializer = new DeserializerBuilder().Build();

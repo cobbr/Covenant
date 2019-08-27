@@ -57,26 +57,27 @@
                 <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control form-control" disabled>
             </div>
         </div>
-        <div class="form-row">
-            <div class="addresses">
-                @for (int i = 0; i < Model.ConnectAddresses.Count; i++)
-                {
-                    <div class="form-group col-md-4">
-                        <label asp-for="ConnectAddresses[i]"></label>
-                        <input asp-for="ConnectAddresses[i]" value="@Model.ConnectAddresses[i]" class="form-control form-control address" disabled>
-                    </div>
-                }
+        <div class="d-flex flex-row address-row">
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <label asp-for="ConnectAddresses[0]">ConnectAddress</label>
+                <input asp-for="ConnectAddresses[0]" value="@Model.ConnectAddresses[0]" class="form-control address" disabled>
             </div>
-            <div class="urls">
-                @for (int i = 0; i < Model.Urls.Count; i++)
-                {
-                    <div class="form-group">
-                        <label asp-for="Urls[i]"></label>
-                        <input asp-for="Urls[i]" value="@Model.Urls[i]" class="form-control" readonly>
-                    </div>
-                }
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <label asp-for="Urls[0]">Url</label>
+                <input asp-for="Urls[0]" value="@Model.Urls[0]" class="form-control" disabled>
             </div>
         </div>
+        @for (int i = 1; i < Model.ConnectAddresses.Count; i++)
+        {
+            <div class="d-flex flex-row address-row">
+                <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                    <input asp-for="ConnectAddresses[i]" value="@Model.ConnectAddresses[i]" class="form-control address" disabled>
+                </div>
+                <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                    <input asp-for="Urls[i]" value="@Model.Urls[i]" class="form-control url" disabled>
+                </div>
+            </div>
+        }
         <div class="form-row">
             <div class="form-group col-md-3">
                 <label asp-for="UseSSL"></label>

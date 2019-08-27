@@ -123,33 +123,33 @@ namespace Covenant.Models.Grunts
 
         public void Compile()
         {
-            List<Compiler.EmbeddedResource> resources = this.EmbeddedResources.Select(ER =>
-            {
-                return new Compiler.EmbeddedResource
-                {
-                    Name = ER.Name,
-                    File = ER.Location,
-                    Platform = Platform.X64,
-                    Enabled = true
-                };
-            }).ToList();
-            this.ReferenceSourceLibraries.ToList().ForEach(RSL =>
-            {
-                resources.AddRange(
-                    RSL.EmbeddedResources.Select(ER =>
-                    {
-                        return new Compiler.EmbeddedResource
-                        {
-                            Name = ER.Name,
-                            File = ER.Location,
-                            Platform = Platform.X64,
-                            Enabled = true
-                        };
-                    })
-                );
-            });
             if (!this.Compiled)
             {
+                List<Compiler.EmbeddedResource> resources = this.EmbeddedResources.Select(ER =>
+                {
+                    return new Compiler.EmbeddedResource
+                    {
+                        Name = ER.Name,
+                        File = ER.Location,
+                        Platform = Platform.X64,
+                        Enabled = true
+                    };
+                }).ToList();
+                this.ReferenceSourceLibraries.ToList().ForEach(RSL =>
+                {
+                    resources.AddRange(
+                        RSL.EmbeddedResources.Select(ER =>
+                        {
+                            return new Compiler.EmbeddedResource
+                            {
+                                Name = ER.Name,
+                                File = ER.Location,
+                                Platform = Platform.X64,
+                                Enabled = true
+                            };
+                        })
+                    );
+                });
                 List<Compiler.Reference> references35 = new List<Compiler.Reference>();
                 this.ReferenceSourceLibraries.ToList().ForEach(RSL =>
                 {

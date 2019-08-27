@@ -1789,6 +1789,27 @@ namespace Covenant.Models
                     tasking.Parameters = parameters;
                 }
             }
+            try
+            {
+                tasking.GruntTask.Compile();
+            }
+            catch (CompilerException e)
+            {
+                tasking.GruntCommand.CommandOutput.Output = "CompilerException: " + e.Message;
+                tasking.Status = GruntTaskingStatus.Aborted;
+                Event ev = new Event
+                {
+                    Time = tasking.GruntCommand.CommandTime,
+                    MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command aborted",
+                    MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
+                    Level = EventLevel.Highlight,
+                    Context = tasking.Grunt.Name
+                };
+                await this.Events.AddAsync(ev);
+                this.GruntCommands.Update(tasking.GruntCommand);
+                await this.SaveChangesAsync();
+                await GruntHubProxy.SendCommandEvent(_grunthub, ev, tasking.GruntCommand);
+            }
             await this.GruntTaskings.AddAsync(tasking);
             await this.SaveChangesAsync();
             Grunt parent = await this.GetParentGrunt(tasking.Grunt);
@@ -1836,23 +1857,6 @@ namespace Covenant.Models
 
             GruntTaskingStatus newStatus = tasking.Status;
             GruntTaskingStatus originalStatus = updatingGruntTasking.Status;
-            if (newStatus == GruntTaskingStatus.Tasked && originalStatus != newStatus)
-            {
-                try
-                {
-                    tasking.GruntTask.Compile();
-                }
-                catch (CompilerException e)
-                {
-                    tasking.GruntCommand.CommandOutput.Output = "CompilerException: " + e.Message;
-                    updatingGruntTasking.Status = GruntTaskingStatus.Aborted;
-                    await this.EditGruntCommand(tasking.GruntCommand, _grunthub, _eventhub);
-                    this.GruntTaskings.Update(updatingGruntTasking);
-                    await this.SaveChangesAsync();
-                    throw new ControllerBadRequestException($"BadRequest - Tasking failed to compile: {Environment.NewLine}{e.Message}");
-                }
-            }
-
             if ((originalStatus == GruntTaskingStatus.Tasked || originalStatus == GruntTaskingStatus.Progressed) &&
                 newStatus == GruntTaskingStatus.Completed)
             {
