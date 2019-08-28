@@ -1555,7 +1555,7 @@ namespace Covenant.Core
                     {
                         Name = "PersistStartup",
                         AlternateNames = new List<string>(),
-                        Description = "Installs a payload into the current users startup folder.",
+                        Description = "Installs a payload into the current users startup folder.\n\n\tPayload: Payload to write to a file. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tFileName: Name of the file to write. E.g. \"startup.bat\".\n",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistStartup" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
@@ -1564,7 +1564,7 @@ namespace Covenant.Core
                                 Id = 74,
                                 Name = "Payload",
                                 Description = "Payload to write to a file.",
-                                Value = "powershell -sta -nop -w hidden -enc blah",
+                                Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
@@ -1585,7 +1585,7 @@ namespace Covenant.Core
                     {
                         Name = "PersistAutorun",
                         AlternateNames = new List<string>(),
-                        Description = "Installs an autorun value in HKCU or HKLM to execute a payload.",
+                        Description = "Installs an autorun value in HKCU or HKLM to execute a payload.\n\n\tTargetHive: Target hive to install autorun. Specify \"CurrentUser\" for HKCU and \"LocalMachine\" for HKLM.\n\tValue: Value to set in the registry. E.g. \"C:\\Example\\GruntStager.exe\"\n\tName: Name for the registy value.E.g. \"Updater\".\n",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistAutorun" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
@@ -1604,7 +1604,7 @@ namespace Covenant.Core
                                 Id = 77,
                                 Name = "Value",
                                 Description = "Value to set in the registry.",
-                                Value = "C:\\GruntStager.exe",
+                                Value = "C:\\Example\\GruntStager.exe",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
@@ -1631,7 +1631,7 @@ namespace Covenant.Core
                             {
                                 Id = 79,
                                 Name = "EventName",
-                                Description = "An arbitrary name to be assigned to the new WMI Event.",
+                                Description = "Creates a WMI Event, Consumer and Binding to execute a payload.\n\n\tEventName: An arbitrary name to be assigned to the new WMI Event. E.g. \"Evil Persistence\".\n\tEventFilter: Specifies the event trigger to use. The options are \"ProcessStart\".\n\tEventConsumer: Specifies the action to carry out. The options are \"CommandLine\" (OS Command) and \"ActiveScript\" (JScript or VBScript).\n\tPayload: Specifies the CommandLine or ActiveScript payload to run. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tProcessName: Specifies the process name when the \"ProcessStart\" trigger is selected. E.g. \"notepad.exe\".\n\tScriptingEngine: Specifies the scripting engine when the \"ActiveScript\" consumer is selected. The options are \"JScript\" and \"VBScript\".\n",
                                 Value = "Evil Persistence",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
@@ -1662,7 +1662,7 @@ namespace Covenant.Core
                                 Id = 82,
                                 Name = "Payload",
                                 Description = "Specifies the CommandLine or ActiveScript payload to run.",
-                                Value = "powershell -sta -nop -w hidden -enc blah",
+                                Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
