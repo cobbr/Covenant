@@ -1955,6 +1955,8 @@ namespace Covenant.Models
                 }
                 string verb = newStatus == GruntTaskingStatus.Completed ? "completed" : "progressed";
                 GruntTask DownloadTask = await this.GetGruntTaskByName("Download");
+                GruntTask ScreenshotTask = await this.GetGruntTaskByName("ScreenShot");
+
                 if (tasking.GruntTaskId == DownloadTask.Id)
                 {
                     ev = new Event
@@ -1966,6 +1968,30 @@ namespace Covenant.Models
                     };
                     await this.Events.AddAsync(ev);
                     string FileName = tasking.Parameters[0];
+                    DownloadEvent downloadEvent = new DownloadEvent
+                    {
+                        Time = updatingGruntTasking.CompletionTime,
+                        MessageHeader = "Downloaded: " + FileName + "\r\n" + "Syncing to Elite...",
+                        Level = EventLevel.Highlight,
+                        Context = grunt.Name,
+                        FileName = FileName,
+                        FileContents = tasking.GruntCommand.CommandOutput.Output,
+                        Progress = DownloadEvent.DownloadProgress.Complete
+                    };
+                    downloadEvent.WriteToDisk();
+                    await this.Events.AddAsync(downloadEvent);
+                }
+                else if (tasking.GruntTaskId == ScreenshotTask.Id)
+                {
+                    ev = new Event
+                    {
+                        Time = updatingGruntTasking.CompletionTime,
+                        MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
+                        Level = EventLevel.Highlight,
+                        Context = grunt.Name
+                    };
+                    await this.Events.AddAsync(ev);
+                    string FileName = tasking.Name + ".png";
                     DownloadEvent downloadEvent = new DownloadEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,

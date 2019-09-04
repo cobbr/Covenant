@@ -1695,7 +1695,15 @@ namespace Covenant.Core
                                 DisplayInCommand = true
                             }
                         }
-                    }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ScreenShot",
+                        Description = "Takes a screenshot of the currently active desktop, move into a targeted pid for specific desktops",
+                        TokenTask = true,
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ScreenShot" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
                 };
                 await context.GruntTasks.AddRangeAsync(GruntTasks);
                 await context.SaveChangesAsync();
@@ -1783,6 +1791,7 @@ namespace Covenant.Core
                 var upload = await context.GetGruntTaskByName("Upload");
                 var download = await context.GetGruntTaskByName("Download");
                 var privexchange = await context.GetGruntTaskByName("PrivExchange");
+                var ScreenShot = await context.GetGruntTaskByName("ScreenShot");
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -1797,7 +1806,17 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) }
+    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
+     new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = ScreenShot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
+
                 );
             }
         }
