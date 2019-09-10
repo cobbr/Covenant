@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Fixed
 - Fixed hosting files issue
+- Fixed profile edit/create javascript issue
 
 ## [v0.3.1] - 2019-08-26
 ### Added
