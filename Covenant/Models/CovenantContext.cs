@@ -105,6 +105,15 @@ namespace Covenant.Models
                 .WithOne(CO => CO.GruntCommand)
                 .HasForeignKey<GruntCommand>(GC => GC.CommandOutputId);
 
+            builder.Entity<ListenerTypeImplantTemplate>()
+                .HasKey(ltit => new { ltit.ListenerTypeId, ltit.ImplantTemplateId });
+            builder.Entity<ListenerTypeImplantTemplate>()
+                .HasOne(ltit => ltit.ImplantTemplate)
+                .WithMany("ListenerTypeImplantTemplates");
+            builder.Entity<ListenerTypeImplantTemplate>()
+                .HasOne(ltit => ltit.ListenerType)
+                .WithMany("ListenerTypeImplantTemplates");
+
             builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
                 .HasKey(t => new { t.ReferenceSourceLibraryId, t.ReferenceAssemblyId });
             builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
@@ -557,15 +566,18 @@ namespace Covenant.Models
         #endregion
 
         #region ImplantTemplate Actions
-
         public async Task<IEnumerable<ImplantTemplate>> GetImplantTemplates()
         {
-            return await this.ImplantTemplates.ToListAsync();
+            return await this.ImplantTemplates
+                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .ToListAsync();
         }
 
         public async Task<ImplantTemplate> GetImplantTemplate(int id)
         {
-            ImplantTemplate template = await this.ImplantTemplates.FindAsync(id);
+            ImplantTemplate template = await this.ImplantTemplates
+                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .FirstOrDefaultAsync(IT => IT.Id == id);
             if (template == null)
             {
                 throw new ControllerNotFoundException($"NotFound - ImplantTemplate with id: {id}");
@@ -576,8 +588,8 @@ namespace Covenant.Models
         public async Task<ImplantTemplate> GetImplantTemplateByName(string name)
         {
             ImplantTemplate template = await this.ImplantTemplates
-                .Where(IT => IT.Name == name)
-                .FirstOrDefaultAsync();
+                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .FirstOrDefaultAsync(IT => IT.Name == name);
             if (template == null)
             {
                 throw new ControllerNotFoundException($"NotFound - ImplantTemplate with Name: {name}");
@@ -598,6 +610,7 @@ namespace Covenant.Models
             matchingTemplate.Name = template.Name;
             matchingTemplate.Description = template.Description;
             matchingTemplate.Language = template.Language;
+            matchingTemplate.ImplantDirection = template.ImplantDirection;
             matchingTemplate.StagerCode = template.StagerCode;
             matchingTemplate.ExecutorCode = template.ExecutorCode;
 
@@ -734,7 +747,7 @@ namespace Covenant.Models
             DateTime lostTime = g.LastCheckIn;
             int Drift = 10;
             lostTime = lostTime.AddSeconds(g.Delay + (g.Delay * (g.JitterPercent / 100.0)) + Drift);
-            if (g.ImplantTemplate.CommType != CommunicationType.SMB)
+            if (g.ImplantTemplate.ImplantDirection == ImplantDirection.Pull)
             {
                 return DateTime.UtcNow >= lostTime;
             }
@@ -995,7 +1008,7 @@ namespace Covenant.Models
             byte[] ILBytes = Compiler.Compile(new Compiler.CompilationRequest
             {
                 Language = template.Language,
-                Source = this.GruntTemplateReplace(CodeTemplate, grunt, listener, profile),
+                Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
                 TargetDotNetVersion = grunt.DotNetFrameworkVersion,
                 OutputKind = outputKind,
                 References = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References
@@ -1011,39 +1024,58 @@ namespace Covenant.Models
             return ILBytes;
         }
 
-        private string GruntTemplateReplace(string CodeTemplate, Grunt grunt, Listener listener, Profile profile)
+        private string GruntTemplateReplace(string CodeTemplate, ImplantTemplate template, Grunt grunt, Listener listener, Profile profile)
         {
             switch (profile.Type)
             {
                 case ProfileType.HTTP:
                     HttpProfile httpProfile = (HttpProfile)profile;
                     HttpListener httpListener = (HttpListener)listener;
-                    return CodeTemplate
-                        .Replace("// {{REPLACE_PROFILE_MESSAGE_TRANSFORM}}", profile.MessageTransform)
-                        .Replace("{{REPLACE_PROFILE_HTTP_HEADER_NAMES}}", this.FormatForVerbatimString(string.Join(",", httpProfile.HttpRequestHeaders.Select(H => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(H.Name.Replace("{GUID}", grunt.GUID)))))))
-                        .Replace("{{REPLACE_PROFILE_HTTP_HEADER_VALUES}}", this.FormatForVerbatimString(string.Join(",", httpProfile.HttpRequestHeaders.Select(H => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(H.Value.Replace("{GUID}", grunt.GUID)))))))
-                        .Replace("{{REPLACE_PROFILE_HTTP_URLS}}", this.FormatForVerbatimString(string.Join(",", httpProfile.HttpUrls.Select(H => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(H.Replace("{GUID}", grunt.GUID)))))))
-                        .Replace("{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}", this.FormatForVerbatimString(httpProfile.HttpGetResponse))
-                        .Replace("{{REPLACE_PROFILE_HTTP_POST_REQUEST}}", this.FormatForVerbatimString(httpProfile.HttpPostRequest))
-                        .Replace("{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}", this.FormatForVerbatimString(httpProfile.HttpPostResponse))
-                        .Replace("{{REPLACE_VALIDATE_CERT}}", grunt.ValidateCert ? "true" : "false")
-                        .Replace("{{REPLACE_USE_CERT_PINNING}}", grunt.UseCertPinning ? "true" : "false")
-                        .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
-                        .Replace("{{REPLACE_COVENANT_URIS}}", this.FormatForVerbatimString(string.Join(",", httpListener.Urls)))
-                        .Replace("{{REPLACE_COVENANT_CERT_HASH}}", this.FormatForVerbatimString(httpListener.UseSSL ? httpListener.SSLCertHash : ""))
-                        .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
-                        .Replace("{{REPLACE_DELAY}}", this.FormatForVerbatimString(grunt.Delay.ToString()))
-                        .Replace("{{REPLACE_JITTER_PERCENT}}", this.FormatForVerbatimString(grunt.JitterPercent.ToString()))
-                        .Replace("{{REPLACE_CONNECT_ATTEMPTS}}", this.FormatForVerbatimString(grunt.ConnectAttempts.ToString()))
-                        .Replace("{{REPLACE_KILL_DATE}}", this.FormatForVerbatimString(grunt.KillDate.ToBinary().ToString()))
-                        .Replace("{{REPLACE_GRUNT_SHARED_SECRET_PASSWORD}}", this.FormatForVerbatimString(grunt.GruntSharedSecretPassword));
+                    if (template.CommType == CommunicationType.HTTP)
+                    {
+                        return CodeTemplate
+                            .Replace("// {{REPLACE_PROFILE_MESSAGE_TRANSFORM}}", profile.MessageTransform)
+                            .Replace("{{REPLACE_PROFILE_HTTP_HEADER_NAMES}}", this.FormatForVerbatimString(string.Join(",", httpProfile.HttpRequestHeaders.Select(H => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(H.Name))))))
+                            .Replace("{{REPLACE_PROFILE_HTTP_HEADER_VALUES}}", this.FormatForVerbatimString(string.Join(",", httpProfile.HttpRequestHeaders.Select(H => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(H.Value))))))
+                            .Replace("{{REPLACE_PROFILE_HTTP_URLS}}", this.FormatForVerbatimString(string.Join(",", httpProfile.HttpUrls.Select(H => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(H))))))
+                            .Replace("{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}", this.FormatForVerbatimString(httpProfile.HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")))
+                            .Replace("{{REPLACE_PROFILE_HTTP_POST_REQUEST}}", this.FormatForVerbatimString(httpProfile.HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")))
+                            .Replace("{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}", this.FormatForVerbatimString(httpProfile.HttpPostResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")))
+                            .Replace("{{REPLACE_VALIDATE_CERT}}", grunt.ValidateCert ? "true" : "false")
+                            .Replace("{{REPLACE_USE_CERT_PINNING}}", grunt.UseCertPinning ? "true" : "false")
+                            .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
+                            .Replace("{{REPLACE_COVENANT_URIS}}", this.FormatForVerbatimString(string.Join(",", httpListener.Urls)))
+                            .Replace("{{REPLACE_COVENANT_CERT_HASH}}", this.FormatForVerbatimString(httpListener.UseSSL ? httpListener.SSLCertHash : ""))
+                            .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
+                            .Replace("{{REPLACE_DELAY}}", this.FormatForVerbatimString(grunt.Delay.ToString()))
+                            .Replace("{{REPLACE_JITTER_PERCENT}}", this.FormatForVerbatimString(grunt.JitterPercent.ToString()))
+                            .Replace("{{REPLACE_CONNECT_ATTEMPTS}}", this.FormatForVerbatimString(grunt.ConnectAttempts.ToString()))
+                            .Replace("{{REPLACE_KILL_DATE}}", this.FormatForVerbatimString(grunt.KillDate.ToBinary().ToString()))
+                            .Replace("{{REPLACE_GRUNT_SHARED_SECRET_PASSWORD}}", this.FormatForVerbatimString(grunt.GruntSharedSecretPassword));
+                    }
+                    else if (template.CommType == CommunicationType.SMB)
+                    {
+                        return CodeTemplate
+                            .Replace("// {{REPLACE_PROFILE_MESSAGE_TRANSFORM}}", profile.MessageTransform)
+                            .Replace("{{REPLACE_PROFILE_READ_FORMAT}}", this.FormatForVerbatimString(httpProfile.HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")))
+                            .Replace("{{REPLACE_PROFILE_WRITE_FORMAT}}", this.FormatForVerbatimString(httpProfile.HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")))
+                            .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
+                            .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
+                            .Replace("{{REPLACE_DELAY}}", this.FormatForVerbatimString(grunt.Delay.ToString()))
+                            .Replace("{{REPLACE_JITTER_PERCENT}}", this.FormatForVerbatimString(grunt.JitterPercent.ToString()))
+                            .Replace("{{REPLACE_CONNECT_ATTEMPTS}}", this.FormatForVerbatimString(grunt.ConnectAttempts.ToString()))
+                            .Replace("{{REPLACE_KILL_DATE}}", this.FormatForVerbatimString(grunt.KillDate.ToBinary().ToString()))
+                            .Replace("{{REPLACE_GRUNT_SHARED_SECRET_PASSWORD}}", this.FormatForVerbatimString(grunt.GruntSharedSecretPassword));
+                    }
+                    return CodeTemplate;
                 case ProfileType.Bridge:
                     BridgeProfile bridgeProfile = (BridgeProfile)profile;
                     BridgeListener bridgeListener = (BridgeListener)listener;
                     return CodeTemplate
                         .Replace("// {{REPLACE_PROFILE_MESSAGE_TRANSFORM}}", bridgeProfile.MessageTransform)
-                        .Replace("{{REPLACE_PROFILE_WRITE_FORMAT}}", bridgeProfile.WriteFormat.Replace("{GUID}", "{0}").Replace("{DATA}", "{1}"))
-                        .Replace("{{REPLACE_PROFILE_READ_FORMAT}}", bridgeProfile.ReadFormat.Replace("{GUID}", "{0}").Replace("{DATA}", "{1}"))
+                        .Replace("// {{REPLACE_BRIDGE_MESSENGER_CODE}}", bridgeProfile.BridgeMessengerCode)
+                        .Replace("{{REPLACE_PROFILE_WRITE_FORMAT}}", bridgeProfile.WriteFormat.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"))
+                        .Replace("{{REPLACE_PROFILE_READ_FORMAT}}", bridgeProfile.ReadFormat.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"))
                         .Replace("{{REPLACE_PIPE_NAME}}", grunt.SMBPipeName)
                         .Replace("{{REPLACE_COVENANT_URI}}", this.FormatForVerbatimString(bridgeListener.ConnectAddresses[0] + ":" + bridgeListener.ConnectPort))
                         .Replace("{{REPLACE_GRUNT_GUID}}", this.FormatForVerbatimString(grunt.OriginalServerGuid))
@@ -2379,6 +2411,16 @@ namespace Covenant.Models
             }
             return type;
         }
+
+        public async Task<ListenerType> GetListenerTypeByName(string name)
+        {
+            ListenerType type = await this.ListenerTypes.FirstOrDefaultAsync(LT => LT.Name == name);
+            if (type == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ListenerType with name: {name}");
+            }
+            return type;
+        }
         #endregion
 
         #region Profile Actions
@@ -2521,6 +2563,7 @@ namespace Covenant.Models
             matchingProfile.Description = profile.Description;
             matchingProfile.ReadFormat = profile.ReadFormat;
             matchingProfile.WriteFormat = profile.WriteFormat;
+            matchingProfile.BridgeMessengerCode = profile.BridgeMessengerCode;
             if (matchingProfile.MessageTransform != profile.MessageTransform)
             {
                 if (!await this.IsAdmin(currentUser))
@@ -2540,6 +2583,7 @@ namespace Covenant.Models
         {
             return await this.Listeners
                 .Include(L => L.ListenerType)
+                .Include(L => L.Profile)
                 .ToListAsync();
         }
 
@@ -2547,6 +2591,7 @@ namespace Covenant.Models
         {
             Listener listener = await this.Listeners
                 .Include(L => L.ListenerType)
+                .Include(L => L.Profile)
                 .FirstOrDefaultAsync(L => L.Id == listenerId);
             if (listener == null)
             {
@@ -2584,15 +2629,12 @@ namespace Covenant.Models
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
                 matchingListener.StartTime = DateTime.UtcNow;
-                HttpProfile profile = await this.GetHttpProfile(matchingListener.ProfileId);
-                if (profile == null)
-                {
-                    throw new ControllerNotFoundException($"NotFound - HttpProfile with id: {matchingListener.ProfileId}");
-                }
+                Profile profile = await this.GetProfile(matchingListener.ProfileId);
                 CancellationTokenSource listenerCancellationToken = null;
                 try
                 {
                     listenerCancellationToken = matchingListener.Start();
+                    matchingListener.Status = ListenerStatus.Active;
                 }
                 catch(ListenerStartException e)
                 {
@@ -2608,7 +2650,6 @@ namespace Covenant.Models
                 });
                 await EventHubProxy.SendEvent(_eventhub, listenerEvent);
             }
-
             this.Listeners.Update(matchingListener);
             await this.SaveChangesAsync();
             return await this.GetListener(matchingListener.Id);
@@ -2652,6 +2693,7 @@ namespace Covenant.Models
         {
             return await this.Listeners
                 .Include(L => L.ListenerType)
+                .Include(L => L.Profile)
                 .Where(L => L.ListenerType.Name == "HTTP")
                 .Select(L => (HttpListener)L)
                 .ToListAsync();
@@ -2661,6 +2703,7 @@ namespace Covenant.Models
         {
             return await this.Listeners
                 .Include(L => L.ListenerType)
+                .Include(L => L.Profile)
                 .Where(L => L.ListenerType.Name == "Bridge")
                 .Select(L => (BridgeListener)L)
                 .ToListAsync();
@@ -3059,6 +3102,12 @@ namespace Covenant.Models
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             Profile profile = await this.GetProfile(listener.ProfileId);
+
+            if (!template.CompatibleListenerTypes.Select(LT => LT.Id).Contains(listener.ListenerTypeId))
+            {
+                throw new ControllerBadRequestException($"BadRequest - ListenerType not compatible with chosen ImplantTemplate");
+            }
+
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -3079,7 +3128,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3156,7 +3205,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3233,7 +3282,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3310,7 +3359,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3389,7 +3438,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3469,7 +3518,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3551,7 +3600,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3631,7 +3680,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template
@@ -3711,7 +3760,7 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
 
             launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, grunt, listener, profile),
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
                 grunt,
                 template

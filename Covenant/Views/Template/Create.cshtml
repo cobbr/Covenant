@@ -1,9 +1,14 @@
-﻿@using Covenant.Core
-@using Covenant.Models.Grunts
+﻿@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
 @model ImplantTemplate
 @{
     Layout = "_ImplantTemplateLayout";
     ViewData["Title"] = "ImplantTemplates";
+    List<ListenerType> ListenerTypes = ViewBag.ListenerTypes;
+    IEnumerable<SelectListItem> listenerTypeSelectList = ListenerTypes.Select(LT =>
+    {
+        return new SelectListItem { Text = LT.Name, Value = LT.Id.ToString(), Selected = Model.CompatibleListenerTypes.Select(CLT => CLT.Id).Contains(LT.Id) };
+    });
 }
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Create Implant Template</h1>
@@ -23,13 +28,33 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
             <label asp-for="Language"></label>
             <select asp-for="Language" asp-items="Html.GetEnumSelectList<ImplantLanguage>()" class="form-control"></select>
         </div>
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
             <label asp-for="CommType"></label>
             <select asp-for="CommType" asp-items="Html.GetEnumSelectList<CommunicationType>()" class="form-control"></select>
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="ImplantDirection"></label>
+            <select asp-for="ImplantDirection" asp-items="Html.GetEnumSelectList<ImplantDirection>()" class="form-control"></select>
+        </div>
+        <div class="form-group col-md-3">
+            <label asp-for="CompatibleListenerTypes"></label>
+            <select asp-for="CompatibleListenerTypes" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                @foreach (var listenertype in listenerTypeSelectList)
+                {
+                    if (listenertype.Selected)
+                    {
+                        <option selected value="@listenertype.Value">@listenertype.Text</option>
+                    }
+                    else
+                    {
+                        <option value="@listenertype.Value">@listenertype.Text</option>
+                    }
+                }
+            </select>
         </div>
     </div>
     <div class="form-row">
@@ -48,8 +73,7 @@
 </form>
 
 @section Scripts {
-    <script type="text/javascript">
-        $(document).ready(function() {
+    <script type="text/javascript">$(document).ready(function () {
             var editor1 = CodeMirror.fromTextArea(document.getElementById("StagerCode"), {
                 lineNumbers: true,
                 mode: "text/x-csharp"
@@ -58,6 +82,5 @@
                 lineNumbers: true,
                 mode: "text/x-csharp"
             });
-        });
-    </script>
+        });</script>
 }

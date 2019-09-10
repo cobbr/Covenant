@@ -1,0 +1,114 @@
+﻿@using Covenant.Models.Listeners
+@model HttpProfile
+
+<form asp-controller="Profile" asp-action="EditHttp">
+    <div asp-validation-summary="All"></div>
+    <input asp-for="Id" value="@Model.Id" type="hidden">
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" value="@Model.Name" class="form-control">
+        </div>
+        <div class="form-group">
+            <label asp-for="Type"></label><br />
+            <select asp-for="Type" value="@ProfileType.HTTP" asp-items="@Html.GetEnumSelectList<ProfileType>()" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto" disabled></select>
+            <input asp-for="Type" value="@ProfileType.HTTP" hidden>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" value="@Model.Description" class="form-control">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpUrls[0]">HttpUrls</label>
+        </div>
+    </div>
+    @for (int i = 0; i < Model.HttpUrls.Count; i++)
+    {
+        <div class="form-row httpurl-row">
+            <div class="form-group col-md-6">
+                <input asp-for="HttpUrls[i]" value="@Model.HttpUrls[i]" class="form-control">
+            </div>
+            <div class="col-auto align-self-center">
+                <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpurl-button"><span data-feather="x"></span></button>
+            </div>
+        </div>
+    }
+    <button type="button" id="add-httpurl-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="MessageTransform"></label>
+            @if (User.IsInRole("Administrator"))
+            {
+                <textarea asp-for="MessageTransform" value="@Model.MessageTransform" rows="10" class="form-control code-mirror-csharp"></textarea>
+            }
+            else
+            {
+                <textarea asp-for="MessageTransform" value="@Model.MessageTransform" rows="10" class="form-control code-mirror-csharp" hidden></textarea>
+            }
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpRequestHeaders[0]">HttpRequestHeaders</label><br />
+        </div>
+    </div>
+    @for (int i = 0; i < Model.HttpRequestHeaders.Count; i++)
+    {
+        <div class="form-row httprequestheader-row">
+            <div class="form-group col-md-6">
+                <label asp-for="HttpRequestHeaders[i].Name"></label>
+                <input asp-for="HttpRequestHeaders[i].Name" value="@Model.HttpRequestHeaders[i].Name" class="form-control">
+                <label asp-for="HttpRequestHeaders[i].Value"></label>
+                <input asp-for="HttpRequestHeaders[i].Value" value="@Model.HttpRequestHeaders[i].Value" class="form-control">
+            </div>
+            <div class="col-auto align-self-center">
+                <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httprequestheader-button"><span data-feather="x"></span></button>
+            </div>
+        </div>
+    }
+    <button type="button" id="add-httprequestheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpResponseHeaders[0]">HttpResponseHeaders</label><br />
+        </div>
+    </div>
+    @for (int i = 0; i < Model.HttpResponseHeaders.Count; i++)
+    {
+        <div class="form-row httpresponseheader-row">
+            <div class="form-group col-md-6">
+                <label asp-for="HttpResponseHeaders[i].Name"></label>
+                <input asp-for="HttpResponseHeaders[i].Name" value="@Model.HttpResponseHeaders[i].Name" class="form-control">
+                <label asp-for="HttpResponseHeaders[i].Value"></label>
+                <input asp-for="HttpResponseHeaders[i].Value" value="@Model.HttpResponseHeaders[i].Value" class="form-control">
+            </div>
+            <div class="col-auto align-self-center">
+                <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpresponseheader-button"><span data-feather="x"></span></button>
+            </div>
+        </div>
+    }
+    <button type="button" id="add-httpresponseheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpPostRequest"></label>
+            <textarea asp-for="HttpPostRequest" value="@Model.HttpPostRequest" rows="20" class="form-control code-mirror-html"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpGetResponse"></label>
+            <textarea asp-for="HttpGetResponse" value="@Model.HttpGetResponse" rows="20" class="form-control code-mirror-html"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpPostResponse"></label>
+            <textarea asp-for="HttpPostResponse" value="@Model.HttpPostResponse" rows="20" class="form-control code-mirror-html"></textarea>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><span data-feather="edit"></span> Edit</button>
+</form>

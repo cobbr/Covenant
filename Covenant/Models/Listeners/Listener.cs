@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,6 +13,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
 using Covenant.Core;
+using Covenant.Models.Grunts;
 
 namespace Covenant.Models.Listeners
 {
@@ -21,6 +23,10 @@ namespace Covenant.Models.Listeners
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+
+        private List<ListenerTypeImplantTemplate> ListenerTypeImplantTemplates { get; set; } = new List<ListenerTypeImplantTemplate>();
+        [NotMapped]
+        public List<ImplantTemplate> CompatibleImplantTemplates => ListenerTypeImplantTemplates.Select(l => l.ImplantTemplate).ToList();
 
         [JsonIgnore]
         public List<Listener> Listeners { get; set; }

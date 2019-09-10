@@ -1,0 +1,94 @@
+﻿@using Covenant.Models.Listeners
+@model HttpListener
+@{
+    IEnumerable<Profile> GenericProfiles = ViewBag.Profiles;
+    IEnumerable<Profile> Profiles = GenericProfiles.Where(P => P.Type == ProfileType.HTTP);
+    IEnumerable<ListenerType> ListenerTypes = ViewBag.ListenerTypes;
+    ListenerType lt = ListenerTypes.FirstOrDefault(LT => LT.Name == "HTTP");
+}
+
+<form id="submit-listener-form" asp-action="CreateHttp">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input asp-for="Id" value="@Model.Id" type="hidden">
+    <input asp-for="GUID" value="@Model.GUID" type="hidden">
+    <input asp-for="ListenerTypeId" value="@lt.Id" type="hidden">
+    <input asp-for="Status" value="Active" type="hidden">
+    <input asp-for="CovenantToken" value="@Model.CovenantToken" type="hidden">
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" value="@Model.Description" class="form-control-plaintext" readonly>
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" value="@Model.Name" class="form-control">
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label asp-for="BindAddress"></label>
+            <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+            <label asp-for="BindPort"></label>
+            <input asp-for="BindPort" value="@Model.BindPort" class="form-control">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label asp-for="ConnectPort"></label>
+            <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control">
+        </div>
+    </div>
+    <div class="d-flex flex-row address-row">
+        <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+            <label asp-for="ConnectAddresses[0]">ConnectAddress</label>
+            <input asp-for="ConnectAddresses[0]" value="@Model.ConnectAddresses[0]" class="form-control address">
+        </div>
+        <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+            <label asp-for="Urls[0]">Url</label>
+            <input asp-for="Urls[0]" value="@Model.Urls[0]" class="form-control" readonly>
+        </div>
+    </div>
+    @for (int i = 1; i < Model.ConnectAddresses.Count; i++)
+    {
+        <div class="d-flex flex-row address-row">
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <input asp-for="ConnectAddresses[i]" value="@Model.ConnectAddresses[i]" class="form-control address">
+            </div>
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <input asp-for="Urls[i]" value="@Model.Urls[i]" class="form-control url" readonly>
+            </div>
+            <div class="col-auto align-self-center">
+                <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-connectaddress-button"><span data-feather="x"></span></button>
+            </div>
+        </div>
+    }
+    <button type="button" id="add-connectaddress-button" class="btn btn-outline-primary btn-sm mt-2 mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label asp-for="UseSSL"></label>
+            <select asp-for="UseSSL" class="form-control form-control-sm">
+                <option>False</option>
+                <option>True</option>
+            </select>
+        </div>
+        <div class="form-group col-md-3 cert-div" hidden>
+            <label for="SSLCertificateFile">SSLCertificate</label>
+            <input id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file" type="file">
+            <input asp-for="SSLCertificate" class="form-control file-filler" type="hidden" disabled>
+        </div>
+        <div class="form-group col-md-6 cert-div" hidden>
+            <label asp-for="SSLCertificatePassword"></label>
+            <input asp-for="SSLCertificatePassword" class="form-control form-control-sm">
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="ProfileId">HttpProfile</label>
+        <select asp-for="ProfileId" class="form-control">
+            @foreach (var item in Profiles)
+            {
+                <option value="@item.Id">@item.Name</option>
+            }
+        </select>
+    </div>
+    <button id="submit-listener-button" type="button" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+</form>

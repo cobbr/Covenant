@@ -42,7 +42,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return View(await _context.GetHttpProfile(id));
+                return View(await _context.GetProfile(id));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -50,13 +50,28 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /profile/
+        // POST: /profile/edithttp
         [HttpPost]
-        public async Task<IActionResult> Edit(HttpProfile profile)
+        public async Task<IActionResult> EditHttp(HttpProfile profile)
         {
             try
             {
                 await _context.EditHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
+                return RedirectToAction("Index", "Listener");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                return RedirectToAction("Index", "Listener");
+            }
+        }
+
+        // POST: /profile/editbridge
+        [HttpPost]
+        public async Task<IActionResult> EditBridge(BridgeProfile profile)
+        {
+            try
+            {
+                await _context.EditBridgeProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return RedirectToAction("Index", "Listener");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -70,7 +85,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return View(new HttpProfile());
+                return View();
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -78,13 +93,28 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /profile/
+        // POST: /profile/createhttp
         [HttpPost]
-        public async Task<IActionResult> Create(HttpProfile profile)
+        public async Task<IActionResult> CreateHttp(HttpProfile profile)
         {
             try
             {
                 await _context.CreateHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
+                return RedirectToAction("Index", "Listener");
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                return RedirectToAction("Index", "Listener");
+            }
+        }
+
+        // POST: /profile/createbridge
+        [HttpPost]
+        public async Task<IActionResult> CreateBridge(BridgeProfile profile)
+        {
+            try
+            {
+                await _context.CreateBridgeProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return RedirectToAction("Index", "Listener");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

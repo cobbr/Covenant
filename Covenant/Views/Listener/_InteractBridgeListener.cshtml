@@ -1,0 +1,75 @@
+﻿@using Covenant.Models.Listeners
+@model BridgeListener
+@{
+    IEnumerable<HttpProfile> Profiles = ViewBag.Profiles;
+}
+
+<div>
+    <input asp-for="Id" value="@Model.Id" type="hidden" disabled>
+    <input asp-for="GUID" value="@Model.GUID" type="hidden" disabled>
+    <input asp-for="ListenerTypeId" value="@Model.ListenerTypeId" type="hidden" disabled>
+    <input asp-for="Status" value="Active" type="hidden" disabled>
+    <input asp-for="CovenantToken" value="@Model.CovenantToken" type="hidden" disabled>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" value="@Model.Description" class="form-control-plaintext" readonly disabled>
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" value="@Model.Name" class="form-control" disabled>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label asp-for="BindAddress"></label>
+            <input asp-for="BindAddress" value="@Model.BindAddress" class="form-control form-control" disabled>
+        </div>
+        <div class="form-group col-md-4">
+            <label asp-for="BindPort"></label>
+            <input asp-for="BindPort" value="@Model.BindPort" class="form-control form-control" disabled>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label asp-for="ConnectPort"></label>
+            <input asp-for="ConnectPort" value="@Model.ConnectPort" class="form-control form-control" disabled>
+        </div>
+    </div>
+    <div class="d-flex flex-row address-row">
+        <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+            <label asp-for="ConnectAddresses[0]">ConnectAddress</label>
+            <input asp-for="ConnectAddresses[0]" value="@Model.ConnectAddresses[0]" class="form-control address" disabled>
+        </div>
+    </div>
+    @for (int i = 1; i < Model.ConnectAddresses.Count; i++)
+    {
+        <div class="d-flex flex-row address-row">
+            <div class="form-group col-md-4 pl-0 mt-1 mb-1">
+                <input asp-for="ConnectAddresses[i]" value="@Model.ConnectAddresses[i]" class="form-control address" disabled>
+            </div>
+        </div>
+    }
+    <div class="form-group">
+        <label asp-for="ProfileId">Profile</label>
+        <select asp-for="ProfileId" class="form-control" disabled>
+            <option>@Model.Profile.Name</option>
+        </select>
+    </div>
+
+    <div class="btn-group" role="group">
+        @if (Model.Status == ListenerStatus.Active)
+        {
+            <form asp-action="Stop" asp-route-id="@Model.Id">
+                <button type="submit" class="btn btn-warning"><span data-feather="stop-circle"></span> Stop</button>
+            </form>
+        }
+        else
+        {
+            <form asp-action="Start" asp-route-id="@Model.Id">
+                <button type="submit" class="btn btn-primary"><span data-feather="play"></span> Start</button>
+            </form>
+        }
+        <form asp-action="Delete" asp-route-id="@Model.Id">
+            <button type="submit" class="btn btn-danger ml-2"><span data-feather="x"></span> Delete</button>
+        </form>
+    </div>
+</div>

@@ -20,48 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Data\Grunt\*" />
-    <None Include="wwwroot\css\bootstrap-datetimepicker.css" />
-    <None Include="wwwroot\css\bootstrap-datetimepicker.min.css" />
-    <None Include="wwwroot\js\bootstrap-datetimepicker.min.js" />
-    <None Include="wwwroot\js\bootstrap-datetimepicker.js" />
-    <None Include="**/*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-    <Folder Include="Data\Tasks\" />
-    <Folder Include="Models\Indicators\" />
-    <Folder Include="Views\" />
-    <Folder Include="Views\Grunt\" />
-    <Folder Include="Views\Shared\" />
-    <Folder Include="Views\Indicator\" />
-    <Folder Include="Views\Launcher\" />
-    <Folder Include="Views\Listener\" />
-    <Folder Include="Views\Credential\" />
-    <Folder Include="Views\CovenantUser\" />
-    <Folder Include="Hubs\" />
-    <Folder Include="Controllers\ApiControllers\" />
-    <Folder Include="Controllers\ListenerControllers\" />
-    <Folder Include="Controllers\ViewControllers\" />
-    <Folder Include="Views\Home\" />
-    <Folder Include="wwwroot\images\" />
-    <Folder Include="Views\GruntTask\" />
-    <Folder Include="Views\GruntTasking\" />
-    <Folder Include="Views\Data\" />
-    <Folder Include="Views\ReferenceSourceLibrary\" />
-    <Folder Include="Views\ReferenceAssembly\" />
-    <Folder Include="Views\EmbeddedResource\" />
-    <Folder Include="Views\HostedFile\" />
-    <Folder Include="Views\Profile\" />
-    <Folder Include="Views\Graph\" />
-    <Folder Include="Views\Template\" />
-    <Folder Include="Data\Tasks\CSharp\" />
-    <Folder Include="Data\Tasks\CSharp\Compiled\" />
-    <Folder Include="wwwroot\webfonts\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.App">
       <PrivateAssets Condition="'%(PackageReference.Version)' == ''">all</PrivateAssets>
@@ -108,9 +66,5 @@
     <Reference Include="dnlib">
       <HintPath>refs\dnlib.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Data\covenant.db-journal" />
-    <None Remove="Data\covenant.db" />
   </ItemGroup>
 </Project>

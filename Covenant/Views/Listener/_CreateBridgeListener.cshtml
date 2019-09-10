@@ -1,20 +1,17 @@
 ﻿@using Covenant.Models.Listeners
 @model BridgeListener
 @{
-    Layout = "_ListenerLayout";
-    ViewData["Title"] = "C2Bridge";
-    IEnumerable<BridgeProfile> Profiles = ViewBag.Profiles;
+    IEnumerable<Profile> GenericProfiles = ViewBag.Profiles;
+    IEnumerable<Profile> Profiles = GenericProfiles.Where(P => P.Type == ProfileType.Bridge);
+    IEnumerable<ListenerType> ListenerTypes = ViewBag.ListenerTypes;
+    ListenerType lt = ListenerTypes.FirstOrDefault(LT => LT.Name == "Bridge");
 }
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
-    <h1 class="h2">Create C2Bridge</h1>
-</div>
 
 <form asp-action="CreateBridge">
     <div asp-validation-summary="All" class="text-danger"></div>
     <input asp-for="Id" value="@Model.Id" type="hidden">
     <input asp-for="GUID" value="@Model.GUID" type="hidden">
-    <input asp-for="ListenerTypeId" value="@Model.ListenerTypeId" type="hidden">
+    <input asp-for="ListenerTypeId" value="@lt.Id" type="hidden">
     <input asp-for="Status" value="Active" type="hidden">
     <input asp-for="CovenantToken" value="@Model.CovenantToken" type="hidden">
     <div class="form-group">
@@ -58,7 +55,3 @@
     </div>
     <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
 </form>
-
-@section Scripts {
-
-}

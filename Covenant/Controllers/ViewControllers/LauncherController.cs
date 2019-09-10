@@ -2,12 +2,14 @@
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
 using Covenant.Models;
+using Covenant.Models.Grunts;
 using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 
@@ -34,8 +36,12 @@ namespace Covenant.Controllers
         {
             try
             {
-                ViewBag.Listeners = await _context.GetListeners();
-                ViewBag.ImplantTemplates = await _context.GetImplantTemplates();
+                IEnumerable<Listener> Listeners = await _context.GetListeners();
+                IEnumerable<ImplantTemplate> ImplantTemplates = await _context.GetImplantTemplates();
+                IEnumerable<Listener> ActiveListeners = Listeners.Where(L => L.Status == ListenerStatus.Active);
+                ViewBag.Listeners = ActiveListeners;
+                IEnumerable<ImplantTemplate> CompatibleTemplates = ImplantTemplates.Where(IT => IT.CompatibleListenerTypes.Select(CLT => ActiveListeners.Select(AL => AL.ListenerTypeId).Contains(CLT.Id)).Any(B => B == true));
+                ViewBag.ImplantTemplates = CompatibleTemplates;
                 switch (id.ToLower())
                 {
                     case "binary":

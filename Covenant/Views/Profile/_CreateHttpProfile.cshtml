@@ -1,0 +1,96 @@
+﻿@using System.Linq
+@using Covenant.Core
+@using Covenant.Models.Listeners
+@model HttpProfile
+
+<form asp-controller="Profile" asp-action="CreateHttp">
+    <div asp-validation-summary="All"></div>
+    <input asp-for="Id" value="@Model.Id" type="hidden">
+    <input asp-for="Type" value="@ProfileType.HTTP" class="form-control" type="hidden">
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" value="@Model.Name" class="form-control">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" value="@Model.Name" class="form-control">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpUrls[0]">HttpUrls</label>
+        </div>
+    </div>
+    <div class="form-row httpurl-row">
+        <div class="form-group col-md-6">
+            <input asp-for="HttpUrls[0]" value="@Model.HttpUrls[0]" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpurl-button"><span data-feather="x"></span></button>
+        </div>
+    </div>
+    <button type="button" id="add-httpurl-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="MessageTransform"></label>
+            <textarea asp-for="MessageTransform" value="@Model.MessageTransform" rows="10" class="form-control code-mirror-csharp"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpRequestHeaders[0]">HttpRequestHeaders</label><br />
+        </div>
+    </div>
+    <div class="form-row httprequestheader-row">
+        <div class="form-group col-md-6">
+            <label asp-for="HttpRequestHeaders[0].Name"></label>
+            <input asp-for="HttpRequestHeaders[0].Name" value="@Model.HttpRequestHeaders[0].Name" class="form-control">
+            <label asp-for="HttpRequestHeaders[0].Value"></label>
+            <input asp-for="HttpRequestHeaders[0].Value" value="@Model.HttpRequestHeaders[0].Value" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httprequestheader-button"><span data-feather="x"></span></button>
+        </div>
+    </div>
+    <button type="button" id="add-httprequestheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-6 mb-0">
+            <label asp-for="HttpResponseHeaders[0]">HttpResponseHeaders</label><br />
+        </div>
+    </div>
+    <div class="form-row httpresponseheader-row">
+        <div class="form-group col-md-6">
+            <label asp-for="HttpResponseHeaders[0].Name"></label>
+            <input asp-for="HttpResponseHeaders[0].Name" value="@Model.HttpResponseHeaders[0].Name" class="form-control">
+            <label asp-for="HttpResponseHeaders[0].Value"></label>
+            <input asp-for="HttpResponseHeaders[0].Value" value="@Model.HttpResponseHeaders[0].Value" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpresponseheader-button"><span data-feather="x"></span></button>
+        </div>
+    </div>
+    <button type="button" id="add-httpresponseheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpPostRequest"></label>
+            <textarea asp-for="HttpPostRequest" value="@Model.HttpPostRequest" rows="20" class="form-control code-mirror-html"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpGetResponse"></label>
+            <textarea asp-for="HttpGetResponse" value="@Model.HttpGetResponse" rows="20" class="form-control code-mirror-html"></textarea>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="HttpPostResponse"></label>
+            <textarea asp-for="HttpPostResponse" value="@Model.HttpPostResponse" rows="20" class="form-control code-mirror-html"></textarea>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+</form>

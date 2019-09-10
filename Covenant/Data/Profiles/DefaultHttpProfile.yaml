@@ -2,10 +2,10 @@
 # Project: Covenant (https://github.com/cobbr/Covenant)
 # License: GNU GPLv3
 
-Name: DefaultHttpProfile.yaml
+Name: DefaultHttpProfile
 Description: A default profile.
 MessageTransform: |
-    public static class HttpMessageTransform
+    public static class MessageTransform
     {
         public static string Transform(byte[] bytes)
         {
@@ -25,7 +25,7 @@ HttpRequestHeaders:
     - Name: Cookies
       Value: ASPSESSIONID={GUID}; SESSIONID=1552332971750
 HttpPostRequest: |
-    i=a19ea23062db990386a3a478cb89d52e&data={0}&session=75db-99b1-25fe4e9afbe58696-320bea73
+    i=a19ea23062db990386a3a478cb89d52e&data={DATA}&session=75db-99b1-25fe4e9afbe58696-320bea73
 HttpResponseHeaders:
     - Name: Server
       Value: Microsoft-IIS/7.5
@@ -36,7 +36,7 @@ HttpGetResponse: |
         </head>
         <body>
             <p>Hello World!</p>
-            // Hello World! {0}
+            // Hello World! {DATA}
         </body>
     </html>
 HttpPostResponse: |
@@ -46,6 +46,6 @@ HttpPostResponse: |
         </head>
         <body>
             <p>Hello World!</p>
-            // Hello World! {0}
+            // Hello World! {DATA}
         </body>
     </html>

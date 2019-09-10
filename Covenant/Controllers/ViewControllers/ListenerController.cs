@@ -51,16 +51,9 @@ namespace Covenant.Controllers
         {
             try
             {
-                ListenerType httpType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "HTTP");
-                HttpProfile profile = (await _context.GetHttpProfiles()).FirstOrDefault();
-                ViewBag.Profiles = await _context.GetHttpProfiles();
-                ViewBag.ListenerType = httpType;
-                return View(new HttpListener
-                {
-                    ListenerTypeId = httpType.Id,
-                    ProfileId = profile.Id,
-                    Profile = profile
-                });
+                ViewBag.Profiles = await _context.GetProfiles();
+                ViewBag.ListenerTypes = await _context.GetListenerTypes();
+                return View();
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -69,32 +62,9 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /listener/createbridge
-        public async Task<IActionResult> CreateBridge()
-        {
-            try
-            {
-                ListenerType bridgeType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "Bridge");
-                BridgeProfile profile = (await _context.GetBridgeProfiles()).FirstOrDefault();
-                ViewBag.Profiles = await _context.GetBridgeProfiles();
-                ViewBag.ListenerType = bridgeType;
-                return View(new BridgeListener
-                {
-                    ListenerTypeId = bridgeType.Id,
-                    ProfileId = profile.Id,
-                    Profile = profile
-                });
-            }
-            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
-            {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // POST: /listener/create
+        // POST: /listener/createhttp
         [HttpPost]
-        public async Task<IActionResult> Create(HttpListener listener)
+        public async Task<IActionResult> CreateHttp(HttpListener listener)
         {
             try
             {
@@ -104,15 +74,9 @@ namespace Covenant.Controllers
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                ViewBag.Profiles = (await _context.GetHttpProfiles()).FirstOrDefault().Id;
-                ViewBag.ListenerType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "HTTP");
-                HttpProfile profile = (await _context.GetHttpProfiles()).FirstOrDefault();
-                return View(new HttpListener
-                {
-                    ListenerTypeId = ViewBag.ListenerType.Id,
-                    ProfileId = profile.Id,
-                    Profile = profile
-                });
+                ViewBag.Profiles = await _context.GetHttpProfiles();
+                ViewBag.ListenerTypes = await _context.GetListenerTypes();
+                return RedirectToAction(nameof(Create));
             }
         }
 
@@ -128,15 +92,9 @@ namespace Covenant.Controllers
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                ViewBag.Profiles = (await _context.GetBridgeProfiles()).FirstOrDefault().Id;
-                ViewBag.ListenerType = (await _context.GetListenerTypes()).FirstOrDefault(LT => LT.Name == "Bridge");
-                BridgeProfile profile = (await _context.GetBridgeProfiles()).FirstOrDefault();
-                return View(new BridgeListener
-                {
-                    ListenerTypeId = ViewBag.ListenerType.Id,
-                    ProfileId = profile.Id,
-                    Profile = profile
-                });
+                ViewBag.Profiles = await _context.GetHttpProfiles();
+                ViewBag.ListenerTypes = await _context.GetListenerTypes();
+                return RedirectToAction(nameof(Create));
             }
         }
 
@@ -145,7 +103,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                HttpListener listener = await _context.GetHttpListener(id);
+                Listener listener = await _context.GetListener(id);
                 ViewBag.Profiles = await _context.GetHttpProfiles();
                 ViewBag.HostedFiles = await _context.GetHostedFiles(listener.Id);
                 ViewBag.ListenerType = await _context.GetListenerType(listener.ListenerTypeId);
@@ -161,16 +119,18 @@ namespace Covenant.Controllers
         // GET: /listener/start/{id}
         public async Task<IActionResult> Start(int id)
         {
+            Console.WriteLine("Start: " + id);
             try
             {
-                HttpListener listener = await _context.GetHttpListener(id);
+                Listener listener = await _context.GetListener(id);
                 if (listener.Status == ListenerStatus.Active)
                 {
                     return RedirectToAction(nameof(Index));
                 }
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Active;
-                await _context.EditHttpListener(listener, _ListenerCancellationTokens, _eventhub);
+                Console.WriteLine("EditListener");
+                await _context.EditListener(listener, _ListenerCancellationTokens, _eventhub);
                 return RedirectToAction(nameof(Interact), new { id = id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -185,14 +145,14 @@ namespace Covenant.Controllers
         {
             try
             {
-                HttpListener listener = await _context.GetHttpListener(id);
+                Listener listener = await _context.GetListener(id);
                 if (listener.Status == ListenerStatus.Stopped)
                 {
                     return RedirectToAction(nameof(Index));
                 }
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Stopped;
-                await _context.EditHttpListener(listener, _ListenerCancellationTokens, _eventhub);
+                await _context.EditListener(listener, _ListenerCancellationTokens, _eventhub);
                 return RedirectToAction(nameof(Interact), new { id = id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -207,7 +167,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                HttpListener listener = await _context.GetHttpListener(id);
+                Listener listener = await _context.GetListener(id);
                 await _context.DeleteListener(listener.Id, _ListenerCancellationTokens);
                 return RedirectToAction(nameof(Index));
             }

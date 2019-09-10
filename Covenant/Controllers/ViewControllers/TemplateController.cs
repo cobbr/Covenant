@@ -39,6 +39,7 @@ namespace Covenant.Controllers
         {
             try
             {
+                ViewBag.ListenerTypes = await _context.GetListenerTypes();
                 return View(await _context.GetImplantTemplate(id));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -63,10 +64,11 @@ namespace Covenant.Controllers
         }
 
         // GET: /template/create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             try
             {
+                ViewBag.ListenerTypes = await _context.GetListenerTypes();
                 return View(new ImplantTemplate());
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -75,7 +77,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /template/
+        // POST: /template/create
         [HttpPost]
         public async Task<IActionResult> Create(ImplantTemplate template)
         {

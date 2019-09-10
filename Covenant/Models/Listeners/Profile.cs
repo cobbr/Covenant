@@ -22,13 +22,64 @@ namespace Covenant.Models.Listeners
         public string Name { get; set; }
         public string Description { get; set; }
         public ProfileType Type { get; set; }
-        public string MessageTransform { get; set; }
+        public string MessageTransform { get; set; } =
+@"public static class MessageTransform
+{
+    public static string Transform(byte[] bytes)
+    {
+        return System.Convert.ToBase64String(bytes);
+    }
+    public static byte[] Invert(string str)
+    {
+        return System.Convert.FromBase64String(str);
+    }
+}";
     }
 
     public class BridgeProfile : Profile
     {
-        public string ReadFormat { get; set; }
-        public string WriteFormat { get; set; }
+        public string ReadFormat { get; set; } = @"{DATA},{GUID}";
+        public string WriteFormat { get; set; } = @"{DATA},{GUID}";
+        public string BridgeMessengerCode { get; set; } =
+@"public interface IMessenger
+{
+    string Hostname { get; }
+    string Identifier { get; set; }
+    string Authenticator { get; set; }
+    string Read();
+    void Write(string Message);
+    void Close();
+}
+
+public class BridgeMessenger : IMessenger
+{
+    public string Hostname { get; } = """";
+    public string Identifier { get; set; } = """";
+    public string Authenticator { get; set; } = """";
+
+    public BridgeMessenger(string CovenantURI, string Identifier, string WriteFormat)
+    {
+        this.CovenantURI = CovenantURI;
+        this.Identifier = Identifier;
+        // TODO
+    }
+
+    public string Read()
+    {
+        // TODO
+        return null;
+    }
+
+    public void Write(string Message)
+    {
+        // TODO
+    }
+
+    public void Close()
+    {
+        // TODO
+    }
+}";
 
         public BridgeProfile()
         {
@@ -52,6 +103,7 @@ namespace Covenant.Models.Listeners
             public string MessageTransform { get; set; } = "";
             public string ReadFormat { get; set; } = "";
             public string WriteFormat { get; set; } = "";
+            public string BridgeMessengerCode { get; set; } = "";
         }
 
         private static BridgeProfile CreateFromBridgeProfileYaml(BridgeProfileYaml yaml)
@@ -62,7 +114,8 @@ namespace Covenant.Models.Listeners
                 Description = yaml.Description,
                 MessageTransform = yaml.MessageTransform,
                 ReadFormat = yaml.ReadFormat.TrimEnd('\n'),
-                WriteFormat = yaml.WriteFormat.TrimEnd('\n')
+                WriteFormat = yaml.WriteFormat.TrimEnd('\n'),
+                BridgeMessengerCode = yaml.BridgeMessengerCode.TrimEnd('\n')
             };
         }
     }
@@ -75,13 +128,13 @@ namespace Covenant.Models.Listeners
 
     public class HttpProfile : Profile
     {
-        public List<string> HttpUrls { get; set; } = new List<string> { "" };
-        public virtual List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
-        public virtual List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "", Value = "" } };
+        public List<string> HttpUrls { get; set; } = new List<string> { "/index.html?id={GUID}" };
+        public virtual List<HttpProfileHeader> HttpRequestHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "User-Agent", Value = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36" } };
+        public virtual List<HttpProfileHeader> HttpResponseHeaders { get; set; } = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "Server", Value = "Microsoft-IIS/7.5" } };
 
-        public string HttpPostRequest { get; set; } = "";
-        public string HttpGetResponse { get; set; } = "";
-        public string HttpPostResponse { get; set; } = "";
+        public string HttpPostRequest { get; set; } = @"{DATA}";
+        public string HttpGetResponse { get; set; } = @"{DATA}";
+        public string HttpPostResponse { get; set; } = @"{DATA}";
 
         public HttpProfile()
         {

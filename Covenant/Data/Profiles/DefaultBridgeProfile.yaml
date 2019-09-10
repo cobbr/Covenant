@@ -2,11 +2,11 @@
 # Project: Covenant (https://github.com/cobbr/Covenant)
 # License: GNU GPLv3
 
-Name: DefaultBridgeProfile.yaml
+Name: DefaultBridgeProfile
 Description: A default BridgeProfile for a C2Bridge.
 
-MessageTransform: |
-    public static class HttpMessageTransform
+MessageTransform: |-
+    public static class MessageTransform
     {
         public static string Transform(byte[] bytes)
         {
@@ -16,7 +16,47 @@ MessageTransform: |
             return System.Convert.FromBase64String(str);
         }
     }
-ReadFormat: |
-    {GUID},{DATA}
-WriteFormat: |
-    {GUID},{DATA}
+ReadFormat: |-
+    {DATA},{GUID}
+WriteFormat: |-
+    {DATA},{GUID}
+BridgeMessengerCode: |-
+    public interface IMessenger
+    {
+        string Hostname { get; }
+        string Identifier { get; set; }
+        string Authenticator { get; set; }
+        string Read();
+        void Write(string Message);
+        void Close();
+    }
+    
+    public class BridgeMessenger : IMessenger
+    {
+        public string Hostname { get; } = "";
+        public string Identifier { get; set; } = "";
+        public string Authenticator { get; set; } = "";
+
+        public BridgeMessenger(string CovenantURI, string Identifier, string WriteFormat)
+        {
+            this.CovenantURI = CovenantURI;
+            this.Identifier = Identifier;
+            // TODO
+        }
+
+        public string Read()
+        {
+            // TODO
+            return null;
+        }
+
+        public void Write(string Message)
+        {
+            // TODO
+        }
+
+        public void Close()
+        {
+            // TODO
+        }
+    }

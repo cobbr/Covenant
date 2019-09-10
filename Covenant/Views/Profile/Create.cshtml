@@ -1,7 +1,6 @@
 ﻿@using System.Linq
 @using Covenant.Core
 @using Covenant.Models.Listeners
-@model HttpProfile
 @{
     Layout = "../Listener/_ListenerLayout";
     ViewData["Title"] = "Profile";
@@ -10,120 +9,49 @@
     <h1 class="h2">Create HttpProfile</h1>
 </div>
 
-<form asp-controller="Profile" asp-action="Create">
-    <div asp-validation-summary="All"></div>
-    <input asp-for="Id" type="hidden">
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <label asp-for="Name"></label>
-            <input asp-for="Name" value="@Model.Name" class="form-control">
-        </div>
-        <div class="form-group">
-            <label asp-for="Type"></label><br />
-            <select asp-for="Type" asp-items="@Html.GetEnumSelectList<ProfileType>()" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto"></select>
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-12">
-            <label asp-for="Description"></label>
-            <input asp-for="Description" class="form-control">
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-6 mb-0">
-            <label asp-for="HttpUrls[0]">HttpUrls</label>
-        </div> 
-    </div>
-    <div class="form-row httpurl-row">
-        <div class="form-group col-md-6">
-            <input asp-for="HttpUrls[0]" class="form-control">
-        </div>
-        <div class="col-auto align-self-center">
-            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpurl-button"><span data-feather="x"></span></button>
-        </div>
-    </div>
-    <button type="button" id="add-httpurl-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
-    <div class="form-row">
-        <div class="form-group col-md-12">
-            <label asp-for="MessageTransform"></label>
-            <textarea asp-for="MessageTransform" value="@Model.MessageTransform" rows="10" class="form-control"></textarea>
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-6 mb-0">
-            <label asp-for="HttpRequestHeaders[0]">HttpRequestHeaders</label><br />
-        </div>
-    </div>
-    <div class="form-row httprequestheader-row">
-        <div class="form-group col-md-6">
-            <label asp-for="HttpRequestHeaders[0].Name"></label>
-            <input asp-for="HttpRequestHeaders[0].Name" class="form-control">
-            <label asp-for="HttpRequestHeaders[0].Value"></label>
-            <input asp-for="HttpRequestHeaders[0].Value" class="form-control">
-        </div>
-        <div class="col-auto align-self-center">
-            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httprequestheader-button"><span data-feather="x"></span></button>
-        </div>
-    </div>
-    <button type="button" id="add-httprequestheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
-    <div class="form-row">
-        <div class="form-group col-md-6 mb-0">
-            <label asp-for="HttpResponseHeaders[0]">HttpResponseHeaders</label><br />
-        </div>
-    </div>
-    <div class="form-row httpresponseheader-row">
-        <div class="form-group col-md-6">
-            <label asp-for="HttpResponseHeaders[0].Name"></label>
-            <input asp-for="HttpResponseHeaders[0].Name" class="form-control">
-            <label asp-for="HttpResponseHeaders[0].Value"></label>
-            <input asp-for="HttpResponseHeaders[0].Value" class="form-control">
-        </div>
-        <div class="col-auto align-self-center">
-            <button type="button" class="btn btn-outline-danger btn-sm xbutton remove-httpresponseheader-button"><span data-feather="x"></span></button>
-        </div>
-    </div>
-    <button type="button" id="add-httpresponseheader-button" class="btn btn-outline-primary btn-sm mb-4"><span data-feather="plus"></span> Add</button>
-    <div class="form-row">
-        <div class="form-group col-md-12">
-            <label asp-for="HttpPostRequest"></label>
-            <textarea asp-for="HttpPostRequest" value="@Model.HttpPostRequest" rows="20" class="form-control"></textarea>
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-12">
-            <label asp-for="HttpGetResponse"></label>
-            <textarea asp-for="HttpGetResponse" value="@Model.HttpGetResponse" rows="20" class="form-control"></textarea>
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-12">
-            <label asp-for="HttpPostResponse"></label>
-            <textarea asp-for="HttpPostResponse" value="@Model.HttpPostResponse" rows="20" class="form-control"></textarea>
-        </div>
-    </div>
+<ul class="nav nav-tabs mb-3" id="listener-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="http-tab" data-toggle="tab" href="#http" role="tab" aria-controls="http" aria-selected="true">
+            <span data-feather="cloud"></span>
+            HttpProfile
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="bridge-tab" data-toggle="tab" href="#bridge" role="tab" aria-controls="bridge" aria-selected="false">
+            <span data-feather="radio"></span>
+            BridgeProfile
+        </a>
+    </li>
+</ul>
 
-    <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
-</form>
+<div class="tab-content" id="listener-tab-content">
+    <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab">
+        @{
+            await Html.RenderPartialAsync("_CreateHttpProfile", new HttpProfile());
+        }
+    </div>
+    <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
+        @{
+            await Html.RenderPartialAsync("_CreateBridgeProfile", new BridgeProfile());
+        }
+    </div>
+</div>
 
 @section Scripts {
 <script type="text/javascript">
     $(document).ready(function () {
-        var editor1 = CodeMirror.fromTextArea(document.getElementById("HttpMessageTransform"), {
-            lineNumbers: true,
-            mode: "text/x-csharp"
+        var editors = [];
+        $(".code-mirror-csharp").each(function () {
+            editors.push(CodeMirror.fromTextArea(this, {
+                lineNumbers: true,
+                mode: "text/x-csharp"
+            }));
         });
-
-        var editor2 = CodeMirror.fromTextArea(document.getElementById("HttpPostRequest"), {
-            lineNumbers: true,
-            mode: "htmlmixed"
-        });
-        var editor3 = CodeMirror.fromTextArea(document.getElementById("HttpGetResponse"), {
-            lineNumbers: true,
-            mode: "htmlmixed"
-        });
-        var editor4 = CodeMirror.fromTextArea(document.getElementById("HttpPostResponse"), {
-            lineNumbers: true,
-            mode: "htmlmixed"
+        $(".code-mirror-html").each(function () {
+            editors.push(CodeMirror.fromTextArea(this, {
+                lineNumbers: true,
+                mode: "htmlmixed"
+            }));
         });
 
         var addUrl = function () {
@@ -225,6 +153,13 @@
         $('.remove-httpurl-button').click(removeUrl);
         $('.remove-httprequestheader-button').click(removeRequest);
         $('.remove-httpresponseheader-button').click(removeResponse);
+        
+        $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
+            editors.forEach(function (value, index, array) {
+                value.refresh();
+            });
+        });
+        $("#http-tab").tab('show');
     });
     </script>
 }

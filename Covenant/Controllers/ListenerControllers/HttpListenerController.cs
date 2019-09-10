@@ -41,16 +41,17 @@ namespace Covenant.Controllers
         [HttpGet, AllowAnonymous]
 		public async Task<ActionResult<string>> Get()
 		{
+            string guid = "";
             try
             {
                 this.SetHeaders();
-                string guid = GetGuid(HttpContext);
-                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse, await _internalListener.Read(guid));
+                guid = GetGuid(HttpContext);
+                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), await _internalListener.Read(guid), guid);
                 return Ok(response);
             }
             catch (ControllerNotFoundException e)
             {
-                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse, e.Message);
+                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
                 return NotFound(response);
             }
         }
@@ -58,25 +59,24 @@ namespace Covenant.Controllers
         [HttpPost, AllowAnonymous]
 		public async Task<ActionResult<string>> Post()
         {
+            string guid = "";
             try
             {
                 this.SetHeaders();
-                string guid = GetGuid(HttpContext);
+                guid = GetGuid(HttpContext);
                 using (StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8))
                 {
                     string body = reader.ReadToEnd();
-                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest).FirstOrDefault();
+                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")).FirstOrDefault();
                     string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
-                    Console.WriteLine("guidToRead: " + guidToRead);
                     string postRead = await _internalListener.Read(guidToRead);
-                    Console.WriteLine("Post read: " + postRead);
-                    string response = String.Format(_context.HttpProfiles.First().HttpPostResponse, postRead);
+                    string response = String.Format(_context.HttpProfiles.First().HttpPostResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), postRead, guid);
                     return Ok(response);
                 }
             }
             catch (ControllerNotFoundException e)
             {
-                string response = String.Format(_context.HttpProfiles.First().HttpPostResponse, e.Message);
+                string response = String.Format(_context.HttpProfiles.First().HttpPostResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
                 return NotFound(response);
             }
         }
