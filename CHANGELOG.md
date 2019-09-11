@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added PersistAutorun task, PersistStartup task, and PersistWMI task
 - Added Screenshot task, added ScreenshotEvent
 - Added displaying image for ScreenShot events/tasks in Grunt interact view, GruntTasking interact view, and Data view
+- Added BypassAmsi task
+
+### Changed
+- Updated SharpSploit referencesourcelibrary
+- Updated Rubeus referencesourcelibrary
 
 ### Fixed
 - Fixed hosting files issue

@@ -1698,6 +1698,14 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "BypassAmsi",
+                        AlternateNames = new List<string>(),
+                        Description = "Bypasses AMSI by patching the AmsiScanBuffer function.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassAmsi" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
@@ -1858,6 +1866,7 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCmd") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PowerShell") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Assembly") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassAmsi") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("AssemblyReflect") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ListDirectory") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ChangeDirectory") },
