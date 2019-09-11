@@ -1,9 +1,9 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
+﻿using System;
 using System.IO;
-using System.Windows.Forms;
-using System;
 using System.Text;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Windows.Forms;
 
 public static class Task
 {

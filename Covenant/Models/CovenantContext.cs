@@ -85,6 +85,7 @@ namespace Covenant.Models
             builder.Entity<CapturedTicketCredential>().ToTable("CapturedTicketCredential");
 
             builder.Entity<DownloadEvent>().ToTable("DownloadEvent");
+            builder.Entity<ScreenshotEvent>().ToTable("ScreenshotEvent");
 
             builder.Entity<FileIndicator>().ToTable("FileIndicator");
             builder.Entity<NetworkIndicator>().ToTable("NetworkIndicator");
@@ -553,6 +554,48 @@ namespace Covenant.Models
             await this.Events.AddAsync(downloadEvent);
             await this.SaveChangesAsync();
             return await this.GetDownloadEvent(downloadEvent.Id);
+        }
+
+        public async Task<IEnumerable<ScreenshotEvent>> GetScreenshotEvents()
+        {
+            return await this.Events.Where(E => E.Type == EventType.Screenshot).Select(E => (ScreenshotEvent)E).ToListAsync();
+        }
+
+        public async Task<ScreenshotEvent> GetScreenshotEvent(int eventId)
+        {
+            ScreenshotEvent anEvent = (ScreenshotEvent)await this.Events.FirstOrDefaultAsync(E => E.Id == eventId && E.Type == EventType.Screenshot);
+            if (anEvent == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ScreenshotEvent with id: {eventId}");
+            }
+            return anEvent;
+        }
+
+        public async Task<string> GetScreenshotContent(int eventId)
+        {
+            ScreenshotEvent theEvent = await this.GetScreenshotEvent(eventId);
+            string filename = System.IO.Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(theEvent.FileName));
+            if (!System.IO.File.Exists(filename))
+            {
+                throw new ControllerBadRequestException($"BadRequest - Path does not exist on disk: {filename}");
+            }
+            try
+            {
+                return Convert.ToBase64String(System.IO.File.ReadAllBytes(filename));
+            }
+            catch (Exception e)
+            {
+                throw new ControllerBadRequestException($"BadRequest - Unable to read download content from: {filename}{Environment.NewLine}{e.Message}");
+            }
+        }
+
+        public async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent)
+        {
+            screenshotEvent.Time = DateTime.UtcNow;
+            screenshotEvent.WriteToDisk();
+            await this.Events.AddAsync(screenshotEvent);
+            await this.SaveChangesAsync();
+            return await this.GetScreenshotEvent(screenshotEvent.Id);
         }
         #endregion
 
@@ -1971,7 +2014,7 @@ namespace Covenant.Models
                     DownloadEvent downloadEvent = new DownloadEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "Downloaded: " + FileName + "\r\n" + "Syncing to Elite...",
+                        MessageHeader = "Downloaded: " + FileName,
                         Level = EventLevel.Highlight,
                         Context = grunt.Name,
                         FileName = FileName,
@@ -1992,18 +2035,18 @@ namespace Covenant.Models
                     };
                     await this.Events.AddAsync(ev);
                     string FileName = tasking.Name + ".png";
-                    DownloadEvent downloadEvent = new DownloadEvent
+                    ScreenshotEvent screenshotEvent = new ScreenshotEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "Downloaded: " + FileName + "\r\n" + "Syncing to Elite...",
+                        MessageHeader = "Downloaded: " + FileName,
                         Level = EventLevel.Highlight,
                         Context = grunt.Name,
                         FileName = FileName,
                         FileContents = tasking.GruntCommand.CommandOutput.Output,
                         Progress = DownloadEvent.DownloadProgress.Complete
                     };
-                    downloadEvent.WriteToDisk();
-                    await this.Events.AddAsync(downloadEvent);
+                    screenshotEvent.WriteToDisk();
+                    await this.Events.AddAsync(screenshotEvent);
                 }
                 else
                 {
