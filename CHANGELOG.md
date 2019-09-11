@@ -9,8 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added BridgeListeners
 - Added BridgeProfiles
 
+## [v0.3.2] - 2019-09-11
+### Added
+- Added PersistAutorun task, PersistStartup task, and PersistWMI task
+- Added Screenshot task, added ScreenshotEvent
+- Added displaying image for ScreenShot events/tasks in Grunt interact view, GruntTasking interact view, and Data view
+- Added BypassAmsi task
+
+### Changed
+- Updated SharpSploit referencesourcelibrary
+- Updated Rubeus referencesourcelibrary
+
 ### Fixed
 - Fixed hosting files issue
+- Fixed profile edit/create javascript issue
 
 ## [v0.3.1] - 2019-08-26
 ### Added
@@ -119,3 +131,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.1.3]: https://github.com/cobbr/Covenant/compare/v0.1.2...v0.1.3
 [v0.2]: https://github.com/cobbr/Covenant/compare/v0.1.3...v0.2
 [v0.3]: https://github.com/cobbr/Covenant/compare/v0.2...v0.3
+[v0.3.1]: https://github.com/cobbr/Covenant/compare/v0.3...v0.3.1
+[v0.3.2]: https://github.com/cobbr/Covenant/compare/v0.3.1...v0.3.2

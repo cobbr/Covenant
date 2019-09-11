@@ -21,7 +21,8 @@ namespace Covenant.Models.Covenant
     public enum EventType
     {
         Normal,
-        Download
+        Download,
+        Screenshot
     }
 
     public class Event
@@ -58,18 +59,26 @@ namespace Covenant.Models.Covenant
             if (this.Progress == DownloadProgress.Complete)
             {
                 File.WriteAllBytes(
-                    Path.Combine(Common.CovenantDownloadDirectory, this.FileName),
+                    Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.FileName)),
                     contents
                 );
             }
             else
             {
-                using (var stream = new FileStream(Path.Combine(Common.CovenantDownloadDirectory, this.FileName), FileMode.Append))
+                using (var stream = new FileStream(Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.FileName)), FileMode.Append))
                 {
                     stream.Write(contents, 0, contents.Length);
                 }
             }
             return true;
+        }
+    }
+
+    public class ScreenshotEvent : DownloadEvent
+    {
+        public ScreenshotEvent()
+        {
+            this.Type = EventType.Screenshot;
         }
     }
 }

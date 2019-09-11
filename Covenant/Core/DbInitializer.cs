@@ -611,6 +611,13 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "ScreenShot",
+                        Description = "Takes a screenshot of the currently active desktop, move into a targeted pid for specific desktops",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ScreenShot" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
                         Name = "Mimikatz",
                         AlternateNames = new List<string>(),
                         Description = "Execute a mimikatz command.",
@@ -1594,6 +1601,152 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "PersistStartup",
+                        AlternateNames = new List<string>(),
+                        Description = "Installs a payload into the current users startup folder.\n\n\tPayload: Payload to write to a file. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tFileName: Name of the file to write. E.g. \"startup.bat\".\n",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistStartup" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 74,
+                                Name = "Payload",
+                                Description = "Payload to write to a file.",
+                                Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 75,
+                                Name = "FileName",
+                                Description = "Name of the file to write.",
+                                Value = "startup.bat",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PersistAutorun",
+                        AlternateNames = new List<string>(),
+                        Description = "Installs an autorun value in HKCU or HKLM to execute a payload.\n\n\tTargetHive: Target hive to install autorun. Specify \"CurrentUser\" for HKCU and \"LocalMachine\" for HKLM.\n\tValue: Value to set in the registry. E.g. \"C:\\Example\\GruntStager.exe\"\n\tName: Name for the registy value.E.g. \"Updater\".\n",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistAutorun" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 76,
+                                Name = "TargetHive",
+                                Description = "Target hive to install autorun.",
+                                Value = "CurrentUser",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 77,
+                                Name = "Value",
+                                Description = "Value to set in the registry.",
+                                Value = "C:\\Example\\GruntStager.exe",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 78,
+                                Name = "Name",
+                                Description = "Name for the registy value.",
+                                Value = "Updater",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "PersistWMI",
+                        Description = "Creates a WMI Event, Consumer and Binding to execute a payload.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistWMI" + ".task")),
+                        Options = new List<GruntTaskOption>{
+                            new GruntTaskOption
+                            {
+                                Id = 79,
+                                Name = "EventName",
+                                Description = "Creates a WMI Event, Consumer and Binding to execute a payload.\n\n\tEventName: An arbitrary name to be assigned to the new WMI Event. E.g. \"Evil Persistence\".\n\tEventFilter: Specifies the event trigger to use. The options are \"ProcessStart\".\n\tEventConsumer: Specifies the action to carry out. The options are \"CommandLine\" (OS Command) and \"ActiveScript\" (JScript or VBScript).\n\tPayload: Specifies the CommandLine or ActiveScript payload to run. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tProcessName: Specifies the process name when the \"ProcessStart\" trigger is selected. E.g. \"notepad.exe\".\n\tScriptingEngine: Specifies the scripting engine when the \"ActiveScript\" consumer is selected. The options are \"JScript\" and \"VBScript\".\n",
+                                Value = "Evil Persistence",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 80,
+                                Name = "EventFilter",
+                                Description = "Specifies the event trigger to use.",
+                                Value = "ProcessStart",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 81,
+                                Name = "EventConsumer",
+                                Description = "Specifies the action to carry out.",
+                                Value = "CommandLine",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 82,
+                                Name = "Payload",
+                                Description = "Specifies the CommandLine or ActiveScript payload to run.",
+                                Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 83,
+                                Name = "ProcessName",
+                                Description = "Specifies the process name when the ProcessStart trigger is selected.",
+                                Value = "notepad.exe",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = false
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 84,
+                                Name = "ScriptingEngine",
+                                Description = "Specifies the scripting engine when the ActiveScript consumer is selected.",
+                                Value = "VBScript",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "BypassAmsi",
+                        AlternateNames = new List<string>(),
+                        Description = "Bypasses AMSI by patching the AmsiScanBuffer function.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassAmsi" + ".task")),
+                        Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
@@ -1602,7 +1755,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 74,
+                                Id = 85,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -1638,7 +1791,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 75,
+                                Id = 86,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -1648,7 +1801,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 76,
+                                Id = 87,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -1668,7 +1821,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 77,
+                                Id = 88,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -1688,7 +1841,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 78,
+                                Id = 89,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -1708,7 +1861,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 79,
+                                Id = 90,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -1728,7 +1881,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 80,
+                                Id = 91,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
@@ -1754,6 +1907,7 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCmd") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PowerShell") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Assembly") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassAmsi") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("AssemblyReflect") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ListDirectory") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ChangeDirectory") },
@@ -1800,7 +1954,10 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCode") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SharpShell") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PrivExchange") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistCOMHijack") }
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistCOMHijack") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistStartup") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistAutorun") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistWMI") }
                 );
 
                 var er1 = await context.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x64.dll");
@@ -1824,6 +1981,7 @@ namespace Covenant.Core
                 var upload = await context.GetGruntTaskByName("Upload");
                 var download = await context.GetGruntTaskByName("Download");
                 var privexchange = await context.GetGruntTaskByName("PrivExchange");
+                var screenshot = await context.GetGruntTaskByName("ScreenShot");
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -1838,7 +1996,19 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) }
+    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
+
                 );
             }
         }

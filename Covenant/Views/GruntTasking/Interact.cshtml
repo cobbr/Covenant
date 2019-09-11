@@ -60,7 +60,14 @@
 }
 <div class="form-group">
     <label asp-for="GruntCommand.CommandOutput.Output"></label>
-    <textarea asp-for="GruntCommand.CommandOutput.Output" value="@Model.GruntCommand.CommandOutput.Output" rows="20" class="form-control" readonly></textarea>
+    @if (Model.GruntTask.Name == "ScreenShot")
+    {
+        <img style="max-width:100%" src="data:image/png;base64, @Model.GruntCommand.CommandOutput.Output" />
+    }
+    else
+    {
+        <textarea asp-for="GruntCommand.CommandOutput.Output" value="@Model.GruntCommand.CommandOutput.Output" rows="20" class="form-control" readonly></textarea>
+    }
 </div>
 
 @section Scripts {

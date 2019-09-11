@@ -319,7 +319,14 @@
                                 <div class="card-body">
                                     @if (command.CommandOutput != null)
                                     {
-                                        <p class="text-white task-text-body" style="white-space:pre-wrap">@command.CommandOutput.Output</p>
+                                        if (command.GruntTasking.GruntTask.Name == "ScreenShot")
+                                        {
+                                            <img style="max-width: 100%" src="data:image/png;base64, @command.CommandOutput.Output" />
+                                        }
+                                        else
+                                        {
+                                            <p class="text-white task-text-body" style="white-space:pre-wrap">@command.CommandOutput.Output</p>
+                                        }
                                     }
                                     else
                                     {
@@ -567,7 +574,13 @@
             var displayCommandEvent = function (command, taskingEvent) {
                 var taskingcard = $("#tasking-card-" + command.id)[0];
                 var headerClass = "text-info task-text-head";
-                var outp = '<p class="text-white task-text-body" style="white-space:pre-wrap">' + $('<div>').text(command.commandOutput.output).html() + '</p>';
+                var outp = '';
+                if (command.gruntTasking != undefined && command.gruntTasking.gruntTask.name == 'ScreenShot') {
+                    outp = '<img style="max-width: 100%" src="data:image/png;base64, ' + $('<div>').text(command.commandOutput.output).html() + '" />';
+                }
+                else {
+                    outp = '<p class="text-white task-text-body" style="white-space:pre-wrap">' + $('<div>').text(command.commandOutput.output).html() + '</p>';
+                }
                 if (taskingcard !== undefined) {
                     if (taskingEvent !== undefined) {
                         var head = '<p class="' + headerClass + '">' + $('<div>').text(taskingEvent.messageHeader).html() + '</p>';
