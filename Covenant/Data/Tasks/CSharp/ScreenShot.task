@@ -1,0 +1,28 @@
+﻿using System;
+using System.IO;
+using System.Text;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Windows.Forms;
+
+public static class Task
+{
+    public static string Execute()
+    {
+        try
+        {
+            Rectangle bounds = Screen.GetBounds(Point.Empty);
+            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+            {
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                }
+                MemoryStream ms = new MemoryStream();
+                bitmap.Save(ms, ImageFormat.Png);
+                byte[] bmpBytes = ms.ToArray();
+                return Convert.ToBase64String(bmpBytes);
+            }
+        } catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

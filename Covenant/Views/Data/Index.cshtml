@@ -6,6 +6,7 @@
     IEnumerable<CapturedHashCredential> HashCredentials = ViewBag.HashCredentials;
     IEnumerable<CapturedTicketCredential> TicketCredentials = ViewBag.TicketCredentials;
     IEnumerable<DownloadEvent> DownloadEvents = ViewBag.DownloadEvents;
+    IEnumerable<ScreenshotEvent> ScreenshotEvents = ViewBag.ScreenshotEvents;
 }
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
@@ -31,13 +32,13 @@
             Downloads
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" id="screenshots-tab" data-toggle="tab" href="#screenshots" role="tab" aria-controls="screenshots" aria-selected="false">
+            <span data-feather="camera"></span>
+            Screenshots
+        </a>
+    </li>
     @*
-        <li class="nav-item">
-            <a class="nav-link" id="screenshots-tab" data-toggle="tab" href="#screenshots" role="tab" aria-controls="screenshots" aria-selected="false">
-                <span data-feather="camera"></span>
-                Screenshots
-            </a>
-        </li>
         <li class="nav-item">
             <a class="nav-link" id="keylogger-tab" data-toggle="tab" href="#keylogger" role="tab" aria-controls="keylogger" aria-selected="false">
                 <span data-feather="message-square"></span>
@@ -80,7 +81,7 @@
                             </td>
                             <td>
                                 <a class="btn btn-primary" asp-controller="Data" asp-action="Download" asp-route-id="@download.Id">
-                                    <span data-feather="download"></span> 
+                                    <span data-feather="download"></span>
                                     Download
                                 </a>
                             </td>
@@ -90,37 +91,36 @@
             </table>
         </div>
     </div>
-    @*
-        <div class="tab-pane fade" id="screenshots" role="tabpanel" aria-labelledby="screenshots-tab">
-            <div class="table-responsive">
-                <table id="download-table" class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>FileName</th>
-                            <th>Size</th>
-                            <th>Download</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+    <div class="tab-pane fade" id="screenshots" role="tabpanel" aria-labelledby="screenshots-tab">
+        <div class="table-responsive">
+            <table id="screenshot-table" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>FileName</th>
+                        <th>Size</th>
+                        <th>Image</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var screenshot in ScreenshotEvents)
+                    {
                         <tr>
                             <td>
-                                <a asp-action="Download" asp-route-id="1">
-                                    Download1
-                                </a>
+                                @screenshot.FileName
                             </td>
-                            <td>FileName1</td>
-                            <td>100MB</td>
                             <td>
-                                <a class="btn btn-link" asp-action="DownloadDownload" asp-route-id="1">
-                                    Download
-                                </a>
+                                @System.Convert.FromBase64String(screenshot.FileContents).Length
+                            </td>
+                            <td>
+                                <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
                             </td>
                         </tr>
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
+    </div>
+    @*
         <div class="tab-pane fade" id="keylogger" role="tabpanel" aria-labelledby="keylogger-tab">
             <div class="table-responsive">
                 <table id="download-table" class="table table-bordered">

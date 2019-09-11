@@ -32,6 +32,7 @@ namespace Covenant.Controllers.ViewControllers
             ViewBag.NetworkIndicators = await _context.GetNetworkIndicators();
             ViewBag.FileIndicators = await _context.GetFileIndicators();
             ViewBag.DownloadEvents = await _context.GetDownloadEvents();
+            ViewBag.ScreenshotEvents = await _context.GetScreenshotEvents();
             return View();
         }
 
@@ -41,6 +42,20 @@ namespace Covenant.Controllers.ViewControllers
             {
                 DownloadEvent ev = await _context.GetDownloadEvent(id);
                 return File(Convert.FromBase64String(ev.FileContents), "plain/text", ev.FileName);
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> Screenshot(int id)
+        {
+            try
+            {
+                ScreenshotEvent ev = await _context.GetScreenshotEvent(id);
+                return File(Convert.FromBase64String(ev.FileContents), "image/png", ev.FileName);
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
