@@ -318,7 +318,7 @@
                                 <div class="card-body">
                                     @if (command.CommandOutput != null)
                                     {
-                                        if (command.GruntTasking.GruntTask.Name == "ScreenShot")
+                                        if (command.GruntTasking != null && command.GruntTasking.GruntTask != null && command.GruntTasking.GruntTask.Name == "ScreenShot")
                                         {
                                             <img style="max-width: 100%" src="data:image/png;base64, @command.CommandOutput.Output" />
                                         }
