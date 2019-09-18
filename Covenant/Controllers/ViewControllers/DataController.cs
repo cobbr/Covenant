@@ -1,7 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +24,7 @@ namespace Covenant.Controllers.ViewControllers
             _context = context;
         }
 
-        // GET: /data/
+        [Authorize, HttpGet, Route("Data"), Route("Data/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.PasswordCredentials = await _context.GetPasswordCredentials();
@@ -36,6 +38,7 @@ namespace Covenant.Controllers.ViewControllers
             return View();
         }
 
+        [Authorize, HttpGet, Route("Data/Download/{id}")]
         public async Task<IActionResult> Download(int id)
         {
             try
@@ -50,6 +53,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
+        [Authorize, HttpGet, Route("Data/Screenshot/{id}")]
         public async Task<IActionResult> Screenshot(int id)
         {
             try

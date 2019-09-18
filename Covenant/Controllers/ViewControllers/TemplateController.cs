@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
@@ -21,7 +24,7 @@ namespace Covenant.Controllers
             _context = context;
         }
 
-        // GET: /template/
+        [Authorize, HttpGet, Route("Template"), Route("Template/Index")]
         public async Task<IActionResult> Index()
         {
             try
@@ -34,7 +37,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /template/{id}
+        [Authorize, HttpGet, Route("Template/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -48,8 +51,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /template/
-        [HttpPost]
+        [Authorize, HttpPost, Route("Template/Edit")]
         public async Task<IActionResult> Edit(ImplantTemplate template)
         {
             try
@@ -63,7 +65,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /template/create
+        [Authorize, HttpGet, Route("Template/Create")]
         public async Task<IActionResult> Create()
         {
             try
@@ -77,8 +79,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /template/create
-        [HttpPost]
+        [Authorize, HttpPost, Route("Template/Create")]
         public async Task<IActionResult> Create(ImplantTemplate template)
         {
             try

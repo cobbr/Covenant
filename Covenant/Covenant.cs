@@ -17,14 +17,15 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
-using McMaster.Extensions.CommandLineUtils;
 using NLog.Web;
 using NLog.Config;
 using NLog.Targets;
+using McMaster.Extensions.CommandLineUtils;
 
 using Covenant.Models;
 using Covenant.Core;
@@ -91,7 +92,7 @@ namespace Covenant
                 }
                 IPEndPoint CovenantEndpoint = new IPEndPoint(address, Common.CovenantHTTPSPort);
                 string CovenantUri = (CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + Common.CovenantHTTPSPort : "https://" + CovenantEndpoint);
-                var host = BuildWebHost(CovenantEndpoint, CovenantUri);
+                var host = BuildHost(CovenantEndpoint, CovenantUri);
                 using (var scope = host.Services.CreateScope())
                 {
                     var services = scope.ServiceProvider;
@@ -160,9 +161,11 @@ namespace Covenant
             app.Execute(args);
         }
 
-        public static IWebHost BuildWebHost(IPEndPoint CovenantEndpoint, string CovenantUri) =>
-            new WebHostBuilder()
-                .UseKestrel(options =>
+        public static IHost BuildHost(IPEndPoint CovenantEndpoint, string CovenantUri) =>
+            new HostBuilder()
+            .ConfigureWebHost(weboptions =>
+            {
+                weboptions.UseKestrel(options =>
                 {
                     options.Listen(CovenantEndpoint, listenOptions =>
                     {
@@ -211,8 +214,9 @@ namespace Covenant
                            .AddFilter("Microsoft", LogLevel.Warning);
                 })
                 .UseStartup<Startup>()
-                .UseSetting("CovenantUri", CovenantUri)
-                .Build();
+                .UseSetting("CovenantUri", CovenantUri);
+            })
+            .Build();
 
         private static bool IsElevated()
         {

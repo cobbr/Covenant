@@ -1,7 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -22,13 +24,13 @@ namespace Covenant.Controllers.ViewControllers
             _context = context;
         }
 
+        [Authorize, HttpGet, Route("EmbeddedResource/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             return View(await _context.GetEmbeddedResource(id));
         }
 
-        // POST: /embeddedresource/edit
-        [HttpPost]
+        [Authorize, HttpPost, Route("EmbeddedResource/Edit")]
         public async Task<IActionResult> Edit(EmbeddedResource resource)
         {
             try
@@ -41,7 +43,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // GET: /embeddedresource/create
+        [Authorize, HttpGet, Route("EmbeddedResource/Create")]
         public IActionResult Create()
         {
             try
@@ -54,8 +56,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // POST: /embeddedresource/create
-        [HttpPost]
+        [Authorize, HttpPost, Route("EmbeddedResource/Create")]
         public async Task<IActionResult> Create(EmbeddedResource resource)
         {
             try

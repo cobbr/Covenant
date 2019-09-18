@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -57,6 +61,14 @@ namespace Covenant.Core
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.Bridge,
                         ImplantDirection = ImplantDirection.Push
+                    },
+                    new ImplantTemplate
+                    {
+                        Name = "Brute",
+                        Description = "A cross-platform implant built on .NET Core 3.0.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.HTTP,
+                        ImplantDirection = ImplantDirection.Pull
                     }
                 };
                 templates.ForEach(t => t.ReadFromDisk());
@@ -83,6 +95,11 @@ namespace Covenant.Core
                     {
                         ListenerType = await context.GetListenerTypeByName("Bridge"),
                         ImplantTemplate = await context.GetImplantTemplateByName("GruntSMB")
+                    },
+                    new ListenerTypeImplantTemplate
+                    {
+                        ListenerType = await context.GetListenerTypeByName("HTTP"),
+                        ImplantTemplate = await context.GetImplantTemplateByName("Brute")
                     }
                 );
             }
@@ -185,6 +202,7 @@ namespace Covenant.Core
                 await context.SaveChangesAsync();
             }
 
+            #region ReferenceSourceLibraries
             if (!context.ReferenceSourceLibraries.Any())
             {
                 var ReferenceSourceLibraries = new List<ReferenceSourceLibrary>
@@ -348,11 +366,12 @@ namespace Covenant.Core
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) }
                 );
             }
-
+            #endregion
             if (!context.GruntTasks.Any())
             {
                 var GruntTasks = new List<GruntTask>
                 {
+                    #region GruntTasks DotNetFramework
                     new GruntTask
                     {
                         Name = "Shell",
@@ -1745,12 +1764,15 @@ namespace Covenant.Core
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassAmsi" + ".task")),
                         Options = new List<GruntTaskOption>()
                     },
+                    #endregion
+                    #region GruntTask Generic
                     new GruntTask
                     {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
                         Code = "",
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1771,6 +1793,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Get active Jobs.",
                         Code = "",
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -1779,6 +1802,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Kill the Grunt.",
                         Code = "",
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -1877,6 +1901,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Show the help menu.",
                         Code = "",
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1889,7 +1914,19 @@ namespace Covenant.Core
                                 DisplayInCommand = true
                             }
                         }
+                    },
+                    #endregion
+                    #region GruntTask DotNetCore
+                    new GruntTask
+                    {
+                        Name = "WhoAmI",
+                        AlternateNames = new List<string>(),
+                        Description = "Gets the username of the currently used/impersonated token.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "WhoAmI" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption>()
                     }
+                    #endregion
                 };
                 await context.GruntTasks.AddRangeAsync(GruntTasks);
                 await context.SaveChangesAsync();

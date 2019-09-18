@@ -6,13 +6,14 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Reflection;
 using System.IO.Compression;
 using System.Collections.Generic;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Emit;
 
 using Confuser.Core;
 using Confuser.Core.Project;
@@ -23,20 +24,64 @@ namespace Covenant.Core
     {
         public class CompilationRequest
         {
-            public string Source { get; set; } = null;
-            public List<string> SourceDirectories { get; set; } = null;
-
             public Covenant.Models.Grunts.ImplantLanguage Language { get; set; } = Models.Grunts.ImplantLanguage.CSharp;
+            public Platform Platform { get; set; } = Platform.AnyCpu;
+        }
+
+        public class CsharpCompilationRequest : CompilationRequest
+        {
             public Common.DotNetVersion TargetDotNetVersion { get; set; } = Common.DotNetVersion.Net35;
             public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
-            public Platform Platform { get; set; } = Platform.AnyCpu;
-            public bool UnsafeCompile { get; set; } = false;
             public bool Optimize { get; set; } = true;
             public bool Confuse { get; set; } = false;
+            public bool UnsafeCompile { get; set; } = false;
 
             public string AssemblyName { get; set; } = null;
             public List<Reference> References { get; set; } = new List<Reference>();
             public List<EmbeddedResource> EmbeddedResources { get; set; } = new List<EmbeddedResource>();
+        }
+
+        public class CsharpFrameworkCompilationRequest : CsharpCompilationRequest
+        {
+            public string Source { get; set; } = null;
+            public List<string> SourceDirectories { get; set; } = null;
+        }
+
+        public class CsharpCoreCompilationRequest : CsharpCompilationRequest
+        {
+            public string ResultName { get; set; } = "";
+            public string SourceDirectory { get; set; } = "";
+            public RuntimeIdentifier RuntimeIdentifier { get; set; } = RuntimeIdentifier.win_x64;
+        }
+
+        private static readonly Dictionary<RuntimeIdentifier, string> RuntimeIdentifiers = new Dictionary<RuntimeIdentifier, string>
+        {
+            { RuntimeIdentifier.win_x64, "win-x64" }, { RuntimeIdentifier.win_x86, "win-x86" },
+            { RuntimeIdentifier.win_arm, "win-arm" }, { RuntimeIdentifier.win_arm64, "win-arm64" },
+            { RuntimeIdentifier.win7_x64, "win7-x64" }, { RuntimeIdentifier.win7_x86, "win7-x86" },
+            { RuntimeIdentifier.win81_x64, "win81-x64" }, { RuntimeIdentifier.win81_x86, "win81-x86" }, { RuntimeIdentifier.win81_arm, "win81-arm" },
+            { RuntimeIdentifier.win10_x64, "win10-x64" }, { RuntimeIdentifier.win10_x86, "win10-x86" },
+            { RuntimeIdentifier.win10_arm, "win10-arm" }, { RuntimeIdentifier.win10_arm64, "win10-arm64" },
+            { RuntimeIdentifier.linux_x64, "linux-x64" }, { RuntimeIdentifier.linux_musl_x64, "linux-musl-x64" }, { RuntimeIdentifier.linux_arm, "linux-arm" },
+            { RuntimeIdentifier.rhel_x64, "rhel-x64" }, { RuntimeIdentifier.rhel_6_x64, "rhel.6-x64" },
+            { RuntimeIdentifier.tizen, "tizen" }, { RuntimeIdentifier.tizen_4_0_0, "tizen.4.0.0" }, { RuntimeIdentifier.tizen_5_0_0, "tizen.5.0.0" },
+            { RuntimeIdentifier.osx_x64, "osx-x64" },{ RuntimeIdentifier.osx_10_10_x64, "osx.10.10-x64" }, { RuntimeIdentifier.osx_10_11_x64, "osx.10.11-x64" },
+            { RuntimeIdentifier.osx_10_12_x64, "osx.10.12-x64" }, { RuntimeIdentifier.osx_10_13_x64, "osx.10.13-x64" }, { RuntimeIdentifier.osx_10_14_x64, "osx.10.14-x64" },
+        };
+
+        public enum RuntimeIdentifier
+        {
+            win_x64, win_x86,
+            win_arm, win_arm64,
+            win7_x64, win7_x86,
+            win81_x64, win81_x86, win81_arm,
+            win10_x64, win10_x86,
+            win10_arm, win10_arm64,
+            linux_x64, linux_musl_x64, linux_arm,
+            rhel_x64, rhel_6_x64,
+            tizen, tizen_4_0_0, tizen_5_0_0,
+            osx_x64, osx_10_10_x64, osx_10_11_x64,
+            osx_10_12_x64, osx_10_13_x64, osx_10_14_x64
         }
 
         public class EmbeddedResource
@@ -63,16 +108,58 @@ namespace Covenant.Core
 
         public static byte[] Compile(CompilationRequest request)
         {
-            switch(request.Language)
+            if (request.Language == Models.Grunts.ImplantLanguage.CSharp)
             {
-                case Models.Grunts.ImplantLanguage.CSharp:
-                    return CompileCSharp(request);
-                default:
-                    return CompileCSharp(request);
+                return CompileCSharp((CsharpCompilationRequest)request);
+            }
+            return null;
+        }
+
+        private static byte[] CompileCSharp(CsharpCompilationRequest request)
+        {
+            if (request.TargetDotNetVersion == Common.DotNetVersion.NetCore30)
+            {
+                return CompileCSharpCore((CsharpCoreCompilationRequest)request);
+            }
+            else
+            {
+                return CompileCSharpFramework((CsharpFrameworkCompilationRequest)request);
             }
         }
 
-        private static byte[] CompileCSharp(CompilationRequest request)
+        private static byte[] CompileCSharpCore(CsharpCoreCompilationRequest request)
+        {
+            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            p.StartInfo.WorkingDirectory = request.SourceDirectory;
+            p.StartInfo.FileName = "dotnet";
+            p.StartInfo.Arguments = $"publish -c release -r {RuntimeIdentifiers[request.RuntimeIdentifier]}";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.CreateNoWindow = true;
+            p.Start();
+            p.WaitForExit();
+            try
+            {
+                string dir = Path.Combine(request.SourceDirectory, "bin", "release", "netcoreapp3.0", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
+                IEnumerable<string> files = Directory.EnumerateFiles(dir);
+                string file = files
+                    .Select(F => new FileInfo(F))
+                    .FirstOrDefault(F => F.DirectoryName == dir &&
+                                    F.Name.Contains(request.ResultName, StringComparison.CurrentCultureIgnoreCase) &&
+                                    !F.Name.EndsWith(".pdb", StringComparison.CurrentCultureIgnoreCase) &&
+                                    !F.Name.EndsWith(".deps.json", StringComparison.CurrentCultureIgnoreCase))
+                    .FullName;
+                byte[] bytes = File.ReadAllBytes(file);
+                if (request.Confuse)
+                {
+                    return ConfuseAssembly(bytes);
+                }
+                return bytes;
+            }
+            catch (Exception e) { Console.Error.WriteLine("Exception: " + e.Message + Environment.NewLine + e.StackTrace); }
+            return null;
+        }
+
+        private static byte[] CompileCSharpFramework(CsharpFrameworkCompilationRequest request)
         {
             // Gather SyntaxTrees for compilation
             List<SourceSyntaxTree> sourceSyntaxTrees = new List<SourceSyntaxTree>();
@@ -91,20 +178,11 @@ namespace Covenant.Core
             SyntaxTree sourceTree = CSharpSyntaxTree.ParseText(request.Source, new CSharpParseOptions());
             compilationTrees.Add(sourceTree);
 
-            List<PortableExecutableReference> references = request.References.Where(R => R.Framework == request.TargetDotNetVersion).Where(R => R.Enabled).Select(R =>
-            {
-                switch (R.Framework)
-                {
-                    case Common.DotNetVersion.Net35:
-                        return MetadataReference.CreateFromFile(R.File);
-                    case Common.DotNetVersion.Net40:
-                        return MetadataReference.CreateFromFile(R.File);
-                    case Common.DotNetVersion.NetCore21:
-                        return MetadataReference.CreateFromFile(R.File);
-                    default:
-                        return null;
-                }
-            }).ToList();
+            List<PortableExecutableReference> references = request.References
+                .Where(R => R.Framework == request.TargetDotNetVersion)
+                .Where(R => R.Enabled)
+                .Select(R => MetadataReference.CreateFromFile(R.File))
+                .ToList();
 
             // Use specified OutputKind and Platform
             CSharpCompilationOptions options = new CSharpCompilationOptions(outputKind: request.OutputKind, optimizationLevel: OptimizationLevel.Release, platform: request.Platform, allowUnsafe: request.UnsafeCompile);
@@ -138,7 +216,6 @@ namespace Covenant.Core
                     return N.Kind() == SyntaxKind.UsingDirective && !((UsingDirectiveSyntax)N).Name.ToFullString().StartsWith("System.") && !usedNamespaceNames.Contains(((UsingDirectiveSyntax)N).Name.ToFullString());
                 }).ToList();
                 sourceTree = sourceTree.GetRoot().RemoveNodes(unusedUsingDirectives, SyntaxRemoveOptions.KeepNoTrivia).SyntaxTree;
-                // Console.WriteLine("source: " + sourceTree.ToString());
 
                 // Compile again, with unused SyntaxTrees and unused using statements removed
                 compilationTrees.Add(sourceTree);

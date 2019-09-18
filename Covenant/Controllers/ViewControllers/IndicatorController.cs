@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +22,7 @@ namespace Covenant.Controllers
             _context = context;
         }
 
-        // GET: /indicator/
+        [Authorize, HttpGet, Route("Indicator"), Route("Indicator/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.TargetIndicators = await _context.GetTargetIndicators();
@@ -27,30 +31,27 @@ namespace Covenant.Controllers
             return View(await _context.GetIndicators());
         }
 
-        // GET: /indicator/create
+        [Authorize, HttpGet, Route("Indicator/Create")]
         public IActionResult Create()
         {
             return View(new Indicator());
         }
 
-        // POST: /indicator/createfileindicator
-        [HttpPost]
+        [Authorize, HttpPost, Route("Indicator/CreateFileIndicator")]
         public async Task<IActionResult> CreateFileIndicator(FileIndicator indicator)
         {
             Indicator createdIndicator = await _context.CreateIndicator(indicator);
             return RedirectToAction("Index", "Data");
         }
 
-        // POST: /indicator/createnetworkindicator
-        [HttpPost]
+        [Authorize, HttpPost, Route("Indicator/CreateNetworkIndicator")]
         public async Task<IActionResult> CreateNetworkIndicator(NetworkIndicator indicator)
         {
             Indicator createdIndicator = await _context.CreateIndicator(indicator);
             return RedirectToAction("Index", "Data");
         }
 
-        // POST: /indicator/createtargetindicator
-        [HttpPost]
+        [Authorize, HttpPost, Route("Indicator/CreateTargetIndicator")]
         public async Task<IActionResult> CreateTargetIndicator(TargetIndicator indicator)
         {
             Indicator createdIndicator = await _context.CreateIndicator(indicator);

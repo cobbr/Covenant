@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
@@ -25,13 +29,13 @@ namespace Covenant.Controllers
             _context = context;
         }
 
-        // GET: /launcher/
+        [Authorize, HttpGet, Route("Launcher"), Route("Launcher/Index")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.GetLaunchers());
         }
 
-        // GET: /launcher/create/{name}
+        [Authorize, HttpGet, Route("Launcher/Create/{id}")]
         public async Task<IActionResult> Create(string id)
         {
             try
@@ -73,8 +77,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/binary
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/Binary")]
         public async Task<IActionResult> Binary(BinaryLauncher launcher)
         {
             try
@@ -94,7 +97,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostbinary
+        [Authorize, HttpPost, Route("Launcher/HostBinary")]
         public async Task<IActionResult> HostBinary(HostedFile file)
         {
             try
@@ -112,7 +115,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/binarydownload
+        [Authorize, HttpGet, Route("Launcher/BinaryDownload")]
         public async Task<IActionResult> BinaryDownload()
         {
             try
@@ -127,8 +130,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/powershell
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/PowerShell")]
         public async Task<IActionResult> PowerShell(PowerShellLauncher launcher)
         {
             try
@@ -148,7 +150,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostpowershell
+        [Authorize, HttpPost, Route("Launcher/HostPowerShell")]
         public async Task<IActionResult> HostPowerShell(HostedFile file)
         {
             try
@@ -165,7 +167,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/powershelldownload
+        [Authorize, HttpGet, Route("Launcher/PowerShellDownload")]
         public async Task<IActionResult> PowerShellDownload()
         {
             try
@@ -180,8 +182,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/installutil
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/InstallUtil")]
         public async Task<IActionResult> InstallUtil(InstallUtilLauncher launcher)
         {
             try
@@ -201,7 +202,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostinstallutil
+        [Authorize, HttpPost, Route("Launcher/HostInstallUtil")]
         public async Task<IActionResult> HostInstallUtil(HostedFile file)
         {
             try
@@ -219,7 +220,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/installutildownload
+        [Authorize, HttpGet, Route("Launcher/InstallUtilDownload")]
         public async Task<IActionResult> InstallUtilDownload()
         {
             try
@@ -234,8 +235,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/msbuild
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/MSBuild")]
         public async Task<IActionResult> MSBuild(MSBuildLauncher launcher)
         {
             try
@@ -255,7 +255,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostmsbuild
+        [Authorize, HttpPost, Route("Launcher/HostMSBuild")]
         public async Task<IActionResult> HostMSBuild(HostedFile file)
         {
             try
@@ -273,7 +273,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/msbuilddownload
+        [Authorize, HttpGet, Route("Launcher/MSBuildDownload")]
         public async Task<IActionResult> MSBuildDownload()
         {
             try
@@ -288,8 +288,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/regsvr32
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/Regsvr32")]
         public async Task<IActionResult> Regsvr32(Regsvr32Launcher launcher)
         {
             try
@@ -309,7 +308,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostregsvr32
+        [Authorize, HttpPost, Route("Launcher/HostRegsvr32")]
         public async Task<IActionResult> HostRegsvr32(HostedFile file)
         {
             try
@@ -327,7 +326,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/regsvr32download
+        [Authorize, HttpGet, Route("Launcher/Regsvr32Download")]
         public async Task<IActionResult> Regsvr32Download()
         {
             try
@@ -342,8 +341,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/mshta
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/Mshta")]
         public async Task<IActionResult> Mshta(MshtaLauncher launcher)
         {
             try
@@ -363,7 +361,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostmshta
+        [Authorize, HttpPost, Route("Launcher/HostMshta")]
         public async Task<IActionResult> HostMshta(HostedFile file)
         {
             try
@@ -381,7 +379,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/mshtadownload
+        [Authorize, HttpGet, Route("Launcher/MshtaDownload")]
         public async Task<IActionResult> MshtaDownload()
         {
             try
@@ -396,8 +394,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/wmic
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/Wmic")]
         public async Task<IActionResult> Wmic(WmicLauncher launcher)
         {
             try
@@ -417,7 +414,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostwmic
+        [Authorize, HttpPost, Route("Launcher/HostWmic")]
         public async Task<IActionResult> HostWmic(HostedFile file)
         {
             try
@@ -435,7 +432,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/wmicdownload
+        [Authorize, HttpGet, Route("Launcher/WmicDownload")]
         public async Task<IActionResult> WmicDownload()
         {
             try
@@ -450,8 +447,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/cscript
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/Cscript")]
         public async Task<IActionResult> Cscript(CscriptLauncher launcher)
         {
             try
@@ -471,7 +467,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostcscript
+        [Authorize, HttpPost, Route("Launcher/HostCscript")]
         public async Task<IActionResult> HostCscript(HostedFile file)
         {
             try
@@ -489,7 +485,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/cscriptdownload
+        [Authorize, HttpGet, Route("Launcher/CscriptDownload")]
         public async Task<IActionResult> CscriptDownload()
         {
             try
@@ -504,8 +500,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/wscript
-        [HttpPost]
+        [Authorize, HttpPost, Route("Launcher/Wscript")]
         public async Task<IActionResult> Wscript(WscriptLauncher launcher)
         {
             try
@@ -525,7 +520,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /launcher/hostwscript
+        [Authorize, HttpPost, Route("Launcher/HostWscript")]
         public async Task<IActionResult> HostWscript(HostedFile file)
         {
             try
@@ -543,7 +538,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /launcher/wscriptdownload
+        [Authorize, HttpGet, Route("Launcher/WscriptDownload")]
         public async Task<IActionResult> WscriptDownload()
         {
             try

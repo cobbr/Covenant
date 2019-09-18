@@ -5,6 +5,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 using Microsoft.CodeAnalysis;
 
 using Covenant.Core;
@@ -28,20 +31,24 @@ namespace Covenant.Models.Launchers
 
     public class Launcher
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-
         public int ListenerId { get; set; }
-
-        public string Name { get; set; } = "GenericLauncher";
-        public string Description { get; set; } = "A generic launcher.";
-
-        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
-        public LauncherType Type { get; set; }
-
         public int ImplantTemplateId { get; set; }
 
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public LauncherType Type { get; set; } = LauncherType.Binary;
+        public Common.DotNetVersion DotNetVersion { get; set; } = Common.DotNetVersion.Net35;
+
+        // .NET Core options
+        public Compiler.RuntimeIdentifier RuntimeIdentifier { get; set; } = Compiler.RuntimeIdentifier.win_x64;
+
+        // Http Options
         public bool ValidateCert { get; set; } = true;
         public bool UseCertPinning { get; set; } = true;
+
+        // Smb Options
         public string SMBPipeName { get; set; } = "gruntsvc";
 
         public int Delay { get; set; } = 5;
@@ -149,11 +156,11 @@ namespace Covenant.Models.Launchers
                 this.DiskCode = DiskCode.Replace("{{REPLACE_SCRIPT}}", code);
             }
 
-            if (this.DotNetFrameworkVersion == Common.DotNetVersion.Net35)
+            if (this.DotNetVersion == Common.DotNetVersion.Net35)
             {
                 this.DiskCode = this.DiskCode.Replace("{{REPLACE_VERSION_SETTER}}", "");
             }
-            else if (this.DotNetFrameworkVersion == Common.DotNetVersion.Net40)
+            else if (this.DotNetVersion == Common.DotNetVersion.Net40)
             {
                 this.DiskCode = this.DiskCode.Replace("{{REPLACE_VERSION_SETTER}}", JScriptNet40VersionSetter);
             }

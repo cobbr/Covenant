@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +22,7 @@ namespace Covenant.Controllers
             _context = context;
         }
 
-        // GET: /credential
+        [Authorize, HttpGet, Route("Credential"), Route("Credential/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.PasswordCredentials = await _context.GetPasswordCredentials();
@@ -27,30 +31,27 @@ namespace Covenant.Controllers
             return View(await _context.GetCredentials());
         }
 
-        // GET: /credential/create
+        [Authorize, HttpGet, Route("Credential/Create")]
         public IActionResult Create()
         {
             return View(new CapturedCredential());
         }
 
-        // POST: /credential/createpasswordcredential
-        [HttpPost]
+        [Authorize, HttpPost, Route("Credential/CreatePasswordCredential")]
         public async Task<IActionResult> CreatePasswordCredential(CapturedPasswordCredential credential)
         {
             CapturedCredential createdCredential = await _context.CreatePasswordCredential(credential);
             return RedirectToAction("Index", "Data");
         }
 
-        // POST: /credential/createhashcredential
-        [HttpPost]
+        [Authorize, HttpPost, Route("Credential/CreateHashCredential")]
         public async Task<IActionResult> CreateHashCredential(CapturedHashCredential credential)
         {
             CapturedCredential createdCredential = await _context.CreateHashCredential(credential);
             return RedirectToAction("Index", "Data");
         }
 
-        // POST: /credential/createticketcredential
-        [HttpPost]
+        [Authorize, HttpPost, Route("Credential/CreateTicketCredential")]
         public async Task<IActionResult> CreateTicketCredential(CapturedTicketCredential credential)
         {
             CapturedCredential createdCredential = await _context.CreateTicketCredential(credential);

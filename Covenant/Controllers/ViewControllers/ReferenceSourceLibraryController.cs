@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -21,6 +25,7 @@ namespace Covenant.Controllers.ViewControllers
             _context = context;
         }
 
+        [Authorize, HttpGet, Route("ReferenceSourceLibrary/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -41,8 +46,7 @@ namespace Covenant.Controllers.ViewControllers
             public new List<int> EmbeddedResources { get; set; } = new List<int>();
         }
 
-        // POST: /referencesourcelibrary/edit
-        [HttpPost]
+        [Authorize, HttpPost, Route("ReferenceSourceLibrary/Edit")]
         public async Task<IActionResult> Edit(ReferenceSourceLibraryModel libraryModel)
         {
             try
@@ -71,7 +75,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // GET: /referencesourcelibrary/create
+        [Authorize, HttpGet, Route("ReferenceSourceLibrary/Create")]
         public async Task<IActionResult> Create()
         {
             try
@@ -86,8 +90,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // POST: /grunttask/create
-        [HttpPost]
+        [Authorize, HttpPost, Route("ReferenceSourceLibrary/Create")]
         public async Task<IActionResult> Create(ReferenceSourceLibraryModel libraryModel)
         {
             try

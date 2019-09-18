@@ -17,7 +17,7 @@
         <input asp-for="@Model.Description" value="@Model.Description" class="form-control-plaintext" readonly>
     </div>
     <div class="form-row">
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-4">
             <label asp-for="@Model.ListenerId">Listener</label>
             <select asp-for="@Model.ListenerId" class="form-control">
                 @foreach (var item in Listeners)
@@ -29,7 +29,7 @@
                 }
             </select>
         </div>
-        <div class="form-group col-md-6">
+        <div class="form-group col-md-4">
             <label asp-for="@Model.ImplantTemplateId">Template</label>
             <select asp-for="@Model.ImplantTemplateId" class="form-control">
                 @foreach (var item in ImplantTemplates)
@@ -37,6 +37,16 @@
                     <option value="@item.Id">@Html.DisplayFor(modelItem => item.Name)</option>
                 }
             </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label asp-for="DotNetVersion"></label>
+            <select asp-for="DotNetVersion" asp-items="Html.GetEnumSelectList<Common.DotNetVersion>()" class="form-control"></select>
+        </div>
+    </div>
+    <div class="form-row" id="core-div">
+        <div class="form-group col-md-4">
+            <label asp-for="@Model.RuntimeIdentifier"></label>
+            <select asp-for="@Model.RuntimeIdentifier" asp-items="Html.GetEnumSelectList<Compiler.RuntimeIdentifier>()" class="form-control"></select>
         </div>
     </div>
     <div class="form-row" id="http-div">
@@ -78,14 +88,14 @@
             <label asp-for="@Model.KillDate"></label>
             <input id="KillDate" name="KillDate" value="@Model.KillDate" class="form-control">
         </div>
-        <div class="form-group col-md-4">
-            <label asp-for="DotNetFrameworkVersion"></label>
-            <select asp-for="DotNetFrameworkVersion" asp-items="Html.GetEnumSelectList<Common.DotNetVersion>()" class="form-control"></select>
-        </div>
     </div>
-    <input asp-for="@Model.LauncherString" value="@Model.LauncherString" class="form-control" type="hidden">
+    @{
+        string ls = Model.LauncherString == null ? "" : Model.LauncherString.Substring(0, Math.Min(Model.LauncherString.Length, 10000));
+        string bs = Model.Base64ILByteString == null ? "" : Model.Base64ILByteString.Substring(0, Math.Min(Model.Base64ILByteString.Length, 10000));
+    }
+    <input asp-for="@Model.LauncherString" value="@ls" class="form-control" type="hidden">
     <input asp-for="@Model.StagerCode" value="@Model.StagerCode" class="form-control" type="hidden">
-    <input asp-for="@Model.Base64ILByteString" value="@Model.Base64ILByteString" class="form-control" type="hidden">
+    <input asp-for="@Model.Base64ILByteString" value="@bs" class="form-control" type="hidden">
     @{
         List<string> launchernames = new List<string> { "Binary", "CScript", "InstallUtil", "MSBuild", "Mshta", "PowerShell", "Regsvr32", "Wmic", "WScript" };
         if (launchernames.Contains(Model.Name))

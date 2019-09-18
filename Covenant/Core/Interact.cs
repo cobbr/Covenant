@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -113,7 +117,7 @@ namespace Covenant.Core
             List<string> suggestions = new List<string>();
             foreach (var task in await _context.GetGruntTasks())
             {
-                if (!task.Name.StartsWith("SharpShell-", StringComparison.Ordinal))
+                if (!task.Name.StartsWith("SharpShell-", StringComparison.Ordinal) && task.SupportedDotNetVersions.Contains(grunt.DotNetVersion))
                 {
                     suggestions.Add(task.Name);
                     GetSuggestionRecursive(task, 0, task.Name, ref suggestions);
@@ -195,7 +199,7 @@ namespace Covenant.Core
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "help")
             {
-                output = await Help(parameters);
+                output = await Help(grunt, parameters);
             }
             else if (parameters.FirstOrDefault().Value.ToLower() == "sharpshell")
             {
@@ -237,7 +241,7 @@ namespace Covenant.Core
                 await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
                 output = "PowerShell Imported";
             }
-            else if (commandTask != null)
+            else if (commandTask != null && commandTask.SupportedDotNetVersions.Contains(grunt.DotNetVersion))
             {
                 parameters = parameters.Skip(1).ToList();
                 if (parameters.Count() < commandTask.Options.Count(O => !O.Optional))
@@ -299,6 +303,10 @@ namespace Covenant.Core
                 commandTask = await _context.EditGruntTask(commandTask);
                 await StartTask(grunt, commandTask, GruntCommand);
             }
+            else if (commandTask != null && !commandTask.SupportedDotNetVersions.Contains(grunt.DotNetVersion))
+            {
+                output = EliteConsole.PrintFormattedErrorLine($"Task: {commandTask.Name} is not compatible with DotNetVersion: {grunt.DotNetVersion.ToString()}");
+            }
             else
             {
                 output = EliteConsole.PrintFormattedErrorLine("Unrecognized command");
@@ -341,7 +349,7 @@ namespace Covenant.Core
             return menu.Print();
         }
 
-        public async Task<string> Help(List<ParsedParameter> parameters)
+        public async Task<string> Help(Grunt grunt, List<ParsedParameter> parameters)
         {
             string Name = "Help";
             if ((parameters.Count() != 1 && parameters.Count() != 2 ) || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
@@ -353,6 +361,10 @@ namespace Covenant.Core
             StringBuilder toPrint = new StringBuilder();
             foreach (GruntTask t in await _context.GetGruntTasks())
             {
+                if (!t.SupportedDotNetVersions.Contains(grunt.DotNetVersion))
+                {
+                    continue;
+                }
                 if (parameters.Count() == 1)
                 {
                     toPrint.AppendLine($"{t.Name}\t\t{t.Description}");
