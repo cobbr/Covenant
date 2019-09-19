@@ -91,11 +91,7 @@ namespace GruntExecutor
                     try
                     {
                         GruntTaskingMessage message = messenger.ReadTaskingMessage();
-                        if (message == null)
-                        {
-                            ConnectAttemptCount++;
-                        }
-                        else
+                        if (message != null)
                         {
                             ConnectAttemptCount = 0;
                             string output = "";
