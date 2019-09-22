@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task
 - Fixed null tasking display
+- Fixed BindPort changes to ConnectPort on listener restart
 
 ## [v0.3.2] - 2019-09-11
 ### Added
