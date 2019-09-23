@@ -63,14 +63,13 @@ namespace Covenant.Core
                 .Cast<Match>()
                 .Select(M => M.Value)
                 .ToList();
-
             for(int i = 0; i < matches.Count; i++)
             {
-                if (matches[i].StartsWith("/", StringComparison.Ordinal))
+                if (matches[i].StartsWith("/", StringComparison.Ordinal) && matches[i].IndexOf(":", StringComparison.Ordinal) != -1)
                 {
                     int labelIndex = matches[i].IndexOf(":", StringComparison.Ordinal);
                     string label = matches[i].Substring(1, labelIndex - 1);
-                    string val = matches[i].Substring(labelIndex + 1, matches[i].Length - labelIndex);
+                    string val = matches[i].Substring(labelIndex + 1, matches[i].Length - labelIndex - 1);
                     ParsedParameters.Add(new ParsedParameter
                     {
                         Position = i,
@@ -164,148 +163,156 @@ namespace Covenant.Core
                 CommandOutputId = 0,
                 CommandOutput = new CommandOutput()
             }, _grunthub, _eventhub);
-
-            List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
-            GruntTask commandTask = null;
             try
             {
-                commandTask = await _context.GetGruntTaskByName(parameters.FirstOrDefault().Value);
-                if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
+                List<ParsedParameter> parameters = ParseParameters(UserInput).ToList();
+                GruntTask commandTask = null;
+                try
                 {
-                    parameters = new List<ParsedParameter>
+                    commandTask = await _context.GetGruntTaskByName(parameters.FirstOrDefault().Value);
+                    if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
                     {
-                        new ParsedParameter
+                        parameters = new List<ParsedParameter>
                         {
-                            Value = commandTask.Name, Label = "", IsLabeled = false, Position = 0
-                        },
-                        new ParsedParameter
-                        {
-                            Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).Trim('"'),
-                            Label = "", IsLabeled = false, Position = 0
-                        }
-                    };
-                }
-            }
-            catch (ControllerNotFoundException) { }
-
-            string output = "";
-            if (parameters.FirstOrDefault().Value.ToLower() == "show")
-            {
-                output = await Show(grunt);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "help")
-            {
-                output = await Help(parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "sharpshell")
-            {
-                output = await SharpShell(grunt, GruntCommand, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "kill")
-            {
-                output = await Kill(grunt, GruntCommand, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "set")
-            {
-                output = await Set(grunt, GruntCommand, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "history")
-            {
-                output = await History(grunt, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "connect")
-            {
-                output = await Connect(grunt, GruntCommand, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "disconnect")
-            {
-                output = await Disconnect(grunt, GruntCommand, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "jobs")
-            {
-                output = await Jobs(grunt, GruntCommand, parameters);
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "note")
-            {
-                grunt.Note = string.Join(" ", parameters.Skip(1).Select(P => P.Value).ToArray());
-                await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
-                output = "Note: " + grunt.Note;
-            }
-            else if (parameters.FirstOrDefault().Value.ToLower() == "powershellimport")
-            {
-                grunt.PowerShellImport = parameters.Count >= 2 ? parameters[1].Value : "";
-                await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
-                output = "PowerShell Imported";
-            }
-            else if (commandTask != null)
-            {
-                parameters = parameters.Skip(1).ToList();
-                if (parameters.Count() < commandTask.Options.Count(O => !O.Optional))
-                {
-                    _context.Entry(GruntCommand).State = EntityState.Detached;
-                    GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask));
-                    return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
-                }
-                // All options begin unassigned
-                List<bool> OptionAssignments = commandTask.Options.Select(O => false).ToList();
-                commandTask.Options.ForEach(O => O.Value = "");
-                for (int i = 0; i < parameters.Count; i++)
-                {
-                    if (parameters[i].IsLabeled)
-                    {
-                        var option = commandTask.Options.FirstOrDefault(O => O.Name.Equals(parameters[i].Label, StringComparison.OrdinalIgnoreCase));
-                        option.Value = parameters[i].Value;
-                        OptionAssignments[commandTask.Options.IndexOf(option)] = true;
-                    }
-                    else
-                    {
-                        GruntTaskOption nextOption = null;
-                        // Find next unassigned option
-                        for (int j = 0; j < commandTask.Options.Count; j++)
-                        {
-                            if (!OptionAssignments[j])
+                            new ParsedParameter
                             {
-                                nextOption = commandTask.Options[j];
-                                OptionAssignments[j] = true;
-                                break;
+                                Value = commandTask.Name, Label = "", IsLabeled = false, Position = 0
+                            },
+                            new ParsedParameter
+                            {
+                                Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).Trim('"'),
+                                Label = "", IsLabeled = false, Position = 0
                             }
-                        }
-                        if (nextOption == null)
-                        {
-                            // This is an extra parameter
-                            _context.Entry(GruntCommand).State = EntityState.Detached;
-                            GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask));
-                            return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
-                        }
-                        nextOption.Value = parameters[i].Value;
+                        };
                     }
                 }
+                catch (ControllerNotFoundException) { }
 
-                // Check for unassigned required options
-                for (int i = 0; i < commandTask.Options.Count; i++)
+                string output = "";
+                if (parameters.FirstOrDefault().Value.ToLower() == "show")
                 {
-                    if (!OptionAssignments[i] && !commandTask.Options[i].Optional)
+                    output = await Show(grunt);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "help")
+                {
+                    output = await Help(parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "sharpshell")
+                {
+                    output = await SharpShell(grunt, GruntCommand, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "kill")
+                {
+                    output = await Kill(grunt, GruntCommand, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "set")
+                {
+                    output = await Set(grunt, GruntCommand, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "history")
+                {
+                    output = await History(grunt, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "connect")
+                {
+                    output = await Connect(grunt, GruntCommand, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "disconnect")
+                {
+                    output = await Disconnect(grunt, GruntCommand, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "jobs")
+                {
+                    output = await Jobs(grunt, GruntCommand, parameters);
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "note")
+                {
+                    grunt.Note = string.Join(" ", parameters.Skip(1).Select(P => P.Value).ToArray());
+                    await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
+                    output = "Note: " + grunt.Note;
+                }
+                else if (parameters.FirstOrDefault().Value.ToLower() == "powershellimport")
+                {
+                    grunt.PowerShellImport = parameters.Count >= 2 ? parameters[1].Value : "";
+                    await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
+                    output = "PowerShell Imported";
+                }
+                else if (commandTask != null)
+                {
+                    parameters = parameters.Skip(1).ToList();
+                    if (parameters.Count() < commandTask.Options.Count(O => !O.Optional))
                     {
-                        // This is an extra parameter
-                        StringBuilder toPrint = new StringBuilder();
-                        toPrint.Append(EliteConsole.PrintFormattedErrorLine(commandTask.Options[i].Name + " is required."));
-                        toPrint.Append(EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask)));
                         _context.Entry(GruntCommand).State = EntityState.Detached;
-                        GruntCommand.CommandOutput.Output = toPrint.ToString();
+                        GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask));
                         return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
                     }
+                    // All options begin unassigned
+                    List<bool> OptionAssignments = commandTask.Options.Select(O => false).ToList();
+                    commandTask.Options.ForEach(O => O.Value = "");
+                    for (int i = 0; i < parameters.Count; i++)
+                    {
+                        if (parameters[i].IsLabeled)
+                        {
+                            var option = commandTask.Options.FirstOrDefault(O => O.Name.Equals(parameters[i].Label, StringComparison.OrdinalIgnoreCase));
+                            option.Value = parameters[i].Value;
+                            OptionAssignments[commandTask.Options.IndexOf(option)] = true;
+                        }
+                        else
+                        {
+                            GruntTaskOption nextOption = null;
+                            // Find next unassigned option
+                            for (int j = 0; j < commandTask.Options.Count; j++)
+                            {
+                                if (!OptionAssignments[j])
+                                {
+                                    nextOption = commandTask.Options[j];
+                                    OptionAssignments[j] = true;
+                                    break;
+                                }
+                            }
+                            if (nextOption == null)
+                            {
+                                // This is an extra parameter
+                                _context.Entry(GruntCommand).State = EntityState.Detached;
+                                GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask));
+                                return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
+                            }
+                            nextOption.Value = parameters[i].Value;
+                        }
+                    }
+
+                    // Check for unassigned required options
+                    for (int i = 0; i < commandTask.Options.Count; i++)
+                    {
+                        if (!OptionAssignments[i] && !commandTask.Options[i].Optional)
+                        {
+                            // This is an extra parameter
+                            StringBuilder toPrint = new StringBuilder();
+                            toPrint.Append(EliteConsole.PrintFormattedErrorLine(commandTask.Options[i].Name + " is required."));
+                            toPrint.Append(EliteConsole.PrintFormattedErrorLine(GetUsage(commandTask)));
+                            _context.Entry(GruntCommand).State = EntityState.Detached;
+                            GruntCommand.CommandOutput.Output = toPrint.ToString();
+                            return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
+                        }
+                    }
+                    // Parameters have parsed successfully
+                    commandTask = await _context.EditGruntTask(commandTask);
+                    await StartTask(grunt, commandTask, GruntCommand);
                 }
-                // Parameters have parsed successfully
-                commandTask = await _context.EditGruntTask(commandTask);
-                await StartTask(grunt, commandTask, GruntCommand);
+                else
+                {
+                    output = EliteConsole.PrintFormattedErrorLine("Unrecognized command");
+                }
+                _context.Entry(GruntCommand).State = EntityState.Detached;
+                GruntCommand.CommandOutput.Output = output;
+                return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
             }
-            else
+            catch (Exception e)
             {
-                output = EliteConsole.PrintFormattedErrorLine("Unrecognized command");
+                _context.Entry(GruntCommand).State = EntityState.Detached;
+                GruntCommand.CommandOutput.Output = EliteConsole.PrintFormattedErrorLine($"{e.Message}{Environment.NewLine}{e.StackTrace}");
+                return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
             }
-            _context.Entry(GruntCommand).State = EntityState.Detached;
-            GruntCommand.CommandOutput.Output = output;
-            return await _context.EditGruntCommand(GruntCommand, _grunthub, _eventhub);
         }
 
         public async Task<string> Show(Grunt grunt)

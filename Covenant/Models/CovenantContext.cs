@@ -1731,107 +1731,77 @@ namespace Covenant.Models
             tasking.Grunt.Listener = await this.GetListener(tasking.Grunt.ListenerId);
             tasking.GruntTask = await this.GetGruntTask(tasking.GruntTaskId);
             tasking.GruntCommand = await this.GetGruntCommand(tasking.GruntCommandId);
-            if (tasking.Type == GruntTaskingType.Assembly)
+            List<string> parameters = tasking.GruntTask.Options.Select(O => string.IsNullOrEmpty(O.Value) ? O.DefaultValue : O.Value).ToList();
+            if (tasking.GruntTask.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(tasking.Grunt.PowerShellImport))
             {
-                if (!tasking.Parameters.Any())
-                {
-                    List<string> parameters = tasking.GruntTask.Options.Select(O => O.Value).ToList();
-                    if (tasking.GruntTask.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && parameters.Any())
-                    {
-                        if (!string.IsNullOrWhiteSpace(tasking.Grunt.PowerShellImport))
-                        {
-                            parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
-                        }
-                    }
-                    else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
-                        if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                        {
-                            throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
-                        }
-                        parameters[1] = l.LauncherString;
-                    }
-                    else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
-                        if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                        {
-                            throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
-                        }
-                        // Add .exe exetension if needed
-                        List<string> split = l.LauncherString.Split(" ").ToList();
-                        parameters[1] = split.FirstOrDefault();
-                        if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
-
-                        // Add command parameters
-                        split.RemoveAt(0);
-                        parameters.Insert(2, String.Join(" ", split.ToArray()));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                        parameters.Insert(3, Directory);
-                    }
-                    else if (tasking.GruntTask.Name.Equals("dcomcommand", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Add .exe exetension if needed
-                        List<string> split = parameters[1].Split(" ").ToList();
-                        parameters[1] = split[0];
-                        if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
-
-                        // Add command parameters
-                        split.RemoveAt(0);
-                        parameters.Insert(2, String.Join(" ", split.ToArray()));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                        parameters.Insert(3, Directory);
-                    }
-                    else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
-                        if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                        {
-                            throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[0]}");
-                        }
-                        else
-                        {
-                            // Add .exe extension if needed
-                            string[] split = l.LauncherString.Split(" ");
-                            if (!parameters[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[0] += ".exe"; }
-
-                            // Add parameters need for BypassUAC Task
-                            string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
-                            string Directory = "C:\\WINDOWS\\System32\\";
-                            if (parameters[0].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                            else if (parameters[0].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                            parameters.Add(ArgParams);
-                            parameters.Add(Directory);
-                            parameters.Add("0");
-                        }
-                    }
-                    else if (tasking.GruntTask.Name.Equals("bypassuaccommand", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Add .exe extension if needed
-                        string[] split = parameters[0].Split(" ");
-                        if (!parameters[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[0] += ".exe"; }
-
-                        // Add parameters need for BypassUAC Task
-                        string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[0].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[0].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                        parameters.Add(ArgParams);
-                        parameters.Add(Directory);
-                        parameters.Add("0");
-                    }
-                    tasking.Parameters = parameters;
-                }
+                parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
             }
+            else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
+                }
+                // Add .exe extension if needed
+                List<string> split = l.LauncherString.Split(" ").ToList();
+                parameters[1] = split.FirstOrDefault();
+                if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
+
+                // Add Directory
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+                if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
+                if (split.Count > 1) { parameters[1] += " " + String.Join(" ", split.ToArray()); }
+            }
+            else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
+                }
+                // Add .exe extension if needed
+                List<string> split = l.LauncherString.Split(" ").ToList();
+                parameters[1] = split.FirstOrDefault();
+                if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
+
+                // Add command parameters
+                split.RemoveAt(0);
+                parameters.Insert(2, String.Join(" ", split.ToArray()));
+
+                // Add Directory
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+                if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
+
+                parameters.Insert(3, Directory);
+            }
+            else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[0]}");
+                }
+                // Add .exe extension if needed
+                string[] split = l.LauncherString.Split(" ");
+                parameters[0] = split.FirstOrDefault();
+                if (!parameters[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[0] += ".exe"; }
+                        
+                // Add parameters need for BypassUAC Task
+                string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[0].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[0].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+
+                parameters.Add(ArgParams);
+                parameters.Add(Directory);
+                parameters.Add("0");
+            }
+            tasking.Parameters = parameters;
             try
             {
                 tasking.GruntTask.Compile();

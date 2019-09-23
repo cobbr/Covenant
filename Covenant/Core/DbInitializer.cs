@@ -587,6 +587,7 @@ namespace Covenant.Core
                                 Value = ".",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = ".",
                                 DisplayInCommand = true
                             }
                         }
@@ -771,6 +772,7 @@ namespace Covenant.Core
                                 Value = "False",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = "False",
                                 DisplayInCommand = true
                             }
                         }
@@ -1065,6 +1067,7 @@ namespace Covenant.Core
                                 Value = "LOGON32_LOGON_NEW_CREDENTIALS",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = "LOGON32_LOGON_NEW_CREDENTIALS",
                                 DisplayInCommand = true
                             }
                         }
@@ -1113,7 +1116,8 @@ namespace Covenant.Core
                                 Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             },
                             new GruntTaskOption
@@ -1123,7 +1127,8 @@ namespace Covenant.Core
                                 Description = "Password to authenticate the user. (optional)",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1163,7 +1168,8 @@ namespace Covenant.Core
                                 Description = "Username to authenticate as. Format: DOMAIN\\Username (optional)",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             },
                             new GruntTaskOption
@@ -1173,7 +1179,8 @@ namespace Covenant.Core
                                 Description = "Password to authenticate the user. (optional)",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1200,7 +1207,7 @@ namespace Covenant.Core
                             {
                                 Id = 52,
                                 Name = "Command",
-                                Description = "Command line to execute on the remote system.",
+                                Description = "Executable to execute on the remote system.",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
@@ -1209,11 +1216,34 @@ namespace Covenant.Core
                             new GruntTaskOption
                             {
                                 Id = 53,
+                                Name = "Parameters",
+                                Description = "Command line parameters to pass to the Command.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "",
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 54,
+                                Name = "Directory",
+                                Description = "Directory on the remote system containing the Command executable.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "C:\\Windows\\System32\\",
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 55,
                                 Name = "Method",
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = "MMC20.Application",
                                 DisplayInCommand = true
                             }
                         }
@@ -1228,7 +1258,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 54,
+                                Id = 56,
                                 Name = "ComputerName",
                                 Description = "ComputerName to execute the process on.",
                                 Value = "localhost",
@@ -1238,7 +1268,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 55,
+                                Id = 57,
                                 Name = "Launcher",
                                 Description = "Grunt Launcher to execute on the remote system.",
                                 Value = "PowerShell",
@@ -1248,12 +1278,13 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 56,
+                                Id = 58,
                                 Name = "Method",
                                 Description = "DCOM method to use for execution.",
                                 Value = "MMC20.Application",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = "MMC20.Application",
                                 DisplayInCommand = true
                             }
                         }
@@ -1268,12 +1299,45 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 57,
+                                Id = 59,
                                 Name = "Command",
                                 Description = "Command to execute with high integrity.",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 60,
+                                Name = "Parameters",
+                                Description = "Command line parameters to pass to the Command.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "",
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 61,
+                                Name = "Directory",
+                                Description = "Directory containing the Command executable.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "C:\\Windows\\System32\\",
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 62,
+                                Name = "ProcessID",
+                                Description = "ProcessID.",
+                                Value = "0",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "0",
                                 DisplayInCommand = true
                             }
                         }
@@ -1288,7 +1352,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 58,
+                                Id = 63,
                                 Name = "Launcher",
                                 Description = "Launcher to execute with high integrity.",
                                 Value = "PowerShell",
@@ -1308,7 +1372,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 59,
+                                Id = 64,
                                 Name = "Identities",
                                 Description = "List of comma-delimited usernames to retrieve.",
                                 Value = "username",
@@ -1328,7 +1392,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 60,
+                                Id = 65,
                                 Name = "Identities",
                                 Description = "List of comma-delimited groups to retrieve.",
                                 Value = "Domain Admins",
@@ -1348,7 +1412,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 61,
+                                Id = 66,
                                 Name = "Identities",
                                 Description = "List of comma-delimited computers to retrieve.",
                                 Value = "DC01",
@@ -1368,7 +1432,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 62,
+                                Id = 67,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
@@ -1388,7 +1452,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 63,
+                                Id = 68,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
@@ -1398,7 +1462,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 64,
+                                Id = 69,
                                 Name = "LocalGroup",
                                 Description = "LocalGroup name to query for members.",
                                 Value = "Administrators",
@@ -1418,7 +1482,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 65,
+                                Id = 70,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
@@ -1438,7 +1502,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 66,
+                                Id = 71,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
@@ -1458,7 +1522,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 67,
+                                Id = 72,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
                                 Value = "HKEY_CURRENT_USER\\Environment\\Path",
@@ -1476,76 +1540,6 @@ namespace Covenant.Core
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
-                            new GruntTaskOption
-                            {
-                                Id = 68,
-                                Name = "RegPath",
-                                Description = "The full path to the registry value to be read.",
-                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 69,
-                                Name = "Value",
-                                Description = "The value to write to the registry key.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Name = "GetRemoteRegistryKey",
-                        AlternateNames = new List<string>(),
-                        Description = "Gets a value stored in registry on a remote system.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetRemoteRegistryKey" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 70,
-                                Name = "Hostname",
-                                Description = "The Hostname of the remote system to query.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
-                            new GruntTaskOption
-                            {
-                                Id = 71,
-                                Name = "RegPath",
-                                Description = "The full path to the registry value to be read.",
-                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            }
-                        }
-                    },
-                    new GruntTask
-                    {
-                        Name = "SetRemoteRegistryKey",
-                        AlternateNames = new List<string>(),
-                        Description = "Sets a value into the registry on a remote system.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRemoteRegistryKey" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 72,
-                                Name = "Hostname",
-                                Description = "The Hostname of the remote system to write to.",
-                                Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = true
-                            },
                             new GruntTaskOption
                             {
                                 Id = 73,
@@ -1570,6 +1564,76 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "GetRemoteRegistryKey",
+                        AlternateNames = new List<string>(),
+                        Description = "Gets a value stored in registry on a remote system.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetRemoteRegistryKey" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 75,
+                                Name = "Hostname",
+                                Description = "The Hostname of the remote system to query.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 76,
+                                Name = "RegPath",
+                                Description = "The full path to the registry value to be read.",
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "SetRemoteRegistryKey",
+                        AlternateNames = new List<string>(),
+                        Description = "Sets a value into the registry on a remote system.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRemoteRegistryKey" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 77,
+                                Name = "Hostname",
+                                Description = "The Hostname of the remote system to write to.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 78,
+                                Name = "RegPath",
+                                Description = "The full path to the registry value to be read.",
+                                Value = "HKEY_CURRENT_USER\\Environment\\Path",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 79,
+                                Name = "Value",
+                                Description = "The value to write to the registry key.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
                         Name = "ShellCode",
                         AlternateNames = new List<string>(),
                         Description = "Executes a specified shellcode byte array by copying it to pinned memory, modifying the memory permissions, and executing.",
@@ -1578,7 +1642,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 75,
+                                Id = 80,
                                 Name = "Hex",
                                 Description = "Hex string representing the Shellcode bytes to execute.",
                                 Value = "",
@@ -1598,7 +1662,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 76,
+                                Id = 81,
                                 Name = "EWSUri",
                                 Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
                                 Value = "https://exchange.example.local:443/EWS/Exchange.asmx",
@@ -1608,7 +1672,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 77,
+                                Id = 82,
                                 Name = "RelayUri",
                                 Description = "The URI of the external relay of the Exchange authentication.",
                                 Value = "https://relay.example.local:443/relay",
@@ -1618,7 +1682,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 78,
+                                Id = 83,
                                 Name = "ExchangeVersion",
                                 Description = "Microsoft Exchange version. Defaults to Exchange2010.",
                                 Value = "Exchange2010",
@@ -1638,7 +1702,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 79,
+                                Id = 84,
                                 Name = "CLSID",
                                 Description = "Missing CLSID to abuse.",
                                 Value = "",
@@ -1648,7 +1712,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 80,
+                                Id = 85,
                                 Name = "ExecutablePath",
                                 Description = "Path to the executable path.",
                                 Value = "",
@@ -1668,7 +1732,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 81,
+                                Id = 86,
                                 Name = "Payload",
                                 Description = "Payload to write to a file.",
                                 Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
@@ -1678,12 +1742,12 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 82,
+                                Id = 87,
                                 Name = "FileName",
                                 Description = "Name of the file to write.",
                                 Value = "startup.bat",
                                 SuggestedValues = new List<string>(),
-                                Optional = true,
+                                Optional = false,
                                 DisplayInCommand = true
                             }
                         }
@@ -1698,7 +1762,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 83,
+                                Id = 88,
                                 Name = "TargetHive",
                                 Description = "Target hive to install autorun.",
                                 Value = "CurrentUser",
@@ -1708,7 +1772,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 84,
+                                Id = 89,
                                 Name = "Value",
                                 Description = "Value to set in the registry.",
                                 Value = "C:\\Example\\GruntStager.exe",
@@ -1718,12 +1782,12 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 85,
+                                Id = 90,
                                 Name = "Name",
                                 Description = "Name for the registy value.",
                                 Value = "Updater",
                                 SuggestedValues = new List<string>(),
-                                Optional = true,
+                                Optional = false,
                                 DisplayInCommand = true
                             }
                         }
@@ -1736,7 +1800,7 @@ namespace Covenant.Core
                         Options = new List<GruntTaskOption>{
                             new GruntTaskOption
                             {
-                                Id = 86,
+                                Id = 91,
                                 Name = "EventName",
                                 Description = "Creates a WMI Event, Consumer and Binding to execute a payload.\n\n\tEventName: An arbitrary name to be assigned to the new WMI Event. E.g. \"Evil Persistence\".\n\tEventFilter: Specifies the event trigger to use. The options are \"ProcessStart\".\n\tEventConsumer: Specifies the action to carry out. The options are \"CommandLine\" (OS Command) and \"ActiveScript\" (JScript or VBScript).\n\tPayload: Specifies the CommandLine or ActiveScript payload to run. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tProcessName: Specifies the process name when the \"ProcessStart\" trigger is selected. E.g. \"notepad.exe\".\n\tScriptingEngine: Specifies the scripting engine when the \"ActiveScript\" consumer is selected. The options are \"JScript\" and \"VBScript\".\n",
                                 Value = "Evil Persistence",
@@ -1746,7 +1810,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 87,
+                                Id = 92,
                                 Name = "EventFilter",
                                 Description = "Specifies the event trigger to use.",
                                 Value = "ProcessStart",
@@ -1756,7 +1820,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 88,
+                                Id = 93,
                                 Name = "EventConsumer",
                                 Description = "Specifies the action to carry out.",
                                 Value = "CommandLine",
@@ -1766,7 +1830,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 89,
+                                Id = 94,
                                 Name = "Payload",
                                 Description = "Specifies the CommandLine or ActiveScript payload to run.",
                                 Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
@@ -1776,22 +1840,23 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 90,
+                                Id = 95,
                                 Name = "ProcessName",
                                 Description = "Specifies the process name when the ProcessStart trigger is selected.",
                                 Value = "notepad.exe",
                                 SuggestedValues = new List<string>(),
-                                Optional = true,
+                                Optional = false,
                                 DisplayInCommand = false
                             },
                             new GruntTaskOption
                             {
-                                Id = 91,
+                                Id = 96,
                                 Name = "ScriptingEngine",
                                 Description = "Specifies the scripting engine when the ActiveScript consumer is selected.",
                                 Value = "VBScript",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = "VBScript",
                                 DisplayInCommand = true
                             }
                         }
@@ -1814,7 +1879,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 92,
+                                Id = 97,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -1850,7 +1915,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 93,
+                                Id = 98,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -1860,7 +1925,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 94,
+                                Id = 99,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -1880,7 +1945,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 95,
+                                Id = 100,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -1900,7 +1965,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 96,
+                                Id = 101,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -1920,7 +1985,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 97,
+                                Id = 102,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -1940,11 +2005,12 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 98,
+                                Id = 103,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }

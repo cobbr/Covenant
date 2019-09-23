@@ -121,11 +121,12 @@
                 return null;
             };
 
-            var clipboard = new ClipboardJS('.copy-code-button', {
+            var clipboard1 = new ClipboardJS('.copy-code-button', {
                 text: function(trigger) {
                     return getCodeMirrorNative($("#copy-stager-code")[0]).getDoc().getValue();
                 }
             });
+            var clipboard2 = new ClipboardJS(".copy");
 
             $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function() {
                 editor.refresh();

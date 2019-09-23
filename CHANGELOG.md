@@ -8,10 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added ShellRunAs and ShellCmdRunAs tasks
 
+### Changed
+- Changed command-line parsing, Task parsing, added DefaultValue for optional parameters
+- Changed DCOM, WMI, BypassUAC task handling
+
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task
 - Fixed null tasking display
 - Fixed BindPort changes to ConnectPort on listener restart
+- Fixed command-line parsing issues
 
 ## [v0.3.2] - 2019-09-11
 ### Added
