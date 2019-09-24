@@ -14,7 +14,7 @@ public static class Task
 				return "Autorun Persistence failed. Invalid Target Hive specified.";
             }
 
-            if (Autorun.InstallAutorun(TargetHive, Value, Name))
+            if (Autorun.InstallAutorun(TargetHive, Name, Value))
             {
                 return "Startup Persistence suceeded for: " + Name;
             }
