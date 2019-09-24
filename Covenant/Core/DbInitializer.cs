@@ -1773,9 +1773,9 @@ namespace Covenant.Core
                             new GruntTaskOption
                             {
                                 Id = 89,
-                                Name = "Value",
-                                Description = "Value to set in the registry.",
-                                Value = "C:\\Example\\GruntStager.exe",
+                                Name = "Name",
+                                Description = "Name for the registy value.",
+                                Value = "Updater",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
@@ -1783,9 +1783,9 @@ namespace Covenant.Core
                             new GruntTaskOption
                             {
                                 Id = 90,
-                                Name = "Name",
-                                Description = "Name for the registy value.",
-                                Value = "Updater",
+                                Name = "Value",
+                                Description = "Value to set in the registry.",
+                                Value = "C:\\Example\\GruntStager.exe",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true

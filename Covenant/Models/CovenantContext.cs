@@ -1731,7 +1731,7 @@ namespace Covenant.Models
             tasking.Grunt.Listener = await this.GetListener(tasking.Grunt.ListenerId);
             tasking.GruntTask = await this.GetGruntTask(tasking.GruntTaskId);
             tasking.GruntCommand = await this.GetGruntCommand(tasking.GruntCommandId);
-            List<string> parameters = tasking.GruntTask.Options.Select(O => string.IsNullOrEmpty(O.Value) ? O.DefaultValue : O.Value).ToList();
+            List<string> parameters = tasking.GruntTask.Options.OrderBy(O => O.Id).Select(O => string.IsNullOrEmpty(O.Value) ? O.DefaultValue : O.Value).ToList();
             if (tasking.GruntTask.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(tasking.Grunt.PowerShellImport))
             {
                 parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
