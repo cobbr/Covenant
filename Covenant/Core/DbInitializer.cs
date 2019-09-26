@@ -996,7 +996,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Impersonate the token of the specified process. Used to execute subsequent commands as the user associated with the token of the specified process.",
                         TokenTask = true,
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ImpersonateUser" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ImpersonateProcess" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
