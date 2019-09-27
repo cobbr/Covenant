@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Changed command-line parsing, Task parsing, added DefaultValue for optional parameters
 - Changed DCOM, WMI, BypassUAC task handling
+- Updated SharpSploit to latest version
 
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task
