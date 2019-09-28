@@ -188,20 +188,23 @@ namespace Covenant.Models.Listeners
                             break;
                     }
                     break;
-                case APIModels.GruntTaskingType.SetDelay:
-                    Message = tasking.Parameters[0];
-                    break;
-                case APIModels.GruntTaskingType.SetJitter:
-                    Message = tasking.Parameters[0];
-                    break;
-                case APIModels.GruntTaskingType.SetConnectAttempts:
-                    Message = tasking.Parameters[0];
+                case APIModels.GruntTaskingType.SetOption:
+                    if (tasking.Parameters.Count >= 2)
+                    {
+                        Message = tasking.Parameters[0] + "," + tasking.Parameters[1];
+                    }
                     break;
                 case APIModels.GruntTaskingType.Connect:
-                    Message = tasking.Parameters[0] + "," + tasking.Parameters[1];
+                    if (tasking.Parameters.Count >= 2)
+                    {
+                        Message = tasking.Parameters[0] + "," + tasking.Parameters[1];
+                    }
                     break;
                 case APIModels.GruntTaskingType.Disconnect:
-                    Message = tasking.Parameters[0];
+                    if (tasking.Parameters.Count >= 1)
+                    {
+                        Message = tasking.Parameters[0];
+                    }
                     break;
                 default:
                     Message = string.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
@@ -462,7 +465,7 @@ namespace Covenant.Models.Listeners
 
 		private async Task PostTask(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage outputMessage, string guid)
 		{
-			if (targetGrunt == null || egressGrunt == null || egressGrunt.Guid != guid)
+            if (targetGrunt == null || egressGrunt == null || egressGrunt.Guid != guid)
 			{
                 // Invalid GUID. May not be legitimate Grunt request, respond NotFound
                 this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
@@ -510,11 +513,15 @@ namespace Covenant.Models.Listeners
 			gruntTasking.GruntCommand.CommandOutputId = 0;
 			gruntTasking.Status = APIModels.GruntTaskingStatus.Completed;
 			gruntTasking.CompletionTime = DateTime.UtcNow;
-			gruntTasking.GruntCommand = await _client.ApiCommandsPutAsync(gruntTasking.GruntCommand);
-			await _client.ApiTaskingsPutAsync(gruntTasking);
+            gruntTasking.GruntCommand = await _client.ApiCommandsPutAsync(gruntTasking.GruntCommand);
+            await _client.ApiTaskingsPutAsync(gruntTasking);
             lock (_hashCodesLock)
             {
                 this.CacheTaskHashCodes.Remove(GetTaskingHashCode(gruntTasking));
+            }
+            if(gruntTasking.Type == APIModels.GruntTaskingType.SetOption)
+            {
+                targetGrunt = await _client.ApiGruntsByIdGetAsync(targetGrunt.Id ?? default);
             }
             await CheckInGrunt(targetGrunt);
             return;

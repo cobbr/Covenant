@@ -95,31 +95,32 @@ namespace GruntExecutor
                         {
                             ConnectAttemptCount = 0;
                             string output = "";
-                            if (message.Type == GruntTaskingType.SetDelay || message.Type == GruntTaskingType.SetJitter || message.Type == GruntTaskingType.SetConnectAttempts)
+                            if (message.Type == GruntTaskingType.SetOption)
                             {
-                                if (int.TryParse(message.Message, out int val))
-                                {
-                                    if (message.Type == GruntTaskingType.SetDelay)
-                                    {
-                                        Delay = val;
-                                        output += "Set Delay: " + Delay;
-                                    }
-                                    else if (message.Type == GruntTaskingType.SetJitter)
-                                    {
-                                        Jitter = val;
-                                        output += "Set Jitter: " + Jitter;
-                                    }
-                                    else if (message.Type == GruntTaskingType.SetConnectAttempts)
-                                    {
-                                        ConnectAttempts = val;
-                                        output += "Set ConnectAttempts: " + ConnectAttempts;
-                                    }
-                                }
-                                else
-                                {
-                                    output += "Error parsing: " + message.Message.Split(',')[1];
-                                }
-                                messenger.WriteTaskingMessage(output, message.Name);
+								string[] split = message.Message.Split(',');
+								if (split.Length >= 2 && int.TryParse(split[1], out int val))
+								{
+									if (split[0].Equals("Delay", StringComparison.CurrentCultureIgnoreCase))
+									{
+										Delay = val;
+										output += "Set Delay: " + Delay;
+									}
+									else if (split[0].Equals("JitterPercent", StringComparison.CurrentCultureIgnoreCase))
+									{
+										Jitter = val;
+										output += "Set JitterPercent: " + Jitter;
+									}
+									else if (split[0].Equals("ConnectAttempts", StringComparison.CurrentCultureIgnoreCase))
+									{
+										ConnectAttempts = val;
+										output += "Set ConnectAttempts: " + ConnectAttempts;
+									}
+								}
+								else
+								{
+									output += "Error parsing SetOption: " + message.Message;
+								}
+								messenger.WriteTaskingMessage(output, message.Name);
                             }
                             else if (message.Type == GruntTaskingType.Kill)
                             {
@@ -591,9 +592,7 @@ namespace GruntExecutor
     public enum GruntTaskingType
     {
         Assembly,
-        SetDelay,
-        SetJitter,
-        SetConnectAttempts,
+        SetOption,
         Kill,
         Connect,
         Disconnect,

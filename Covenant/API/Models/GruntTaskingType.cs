@@ -19,12 +19,8 @@ namespace Covenant.API.Models
     {
         [EnumMember(Value = "Assembly")]
         Assembly,
-        [EnumMember(Value = "SetDelay")]
-        SetDelay,
-        [EnumMember(Value = "SetJitter")]
-        SetJitter,
-        [EnumMember(Value = "SetConnectAttempts")]
-        SetConnectAttempts,
+        [EnumMember(Value = "SetOption")]
+        SetOption,
         [EnumMember(Value = "Kill")]
         Kill,
         [EnumMember(Value = "Connect")]
@@ -47,12 +43,8 @@ namespace Covenant.API.Models
             {
                 case GruntTaskingType.Assembly:
                     return "Assembly";
-                case GruntTaskingType.SetDelay:
-                    return "SetDelay";
-                case GruntTaskingType.SetJitter:
-                    return "SetJitter";
-                case GruntTaskingType.SetConnectAttempts:
-                    return "SetConnectAttempts";
+                case GruntTaskingType.SetOption:
+                    return "SetOption";
                 case GruntTaskingType.Kill:
                     return "Kill";
                 case GruntTaskingType.Connect:
@@ -71,12 +63,8 @@ namespace Covenant.API.Models
             {
                 case "Assembly":
                     return GruntTaskingType.Assembly;
-                case "SetDelay":
-                    return GruntTaskingType.SetDelay;
-                case "SetJitter":
-                    return GruntTaskingType.SetJitter;
-                case "SetConnectAttempts":
-                    return GruntTaskingType.SetConnectAttempts;
+                case "SetOption":
+                    return GruntTaskingType.SetOption;
                 case "Kill":
                     return GruntTaskingType.Kill;
                 case "Connect":

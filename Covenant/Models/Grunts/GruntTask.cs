@@ -44,7 +44,12 @@ namespace Covenant.Models.Grunts
         public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
 
         public string Code { get; set; } = "";
+        public GruntTaskingType TaskingType { get; set; } = GruntTaskingType.Assembly;
         public bool Compiled { get; set; } = false;
+        public bool UnsafeCompile { get; set; } = false;
+        public bool TokenTask { get; set; } = false;
+
+        public List<GruntTaskOption> Options { get; set; } = new List<GruntTaskOption>();
 
         private List<GruntTaskReferenceSourceLibrary> GruntTaskReferenceSourceLibraries { get; set; } = new List<GruntTaskReferenceSourceLibrary>();
         private List<GruntTaskReferenceAssembly> GruntTaskReferenceAssemblies { get; set; } = new List<GruntTaskReferenceAssembly>();
@@ -55,11 +60,6 @@ namespace Covenant.Models.Grunts
         public List<ReferenceAssembly> ReferenceAssemblies => GruntTaskReferenceAssemblies.Select(e => e.ReferenceAssembly).ToList();
         [NotMapped]
         public List<EmbeddedResource> EmbeddedResources => GruntTaskEmbeddedResources.Select(e => e.EmbeddedResource).ToList();
-
-        public bool UnsafeCompile { get; set; } = false;
-        public bool TokenTask { get; set; } = false;
-
-        public List<GruntTaskOption> Options { get; set; } = new List<GruntTaskOption>();
 
         public void Add(ReferenceSourceLibrary library)
         {
