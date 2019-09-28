@@ -907,8 +907,8 @@ namespace Covenant.Models
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetConnectAttempts,
-                        Parameters = new List<string> { grunt.ConnectAttempts.ToString() },
+                        Type = GruntTaskingType.SetOption,
+                        Parameters = new List<string> { "ConnectAttempts", grunt.ConnectAttempts.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
                     }, grunthub);
@@ -935,8 +935,8 @@ namespace Covenant.Models
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetDelay,
-                        Parameters = new List<string> { grunt.Delay.ToString() },
+                        Type = GruntTaskingType.SetOption,
+                        Parameters = new List<string> { "Delay", grunt.Delay.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
                     }, grunthub);
@@ -963,8 +963,8 @@ namespace Covenant.Models
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetJitter,
-                        Parameters = new List<string> { grunt.JitterPercent.ToString() },
+                        Type = GruntTaskingType.SetOption,
+                        Parameters = new List<string> { "JitterPercent", grunt.JitterPercent.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
                     }, grunthub);
@@ -1430,6 +1430,7 @@ namespace Covenant.Models
             }
             updatingTask.UnsafeCompile = task.UnsafeCompile;
             updatingTask.TokenTask = task.TokenTask;
+            updatingTask.TaskingType = task.TaskingType;
             task.Options.Where(O => O.Id == 0).ToList().ForEach(async O => await this.CreateGruntTaskOption(O));
             var removeOptions = updatingTask.Options.Select(UT => UT.Id).Except(task.Options.Select(O => O.Id));
             removeOptions.ToList().ForEach(RO => updatingTask.Options.Remove(updatingTask.Options.FirstOrDefault(UO => UO.Id == RO)));
@@ -1801,6 +1802,40 @@ namespace Covenant.Models
                 parameters.Add(Directory);
                 parameters.Add("0");
             }
+            else if (tasking.GruntTask.Name.Equals("SharpShell", StringComparison.CurrentCultureIgnoreCase))
+            {
+                string WrapperFunctionFormat =
+    @"using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Security;
+using System.Security.Principal;
+using System.Collections.Generic;
+using SharpSploit.Credentials;
+using SharpSploit.Enumeration;
+using SharpSploit.Execution;
+using SharpSploit.Generic;
+using SharpSploit.Misc;
+public static class Task
+{{
+    public static string Execute()
+    {{
+        {0}
+    }}
+}}";
+                string csharpcode = string.Join(" ", parameters);
+                tasking.GruntTask.Code = string.Format(WrapperFunctionFormat, csharpcode);
+                tasking.GruntTask.Compiled = false;
+                this.GruntTasks.Update(tasking.GruntTask);
+                await this.SaveChangesAsync();
+                parameters = new List<string> { };
+            }
+            else if (tasking.GruntTask.Name.Equals("Disconnect", StringComparison.CurrentCultureIgnoreCase))
+            {
+                Grunt g = await this.GetGruntByName(parameters[0]);
+                parameters[0] = g.GUID;
+            }
             tasking.Parameters = parameters;
             try
             {
@@ -1877,23 +1912,24 @@ namespace Covenant.Models
                 {
                     grunt.Status = GruntStatus.Killed;
                 }
-                else if (tasking.Type == GruntTaskingType.SetDelay || tasking.Type == GruntTaskingType.SetJitter || tasking.Type == GruntTaskingType.SetConnectAttempts)
+                else if (tasking.Type == GruntTaskingType.SetOption && tasking.Parameters.Count >= 2)
                 {
-                    bool parsed = int.TryParse(tasking.Parameters[0], out int n);
+                    bool parsed = int.TryParse(tasking.Parameters[1], out int n);
                     if (parsed)
                     {
-                        if (tasking.Type == GruntTaskingType.SetDelay)
+                        if (tasking.Parameters[0].Equals("Delay", StringComparison.CurrentCultureIgnoreCase))
                         {
                             grunt.Delay = n;
                         }
-                        else if (tasking.Type == GruntTaskingType.SetJitter)
+                        else if (tasking.Parameters[0].Equals("JitterPercent", StringComparison.CurrentCultureIgnoreCase))
                         {
                             grunt.JitterPercent = n;
                         }
-                        else if (tasking.Type == GruntTaskingType.SetConnectAttempts)
+                        else if (tasking.Parameters[0].Equals("ConnectAttempts", StringComparison.CurrentCultureIgnoreCase))
                         {
                             grunt.ConnectAttempts = n;
                         }
+                        this.Grunts.Update(grunt);
                     }
                 }
                 else if (tasking.Type == GruntTaskingType.Connect)

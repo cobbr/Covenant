@@ -197,29 +197,13 @@ namespace Covenant.Core
                 {
                     output = await Help(parameters);
                 }
-                else if (parameters.FirstOrDefault().Value.ToLower() == "sharpshell")
-                {
-                    output = await SharpShell(grunt, GruntCommand, parameters);
-                }
                 else if (parameters.FirstOrDefault().Value.ToLower() == "kill")
                 {
                     output = await Kill(grunt, GruntCommand, parameters);
                 }
-                else if (parameters.FirstOrDefault().Value.ToLower() == "set")
-                {
-                    output = await Set(grunt, GruntCommand, parameters);
-                }
                 else if (parameters.FirstOrDefault().Value.ToLower() == "history")
                 {
                     output = await History(grunt, parameters);
-                }
-                else if (parameters.FirstOrDefault().Value.ToLower() == "connect")
-                {
-                    output = await Connect(grunt, GruntCommand, parameters);
-                }
-                else if (parameters.FirstOrDefault().Value.ToLower() == "disconnect")
-                {
-                    output = await Disconnect(grunt, GruntCommand, parameters);
                 }
                 else if (parameters.FirstOrDefault().Value.ToLower() == "jobs")
                 {
@@ -396,65 +380,11 @@ namespace Covenant.Core
             {
                 GruntTaskId = task.Id,
                 GruntId = grunt.Id,
-                Type = GruntTaskingType.Assembly,
+                Type = task.TaskingType,
                 Status = GruntTaskingStatus.Uninitialized,
                 GruntCommandId = command.Id,
                 GruntCommand = command
             }, _grunthub);
-        }
-
-        public async Task<string> SharpShell(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
-        {
-            if (parameters.Count() < 2 || !parameters[0].Value.Equals("SharpShell", StringComparison.OrdinalIgnoreCase))
-            {
-                return EliteConsole.PrintFormattedErrorLine("Usage: SharpShell <code>");
-            }
-            string WrapperFunctionFormat =
-@"using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Security;
-using System.Security.Principal;
-using System.Collections.Generic;
-using SharpSploit.Credentials;
-using SharpSploit.Enumeration;
-using SharpSploit.Execution;
-using SharpSploit.Generic;
-using SharpSploit.Misc;
-public static class Task
-{{
-    public static string Execute()
-    {{
-        {0}
-    }}
-}}";
-
-            string csharpcode = string.Join(" ", parameters.Skip(1).Select(P => P.Value).ToArray());
-            GruntTask newSharpShellTask = await _context.CreateGruntTask(new GruntTask
-            {
-                Name = "SharpShell-" + Utilities.CreateShortGuid(),
-                AlternateNames = new List<string>(),
-                Description = "Execute custom c# code.",
-                Code = string.Format(WrapperFunctionFormat, csharpcode),
-                Options = new List<GruntTaskOption>()
-            });
-            await _context.AddAsync(new GruntTaskReferenceSourceLibrary
-            {
-                ReferenceSourceLibrary = await _context.GetReferenceSourceLibraryByName("SharpSploit"),
-                GruntTask = newSharpShellTask
-            });
-            await _context.SaveChangesAsync();
-            await _context.CreateGruntTasking(new GruntTasking
-            {
-                GruntId = grunt.Id,
-                GruntTaskId = newSharpShellTask.Id,
-                Type = GruntTaskingType.Assembly,
-                Status = GruntTaskingStatus.Uninitialized,
-                GruntCommandId = command.Id,
-                GruntCommand = command
-            }, _grunthub);
-            return "";
         }
 
         public async Task<string> Kill(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
@@ -479,72 +409,6 @@ public static class Task
                 GruntCommandId = command.Id
             }, _grunthub);
             return "";
-        }
-
-        public async Task<string> Set(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
-        {
-            if (parameters.Count != 3)
-            {
-                return EliteConsole.PrintFormattedErrorLine("Usage: Set (Delay | JitterPercent | ConnectAttempts) <value>");
-            }
-
-            if (int.TryParse(parameters[2].Value, out int n))
-            {
-                GruntTask setTask = await _context.GetGruntTaskByName("Set");
-                if (parameters[1].Value.Equals("delay", StringComparison.OrdinalIgnoreCase))
-                {
-                    grunt.Delay = n;
-                    await _context.CreateGruntTasking(new GruntTasking
-                    {
-                        Id = 0,
-                        GruntId = grunt.Id,
-                        Grunt = grunt,
-                        GruntTaskId = setTask.Id,
-                        GruntTask = setTask,
-                        Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetDelay,
-                        Parameters = new List<string> { grunt.Delay.ToString() },
-                        GruntCommand = command,
-                        GruntCommandId = command.Id
-                    }, _grunthub);
-                }
-                else if (parameters[1].Value.Equals("jitterpercent", StringComparison.OrdinalIgnoreCase))
-                {
-                    grunt.JitterPercent = n;
-                    await _context.CreateGruntTasking(new GruntTasking
-                    {
-                        Id = 0,
-                        GruntId = grunt.Id,
-                        Grunt = grunt,
-                        GruntTaskId = setTask.Id,
-                        GruntTask = setTask,
-                        Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetJitter,
-                        Parameters = new List<string> { grunt.JitterPercent.ToString() },
-                        GruntCommand = command,
-                        GruntCommandId = command.Id
-                    }, _grunthub);
-                }
-                else if (parameters[1].Value.Equals("connectattempts", StringComparison.OrdinalIgnoreCase))
-                {
-                    grunt.ConnectAttempts = n;
-                    await _context.CreateGruntTasking(new GruntTasking
-                    {
-                        Id = 0,
-                        GruntId = grunt.Id,
-                        Grunt = grunt,
-                        GruntTaskId = setTask.Id,
-                        GruntTask = setTask,
-                        Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetConnectAttempts,
-                        Parameters = new List<string> { grunt.ConnectAttempts.ToString() },
-                        GruntCommand = command,
-                        GruntCommandId = command.Id
-                    }, _grunthub);
-                }
-                return "";
-            }
-            return EliteConsole.PrintFormattedErrorLine("Usage: Set (Delay | JitterPercent | ConnectAttempts) <value>");
         }
 
         public async Task<string> History(Grunt grunt, List<ParsedParameter> parameters)
@@ -572,75 +436,6 @@ public static class Task
                 toPrint.Append(EliteConsole.PrintInfoLine("(" + command.User.UserName + ") > " + command.Command));
                 toPrint.Append(EliteConsole.PrintInfoLine(command.CommandOutput.Output));
             }
-            return toPrint.ToString();
-        }
-
-        public async Task<string> Connect(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
-        {
-            string Name = "Connect";
-            StringBuilder toPrint = new StringBuilder();
-            if (parameters.Count < 2 || parameters.Count > 3 || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
-            {
-                return EliteConsole.PrintFormattedErrorLine("Usage: Connect <ComputerName> [ <PipeName> ]");
-            }
-            GruntTask connectTask = await _context.GetGruntTaskByName("Connect");
-            string PipeName = "gruntsvc";
-            if (parameters.Count == 3)
-            {
-                PipeName = parameters[2].Value;
-            }
-            await _context.CreateGruntTasking(new GruntTasking
-            {
-                Id = 0,
-                GruntId = grunt.Id,
-                GruntTaskId = connectTask.Id,
-                GruntTask = connectTask,
-                Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
-                Status = GruntTaskingStatus.Uninitialized,
-                Type = GruntTaskingType.Connect,
-                Parameters = new List<string> { parameters[1].Value, PipeName },
-                GruntCommand = command,
-                GruntCommandId = command.Id
-            }, _grunthub);
-            return toPrint.ToString();
-        }
-
-        public async Task<string> Disconnect(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
-        {
-            string Name = "Disconnect";
-            StringBuilder toPrint = new StringBuilder();
-            if (parameters.Count != 2 || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
-            {
-                return EliteConsole.PrintFormattedErrorLine("Usage: Disconnect <grunt_name>");
-            }
-            Grunt disconnectGrunt = await _context.Grunts.FirstOrDefaultAsync(G => G.GUID.Equals(parameters[1].Value, StringComparison.OrdinalIgnoreCase));
-            if (disconnectGrunt == null)
-            {
-                toPrint.Append(EliteConsole.PrintFormattedErrorLine("Invalid GruntName selected: " + parameters[1].Value));
-                toPrint.Append(EliteConsole.PrintFormattedErrorLine("Usage: Disconnect <grunt_name>"));
-                return toPrint.ToString();
-            }
-            List<string> childrenGruntGuids = grunt.Children.ToList();
-            if (!childrenGruntGuids.Contains(disconnectGrunt.GUID, StringComparer.OrdinalIgnoreCase))
-            {
-                toPrint.Append(EliteConsole.PrintFormattedErrorLine("Grunt: \"" + parameters[1].Value + "\" is not a child Grunt"));
-                toPrint.Append(EliteConsole.PrintFormattedErrorLine("Usage: Disconnect <grunt_name>"));
-                return toPrint.ToString();
-            }
-            GruntTask disconnectTask = await _context.GetGruntTaskByName("Disconnect");
-            await _context.CreateGruntTasking(new GruntTasking
-            {
-                Id = 0,
-                GruntId = grunt.Id,
-                GruntTaskId = disconnectTask.Id,
-                GruntTask = disconnectTask,
-                Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
-                Status = GruntTaskingStatus.Uninitialized,
-                Type = GruntTaskingType.Disconnect,
-                Parameters = new List<string> { disconnectGrunt.GUID },
-                GruntCommand = command,
-                GruntCommandId = command.Id
-            }, _grunthub);
             return toPrint.ToString();
         }
 

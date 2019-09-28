@@ -1876,6 +1876,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
                         Code = "",
+                        TaskingType = GruntTaskingType.SetOption,
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -1887,6 +1888,16 @@ namespace Covenant.Core
                                 SuggestedValues = new List<string> { "Delay", "ConnectAttempts", "JitterPercent" },
                                 Optional = false,
                                 DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 98,
+                                Name = "Value",
+                                Description = "Value to change the option to.",
+                                Value = "",
+                                SuggestedValues = new List<string> { },
+                                Optional = false,
+                                DisplayInCommand = true
                             }
                         }
                     },
@@ -1896,6 +1907,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Get active Jobs.",
                         Code = "",
+                        TaskingType = GruntTaskingType.Jobs,
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -1904,6 +1916,7 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Kill the Grunt.",
                         Code = "",
+                        TaskingType = GruntTaskingType.Kill,
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
@@ -1912,11 +1925,12 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Connect to a P2P Grunt.",
                         Code = "",
+                        TaskingType = GruntTaskingType.Connect,
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
                             {
-                                Id = 98,
+                                Id = 99,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -1926,7 +1940,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 99,
+                                Id = 100,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -1942,11 +1956,12 @@ namespace Covenant.Core
                         AlternateNames = new List<string>(),
                         Description = "Disconnect from a ChildGrunt.",
                         Code = "",
+                        TaskingType = GruntTaskingType.Disconnect,
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
                             {
-                                Id = 100,
+                                Id = 101,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -1966,7 +1981,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 101,
+                                Id = 102,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -1986,7 +2001,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 102,
+                                Id = 103,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -2006,7 +2021,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 103,
+                                Id = 104,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),

@@ -90,6 +90,7 @@ namespace Covenant.Controllers
                 CovenantUser currentUser = await _context.GetCurrentUser(_userManager, HttpContext.User);
                 tasking.Grunt = await _context.GetGrunt(tasking.GruntId);
                 tasking.GruntTask = await _context.GetGruntTask(tasking.GruntTaskId);
+                tasking.Type = tasking.GruntTask.TaskingType;
                 for (int i = 0; i < Math.Min(tasking.Parameters.Count, tasking.GruntTask.Options.Count); i++)
                 {
                     if (tasking.Parameters[i] == null)
