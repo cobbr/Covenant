@@ -889,8 +889,9 @@ namespace Covenant.Core
                                 Name = "Command",
                                 Description = "SharpUp command to execute.",
                                 Value = "",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
+                                SuggestedValues = new List<string> { "audit" },
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
