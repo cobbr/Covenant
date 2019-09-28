@@ -1,0 +1,16 @@
+﻿using System;
+using System.IO;
+
+using SharpSploit.Evasion;
+
+public static class Task
+{
+    public static string Execute()
+    {
+        try
+        {
+            return Directory.GetCurrentDirectory();
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

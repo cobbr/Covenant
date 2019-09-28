@@ -594,6 +594,14 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "GetCurrentDirectory",
+                        AlternateNames = new List<string>{ "pwd" },
+                        Description = "Get the Grunt's Current Working Directory",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetCurrentDirectory" + ".task")),
+                        Options = new List<GruntTaskOption>{ }
+                    },
+                    new GruntTask
+                    {
                         Name = "ChangeDirectory",
                         AlternateNames = new List<string> { "cd" },
                         Description = "Change the current directory.",
@@ -2053,6 +2061,7 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassAmsi") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("AssemblyReflect") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ListDirectory") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetCurrentDirectory") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ChangeDirectory") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ProcessList") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
