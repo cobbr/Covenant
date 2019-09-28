@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed command-line parsing issues
 - Fixed PersistAutorun option ordering
 - Fixed ImpersonateProcess using wrong task code
+- Fixed InstallUtilLauncher dll was base64 encoded when hosted
 
 ## [v0.3.2] - 2019-09-11
 ### Added

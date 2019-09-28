@@ -59,6 +59,11 @@
                 string code = ((PowerShellLauncher)Model).PowerShellCode;
                 content = string.IsNullOrEmpty(code) ? "" : Convert.ToBase64String(Common.CovenantEncoding.GetBytes(code));
             }
+            else if (Model.Name == "InstallUtil")
+            {
+                string code = ((DiskLauncher)Model).DiskCode;
+                content = code == null ? "" : code;
+            }
             else if (new List<string> { "Cscript", "InstallUtil", "MSBuild", "Mshta", "Regsvr32", "Wmic", "Wscript" }.Contains(Model.Name))
             {
                 string code = ((DiskLauncher)Model).DiskCode;
