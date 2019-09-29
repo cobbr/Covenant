@@ -95,7 +95,7 @@ namespace Covenant.Controllers
             {
                 BinaryLauncher launcher = await _context.GenerateBinaryLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateBinaryHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -148,7 +148,7 @@ namespace Covenant.Controllers
             try
             {
                 PowerShellLauncher launcher = await _context.GeneratePowerShellLauncher();
-                file = await _context.CreateHostedFile(file.ListenerId, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GeneratePowerShellHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -202,7 +202,7 @@ namespace Covenant.Controllers
             {
                 InstallUtilLauncher launcher = await _context.GenerateInstallUtilLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateInstallUtilHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -256,7 +256,7 @@ namespace Covenant.Controllers
             {
                 MSBuildLauncher launcher = await _context.GenerateMSBuildLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateMSBuildHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -310,7 +310,7 @@ namespace Covenant.Controllers
             {
                 Regsvr32Launcher launcher = await _context.GenerateRegsvr32Launcher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateRegsvr32HostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -364,7 +364,7 @@ namespace Covenant.Controllers
             {
                 MshtaLauncher launcher = await _context.GenerateMshtaLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateMshtaHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -418,7 +418,7 @@ namespace Covenant.Controllers
             {
                 WmicLauncher launcher = await _context.GenerateWmicLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateWmicHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -472,7 +472,7 @@ namespace Covenant.Controllers
             {
                 CscriptLauncher launcher = await _context.GenerateCscriptLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateCscriptHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }
@@ -526,7 +526,7 @@ namespace Covenant.Controllers
             {
                 WscriptLauncher launcher = await _context.GenerateWscriptLauncher();
                 HttpListener listener = await _context.GetHttpListener(file.ListenerId);
-                file = await _context.CreateHostedFile(listener.Id, file);
+                file = await _context.CreateHostedFile(file);
                 launcher = await _context.GenerateWscriptHostedLauncher(file);
                 return RedirectToAction(nameof(Create), new { id = launcher.Name });
             }

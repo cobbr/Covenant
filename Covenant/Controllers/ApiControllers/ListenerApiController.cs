@@ -251,7 +251,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                HostedFile hostedFile = await _context.CreateHostedFile(id, file);
+                HostedFile hostedFile = await _context.CreateHostedFile(file);
                 return CreatedAtRoute(nameof(GetHostedFile), new { id = id, hfid = file.Id }, hostedFile);
             }
             catch (ControllerNotFoundException e)
