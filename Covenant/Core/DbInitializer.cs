@@ -506,7 +506,8 @@ namespace Covenant.Core
                                 Description = "The command-line parameters to pass to the assembly's EntryPoint.",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -566,7 +567,8 @@ namespace Covenant.Core
                                 Description = "The parameters to pass to the method.",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -792,7 +794,8 @@ namespace Covenant.Core
                                 Description = "Rubeus command to execute.",
                                 Value = "triage",
                                 SuggestedValues = new List<string> { "triage", "dump", "asktgt", "asktgs", "renew", "s4u", "ptt", "purge", "describe", "klist", "tgtdeleg", "monitor", "harvest", "kerberoast", "asreproast", "createnetonly", "changepw", "hash", "tgssub" },
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -850,7 +853,8 @@ namespace Covenant.Core
                                 Description = "SharpDPAPI command to execute.",
                                 Value = "triage",
                                 SuggestedValues = new List<string> { "triage", "machinetriage", "backupkey", "masterkeys", "machinemasterkeys", "credentials", "machinecredentials", "vaults", "machinevaults", "rdg" },
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -870,7 +874,8 @@ namespace Covenant.Core
                     //             Description = "SharpChrome command to execute.",
                     //             Value = "logins",
                     //             SuggestedValues = new List<string> { "logins", "cookies", "backupkey" },
-                    //             Optional = false,
+                    //             Optional = true,
+                    //             DefaultValue = "",
                     //             DisplayInCommand = true
                     //         }
                     //     }
@@ -911,7 +916,8 @@ namespace Covenant.Core
                                 Description = "ProcessID of the process to createa dump file of.",
                                 Value = "",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -937,7 +943,8 @@ namespace Covenant.Core
                                     "user", "SavedRDPConnections", "TriageIE", "DumpVault", "RecentRunCommands", "PuttySessions", "PuttySSHHostKeys", "CloudCreds", "RecentFiles",
                                     "MasterKeys", "CredFiles", "RCDManFiles", "CurrentDomainGroups", "Patches", "LogonSessions", "KerberosTGTData", "InterestingFiles", "IETabs",
                                     "TriageChrome", "TriageFirefox", "RecycleBin", "4624Events", "4648Events", "KerberosTickets" },
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -957,7 +964,8 @@ namespace Covenant.Core
                                 Description = "SharpWMI command to execute.",
                                 Value = "",
                                 SuggestedValues = new List<string> { "action=query", "action=create", "action=executevbs" },
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1378,7 +1386,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited usernames to retrieve.",
                                 Value = "username",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1398,7 +1407,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited groups to retrieve.",
                                 Value = "Domain Admins",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1418,7 +1428,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited computers to retrieve.",
                                 Value = "DC01",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1438,7 +1449,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1458,7 +1470,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             },
                             new GruntTaskOption
@@ -1468,7 +1481,8 @@ namespace Covenant.Core
                                 Description = "LocalGroup name to query for members.",
                                 Value = "Administrators",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "Administrators",
                                 DisplayInCommand = true
                             }
                         }
@@ -1488,7 +1502,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
@@ -1508,7 +1523,8 @@ namespace Covenant.Core
                                 Description = "List of comma-delimited ComputerNames to query.",
                                 Value = "DC01",
                                 SuggestedValues = new List<string>(),
-                                Optional = false,
+                                Optional = true,
+                                DefaultValue = "",
                                 DisplayInCommand = true
                             }
                         }
