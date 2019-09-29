@@ -215,12 +215,6 @@ namespace Covenant.Core
                     await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
                     output = "Note: " + grunt.Note;
                 }
-                else if (parameters.FirstOrDefault().Value.ToLower() == "powershellimport")
-                {
-                    grunt.PowerShellImport = parameters.Count >= 2 ? parameters[1].Value : "";
-                    await _context.EditGrunt(grunt, user, _grunthub, _eventhub);
-                    output = "PowerShell Imported";
-                }
                 else if (commandTask != null)
                 {
                     parameters = parameters.Skip(1).ToList();

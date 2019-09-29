@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed command-line parsing, Task parsing, added DefaultValue for optional parameters
 - Changed DCOM, WMI, BypassUAC task handling
 - Updated SharpSploit to latest version
+- Changed PowerShellImport Task tab to use file control
+- Changed PowerShellImport to strip PowerShell ISE magic header value
 
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task
