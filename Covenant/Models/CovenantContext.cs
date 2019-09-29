@@ -1737,6 +1737,39 @@ namespace Covenant.Models
             {
                 parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
             }
+            else if (tasking.GruntTask.Name.Equals("powershellimport", StringComparison.OrdinalIgnoreCase))
+            {
+                if (parameters.Count >= 1)
+                {
+                    string import = parameters[0];
+                    byte[] importBytes = Convert.FromBase64String(import);
+                    if (importBytes.Length >= 3 && importBytes[0] == 0xEF && importBytes[1] == 0xBB && importBytes[2] == 0xBF)
+                    {
+                        import = Convert.ToBase64String(importBytes.Skip(3).ToArray());
+                    }
+                    tasking.Grunt.PowerShellImport = import;
+                }
+                else
+                {
+                    tasking.Grunt.PowerShellImport = "";
+                }
+                this.Grunts.Update(tasking.Grunt);
+                tasking.GruntCommand.CommandOutput.Output = "PowerShell Imported";
+
+                Event ev = new Event
+                {
+                    Time = tasking.GruntCommand.CommandTime,
+                    MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command completed",
+                    MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
+                    Level = EventLevel.Highlight,
+                    Context = tasking.Grunt.Name
+                };
+                await this.Events.AddAsync(ev);
+                this.GruntCommands.Update(tasking.GruntCommand);
+                await this.SaveChangesAsync();
+                await GruntHubProxy.SendCommandEvent(_grunthub, ev, tasking.GruntCommand);
+                tasking.Status = GruntTaskingStatus.Completed;
+            }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
             {
                 Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
