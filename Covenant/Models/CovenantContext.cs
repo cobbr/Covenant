@@ -3077,14 +3077,14 @@ public static class Task
             return file;
         }
 
-        public async Task<HostedFile> CreateHostedFile(int listenerId, HostedFile file)
+        public async Task<HostedFile> CreateHostedFile(HostedFile file)
         {
-            HttpListener listener = await this.GetHttpListener(listenerId);
+            HttpListener listener = await this.GetHttpListener(file.ListenerId);
             if (file.ListenerId != listener.Id)
             {
                 throw new ControllerBadRequestException($"BadRequest - HostedFile with listener id: {file.ListenerId} does not match listener with id: {listener.Id}");
             }
-            HostedFile existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path);
+            HostedFile existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path && HF.ListenerId == file.ListenerId);
             if (existing != null)
             {
                 // If file already exists and is being hosted, BadRequest
@@ -3094,7 +3094,7 @@ public static class Task
             {
                 HostedFile hostedFile = listener.HostFile(file);
                 // Check if it already exists again, path could have changed
-                existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path);
+                existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path && HF.ListenerId == file.ListenerId);
                 if (existing != null)
                 {
                     throw new ControllerBadRequestException($"BadRequest - HostedFile already exists at: {hostedFile.Path}");

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed SharpUp error when no CLI args provided
 - Fixed Connect/Disconnect/Set/SharpShell error when using Task tab
 - Fixed missing DefaultValues for Assembly and GhostPack tasks
+- Fixed bug preventing files with the same name being hosted on different Listeners
 
 ## [v0.3.2] - 2019-09-11
 ### Added
