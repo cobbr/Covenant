@@ -7,7 +7,7 @@ using SharpChrome.Domain;
 
 public static class Task
 {
-    public static string Execute(string Command)
+    public static string Execute(string Command = "")
     {
         string output = "";
         try

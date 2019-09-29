@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed InstallUtilLauncher dll was base64 encoded when hosted
 - Fixed SharpUp error when no CLI args provided
 - Fixed Connect/Disconnect/Set/SharpShell error when using Task tab
+- Fixed missing DefaultValues for Assembly and GhostPack tasks
 
 ## [v0.3.2] - 2019-09-11
 ### Added
