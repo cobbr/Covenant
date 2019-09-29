@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added ShellRunAs and ShellCmdRunAs tasks
+- Added GetCurrentDirectory task
 
 ### Changed
 - Changed command-line parsing, Task parsing, added DefaultValue for optional parameters

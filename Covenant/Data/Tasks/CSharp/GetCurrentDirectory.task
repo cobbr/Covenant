@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 
-using SharpSploit.Evasion;
-
 public static class Task
 {
     public static string Execute()
