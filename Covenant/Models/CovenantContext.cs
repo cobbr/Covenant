@@ -1777,6 +1777,7 @@ namespace Covenant.Models
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
                 }
+                
                 // Add .exe extension if needed
                 List<string> split = l.LauncherString.Split(" ").ToList();
                 parameters[1] = split.FirstOrDefault();
@@ -1787,7 +1788,7 @@ namespace Covenant.Models
                 if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
                 else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
                 if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
-                if (split.Count > 1) { parameters[1] += " " + String.Join(" ", split.ToArray()); }
+                if (split.Count > 1) { parameters[1] += " " + String.Join(" ", split.Skip(1).ToArray()); }
             }
             else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
             {
