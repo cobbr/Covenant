@@ -87,7 +87,7 @@ namespace Covenant.Models.Covenant
                     {
                         try
                         {
-                            string domain = line.Split(":")[1].Trim();
+                            string domain = string.Join(":", line.Split(":").Skip(1)).Trim();
                             string temp = domain.Split("/")[0].Trim();
                             domainSid = domain.Split("/")[1].Trim();
 
@@ -117,15 +117,15 @@ namespace Covenant.Models.Covenant
                             {
                                 if (line.Contains("Username"))
                                 {
-                                    username = line.Split(":")[1].Trim();
+                                    username = string.Join(":", line.Split(":").Skip(1)).Trim();
                                 }
                                 else if (line.Contains("Domain"))
                                 {
-                                    domain = line.Split(":")[1].Trim();
+                                    domain = string.Join(":", line.Split(":").Skip(1)).Trim();
                                 }
                                 else if (line.Contains("NTLM") || line.Contains("Password"))
                                 {
-                                    password = line.Split(":")[1].Trim();
+                                    password = string.Join(":", line.Split(":").Skip(1)).Trim();
                                 }
                             }
                             catch (Exception) { continue; }
@@ -180,7 +180,8 @@ namespace Covenant.Models.Covenant
                     if (lines.FirstOrDefault(L => L.Contains("SAMKey")) != null)
                     {
                         string lines_combined = String.Join('\n', lines);
-                        string domain = lines.FirstOrDefault(L => L.Contains("Domain :")).Split(":")[1].Trim();
+                        string domain_line = lines.FirstOrDefault(L => L.Contains("Domain :"));
+                        string domain = string.Join(":", domain_line.Split(":").Skip(1)).Trim();
                         MatchCollection hash_matches = Regex.Matches(lines_combined, "(?s)RID  :.*?((?=RID  :)|$)");
                         foreach (Match match in hash_matches)
                         {
@@ -193,11 +194,11 @@ namespace Covenant.Models.Covenant
                                 {
                                     if (line.Trim().StartsWith("User :", StringComparison.Ordinal))
                                     {
-                                        user = line.Split(":")[1].Trim();
+                                        user = string.Join(":", line.Split(":").Skip(1)).Trim();
                                     }
                                     else if (line.Trim().StartsWith("Hash NTLM:", StringComparison.Ordinal))
                                     {
-                                        userHash = line.Split(":")[1].Trim();
+                                        userHash = string.Join(":", line.Split(":").Skip(1)).Trim();
                                     }
                                 }
                                 catch (Exception) { continue; }
@@ -228,11 +229,11 @@ namespace Covenant.Models.Covenant
                 {
                     if (line.Contains("UserName"))
                     {
-                        username = line.Split(":")[1].Trim();
+                        username = string.Join(":", line.Split(":").Skip(1)).Trim();
                     }
                     else if(line.Contains("Domain"))
                     {
-                        domain = line.Split(":")[1].Trim();
+                        domain = string.Join(":", line.Split(":").Skip(1)).Trim();
                     }
                 }
                 MatchCollection ticket_matches = Regex.Matches(match.Groups[0].Value, "(?s)ServiceName              :.*?((?=ServiceName              :)|$)");
@@ -250,11 +251,11 @@ namespace Covenant.Models.Covenant
                         {
                             if (line.Contains("ServiceName"))
                             {
-                                servicename = line.Split(":")[1].Trim();
+                                servicename = string.Join(":", line.Split(":").Skip(1)).Trim();
                             }
                             else if (line.Contains("SessionKeyType"))
                             {
-                                sessionkeytype = line.Split(":")[1].Trim();
+                                sessionkeytype = string.Join(":", line.Split(":").Skip(1)).Trim();
                             }
                             else if (line.Contains("Base64EncodedTicket"))
                             {
