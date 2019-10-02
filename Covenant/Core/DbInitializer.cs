@@ -1928,6 +1928,27 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "ReadFile",
+                        AlternateNames = new List<string>{"cat"},
+                        Description = "Read a text file on disk.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ReadFile" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 100,
+                                Name = "Path",
+                                Description = "Path to the file.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+
+                    },
+                    new GruntTask
+                    {
                         Name = "BypassAmsi",
                         AlternateNames = new List<string>(),
                         Description = "Bypasses AMSI by patching the AmsiScanBuffer function.",
@@ -1945,7 +1966,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 100,
+                                Id = 101,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -1955,7 +1976,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 101,
+                                Id = 102,
                                 Name = "Value",
                                 Description = "Value to change the option to.",
                                 Value = "",
@@ -1994,7 +2015,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 102,
+                                Id = 103,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -2004,7 +2025,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 103,
+                                Id = 104,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -2025,7 +2046,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 104,
+                                Id = 105,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -2045,7 +2066,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 105,
+                                Id = 106,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -2065,7 +2086,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 106,
+                                Id = 107,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -2085,7 +2106,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 107,
+                                Id = 108,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
@@ -2193,6 +2214,7 @@ namespace Covenant.Core
                 var download = await context.GetGruntTaskByName("Download");
                 var privexchange = await context.GetGruntTaskByName("PrivExchange");
                 var screenshot = await context.GetGruntTaskByName("ScreenShot");
+                var readfile = await context.GetGruntTaskByName("ReadFile");
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -2206,6 +2228,10 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    //new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    //new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
 
