@@ -1928,10 +1928,10 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
-                        Name = "ReadFile",
+                        Name = "ReadTextFile",
                         AlternateNames = new List<string>{"cat"},
                         Description = "Read a text file on disk.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ReadFile" + ".task")),
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ReadTextFile" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2214,7 +2214,7 @@ namespace Covenant.Core
                 var download = await context.GetGruntTaskByName("Download");
                 var privexchange = await context.GetGruntTaskByName("PrivExchange");
                 var screenshot = await context.GetGruntTaskByName("ScreenShot");
-                var readfile = await context.GetGruntTaskByName("ReadFile");
+                var readtextfile = await context.GetGruntTaskByName("ReadTextFile");
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -2228,10 +2228,8 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    //new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    //new GruntTaskReferenceAssembly { GruntTask = readfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
 
