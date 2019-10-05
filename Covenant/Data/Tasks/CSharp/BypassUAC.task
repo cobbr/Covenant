@@ -4,7 +4,7 @@ using SharpSploit.Credentials;
 
 public static class Task
 {
-    public static string Execute(string Command, string Parameters, string Directory = "C:\\WINDOWS\\System32\\", string ProcessID = "0")
+    public static string Execute(string Command, string Parameters = "", string Directory = "C:\\WINDOWS\\System32\\", string ProcessID = "0")
     {
         try
         {

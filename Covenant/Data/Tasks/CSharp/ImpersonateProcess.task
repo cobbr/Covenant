@@ -10,7 +10,7 @@ public static class Task
         {
             using (Tokens t = new Tokens())
             {
-                int ProcID = Int32.Parse(ProcessID);
+                uint ProcID = UInt32.Parse(ProcessID);
                 if (t.ImpersonateProcess(ProcID))
                 {
                     return "Successfully impersonated: " + ProcessID;

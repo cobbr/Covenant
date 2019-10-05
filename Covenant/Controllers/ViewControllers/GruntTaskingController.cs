@@ -72,7 +72,7 @@ namespace Covenant.Controllers
         private static string GetCommand(GruntTasking tasking)
         {
             string command = tasking.GruntTask.Name;
-            for (int i = 0; i < tasking.Parameters.Count; i++)
+            for (int i = 0; i < Math.Min(tasking.Parameters.Count, tasking.GruntTask.Options.Count); i++)
             {
                 if (tasking.GruntTask.Options[i].DisplayInCommand)
                 {
@@ -90,7 +90,23 @@ namespace Covenant.Controllers
                 CovenantUser currentUser = await _context.GetCurrentUser(_userManager, HttpContext.User);
                 tasking.Grunt = await _context.GetGrunt(tasking.GruntId);
                 tasking.GruntTask = await _context.GetGruntTask(tasking.GruntTaskId);
-
+                tasking.Type = tasking.GruntTask.TaskingType;
+                for (int i = 0; i < Math.Min(tasking.Parameters.Count, tasking.GruntTask.Options.Count); i++)
+                {
+                    if (tasking.Parameters[i] == null)
+                    {
+                        tasking.Parameters[i] = "";
+                        tasking.GruntTask.Options[i].Value = "";
+                    }
+                    else
+                    {
+                        tasking.GruntTask.Options[i].Value = tasking.Parameters[i];
+                    }
+                }
+                for (int i = tasking.Parameters.Count; i < tasking.GruntTask.Options.Count; i++)
+                {
+                    tasking.GruntTask.Options[i].Value = "";
+                }
                 GruntCommand createdCommand = await _context.CreateGruntCommand(new GruntCommand
                 {
                     Command = GetCommand(tasking),

@@ -5,7 +5,7 @@ using SharpDump;
 
 public static class Task
 {
-    public static string Execute(string ProcessID)
+    public static string Execute(string ProcessID = "")
     {
         string output = "";
         try
@@ -27,7 +27,7 @@ public static class Task
             }
             else
             {
-                if (args.Length == 0)
+                if (ProcessID.Length == 0)
                 {
                     // dump LSASS by default
                     Program.Minidump();

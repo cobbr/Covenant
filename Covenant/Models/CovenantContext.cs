@@ -928,8 +928,8 @@ namespace Covenant.Models
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetConnectAttempts,
-                        Parameters = new List<string> { grunt.ConnectAttempts.ToString() },
+                        Type = GruntTaskingType.SetOption,
+                        Parameters = new List<string> { "ConnectAttempts", grunt.ConnectAttempts.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
                     }, grunthub);
@@ -956,8 +956,8 @@ namespace Covenant.Models
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetDelay,
-                        Parameters = new List<string> { grunt.Delay.ToString() },
+                        Type = GruntTaskingType.SetOption,
+                        Parameters = new List<string> { "Delay", grunt.Delay.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
                     }, grunthub);
@@ -984,8 +984,8 @@ namespace Covenant.Models
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetJitter,
-                        Parameters = new List<string> { grunt.JitterPercent.ToString() },
+                        Type = GruntTaskingType.SetOption,
+                        Parameters = new List<string> { "JitterPercent", grunt.JitterPercent.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
                     }, grunthub);
@@ -1470,6 +1470,7 @@ namespace Covenant.Models
             }
             updatingTask.UnsafeCompile = task.UnsafeCompile;
             updatingTask.TokenTask = task.TokenTask;
+            updatingTask.TaskingType = task.TaskingType;
             task.Options.Where(O => O.Id == 0).ToList().ForEach(async O => await this.CreateGruntTaskOption(O));
             var removeOptions = updatingTask.Options.Select(UT => UT.Id).Except(task.Options.Select(O => O.Id));
             removeOptions.ToList().ForEach(RO => updatingTask.Options.Remove(updatingTask.Options.FirstOrDefault(UO => UO.Id == RO)));
@@ -1771,107 +1772,145 @@ namespace Covenant.Models
             tasking.Grunt.Listener = await this.GetListener(tasking.Grunt.ListenerId);
             tasking.GruntTask = await this.GetGruntTask(tasking.GruntTaskId);
             tasking.GruntCommand = await this.GetGruntCommand(tasking.GruntCommandId);
-            if (tasking.Type == GruntTaskingType.Assembly)
+            List<string> parameters = tasking.GruntTask.Options.OrderBy(O => O.Id).Select(O => string.IsNullOrEmpty(O.Value) ? O.DefaultValue : O.Value).ToList();
+            if (tasking.GruntTask.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(tasking.Grunt.PowerShellImport))
             {
-                if (!tasking.Parameters.Any())
-                {
-                    List<string> parameters = tasking.GruntTask.Options.Select(O => O.Value).ToList();
-                    if (tasking.GruntTask.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && parameters.Any())
-                    {
-                        if (!string.IsNullOrWhiteSpace(tasking.Grunt.PowerShellImport))
-                        {
-                            parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
-                        }
-                    }
-                    else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
-                        if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                        {
-                            throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
-                        }
-                        parameters[1] = l.LauncherString;
-                    }
-                    else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
-                        if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                        {
-                            throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
-                        }
-                        // Add .exe exetension if needed
-                        List<string> split = l.LauncherString.Split(" ").ToList();
-                        parameters[1] = split.FirstOrDefault();
-                        if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
-
-                        // Add command parameters
-                        split.RemoveAt(0);
-                        parameters.Insert(2, String.Join(" ", split.ToArray()));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                        parameters.Insert(3, Directory);
-                    }
-                    else if (tasking.GruntTask.Name.Equals("dcomcommand", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Add .exe exetension if needed
-                        List<string> split = parameters[1].Split(" ").ToList();
-                        parameters[1] = split[0];
-                        if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
-
-                        // Add command parameters
-                        split.RemoveAt(0);
-                        parameters.Insert(2, String.Join(" ", split.ToArray()));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                        parameters.Insert(3, Directory);
-                    }
-                    else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
-                        if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                        {
-                            throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[0]}");
-                        }
-                        else
-                        {
-                            // Add .exe extension if needed
-                            string[] split = l.LauncherString.Split(" ");
-                            if (!parameters[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[0] += ".exe"; }
-
-                            // Add parameters need for BypassUAC Task
-                            string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
-                            string Directory = "C:\\WINDOWS\\System32\\";
-                            if (parameters[0].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                            else if (parameters[0].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                            parameters.Add(ArgParams);
-                            parameters.Add(Directory);
-                            parameters.Add("0");
-                        }
-                    }
-                    else if (tasking.GruntTask.Name.Equals("bypassuaccommand", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Add .exe extension if needed
-                        string[] split = parameters[0].Split(" ");
-                        if (!parameters[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[0] += ".exe"; }
-
-                        // Add parameters need for BypassUAC Task
-                        string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
-                        string Directory = "C:\\WINDOWS\\System32\\";
-                        if (parameters[0].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
-                        else if (parameters[0].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
-
-                        parameters.Add(ArgParams);
-                        parameters.Add(Directory);
-                        parameters.Add("0");
-                    }
-                    tasking.Parameters = parameters;
-                }
+                parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
             }
+            else if (tasking.GruntTask.Name.Equals("powershellimport", StringComparison.OrdinalIgnoreCase))
+            {
+                if (parameters.Count >= 1)
+                {
+                    string import = parameters[0];
+                    byte[] importBytes = Convert.FromBase64String(import);
+                    if (importBytes.Length >= 3 && importBytes[0] == 0xEF && importBytes[1] == 0xBB && importBytes[2] == 0xBF)
+                    {
+                        import = Convert.ToBase64String(importBytes.Skip(3).ToArray());
+                    }
+                    tasking.Grunt.PowerShellImport = import;
+                }
+                else
+                {
+                    tasking.Grunt.PowerShellImport = "";
+                }
+                this.Grunts.Update(tasking.Grunt);
+                tasking.GruntCommand.CommandOutput.Output = "PowerShell Imported";
+
+                Event ev = new Event
+                {
+                    Time = tasking.GruntCommand.CommandTime,
+                    MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command completed",
+                    MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
+                    Level = EventLevel.Highlight,
+                    Context = tasking.Grunt.Name
+                };
+                await this.Events.AddAsync(ev);
+                this.GruntCommands.Update(tasking.GruntCommand);
+                await this.SaveChangesAsync();
+                await GruntHubProxy.SendCommandEvent(_grunthub, ev, tasking.GruntCommand);
+                tasking.Status = GruntTaskingStatus.Completed;
+            }
+            else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
+                }
+                
+                // Add .exe extension if needed
+                List<string> split = l.LauncherString.Split(" ").ToList();
+                parameters[1] = split.FirstOrDefault();
+                if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
+
+                // Add Directory
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+                if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
+                if (split.Count > 1) { parameters[1] += " " + String.Join(" ", split.Skip(1).ToArray()); }
+            }
+            else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
+                }
+                // Add .exe extension if needed
+                List<string> split = l.LauncherString.Split(" ").ToList();
+                parameters[1] = split.FirstOrDefault();
+                if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
+
+                // Add command parameters
+                split.RemoveAt(0);
+                parameters.Insert(2, String.Join(" ", split.ToArray()));
+
+                // Add Directory
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+                if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
+
+                parameters.Insert(3, Directory);
+            }
+            else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[0]}");
+                }
+                // Add .exe extension if needed
+                string[] split = l.LauncherString.Split(" ");
+                parameters[0] = split.FirstOrDefault();
+                if (!parameters[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[0] += ".exe"; }
+                        
+                // Add parameters need for BypassUAC Task
+                string ArgParams = String.Join(" ", split.ToList().GetRange(1, split.Count() - 1));
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[0].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[0].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+
+                parameters.Add(ArgParams);
+                parameters.Add(Directory);
+                parameters.Add("0");
+            }
+            else if (tasking.GruntTask.Name.Equals("SharpShell", StringComparison.CurrentCultureIgnoreCase))
+            {
+                string WrapperFunctionFormat =
+    @"using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Security;
+using System.Security.Principal;
+using System.Collections.Generic;
+using SharpSploit.Credentials;
+using SharpSploit.Enumeration;
+using SharpSploit.Execution;
+using SharpSploit.Generic;
+using SharpSploit.Misc;
+public static class Task
+{{
+    public static string Execute()
+    {{
+        {0}
+    }}
+}}";
+                string csharpcode = string.Join(" ", parameters);
+                tasking.GruntTask.Code = string.Format(WrapperFunctionFormat, csharpcode);
+                tasking.GruntTask.Compiled = false;
+                this.GruntTasks.Update(tasking.GruntTask);
+                await this.SaveChangesAsync();
+                parameters = new List<string> { };
+            }
+            else if (tasking.GruntTask.Name.Equals("Disconnect", StringComparison.CurrentCultureIgnoreCase))
+            {
+                Grunt g = await this.GetGruntByName(parameters[0]);
+                parameters[0] = g.GUID;
+            }
+            tasking.Parameters = parameters;
             try
             {
                 tasking.GruntTask.Compile();
@@ -1947,23 +1986,24 @@ namespace Covenant.Models
                 {
                     grunt.Status = GruntStatus.Killed;
                 }
-                else if (tasking.Type == GruntTaskingType.SetDelay || tasking.Type == GruntTaskingType.SetJitter || tasking.Type == GruntTaskingType.SetConnectAttempts)
+                else if (tasking.Type == GruntTaskingType.SetOption && tasking.Parameters.Count >= 2)
                 {
-                    bool parsed = int.TryParse(tasking.Parameters[0], out int n);
+                    bool parsed = int.TryParse(tasking.Parameters[1], out int n);
                     if (parsed)
                     {
-                        if (tasking.Type == GruntTaskingType.SetDelay)
+                        if (tasking.Parameters[0].Equals("Delay", StringComparison.CurrentCultureIgnoreCase))
                         {
                             grunt.Delay = n;
                         }
-                        else if (tasking.Type == GruntTaskingType.SetJitter)
+                        else if (tasking.Parameters[0].Equals("JitterPercent", StringComparison.CurrentCultureIgnoreCase))
                         {
                             grunt.JitterPercent = n;
                         }
-                        else if (tasking.Type == GruntTaskingType.SetConnectAttempts)
+                        else if (tasking.Parameters[0].Equals("ConnectAttempts", StringComparison.CurrentCultureIgnoreCase))
                         {
                             grunt.ConnectAttempts = n;
                         }
+                        this.Grunts.Update(grunt);
                     }
                 }
                 else if (tasking.Type == GruntTaskingType.Connect)
@@ -3089,14 +3129,14 @@ namespace Covenant.Models
             return file;
         }
 
-        public async Task<HostedFile> CreateHostedFile(int listenerId, HostedFile file)
+        public async Task<HostedFile> CreateHostedFile(HostedFile file)
         {
-            HttpListener listener = await this.GetHttpListener(listenerId);
+            HttpListener listener = await this.GetHttpListener(file.ListenerId);
             if (file.ListenerId != listener.Id)
             {
                 throw new ControllerBadRequestException($"BadRequest - HostedFile with listener id: {file.ListenerId} does not match listener with id: {listener.Id}");
             }
-            HostedFile existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path);
+            HostedFile existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path && HF.ListenerId == file.ListenerId);
             if (existing != null)
             {
                 // If file already exists and is being hosted, BadRequest
@@ -3106,7 +3146,7 @@ namespace Covenant.Models
             {
                 HostedFile hostedFile = listener.HostFile(file);
                 // Check if it already exists again, path could have changed
-                existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path);
+                existing = await this.HostedFiles.FirstOrDefaultAsync(HF => HF.Path == file.Path && HF.ListenerId == file.ListenerId);
                 if (existing != null)
                 {
                     throw new ControllerBadRequestException($"BadRequest - HostedFile already exists at: {hostedFile.Path}");

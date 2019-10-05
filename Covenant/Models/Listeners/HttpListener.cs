@@ -91,7 +91,7 @@ namespace Covenant.Models.Listeners
                     Uri uri = new Uri(url);
                     this.UseSSL = uri.Scheme == "https";
                     addresses.Add(uri.Host);
-                    this.BindPort = uri.Port;
+                    this.ConnectPort = uri.Port;
                 }
                 this.ConnectAddresses = addresses;
             }

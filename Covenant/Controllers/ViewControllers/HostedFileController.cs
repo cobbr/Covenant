@@ -42,7 +42,7 @@ namespace Covenant.Controllers.ViewControllers
         {
             try
             {
-                HostedFile createdFile = await _context.CreateHostedFile(file.ListenerId, file);
+                HostedFile createdFile = await _context.CreateHostedFile(file);
                 return RedirectToAction("Interact", "Listener", new { Id = createdFile.Id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

