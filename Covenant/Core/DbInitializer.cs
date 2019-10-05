@@ -102,14 +102,13 @@ namespace Covenant.Core
             }
             if (!context.Profiles.Any())
             {
-                List<HttpProfile> httpProfiles = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
-                                                 .Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
-                                                 .Select(F => HttpProfile.Create(F))
-                                                 .ToList();
-                List<BridgeProfile> bridgeProfiles = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
-                                                 .Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
-                                                 .Select(F => BridgeProfile.Create(F))
-                                                 .ToList();
+                string[] files = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories);
+                List<HttpProfile> httpProfiles = files.Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+                    .Select(F => HttpProfile.Create(F))
+                    .ToList();
+                List<BridgeProfile> bridgeProfiles = files.Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
+                    .Select(F => BridgeProfile.Create(F))
+                    .ToList();
                 await context.Profiles.AddRangeAsync(httpProfiles);
                 await context.Profiles.AddRangeAsync(bridgeProfiles);
                 await context.SaveChangesAsync();

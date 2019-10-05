@@ -152,6 +152,28 @@ namespace Covenant.Controllers
             }
         }
 
+        // GET api/grunts/{id}/outbound
+        // <summary>
+        // Get the outbound Grunt for a Grunt in the graph
+        // </summary>
+        [HttpGet("{id}/outbound", Name = "GetOutboundGrunt")]
+        public async Task<ActionResult<Grunt>> GetOutboundGrunt(int id)
+		{
+			try
+			{
+				return await _context.GetOutboundGrunt(id);
+			}
+			catch (ControllerNotFoundException e)
+			{
+				return NotFound(e.Message);
+			}
+			catch (ControllerBadRequestException e)
+			{
+				return BadRequest(e.Message);
+			}
+		}
+
+
         // POST api/grunts
         // <summary>
         // Create a Grunt

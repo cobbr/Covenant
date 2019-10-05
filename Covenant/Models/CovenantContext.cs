@@ -819,10 +819,6 @@ namespace Covenant.Models
         public async Task<List<string>> GetPathToChildGrunt(int gruntId, int childId)
         {
             Grunt grunt = await this.GetGrunt(gruntId);
-            if (grunt == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Grunt with id: {gruntId}");
-            }
             List<string> path = new List<string>();
             bool found = GetPathToChildGrunt(gruntId, childId, ref path);
             if (!found)
@@ -833,6 +829,18 @@ namespace Covenant.Models
             path.Reverse();
             return path;
         }
+
+        public async Task<Grunt> GetOutboundGrunt(int gruntId)
+		{
+			Grunt grunt = await this.GetGrunt(gruntId);
+			Grunt parent = await this.Grunts.FirstOrDefaultAsync(G => G.Children.Contains(grunt.GUID));
+            while (parent != null)
+			{
+				grunt = parent;
+				parent = await this.Grunts.FirstOrDefaultAsync(G => G.Children.Contains(grunt.GUID));
+			}
+			return grunt;
+		}
 
         public async Task<Grunt> CreateGrunt(Grunt grunt)
         {

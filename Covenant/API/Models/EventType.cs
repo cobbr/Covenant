@@ -20,7 +20,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "Normal")]
         Normal,
         [EnumMember(Value = "Download")]
-        Download
+        Download,
+        [EnumMember(Value = "Screenshot")]
+        Screenshot
     }
     internal static class EventTypeEnumExtension
     {
@@ -37,6 +39,8 @@ namespace Covenant.API.Models
                     return "Normal";
                 case EventType.Download:
                     return "Download";
+                case EventType.Screenshot:
+                    return "Screenshot";
             }
             return null;
         }
@@ -49,6 +53,8 @@ namespace Covenant.API.Models
                     return EventType.Normal;
                 case "Download":
                     return EventType.Download;
+                case "Screenshot":
+                    return EventType.Screenshot;
             }
             return null;
         }

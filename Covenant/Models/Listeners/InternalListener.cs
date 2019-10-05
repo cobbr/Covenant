@@ -430,7 +430,25 @@ namespace Covenant.Models.Listeners
                     {
                         string originalServerGuid = message.GUID.Substring(0, 10);
                         targetGrunt = await _client.ApiGruntsOriginalguidByServerguidGetAsync(originalServerGuid);
-                        await this.PostStage0(egressGrunt, targetGrunt, message, message.GUID.Substring(10), guid);
+						if (targetGrunt != null)
+						{
+							var it = await _client.ApiImplanttemplatesByIdGetAsync(targetGrunt.ImplantTemplateId);
+							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.SMB)
+							{
+								// Get connecting Grunt as egress
+								List<APIModels.GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
+								// TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
+								APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
+								if (connectTasking == null)
+								{
+									this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
+									return guid;
+								}
+								APIModels.Grunt taskedGrunt = await _client.ApiGruntsByIdGetAsync(connectTasking.GruntId);
+								egressGrunt = await _client.ApiGruntsByIdOutboundGetAsync(taskedGrunt.Id ?? default);
+							}
+						}
+						await this.PostStage0(egressGrunt, targetGrunt, message, message.GUID.Substring(10), guid);
                         return guid;
                     }
                     else
@@ -439,6 +457,14 @@ namespace Covenant.Models.Listeners
                         return guid;
                     }
                 }
+				if (targetGrunt != null)
+				{
+					var it = await _client.ApiImplanttemplatesByIdGetAsync(targetGrunt.ImplantTemplateId);
+					if (it.CommType == APIModels.CommunicationType.SMB)
+					{
+						egressGrunt = await _client.ApiGruntsByIdOutboundGetAsync(targetGrunt.Id ?? default);
+					}
+				}
 				switch (targetGrunt.Status)
 				{
 					case APIModels.GruntStatus.Uninitialized:
@@ -539,6 +565,7 @@ namespace Covenant.Models.Listeners
                 this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
                 return;
             }
+
 			bool egressGruntExists = egressGrunt != null;
 
 			if (targetGrunt.Status != APIModels.GruntStatus.Uninitialized)
@@ -593,8 +620,8 @@ namespace Covenant.Models.Listeners
 
             if (egressGruntExists)
             {
-                // Add this as Child grunt to Grunt that connects it
-                List<APIModels.GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
+				// Add this as Child grunt to Grunt that connects it
+				List<APIModels.GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
                 // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
                 APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
                 if (connectTasking == null)
@@ -607,7 +634,8 @@ namespace Covenant.Models.Listeners
                 await _client.ApiGruntsPutAsync(targetGrunt);
                 connectTasking.Status = APIModels.GruntTaskingStatus.Completed;
                 await _client.ApiTaskingsPutAsync(connectTasking);
-            }
+				targetGrunt = await _client.ApiGruntsByIdGetAsync(targetGrunt.Id ?? default);
+			}
 
 			byte[] rsaEncryptedBytes = EncryptUtilities.GruntRSAEncrypt(targetGrunt, Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey));
 			ModelUtilities.GruntEncryptedMessage message = null;

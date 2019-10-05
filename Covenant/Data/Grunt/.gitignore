@@ -3,3 +3,4 @@
 !.gitignore
 !/GruntHTTP/
 !/GruntSMB/
+!/GruntBridge/

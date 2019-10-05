@@ -24,8 +24,8 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="level">Possible values include: 'Silent', 'Info',
         /// 'Warning', 'Highlight', 'Error'</param>
-        /// <param name="type">Possible values include: 'Normal',
-        /// 'Download'</param>
+        /// <param name="type">Possible values include: 'Normal', 'Download',
+        /// 'Screenshot'</param>
         public EventModel(int? id = default(int?), System.DateTime? time = default(System.DateTime?), string messageHeader = default(string), string messageBody = default(string), EventLevel? level = default(EventLevel?), EventType? type = default(EventType?), string context = default(string))
         {
             Id = id;
@@ -71,7 +71,8 @@ namespace Covenant.API.Models
         public EventLevel? Level { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Normal', 'Download'
+        /// Gets or sets possible values include: 'Normal', 'Download',
+        /// 'Screenshot'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public EventType? Type { get; set; }
