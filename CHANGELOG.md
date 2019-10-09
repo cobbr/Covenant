@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SharpSploit to latest version
 - Changed PowerShellImport Task tab to use file control
 - Changed PowerShellImport to strip PowerShell ISE magic header value
+- Updated SharpSploit to latest version, updated powerkatz dlls
 
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task
