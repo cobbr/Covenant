@@ -149,11 +149,8 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
-                                t.Start();
-                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
-                                bool completed = t.Join(5000);
-                                if (completed && impersonatedToken != IntPtr.Zero)
+                                impersonatedToken = TaskExecute(messenger, message);
+                                if (impersonatedToken != IntPtr.Zero)
                                 {
                                     try
                                     {
