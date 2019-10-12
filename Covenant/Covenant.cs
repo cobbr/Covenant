@@ -40,17 +40,17 @@ namespace Covenant
             app.HelpOption("-? | -h | --help");
             var UserNameOption = app.Option(
                 "-u | --username <USERNAME>",
-                "The UserName to login to the Covenant API.",
+                "The UserName to login to the Covenant API. (env: COVENANT_USERNAME)",
                 CommandOptionType.SingleValue
             );
             var PasswordOption = app.Option(
                 "-p | --password <PASSWORD>",
-                "The Password to login to the Covenant API.",
+                "The Password to login to the Covenant API. (env: COVENANT_PASSWORD)",
                 CommandOptionType.SingleValue
             );
             var ComputerNameOption = app.Option(
                 "-c | --computername <COMPUTERNAME>",
-                "The ComputerName (IPAddress or Hostname) to bind the Covenant API to.",
+                "The ComputerName (IPAddress or Hostname) to bind the Covenant API to. (env: COVENANT_COMPUTER_NAME)",
                 CommandOptionType.SingleValue
             );
 
@@ -65,21 +65,21 @@ namespace Covenant
                     return -1;
                 }
 
-                string username = UserNameOption.Value();
-                string password = "";
+                // default username & password to the environment values if no explicit option is set
+                string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
+                string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");;
 
-                if (UserNameOption.HasValue() && !PasswordOption.HasValue())
+                if (! String.IsNullOrEmpty(username) && String.IsNullOrEmpty(password))
                 {
                     Console.Write("Password: ");
                     password = GetPassword();
                     Console.WriteLine();
                 }
-                else if (PasswordOption.HasValue())
-                {
-                    password = PasswordOption.Value();
-                }
-
-                string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : "0.0.0.0";
+                // default the computer name to 0.0.0.0 if the environment is not set.
+                string EnvCovenantComputerName = Environment.GetEnvironmentVariable("COVENANT_COMPUTER_NAME");
+                string DefaultCovenantComputerName = String.IsNullOrEmpty(EnvCovenantComputerName) ? "0.0.0.0" : EnvCovenantComputerName;
+                // but if the option is set, use that value
+                string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : DefaultCovenantComputerName;
                 IPAddress address = null;
                 try
                 {
@@ -103,10 +103,10 @@ namespace Covenant
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
                     DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
-                    if (!context.Users.Any() && UserNameOption.HasValue() && !string.IsNullOrEmpty(password))
+                    if (!context.Users.Any() && ! string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
                         // TODO: create user
-                        CovenantUser user = new CovenantUser { UserName = UserNameOption.Value() };
+                        CovenantUser user = new CovenantUser { UserName = username };
                         Task<IdentityResult> task = userManager.CreateAsync(user, password);
                         task.Wait();
                         IdentityResult userResult = task.Result;
