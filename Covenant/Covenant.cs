@@ -103,7 +103,7 @@ namespace Covenant
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
                     DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
-                    if (!context.Users.Any() && ! string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    if (!context.Users.Any() && ! String.IsNullOrEmpty(username) && ! String.IsNullOrEmpty(password))
                     {
                         // TODO: create user
                         CovenantUser user = new CovenantUser { UserName = username };
