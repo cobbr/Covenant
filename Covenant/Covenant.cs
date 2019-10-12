@@ -67,7 +67,7 @@ namespace Covenant
 
                 // default username & password to the environment values if no explicit option is set
                 string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
-                string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");;
+                string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");
 
                 if (! String.IsNullOrEmpty(username) && String.IsNullOrEmpty(password))
                 {
