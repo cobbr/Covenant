@@ -2115,6 +2115,67 @@ namespace Covenant.Core
                                 DisplayInCommand = true
                             }
                         }
+                    },
+                    new GruntTask
+                    {
+                        Name = "WinRMGrunt",
+                        AlternateNames = new List<string>(),
+                        Description = "",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PowerShellRemoting" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 109,
+                                Name = "ComputerName",
+                                Description = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DefaultValue = "",
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 110,
+                                Name = "Launcher",
+                                Description = "",
+                                Value = "PowerShell",
+                                SuggestedValues = new List<string>(),
+                                DefaultValue = "",
+                                Optional = false,
+                                DisplayInCommand = true,
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 111,
+                                Name = "Domain",
+                                Description = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "",
+                                DisplayInCommand = true,
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 112,
+                                Name = "Username",
+                                Description = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "",
+                                DisplayInCommand = true,
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 113,
+                                Name = "Password",
+                                Description = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "",
+                                DisplayInCommand = true,
+                            }
+                        }
                     }
                 };
                 await context.GruntTasks.AddRangeAsync(GruntTasks);
@@ -2167,6 +2228,7 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WMIGrunt") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCOMCommand") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCOMGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WinRMGrunt") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassUACCommand") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassUACGrunt") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainUser") },
