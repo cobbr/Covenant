@@ -19,7 +19,7 @@ public static class Task
             }
             else
             {
-                return $"{Path} does not exist";
+                return $"{Path} does not exist.";
             }
         }
         catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
