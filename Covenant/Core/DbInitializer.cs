@@ -2120,7 +2120,7 @@ namespace Covenant.Core
                     {
                         Name = "WinRMGrunt",
                         AlternateNames = new List<string>(),
-                        Description = "",
+                        Description = "Execute a Grunt Launcher on a remote system using PowerShell Remoting, optionally with alternate credentials.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PowerShellRemoting" + ".task")),
                         Options = new List<GruntTaskOption>
                         {
@@ -2128,7 +2128,7 @@ namespace Covenant.Core
                             {
                                 Id = 109,
                                 Name = "ComputerName",
-                                Description = "",
+                                Description = "ComputerName to launch the Grunt on.",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DefaultValue = "",
@@ -2138,7 +2138,7 @@ namespace Covenant.Core
                             {
                                 Id = 110,
                                 Name = "Launcher",
-                                Description = "",
+                                Description = "Grunt Launcher to execute on the remote system.",
                                 Value = "PowerShell",
                                 SuggestedValues = new List<string>(),
                                 DefaultValue = "",
@@ -2149,7 +2149,7 @@ namespace Covenant.Core
                             {
                                 Id = 111,
                                 Name = "Domain",
-                                Description = "",
+                                Description = "The domain to execute as.",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
                                 DefaultValue = "",
@@ -2159,7 +2159,7 @@ namespace Covenant.Core
                             {
                                 Id = 112,
                                 Name = "Username",
-                                Description = "",
+                                Description = "The username to execute as.",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
                                 DefaultValue = "",
@@ -2169,7 +2169,7 @@ namespace Covenant.Core
                             {
                                 Id = 113,
                                 Name = "Password",
-                                Description = "",
+                                Description = "The password to execute as.",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
                                 DefaultValue = "",
