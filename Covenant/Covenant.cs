@@ -65,21 +65,21 @@ namespace Covenant
                     return -1;
                 }
 
-                // default username & password to the environment values if no explicit option is set
                 string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
                 string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");
-
-                if (! String.IsNullOrEmpty(username) && String.IsNullOrEmpty(password))
+                if (!string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 {
                     Console.Write("Password: ");
                     password = GetPassword();
                     Console.WriteLine();
                 }
-                // default the computer name to 0.0.0.0 if the environment is not set.
-                string EnvCovenantComputerName = Environment.GetEnvironmentVariable("COVENANT_COMPUTER_NAME");
-                string DefaultCovenantComputerName = String.IsNullOrEmpty(EnvCovenantComputerName) ? "0.0.0.0" : EnvCovenantComputerName;
-                // but if the option is set, use that value
-                string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : DefaultCovenantComputerName;
+
+                string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_COMPUTER_NAME"); ;
+                if (string.IsNullOrEmpty(CovenantBindUrl))
+                {
+                    CovenantBindUrl = "0.0.0.0";
+                }
+
                 IPAddress address = null;
                 try
                 {
@@ -103,19 +103,16 @@ namespace Covenant
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
                     DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
-                    if (!context.Users.Any() && ! String.IsNullOrEmpty(username) && ! String.IsNullOrEmpty(password))
+                    if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
-                        // TODO: create user
                         CovenantUser user = new CovenantUser { UserName = username };
                         Task<IdentityResult> task = userManager.CreateAsync(user, password);
                         task.Wait();
                         IdentityResult userResult = task.Result;
                         if (userResult.Succeeded)
                         {
-                            Task t = userManager.AddToRoleAsync(user, "User");
-                            t.Wait();
-                            Task t2 = userManager.AddToRoleAsync(user, "Administrator");
-                            t2.Wait();
+                            userManager.AddToRoleAsync(user, "User").Wait();
+                            userManager.AddToRoleAsync(user, "Administrator").Wait();
                         }
                         else
                         {
