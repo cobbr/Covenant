@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added DCSync task
 - Added ReadTextFile (cat) task
 - Added support to supply CLI options via environment variables
+- Added Delete (rm/del) task
 
 ### Changed
 - Changed command-line parsing, Task parsing, added DefaultValue for optional parameters
