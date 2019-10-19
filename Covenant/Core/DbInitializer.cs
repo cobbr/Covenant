@@ -829,8 +829,8 @@ namespace Covenant.Core
                             {
                                 Id = 31,
                                 Name = "Ports",
-                                Description = "Ports to scan. Comma-delimited port list.",
-                                Value = "80,443,445",
+                                Description = "Ports to scan. Comma-delimited port list, use hyphens for port ranges",
+                                Value = "80,443-445,3389",
                                 SuggestedValues = new List<string>(),
                                 Optional = false,
                                 DisplayInCommand = true
