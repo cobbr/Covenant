@@ -11,7 +11,7 @@ public static class Task
     {
         try
         {
-            List<int> portList  = new List<int>();
+            List<int> portList = new List<int>();
             foreach (string entry in Ports.Split(','))
             {
                 if (entry.Contains("-"))
@@ -23,7 +23,7 @@ public static class Task
                 }
                 else
                 {
-                  portList.Add(int.Parse(entry));
+                    portList.Add(int.Parse(entry));
                 }
             }
             List<string> computerList = ComputerNames.Split(',').ToList();

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SharpSploit to latest version
 - Changed PowerShellImport Task tab to use file control
 - Changed PowerShellImport to strip PowerShell ISE magic header value
+- Improved PortScan to accept port ranges
 
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task
