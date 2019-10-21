@@ -1,0 +1,16 @@
+﻿using System;
+
+using SharpSploit.LateralMovement;
+
+public static class Task
+{
+    public static string Execute(string ComputerName, string Command, string Domain = "", string Username = "", string Password = "" )
+    {
+        try
+        {
+            PowerShellRemoting.InvokeCommand(ComputerName, Command, Domain, Username, Password);
+			return "";
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

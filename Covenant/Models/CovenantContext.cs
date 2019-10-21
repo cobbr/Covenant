@@ -1814,6 +1814,15 @@ namespace Covenant.Models
 
                 parameters.Insert(3, Directory);
             }
+            else if (tasking.GruntTask.Name.Equals("winrmgrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
+                }
+                parameters[1] = l.LauncherString;
+            }
             else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
             {
                 Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
