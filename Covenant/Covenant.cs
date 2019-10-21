@@ -40,17 +40,17 @@ namespace Covenant
             app.HelpOption("-? | -h | --help");
             var UserNameOption = app.Option(
                 "-u | --username <USERNAME>",
-                "The UserName to login to the Covenant API.",
+                "The UserName to login to the Covenant API. (env: COVENANT_USERNAME)",
                 CommandOptionType.SingleValue
             );
             var PasswordOption = app.Option(
                 "-p | --password <PASSWORD>",
-                "The Password to login to the Covenant API.",
+                "The Password to login to the Covenant API. (env: COVENANT_PASSWORD)",
                 CommandOptionType.SingleValue
             );
             var ComputerNameOption = app.Option(
                 "-c | --computername <COMPUTERNAME>",
-                "The ComputerName (IPAddress or Hostname) to bind the Covenant API to.",
+                "The ComputerName (IPAddress or Hostname) to bind the Covenant API to. (env: COVENANT_COMPUTER_NAME)",
                 CommandOptionType.SingleValue
             );
 
@@ -65,21 +65,21 @@ namespace Covenant
                     return -1;
                 }
 
-                string username = UserNameOption.Value();
-                string password = "";
-
-                if (UserNameOption.HasValue() && !PasswordOption.HasValue())
+                string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
+                string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");
+                if (!string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 {
                     Console.Write("Password: ");
                     password = GetPassword();
                     Console.WriteLine();
                 }
-                else if (PasswordOption.HasValue())
+
+                string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_COMPUTER_NAME"); ;
+                if (string.IsNullOrEmpty(CovenantBindUrl))
                 {
-                    password = PasswordOption.Value();
+                    CovenantBindUrl = "0.0.0.0";
                 }
 
-                string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : "0.0.0.0";
                 IPAddress address = null;
                 try
                 {
@@ -103,19 +103,16 @@ namespace Covenant
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
                     DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
-                    if (!context.Users.Any() && UserNameOption.HasValue() && !string.IsNullOrEmpty(password))
+                    if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
-                        // TODO: create user
-                        CovenantUser user = new CovenantUser { UserName = UserNameOption.Value() };
+                        CovenantUser user = new CovenantUser { UserName = username };
                         Task<IdentityResult> task = userManager.CreateAsync(user, password);
                         task.Wait();
                         IdentityResult userResult = task.Result;
                         if (userResult.Succeeded)
                         {
-                            Task t = userManager.AddToRoleAsync(user, "User");
-                            t.Wait();
-                            Task t2 = userManager.AddToRoleAsync(user, "Administrator");
-                            t2.Wait();
+                            userManager.AddToRoleAsync(user, "User").Wait();
+                            userManager.AddToRoleAsync(user, "Administrator").Wait();
                         }
                         else
                         {

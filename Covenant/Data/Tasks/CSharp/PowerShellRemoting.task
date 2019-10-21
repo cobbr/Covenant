@@ -1,0 +1,22 @@
+﻿using System;
+
+using SharpSploit.LateralMovement;
+
+public static class Task
+{
+    public static string Execute(string ComputerName, string Command, string Domain = "", string Username = "", string Password = "")
+    {
+        try
+        {
+            if(PowerShellRemoting.InvokeCommand(ComputerName, Command, Domain, Username, Password))
+            {
+                return "PowerShellRemoting execution successful. Executed: \"" + Command + "\" on: " + ComputerName;
+            }
+            else
+            {
+                return "PowerShellRemoting execution failed.";
+            }
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

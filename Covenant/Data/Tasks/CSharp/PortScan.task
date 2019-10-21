@@ -11,7 +11,21 @@ public static class Task
     {
         try
         {
-            List<int> portList = Ports.Split(',').Select(P => int.Parse(P)).ToList();
+            List<int> portList = new List<int>();
+            foreach (string entry in Ports.Split(','))
+            {
+                if (entry.Contains("-"))
+                {
+                    string[] parts = entry.Split('-');
+                    int firstPort = int.Parse(parts[0]);
+                    int numPorts = int.Parse(parts[1]) - firstPort + 1;
+                    portList.AddRange(Enumerable.Range(firstPort, numPorts));
+                }
+                else
+                {
+                    portList.Add(int.Parse(entry));
+                }
+            }
             List<string> computerList = ComputerNames.Split(',').ToList();
             bool pingB = (Ping.ToLower() == "true" ? true : false);
             SharpSploitResultList<Network.PortScanResult> results = Network.PortScan(computerList, portList, pingB);
