@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ReadTextFile (cat) task
 - Added support to supply CLI options via environment variables
 - Added Delete (rm/del) task
+- Added PowerShellRemotingCommand/PowerShellRemotingGrunt tasks
 
 ### Changed
 - Changed command-line parsing, Task parsing, added DefaultValue for optional parameters
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed PowerShellImport Task tab to use file control
 - Changed PowerShellImport to strip PowerShell ISE magic header value
 - Improved PortScan to accept port ranges
+- Updated SharpSploit to latest version
 
 ### Fixed
 - Fixed ConnectAttemptCount incrementing on valid response w/o a task

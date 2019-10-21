@@ -1814,14 +1814,23 @@ namespace Covenant.Models
 
                 parameters.Insert(3, Directory);
             }
-            else if (tasking.GruntTask.Name.Equals("winrmgrunt", StringComparison.OrdinalIgnoreCase))
+            else if (tasking.GruntTask.Name.Equals("powershellremotinggrunt", StringComparison.OrdinalIgnoreCase))
             {
                 Launcher l = await this.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
                 }
-                parameters[1] = l.LauncherString;
+                // Add .exe extension if needed
+                List<string> split = l.LauncherString.Split(" ").ToList();
+                parameters[1] = split.FirstOrDefault();
+                if (!parameters[1].EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) { parameters[1] += ".exe"; }
+                // Add Directory
+                string Directory = "C:\\Windows\\System32\\";
+                if (parameters[1].Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "WindowsPowerShell\\v1.0\\"; }
+                else if (parameters[1].Equals("wmic.exe", StringComparison.OrdinalIgnoreCase)) { Directory += "wbem\\"; }
+                if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
+                parameters[1] = parameters[1] + " " + string.Join(" ", split.Skip(1).ToList());
             }
             else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
             {
