@@ -519,7 +519,7 @@ namespace Covenant.Models.Listeners
             {
                 this.CacheTaskHashCodes.Remove(GetTaskingHashCode(gruntTasking));
             }
-            if(gruntTasking.Type == APIModels.GruntTaskingType.SetOption)
+            if(gruntTasking.Type == APIModels.GruntTaskingType.SetOption || gruntTasking.Type == APIModels.GruntTaskingType.Exit)
             {
                 targetGrunt = await _client.ApiGruntsByIdGetAsync(targetGrunt.Id ?? default);
             }
