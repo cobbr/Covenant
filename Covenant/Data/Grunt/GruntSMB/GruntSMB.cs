@@ -122,9 +122,9 @@ namespace GruntExecutor
 								}
 								messenger.WriteTaskingMessage(output, message.Name);
                             }
-                            else if (message.Type == GruntTaskingType.Kill)
+                            else if (message.Type == GruntTaskingType.Exit)
                             {
-                                output += "Killed";
+                                output += "Exited";
                                 messenger.WriteTaskingMessage(output, message.Name);
                                 return;
                             }
@@ -590,7 +590,7 @@ namespace GruntExecutor
     {
         Assembly,
         SetOption,
-        Kill,
+        Exit,
         Connect,
         Disconnect,
         Jobs

@@ -29,7 +29,7 @@ namespace Covenant.Models.Grunts
         Stage2,
         Active,
         Lost,
-        Killed,
+        Exited,
         Disconnected,
         Hidden
     }

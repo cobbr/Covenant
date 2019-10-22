@@ -1966,9 +1966,9 @@ public static class Task
             if ((originalStatus == GruntTaskingStatus.Tasked || originalStatus == GruntTaskingStatus.Progressed) &&
                 newStatus == GruntTaskingStatus.Completed)
             {
-                if (tasking.Type == GruntTaskingType.Kill)
+                if (tasking.Type == GruntTaskingType.Exit)
                 {
-                    grunt.Status = GruntStatus.Killed;
+                    grunt.Status = GruntStatus.Exited;
                 }
                 else if (tasking.Type == GruntTaskingType.SetOption && tasking.Parameters.Count >= 2)
                 {

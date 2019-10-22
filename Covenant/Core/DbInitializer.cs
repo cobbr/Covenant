@@ -2134,11 +2134,11 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
-                        Name = "Kill",
+                        Name = "Exit",
                         AlternateNames = new List<string>(),
-                        Description = "Kill the Grunt.",
+                        Description = "Exits the Grunt.",
                         Code = "",
-                        TaskingType = GruntTaskingType.Kill,
+                        TaskingType = GruntTaskingType.Exit,
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
