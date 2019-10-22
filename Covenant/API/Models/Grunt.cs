@@ -28,7 +28,7 @@ namespace Covenant.API.Models
         /// <param name="dotNetFrameworkVersion">Possible values include:
         /// 'Net40', 'Net35', 'NetCore21'</param>
         /// <param name="status">Possible values include: 'Uninitialized',
-        /// 'Stage0', 'Stage1', 'Stage2', 'Active', 'Lost', 'Killed',
+        /// 'Stage0', 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited',
         /// 'Disconnected', 'Hidden'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
@@ -169,7 +169,7 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// Gets or sets possible values include: 'Uninitialized', 'Stage0',
-        /// 'Stage1', 'Stage2', 'Active', 'Lost', 'Killed', 'Disconnected',
+        /// 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited', 'Disconnected',
         /// 'Hidden'
         /// </summary>
         [JsonProperty(PropertyName = "status")]

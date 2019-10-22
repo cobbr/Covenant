@@ -29,8 +29,8 @@ namespace Covenant.API.Models
         Active,
         [EnumMember(Value = "Lost")]
         Lost,
-        [EnumMember(Value = "Killed")]
-        Killed,
+        [EnumMember(Value = "Exited")]
+        Exited,
         [EnumMember(Value = "Disconnected")]
         Disconnected,
         [EnumMember(Value = "Hidden")]
@@ -59,8 +59,8 @@ namespace Covenant.API.Models
                     return "Active";
                 case GruntStatus.Lost:
                     return "Lost";
-                case GruntStatus.Killed:
-                    return "Killed";
+                case GruntStatus.Exited:
+                    return "Exited";
                 case GruntStatus.Disconnected:
                     return "Disconnected";
                 case GruntStatus.Hidden:
@@ -85,8 +85,8 @@ namespace Covenant.API.Models
                     return GruntStatus.Active;
                 case "Lost":
                     return GruntStatus.Lost;
-                case "Killed":
-                    return GruntStatus.Killed;
+                case "Exited":
+                    return GruntStatus.Exited;
                 case "Disconnected":
                     return GruntStatus.Disconnected;
                 case "Hidden":

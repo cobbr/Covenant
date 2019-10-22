@@ -27,7 +27,7 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="language">Possible values include: 'CSharp'</param>
         /// <param name="taskingType">Possible values include: 'Assembly',
-        /// 'SetOption', 'Kill', 'Connect', 'Disconnect', 'Jobs'</param>
+        /// 'SetOption', 'Exit', 'Connect', 'Disconnect', 'Jobs'</param>
         public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), string code = default(string), GruntTaskingType? taskingType = default(GruntTaskingType?), bool? compiled = default(bool?), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>))
         {
             Id = id;
@@ -91,7 +91,7 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// Gets or sets possible values include: 'Assembly', 'SetOption',
-        /// 'Kill', 'Connect', 'Disconnect', 'Jobs'
+        /// 'Exit', 'Connect', 'Disconnect', 'Jobs'
         /// </summary>
         [JsonProperty(PropertyName = "taskingType")]
         public GruntTaskingType? TaskingType { get; set; }

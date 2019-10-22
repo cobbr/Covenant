@@ -21,8 +21,8 @@ namespace Covenant.API.Models
         Assembly,
         [EnumMember(Value = "SetOption")]
         SetOption,
-        [EnumMember(Value = "Kill")]
-        Kill,
+        [EnumMember(Value = "Exit")]
+        Exit,
         [EnumMember(Value = "Connect")]
         Connect,
         [EnumMember(Value = "Disconnect")]
@@ -45,8 +45,8 @@ namespace Covenant.API.Models
                     return "Assembly";
                 case GruntTaskingType.SetOption:
                     return "SetOption";
-                case GruntTaskingType.Kill:
-                    return "Kill";
+                case GruntTaskingType.Exit:
+                    return "Exit";
                 case GruntTaskingType.Connect:
                     return "Connect";
                 case GruntTaskingType.Disconnect:
@@ -65,8 +65,8 @@ namespace Covenant.API.Models
                     return GruntTaskingType.Assembly;
                 case "SetOption":
                     return GruntTaskingType.SetOption;
-                case "Kill":
-                    return GruntTaskingType.Kill;
+                case "Exit":
+                    return GruntTaskingType.Exit;
                 case "Connect":
                     return GruntTaskingType.Connect;
                 case "Disconnect":
