@@ -5,9 +5,9 @@ public static class Task
 {
     public static string Execute(string ProcessId)
     {
-        int pid = int.Parse(ProcessId);
         try
         {
+            int pid = int.Parse(ProcessId);
             using (var process = Process.GetProcessById(pid))
             {
                 string processName = process.ProcessName;

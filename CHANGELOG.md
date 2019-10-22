@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support to supply CLI options via environment variables
 - Added Delete (rm/del) task
 - Added PowerShellRemotingCommand/PowerShellRemotingGrunt tasks
+- Added Kill task
 
 ### Changed
 - Changed command-line parsing, Task parsing, added DefaultValue for optional parameters
