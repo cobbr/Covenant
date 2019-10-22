@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug preventing files with the same name being hosted on different Listeners
 - Fixed WMIGrunt adding executable name twice to command
 - Fixed CapturedCredential parsing with ':' character
+- Fixed change Grunt name, SetOption commands
 
 ## [v0.3.2] - 2019-09-11
 ### Added

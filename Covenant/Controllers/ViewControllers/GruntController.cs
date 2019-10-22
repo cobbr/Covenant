@@ -76,6 +76,8 @@ namespace Covenant.Controllers
                 grunt.GruntRSAPublicKey = original.GruntRSAPublicKey;
                 grunt.GruntSharedSecretPassword = original.GruntSharedSecretPassword;
                 grunt.PowerShellImport = original.PowerShellImport;
+                grunt.ImplantTemplateId = original.ImplantTemplateId;
+                grunt.ListenerId = original.ListenerId;
 
                 Grunt editedGrunt = await _context.EditGrunt(grunt, _userManager, HttpContext.User, _grunthub, _eventhub);
                 return RedirectToAction(nameof(Interact), new { id = editedGrunt.Id });

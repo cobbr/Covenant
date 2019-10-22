@@ -889,6 +889,8 @@ namespace Covenant.Models
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set");
                     matching_grunt.ConnectAttempts = grunt.ConnectAttempts;
+                    setTask.Options[0].Value = "ConnectAttempts";
+                    setTask.Options[1].Value = grunt.ConnectAttempts.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
                     {
                         Command = "Set ConnectAttempts " + grunt.ConnectAttempts.ToString(),
@@ -917,6 +919,8 @@ namespace Covenant.Models
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set");
                     matching_grunt.Delay = grunt.Delay;
+                    setTask.Options[0].Value = "Delay";
+                    setTask.Options[1].Value = grunt.Delay.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
                     {
                         Command = "Set Delay " + grunt.Delay.ToString(),
@@ -945,6 +949,8 @@ namespace Covenant.Models
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set");
                     matching_grunt.JitterPercent = grunt.JitterPercent;
+                    setTask.Options[0].Value = "JitterPercent";
+                    setTask.Options[1].Value = grunt.JitterPercent.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
                     {
                         Command = "Set JitterPercent " + grunt.JitterPercent.ToString(),
