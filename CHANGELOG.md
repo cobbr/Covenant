@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support to supply CLI options via environment variables
 - Added Delete (rm/del) task
 - Added PowerShellRemotingCommand/PowerShellRemotingGrunt tasks
+- Added Kill task
 - Added BridgeListeners
 - Added BridgeProfiles
 - Added GruntBridge implant
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SharpSploit to latest version
 - Changed PowerShellImport Task tab to use file control
 - Changed PowerShellImport to strip PowerShell ISE magic header value
+- Updated SharpSploit to latest version, updated powerkatz dlls
 - Improved PortScan to accept port ranges
 - Updated SharpSploit to latest version
 
@@ -40,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug preventing files with the same name being hosted on different Listeners
 - Fixed WMIGrunt adding executable name twice to command
 - Fixed CapturedCredential parsing with ':' character
+- Fixed change Grunt name, SetOption commands
+- Fix changing Grunt status to Exited
 
 ## [v0.3.2] - 2019-09-11
 ### Added

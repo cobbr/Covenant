@@ -119,9 +119,9 @@ namespace GruntExecutor
 								}
 								messenger.WriteTaskingMessage(output, message.Name);
                             }
-                            else if (message.Type == GruntTaskingType.Kill)
+                            else if (message.Type == GruntTaskingType.Exit)
                             {
-                                output += "Killed";
+                                output += "Exited";
                                 messenger.WriteTaskingMessage(output, message.Name);
                                 return;
                             }
@@ -143,11 +143,8 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
-                                t.Start();
-                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
-                                bool completed = t.Join(5000);
-                                if (completed && impersonatedToken != IntPtr.Zero)
+                                impersonatedToken = TaskExecute(messenger, message);
+                                if (impersonatedToken != IntPtr.Zero)
                                 {
                                     try
                                     {
@@ -588,7 +585,7 @@ namespace GruntExecutor
     {
         Assembly,
         SetOption,
-        Kill,
+        Exit,
         Connect,
         Disconnect,
         Jobs

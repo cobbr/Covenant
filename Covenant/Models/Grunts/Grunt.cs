@@ -13,6 +13,26 @@ using Covenant.Models.Listeners;
 
 namespace Covenant.Models.Grunts
 {
+    public enum CommunicationType
+    {
+        HTTP,
+        SMB,
+        Bridge
+    }
+
+    public enum GruntStatus
+    {
+        Uninitialized,
+        Stage0,
+        Stage1,
+        Stage2,
+        Active,
+        Lost,
+        Exited,
+        Disconnected,
+        Hidden
+    }
+
     public enum IntegrityLevel
     {
         Untrusted,

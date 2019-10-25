@@ -23,7 +23,7 @@ namespace Covenant.API.Models
         /// Initializes a new instance of the GruntTaskingMessage class.
         /// </summary>
         /// <param name="type">Possible values include: 'Assembly', 'SetDelay',
-        /// 'SetJitter', 'SetConnectAttempts', 'Kill', 'Connect', 'Disconnect',
+        /// 'SetJitter', 'SetConnectAttempts', 'Exit', 'Connect', 'Disconnect',
         /// 'Jobs'</param>
         public GruntTaskingMessage(GruntTaskingType? type = default(GruntTaskingType?), string name = default(string), string message = default(string), bool? token = default(bool?))
         {
@@ -41,7 +41,7 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// Gets or sets possible values include: 'Assembly', 'SetDelay',
-        /// 'SetJitter', 'SetConnectAttempts', 'Kill', 'Connect', 'Disconnect',
+        /// 'SetJitter', 'SetConnectAttempts', 'Exit', 'Connect', 'Disconnect',
         /// 'Jobs'
         /// </summary>
         [JsonProperty(PropertyName = "type")]

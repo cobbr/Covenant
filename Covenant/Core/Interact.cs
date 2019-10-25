@@ -197,9 +197,9 @@ namespace Covenant.Core
                 {
                     output = await Help(parameters);
                 }
-                else if (parameters.FirstOrDefault().Value.ToLower() == "kill")
+                else if (parameters.FirstOrDefault().Value.ToLower() == "exit")
                 {
-                    output = await Kill(grunt, GruntCommand, parameters);
+                    output = await Exit(grunt, GruntCommand, parameters);
                 }
                 else if (parameters.FirstOrDefault().Value.ToLower() == "history")
                 {
@@ -381,24 +381,24 @@ namespace Covenant.Core
             }, _grunthub);
         }
 
-        public async Task<string> Kill(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
+        public async Task<string> Exit(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
         {
             if (parameters.Count() != 1)
             {
                 StringBuilder toPrint = new StringBuilder();
-                toPrint.Append(EliteConsole.PrintFormattedErrorLine("Usage: Kill"));
+                toPrint.Append(EliteConsole.PrintFormattedErrorLine("Usage: Exit"));
                 return toPrint.ToString();
             }
-            GruntTask killTask = await _context.GetGruntTaskByName("Kill");
+            GruntTask exitTask = await _context.GetGruntTaskByName("Exit");
             await _context.CreateGruntTasking(new GruntTasking
             {
                 Id = 0,
                 GruntId = grunt.Id,
-                GruntTaskId = killTask.Id,
-                GruntTask = killTask,
+                GruntTaskId = exitTask.Id,
+                GruntTask = exitTask,
                 Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
                 Status = GruntTaskingStatus.Uninitialized,
-                Type = GruntTaskingType.Kill,
+                Type = GruntTaskingType.Exit,
                 GruntCommand = command,
                 GruntCommandId = command.Id
             }, _grunthub);

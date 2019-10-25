@@ -62,7 +62,7 @@ namespace Covenant.Models.Grunts
     {
         Assembly,
         SetOption,
-        Kill,
+        Exit,
         Connect,
         Disconnect,
         Jobs

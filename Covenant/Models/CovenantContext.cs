@@ -676,18 +676,21 @@ namespace Covenant.Models
             List<Grunt> grunts = await this.Grunts.Include(G => G.ImplantTemplate).ToListAsync();
             grunts.ForEach(async G =>
             {
-                bool lost = await this.IsGruntLost(G);
-                if (G.Status == GruntStatus.Active && lost)
+                if (G.Status == GruntStatus.Active || G.Status == GruntStatus.Lost)
                 {
-                    G.Status = GruntStatus.Lost;
-                    this.Grunts.Update(G);
-                    this.SaveChanges();
-                }
-                else if (G.Status == GruntStatus.Lost && !lost)
-                {
-                    G.Status = GruntStatus.Active;
-                    this.Grunts.Update(G);
-                    this.SaveChanges();
+                    bool lost = await this.IsGruntLost(G);
+                    if (G.Status == GruntStatus.Active && lost)
+                    {
+                        G.Status = GruntStatus.Lost;
+                        this.Grunts.Update(G);
+                        this.SaveChanges();
+                    }
+                    else if (G.Status == GruntStatus.Lost && !lost)
+                    {
+                        G.Status = GruntStatus.Active;
+                        this.Grunts.Update(G);
+                        this.SaveChanges();
+                    }
                 }
             });
             return await this.Grunts.ToListAsync();
@@ -700,18 +703,21 @@ namespace Covenant.Models
             {
                 throw new ControllerNotFoundException($"NotFound - Grunt with id: {gruntId}");
             }
-            bool lost = await this.IsGruntLost(grunt);
-            if (grunt.Status == GruntStatus.Active && lost)
+            if (grunt.Status == GruntStatus.Active || grunt.Status == GruntStatus.Lost)
             {
-                grunt.Status = GruntStatus.Lost;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
-            }
-            else if (grunt.Status == GruntStatus.Lost && !lost)
-            {
-                grunt.Status = GruntStatus.Active;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
+                bool lost = await this.IsGruntLost(grunt);
+                if (grunt.Status == GruntStatus.Active && lost)
+                {
+                    grunt.Status = GruntStatus.Lost;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
+                else if (grunt.Status == GruntStatus.Lost && !lost)
+                {
+                    grunt.Status = GruntStatus.Active;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
             }
             return grunt;
         }
@@ -723,18 +729,21 @@ namespace Covenant.Models
             {
                 throw new ControllerNotFoundException($"NotFound - Grunt with name: {name}");
             }
-            bool lost = await this.IsGruntLost(grunt);
-            if (grunt.Status == GruntStatus.Active && lost)
+            if (grunt.Status == GruntStatus.Active || grunt.Status == GruntStatus.Lost)
             {
-                grunt.Status = GruntStatus.Lost;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
-            }
-            else if (grunt.Status == GruntStatus.Lost && !lost)
-            {
-                grunt.Status = GruntStatus.Active;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
+                bool lost = await this.IsGruntLost(grunt);
+                if (grunt.Status == GruntStatus.Active && lost)
+                {
+                    grunt.Status = GruntStatus.Lost;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
+                else if (grunt.Status == GruntStatus.Lost && !lost)
+                {
+                    grunt.Status = GruntStatus.Active;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
             }
             return grunt;
         }
@@ -746,18 +755,21 @@ namespace Covenant.Models
             {
                 throw new ControllerNotFoundException($"NotFound - Grunt with GUID: {guid}");
             }
-            bool lost = await this.IsGruntLost(grunt);
-            if (grunt.Status == GruntStatus.Active && lost)
+            if (grunt.Status == GruntStatus.Active || grunt.Status == GruntStatus.Lost)
             {
-                grunt.Status = GruntStatus.Lost;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
-            }
-            else if (grunt.Status == GruntStatus.Lost && !lost)
-            {
-                grunt.Status = GruntStatus.Active;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
+                bool lost = await this.IsGruntLost(grunt);
+                if (grunt.Status == GruntStatus.Active && lost)
+                {
+                    grunt.Status = GruntStatus.Lost;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
+                else if (grunt.Status == GruntStatus.Lost && !lost)
+                {
+                    grunt.Status = GruntStatus.Active;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
             }
             return grunt;
         }
@@ -769,18 +781,21 @@ namespace Covenant.Models
             {
                 throw new ControllerNotFoundException($"NotFound - Grunt with OriginalServerGUID: {serverguid}");
             }
-            bool lost = await this.IsGruntLost(grunt);
-            if (grunt.Status == GruntStatus.Active && lost)
+            if (grunt.Status == GruntStatus.Active || grunt.Status == GruntStatus.Lost)
             {
-                grunt.Status = GruntStatus.Lost;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
-            }
-            else if (grunt.Status == GruntStatus.Lost && !lost)
-            {
-                grunt.Status = GruntStatus.Active;
-                this.Grunts.Update(grunt);
-                this.SaveChanges();
+                bool lost = await this.IsGruntLost(grunt);
+                if (grunt.Status == GruntStatus.Active && lost)
+                {
+                    grunt.Status = GruntStatus.Lost;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
+                else if (grunt.Status == GruntStatus.Lost && !lost)
+                {
+                    grunt.Status = GruntStatus.Active;
+                    this.Grunts.Update(grunt);
+                    this.SaveChanges();
+                }
             }
             return grunt;
         }
@@ -910,6 +925,8 @@ namespace Covenant.Models
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set");
                     matching_grunt.ConnectAttempts = grunt.ConnectAttempts;
+                    setTask.Options[0].Value = "ConnectAttempts";
+                    setTask.Options[1].Value = grunt.ConnectAttempts.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
                     {
                         Command = "Set ConnectAttempts " + grunt.ConnectAttempts.ToString(),
@@ -938,6 +955,8 @@ namespace Covenant.Models
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set");
                     matching_grunt.Delay = grunt.Delay;
+                    setTask.Options[0].Value = "Delay";
+                    setTask.Options[1].Value = grunt.Delay.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
                     {
                         Command = "Set Delay " + grunt.Delay.ToString(),
@@ -966,6 +985,8 @@ namespace Covenant.Models
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set");
                     matching_grunt.JitterPercent = grunt.JitterPercent;
+                    setTask.Options[0].Value = "JitterPercent";
+                    setTask.Options[1].Value = grunt.JitterPercent.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
                     {
                         Command = "Set JitterPercent " + grunt.JitterPercent.ToString(),
@@ -2000,9 +2021,9 @@ public static class Task
             if ((originalStatus == GruntTaskingStatus.Tasked || originalStatus == GruntTaskingStatus.Progressed) &&
                 newStatus == GruntTaskingStatus.Completed)
             {
-                if (tasking.Type == GruntTaskingType.Kill)
+                if (tasking.Type == GruntTaskingType.Exit)
                 {
-                    grunt.Status = GruntStatus.Killed;
+                    grunt.Status = GruntStatus.Exited;
                 }
                 else if (tasking.Type == GruntTaskingType.SetOption && tasking.Parameters.Count >= 2)
                 {
