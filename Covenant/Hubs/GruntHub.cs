@@ -100,7 +100,7 @@ namespace Covenant.Hubs
 
         public async Task GetInteract(string gruntName, string input)
         {
-            CovenantUser user = await _context.GetUserByUsername(this.Context.User.Identity.Name);
+            CovenantUser user = await _context.GetUser(this.Context.UserIdentifier);
             Grunt grunt = await _context.GetGruntByName(gruntName);
             GruntCommand command = await interact.Input(user, grunt, input);
             if (!string.IsNullOrWhiteSpace(command.CommandOutput.Output))

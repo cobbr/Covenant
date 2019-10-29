@@ -1028,10 +1028,6 @@ namespace Covenant.Models
         public async Task DeleteGrunt(int gruntId)
         {
             Grunt grunt = await this.GetGrunt(gruntId);
-            if (grunt == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Grunt with id: {gruntId}");
-            }
             this.Grunts.Remove(grunt);
             await this.SaveChangesAsync();
         }
