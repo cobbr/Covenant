@@ -19,29 +19,9 @@ namespace Covenant.Models.Grunts
         Bridge
     }
 
-    public enum GruntStatus
-    {
-        Uninitialized,
-        Stage0,
-        Stage1,
-        Stage2,
-        Active,
-        Lost,
-        Killed,
-        Disconnected,
-        Hidden
-    }
-
     public enum ImplantLanguage
     {
         CSharp
-        // C++,
-        // C,
-        // PowerShell,
-        // Python,
-        // Swift,
-        // ObjectiveC,
-        // Go
     }
 
     public enum ImplantDirection

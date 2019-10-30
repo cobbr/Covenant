@@ -225,7 +225,7 @@ namespace Covenant.Controllers
             try
             {
                 InstallUtilLauncher installUtilLauncher = await _context.GetInstallUtilLauncher();
-                return File(Common.CovenantEncoding.GetBytes(installUtilLauncher.DiskCode), MediaTypeNames.Text.Xml, "GruntStager.xml");
+                return File(Convert.FromBase64String(installUtilLauncher.DiskCode), MediaTypeNames.Application.Octet, "GruntStager.dll");
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {

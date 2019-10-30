@@ -28,6 +28,7 @@ namespace Covenant.Controllers
         private readonly UserManager<CovenantUser> _userManager;
         private readonly IHubContext<GruntHub> _grunthub;
         private readonly IHubContext<EventHub> _eventhub;
+        private readonly Interaction interact;
 
         public GruntApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
         {
@@ -35,6 +36,7 @@ namespace Covenant.Controllers
             _userManager = userManager;
             _grunthub = grunthub;
             _eventhub = eventhub;
+            interact = new Interaction(_context, grunthub, eventhub);
         }
 
         // GET: api/grunts
@@ -230,6 +232,31 @@ namespace Covenant.Controllers
             {
                 await _context.DeleteGrunt(id);
                 return new NoContentResult();
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // POST api/grunts/{id}/interact
+        // <summary>
+        // Interact with a Grunt
+        // </summary>
+        [HttpPost("{id}/interact", Name = "InteractGrunt")]
+        [ProducesResponseType(typeof(GruntCommand), 201)]
+        public async Task<ActionResult<GruntCommand>> InteractGrunt(int id, [FromBody] string command)
+        {
+            try
+            {
+                Grunt grunt = await _context.GetGrunt(id);
+                CovenantUser user = await _context.GetCurrentUser(_userManager, this.HttpContext.User);
+                GruntCommand gruntCommand = await interact.Input(user, grunt, command);
+                return CreatedAtRoute("GetGruntCommand", new { id = gruntCommand.Id }, gruntCommand);
             }
             catch (ControllerNotFoundException e)
             {

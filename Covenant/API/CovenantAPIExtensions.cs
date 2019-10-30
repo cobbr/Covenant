@@ -1357,6 +1357,36 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
+            /// <param name='command'>
+            /// </param>
+            public static GruntCommand ApiGruntsByIdInteractPost(this ICovenantAPI operations, int id, string command = default(string))
+            {
+                return operations.ApiGruntsByIdInteractPostAsync(id, command).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='command'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<GruntCommand> ApiGruntsByIdInteractPostAsync(this ICovenantAPI operations, int id, string command = default(string), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.ApiGruntsByIdInteractPostWithHttpMessagesAsync(id, command, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
             public static byte[] ApiGruntsByIdCompileexecutorGet(this ICovenantAPI operations, int id)
             {
                 return operations.ApiGruntsByIdCompileexecutorGetAsync(id).GetAwaiter().GetResult();

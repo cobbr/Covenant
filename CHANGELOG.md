@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Delete (rm/del) task
 - Added PowerShellRemotingCommand/PowerShellRemotingGrunt tasks
 - Added Kill task
+- Added /api/grunts/{id}/interact API endpoint
 - Added BridgeListeners
 - Added BridgeProfiles
 - Added GruntBridge implant
@@ -43,7 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed WMIGrunt adding executable name twice to command
 - Fixed CapturedCredential parsing with ':' character
 - Fixed change Grunt name, SetOption commands
-- Fix changing Grunt status to Exited
+- Fixed changing Grunt status to Exited
+- Fixed SignalR GetInteract occasionally could not determine requesting username
+- Fixed InstallUtil dll download output format
 
 ## [v0.3.2] - 2019-09-11
 ### Added

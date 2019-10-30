@@ -13,13 +13,6 @@ using Covenant.Models.Listeners;
 
 namespace Covenant.Models.Grunts
 {
-    public enum CommunicationType
-    {
-        HTTP,
-        SMB,
-        Bridge
-    }
-
     public enum GruntStatus
     {
         Uninitialized,

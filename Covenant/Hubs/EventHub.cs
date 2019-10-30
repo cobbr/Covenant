@@ -17,10 +17,6 @@ namespace Covenant.Hubs
         public async static Task SendEvent(IHubContext<EventHub> context, Event theEvent)
         {
             await context.Clients.Group(theEvent.Context).SendAsync("ReceiveEvent", theEvent);
-            if (theEvent.Context != "*")
-            {
-                await context.Clients.Group("*").SendAsync("ReceiveEvent", theEvent);
-            }
         }
     }
 
