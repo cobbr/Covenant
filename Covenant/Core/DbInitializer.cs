@@ -103,7 +103,7 @@ namespace Covenant.Core
             if (!context.Profiles.Any())
             {
                 string[] files = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories);
-                List<HttpProfile> httpProfiles = files.Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+                List<HttpProfile> httpProfiles = files.Where(F => F.Contains("Http", StringComparison.CurrentCultureIgnoreCase))
                     .Select(F => HttpProfile.Create(F))
                     .ToList();
                 List<BridgeProfile> bridgeProfiles = files.Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
