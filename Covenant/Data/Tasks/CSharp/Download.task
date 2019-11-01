@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 
 public static class Task
 {
@@ -7,7 +8,15 @@ public static class Task
     {
         try
         {
-            return Convert.ToBase64String(File.ReadAllBytes(FileName));
+            var fileBytes = File.ReadAllBytes(FileName);
+			using (var memoryStream = new MemoryStream())
+            {
+                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+                {
+                    gZipStream.Write(fileBytes, 0, fileBytes.Length);
+                }
+                return Convert.ToBase64String(memoryStream.ToArray());
+            }
         }
         catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
     }

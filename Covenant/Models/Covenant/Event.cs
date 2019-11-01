@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 
 using Covenant.Core;
 
@@ -55,7 +56,8 @@ namespace Covenant.Models.Covenant
 
         public bool WriteToDisk()
         {
-            byte[] contents = Convert.FromBase64String(this.FileContents);
+            byte[] contents = DecompressGZip(Convert.FromBase64String(this.FileContents));
+            this.FileContents = Convert.ToBase64String(contents); // dirty hack
             if (this.Progress == DownloadProgress.Complete)
             {
                 File.WriteAllBytes(
@@ -71,6 +73,29 @@ namespace Covenant.Models.Covenant
                 }
             }
             return true;
+        }
+
+        private static byte[] DecompressGZip(byte[] compressedArray)
+        {
+            using (var gZipStream = new GZipStream(new MemoryStream(compressedArray), CompressionMode.Decompress))
+            {
+                const int size = 4096;
+                var buffer = new byte[size];
+                using (var memoryStream = new MemoryStream())
+                {
+                    var count = 0;
+                    do
+                    {
+                        count = gZipStream.Read(buffer, 0, size);
+                        if (count > 0)
+                        {
+                            memoryStream.Write(buffer, 0, count);
+                        }
+                    }
+                    while (count > 0);
+                    return memoryStream.ToArray();
+                }
+            }
         }
     }
 
