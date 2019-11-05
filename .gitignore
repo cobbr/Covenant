@@ -30,3 +30,4 @@ bld/
 
 # Public keys
 *.cer
+/Covenant/Covenant.csproj.user

