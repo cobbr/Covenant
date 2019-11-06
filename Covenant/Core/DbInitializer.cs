@@ -263,6 +263,9 @@ namespace Covenant.Core
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net35) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) },
+
 
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -1714,10 +1717,10 @@ namespace Covenant.Core
                                 Id = 83,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01",
+                                Value = "localhost",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
-                                DefaultValue = "",
+                                DefaultValue = "localhost",
                                 DisplayInCommand = true
                             }
                         }
@@ -1735,10 +1738,10 @@ namespace Covenant.Core
                                 Id = 84,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01",
+                                Value = "localhost",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
-                                DefaultValue = "",
+                                DefaultValue = "localhost",
                                 DisplayInCommand = true
                             },
                             new GruntTaskOption
@@ -1767,10 +1770,10 @@ namespace Covenant.Core
                                 Id = 86,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01",
+                                Value = "localhost",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
-                                DefaultValue = "",
+                                DefaultValue = "localhost",
                                 DisplayInCommand = true
                             }
                         }
@@ -1788,11 +1791,32 @@ namespace Covenant.Core
                                 Id = 87,
                                 Name = "ComputerNames",
                                 Description = "List of comma-delimited ComputerNames to query.",
-                                Value = "DC01",
+                                Value = "localhost",
                                 SuggestedValues = new List<string>(),
                                 Optional = true,
-                                DefaultValue = "",
+                                DefaultValue = "localhost",
                                 DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "GetNetShare",
+                        AlternateNames = new List<string>(),
+                        Description = "Gets a list of `ShareInfo`s from specified remote computer(s).",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetShare" + ".task")),
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 88,
+                                Name = "ComputerNames",
+                                Description = "List of comma-delimited ComputerNames to query.",
+                                Value = "localhost",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "localhost",
+                                DisplayInCommand = false
                             }
                         }
                     },
@@ -1806,7 +1830,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 88,
+                                Id = 89,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
                                 Value = "HKEY_CURRENT_USER\\Environment\\Path",
@@ -1826,7 +1850,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 89,
+                                Id = 90,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
                                 Value = "HKEY_CURRENT_USER\\Environment\\Path",
@@ -1836,7 +1860,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 90,
+                                Id = 91,
                                 Name = "Value",
                                 Description = "The value to write to the registry key.",
                                 Value = "",
@@ -1856,7 +1880,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 91,
+                                Id = 92,
                                 Name = "Hostname",
                                 Description = "The Hostname of the remote system to query.",
                                 Value = "",
@@ -1866,7 +1890,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 92,
+                                Id = 93,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
                                 Value = "HKEY_CURRENT_USER\\Environment\\Path",
@@ -1886,7 +1910,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 93,
+                                Id = 94,
                                 Name = "Hostname",
                                 Description = "The Hostname of the remote system to write to.",
                                 Value = "",
@@ -1896,7 +1920,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 94,
+                                Id = 95,
                                 Name = "RegPath",
                                 Description = "The full path to the registry value to be read.",
                                 Value = "HKEY_CURRENT_USER\\Environment\\Path",
@@ -1906,7 +1930,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 95,
+                                Id = 96,
                                 Name = "Value",
                                 Description = "The value to write to the registry key.",
                                 Value = "",
@@ -1926,7 +1950,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 96,
+                                Id = 97,
                                 Name = "Hex",
                                 Description = "Hex string representing the Shellcode bytes to execute.",
                                 Value = "",
@@ -1946,7 +1970,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 97,
+                                Id = 98,
                                 Name = "EWSUri",
                                 Description = "The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.",
                                 Value = "https://exchange.example.local:443/EWS/Exchange.asmx",
@@ -1956,7 +1980,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 98,
+                                Id = 99,
                                 Name = "RelayUri",
                                 Description = "The URI of the external relay of the Exchange authentication.",
                                 Value = "https://relay.example.local:443/relay",
@@ -1966,7 +1990,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 99,
+                                Id = 100,
                                 Name = "ExchangeVersion",
                                 Description = "Microsoft Exchange version. Defaults to Exchange2010.",
                                 Value = "Exchange2010",
@@ -1986,7 +2010,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 100,
+                                Id = 101,
                                 Name = "CLSID",
                                 Description = "Missing CLSID to abuse.",
                                 Value = "",
@@ -1996,7 +2020,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 101,
+                                Id = 102,
                                 Name = "ExecutablePath",
                                 Description = "Path to the executable path.",
                                 Value = "",
@@ -2016,7 +2040,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 102,
+                                Id = 103,
                                 Name = "Payload",
                                 Description = "Payload to write to a file.",
                                 Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
@@ -2026,7 +2050,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 103,
+                                Id = 104,
                                 Name = "FileName",
                                 Description = "Name of the file to write.",
                                 Value = "startup.bat",
@@ -2046,7 +2070,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 104,
+                                Id = 105,
                                 Name = "TargetHive",
                                 Description = "Target hive to install autorun.",
                                 Value = "CurrentUser",
@@ -2056,7 +2080,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 105,
+                                Id = 106,
                                 Name = "Name",
                                 Description = "Name for the registy value.",
                                 Value = "Updater",
@@ -2066,7 +2090,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 106,
+                                Id = 107,
                                 Name = "Value",
                                 Description = "Value to set in the registry.",
                                 Value = "C:\\Example\\GruntStager.exe",
@@ -2084,7 +2108,7 @@ namespace Covenant.Core
                         Options = new List<GruntTaskOption>{
                             new GruntTaskOption
                             {
-                                Id = 107,
+                                Id = 108,
                                 Name = "EventName",
                                 Description = "Creates a WMI Event, Consumer and Binding to execute a payload.\n\n\tEventName: An arbitrary name to be assigned to the new WMI Event. E.g. \"Evil Persistence\".\n\tEventFilter: Specifies the event trigger to use. The options are \"ProcessStart\".\n\tEventConsumer: Specifies the action to carry out. The options are \"CommandLine\" (OS Command) and \"ActiveScript\" (JScript or VBScript).\n\tPayload: Specifies the CommandLine or ActiveScript payload to run. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tProcessName: Specifies the process name when the \"ProcessStart\" trigger is selected. E.g. \"notepad.exe\".\n\tScriptingEngine: Specifies the scripting engine when the \"ActiveScript\" consumer is selected. The options are \"JScript\" and \"VBScript\".\n",
                                 Value = "Evil Persistence",
@@ -2094,7 +2118,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 108,
+                                Id = 109,
                                 Name = "EventFilter",
                                 Description = "Specifies the event trigger to use.",
                                 Value = "ProcessStart",
@@ -2104,7 +2128,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 109,
+                                Id = 110,
                                 Name = "EventConsumer",
                                 Description = "Specifies the action to carry out.",
                                 Value = "CommandLine",
@@ -2114,7 +2138,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 110,
+                                Id = 111,
                                 Name = "Payload",
                                 Description = "Specifies the CommandLine or ActiveScript payload to run.",
                                 Value = "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>",
@@ -2124,7 +2148,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 111,
+                                Id = 112,
                                 Name = "ProcessName",
                                 Description = "Specifies the process name when the ProcessStart trigger is selected.",
                                 Value = "notepad.exe",
@@ -2134,7 +2158,7 @@ namespace Covenant.Core
                             },
                             new GruntTaskOption
                             {
-                                Id = 112,
+                                Id = 113,
                                 Name = "ScriptingEngine",
                                 Description = "Specifies the scripting engine when the ActiveScript consumer is selected.",
                                 Value = "VBScript",
@@ -2163,7 +2187,7 @@ namespace Covenant.Core
                         {
                             new GruntTaskOption
                             {
-                                Id = 113,
+                                Id = 114,
                                 Name = "Time",
                                 Description = "Specifies how long to run the keylogger for.",
                                 Value = "60",
@@ -2173,27 +2197,6 @@ namespace Covenant.Core
                             }
                         }
                     },
-                    new GruntTask
-                    {
-                        Name = "GetNetShares",
-                        AlternateNames = new List<string>(),
-                        Description = "Get a list of shares on a remote computer using the Windows API.",
-                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetShares" + ".task")),
-                        Options = new List<GruntTaskOption>
-                        {
-                            new GruntTaskOption
-                            {
-                                Id = 114,
-                                Name = "Servers",
-                                Description = "Specifies the list of servers to enumerate shares on.",
-                                Value = "localhost",
-                                SuggestedValues = new List<string>(),
-                                Optional = false,
-                                DisplayInCommand = false
-                            }
-                        }
-                    },
-
                     new GruntTask
                     {
                         Name = "Set",
@@ -2417,7 +2420,7 @@ namespace Covenant.Core
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLocalGroupMember") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLoggedOnUser") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetSession") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetShares") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetShare") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRegistryKey") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SetRegistryKey") },
     new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRemoteRegistryKey") },
@@ -2460,7 +2463,6 @@ namespace Covenant.Core
                 var delete = await context.GetGruntTaskByName("Delete");
                 var kill = await context.GetGruntTaskByName("Kill");
                 var getcurrentdir = await context.GetGruntTaskByName("GetCurrentDirectory");
-                var keylogger = await context.GetGruntTaskByName("Keylogger");
 
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
@@ -2511,12 +2513,7 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = keylogger, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
-
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
                 );
             }
         }
