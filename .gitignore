@@ -12,6 +12,9 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
+dotnetwarp_temp/
+Optimize/
+_/
 
 # Covenant Logs
 [Ll]og/

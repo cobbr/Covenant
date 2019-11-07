@@ -5,7 +5,10 @@
     <div class="form-group mt-4">
         <label for="launcher">Launcher</label>
         <div class="input-group">
-            <input id="launcher" class="form-control" value="@Html.DisplayFor(model => model.LauncherString)" />
+            @{
+                string ls = Model.LauncherString == null ? "" : Model.LauncherString.Substring(0, Math.Min(Model.LauncherString.Length, 10000));
+            }
+            <input id="launcher" class="form-control" value="@ls">
             <div class="input-group-append">
                 <button type="button" class="btn btn-outline-primary copy" data-clipboard-target="#launcher">
                     <span data-feather="clipboard"></span>

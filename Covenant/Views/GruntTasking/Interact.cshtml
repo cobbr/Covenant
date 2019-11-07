@@ -51,7 +51,7 @@
         <textarea asp-for="GruntCommand.Command" value="@Model.GruntCommand.Command" rows="1" class="form-control" readonly></textarea>
     </div>
 </div>
-@for (int i = 0; i < Math.Min(Model.GruntTask.Options.Count, Model.Parameters.Count); i++)
+@for (int i = 0; i < Model.Parameters.Count; i++)
 {
     <div class="form-group">
         <label asp-for="Parameters[i]">@Model.GruntTask.Options[i].Name</label>

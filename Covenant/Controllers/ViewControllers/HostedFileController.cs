@@ -1,7 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
@@ -23,7 +25,7 @@ namespace Covenant.Controllers.ViewControllers
             _context = context;
         }
 
-        // GET: /hostedfile/create
+        [Authorize, HttpGet, Route("HostedFile/Create/{id}")]
         public IActionResult Create(int id)
         {
             try
@@ -36,8 +38,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // POST: /hostedfile/create
-        [HttpPost]
+        [Authorize, HttpPost, Route("HostedFile/Create")]
         public async Task<IActionResult> Create(HostedFile file)
         {
             try
@@ -52,7 +53,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // GET: /hostedfile/download
+        [Authorize, HttpGet, Route("HostedFile/Download/{id}")]
         public async Task<IActionResult> Download(int id)
         {
             try

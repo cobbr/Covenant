@@ -1,5 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
@@ -24,7 +27,7 @@ namespace Covenant.Controllers
             _userManager = userManager;
         }
 
-        // GET: /profile/
+        [Authorize, HttpGet, Route("Profile"), Route("Profile/Index")]
         public async Task<IActionResult> Index()
         {
             try
@@ -37,7 +40,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /profile/{id}
+        [Authorize, HttpGet, Route("Profile/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -50,8 +53,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /profile/edithttp
-        [HttpPost]
+        [Authorize, HttpPost, Route("Profile/EditHttp")]
         public async Task<IActionResult> EditHttp(HttpProfile profile)
         {
             try
@@ -65,8 +67,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /profile/editbridge
-        [HttpPost]
+        [Authorize, HttpPost, Route("Profile/EditBridge")]
         public async Task<IActionResult> EditBridge(BridgeProfile profile)
         {
             try
@@ -80,7 +81,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /profile/create
+        [Authorize, HttpGet, Route("Profile/Create")]
         public IActionResult Create()
         {
             try
@@ -93,8 +94,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /profile/createhttp
-        [HttpPost]
+        [Authorize, HttpPost, Route("Profile/CreateHttp")]
         public async Task<IActionResult> CreateHttp(HttpProfile profile)
         {
             try
@@ -108,8 +108,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /profile/createbridge
-        [HttpPost]
+        [Authorize, HttpPost, Route("Profile/CreateBridge")]
         public async Task<IActionResult> CreateBridge(BridgeProfile profile)
         {
             try

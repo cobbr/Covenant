@@ -42,9 +42,11 @@ namespace Covenant.Core
 
         public static string CovenantTaskDirectory = CovenantDataDirectory + "Tasks" + Path.DirectorySeparatorChar;
         public static string CovenantTaskCSharpDirectory = CovenantTaskDirectory + "CSharp" + Path.DirectorySeparatorChar;
+        public static string CovenantTaskCSharpNetCoreApp30Directory = CovenantTaskCSharpDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
         public static string CovenantTaskCSharpCompiledDirectory = CovenantTaskCSharpDirectory + "Compiled" + Path.DirectorySeparatorChar;
         public static string CovenantTaskCSharpCompiledNet35Directory = CovenantTaskCSharpCompiledDirectory + "net35" + Path.DirectorySeparatorChar;
         public static string CovenantTaskCSharpCompiledNet40Directory = CovenantTaskCSharpCompiledDirectory + "net40" + Path.DirectorySeparatorChar;
+        public static string CovenantTaskCSharpCompiledNetCoreApp30Directory = CovenantTaskCSharpCompiledDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
 
         public static string CovenantLogDirectory = CovenantDataDirectory + "Logs" + Path.DirectorySeparatorChar;
         public static string CovenantLogFile = CovenantLogDirectory + "covenant.log";
@@ -88,11 +90,21 @@ namespace Covenant.Core
             }
         };
 
+        public static List<Compiler.Reference> DefaultReferencesCore30 { get; set; } = new List<Compiler.Reference>
+        {
+            new Compiler.Reference
+            {
+                File = String.Join(Path.DirectorySeparatorChar, typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Take(typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Count() - 1))
+                + Path.DirectorySeparatorChar + "System.Private.CoreLib.dll", Framework = DotNetVersion.NetCore21, Enabled = true
+            }
+        };
+
         public enum DotNetVersion
         {
             Net40,
             Net35,
-            NetCore21
+            NetCore21,
+            NetCore30
         }
     }
 }

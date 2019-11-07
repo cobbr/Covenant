@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -33,13 +37,13 @@ namespace Covenant.Controllers
             _eventhub = eventhub;
         }
 
-        // GET: /grunt
+        [Authorize, HttpGet, Route("Grunt"), Route("Grunt/Index")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.GetGrunts());
         }
 
-        // GET: /grunt/interact/{id}
+        [Authorize, HttpGet, Route("Grunt/Interact/{id}")]
         public async Task<IActionResult> Interact(int id)
         {
             const int DISPLAY_LAST = 0;
@@ -65,7 +69,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /grunt/edit/{id}
+        [Authorize, HttpPost, Route("Grunt/Edit")]
         public async Task<IActionResult> Edit(Grunt grunt)
         {
             try
@@ -88,7 +92,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /grunt/hide/{id}
+        [Authorize, HttpGet, Route("Grunt/Hide/{id}")]
         public async Task<IActionResult> Hide(int id)
         {
             try

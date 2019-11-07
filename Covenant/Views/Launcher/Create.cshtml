@@ -148,7 +148,7 @@
                 }
                 window.location.href = '../@url';
             });
-            function swapOptions() {
+            function swapCommOptions() {
                 var comm = $("#ImplantTemplateId").children("option:selected").text();
                 if (comm.includes("HTTP"))
                 {
@@ -166,8 +166,21 @@
                     $("#smb-div").attr("hidden", "true");
                 }
             };
-            $("#ImplantTemplateId").change(swapOptions);
-            swapOptions();
+            function swapVersionOptions() {
+                var netv = $("#DotNetVersion").children("option:selected").text();
+                if (netv.includes("Core"))
+                {
+                    $("#core-div").removeAttr("hidden");
+                }
+                else
+                {
+                    $("#core-div").attr("hidden", "true");
+                }
+            };
+            $("#ImplantTemplateId").change(swapCommOptions);
+            $("#DotNetVersion").change(swapVersionOptions);
+            swapCommOptions();
+            swapVersionOptions();
         });
     </script>
 }

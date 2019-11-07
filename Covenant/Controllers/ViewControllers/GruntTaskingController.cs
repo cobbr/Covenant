@@ -1,6 +1,9 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
@@ -32,7 +35,7 @@ namespace Covenant.Controllers
             _eventhub = eventhub;
         }
 
-        // GET: /grunttasking
+        [Authorize, HttpGet, Route("GruntTasking"), Route("GruntTasking/Index")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.GruntTaskings
@@ -43,7 +46,7 @@ namespace Covenant.Controllers
                 .ToListAsync());
         }
 
-        // GET: /grunttasking/interact/{id}
+        [Authorize, HttpGet, Route("GruntTasking/Interact/{id}")]
         public async Task<IActionResult> Interact(int id)
         {
             try
@@ -82,7 +85,7 @@ namespace Covenant.Controllers
             return command;
         }
 
-        // POST: /grunttasking/create
+        [Authorize, HttpPost, Route("GruntTasking/Create")]
         public async Task<IActionResult> Create(GruntTasking tasking)
         {
             try

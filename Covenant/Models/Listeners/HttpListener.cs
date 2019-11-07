@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 using NLog.Web;
 using NLog.Config;
@@ -137,7 +138,7 @@ namespace Covenant.Models.Listeners
         
         public override CancellationTokenSource Start()
         {
-            IWebHost host = BuildWebHost();
+            IHost host = BuildHost();
 
             using (var scope = host.Services.CreateScope())
             {
@@ -191,44 +192,47 @@ namespace Covenant.Models.Listeners
             }
         }
 
-        private IWebHost BuildWebHost()
+        private IHost BuildHost()
         {
             this.CreateDirectories();
-            WebHostBuilder builder = new WebHostBuilder();
-            builder.UseKestrel(options =>
-            {
-                options.AddServerHeader = false;
-                if (UseSSL)
+            return new HostBuilder()
+                .ConfigureWebHost(webconfig =>
                 {
-                    File.WriteAllBytes(this.SSLCertificateFile, Convert.FromBase64String(this.SSLCertificate));
-                    options.Listen(new IPEndPoint(IPAddress.Parse(this.BindAddress), this.BindPort), listenOptions =>
+                    webconfig.UseKestrel(options =>
                     {
-                        listenOptions.UseHttps(httpsOptions =>
+                        options.AddServerHeader = false;
+                        if (UseSSL)
                         {
-                            httpsOptions.ServerCertificate = new X509Certificate2(SSLCertificateFile, this.SSLCertificatePassword);
-                            httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
-                                                        System.Security.Authentication.SslProtocols.Tls11 |
-                                                        System.Security.Authentication.SslProtocols.Tls;
-                        });
-                    });
-                }
-            });
-            return builder.UseContentRoot(Directory.GetCurrentDirectory())
+                            File.WriteAllBytes(this.SSLCertificateFile, Convert.FromBase64String(this.SSLCertificate));
+                            options.Listen(new IPEndPoint(IPAddress.Parse(this.BindAddress), this.BindPort), listenOptions =>
+                            {
+                                listenOptions.UseHttps(httpsOptions =>
+                                {
+                                    httpsOptions.ServerCertificate = new X509Certificate2(SSLCertificateFile, this.SSLCertificatePassword);
+                                    httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                                                                System.Security.Authentication.SslProtocols.Tls11 |
+                                                                System.Security.Authentication.SslProtocols.Tls;
+                                });
+                            });
+                        }
+                    })
+                    .UseContentRoot(Directory.GetCurrentDirectory())
                     .ConfigureLogging((hostingContext, logging) =>
                     {
                         // logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                         logging.AddConsole();
                         logging.AddDebug();
                         logging.AddFilter("System", LogLevel.Warning)
-                           .AddFilter("Microsoft", LogLevel.Warning);
+                            .AddFilter("Microsoft", LogLevel.Warning);
                     })
                     .UseNLog()
                     .UseStartup<HttpListenerStartup>()
                     .UseSetting("CovenantToken", this.CovenantToken)
                     .UseSetting("ProfileUrls", JsonConvert.SerializeObject((this.Profile as HttpProfile).HttpUrls))
                     .UseSetting("ListenerStaticHostDirectory", this.ListenerStaticHostDirectory)
-                    .UseUrls((this.UseSSL ? "https://" : "http://") + this.BindAddress + ":" + this.BindPort)
-                    .Build();
+                    .UseUrls((this.UseSSL ? "https://" : "http://") + this.BindAddress + ":" + this.BindPort);
+                })
+                .Build();
         }
 
         public HostedFile HostFile(HostedFile hostFileRequest)
@@ -346,13 +350,14 @@ namespace Covenant.Models.Listeners
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app)
         {
-            app.UseMvc(routes =>
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
             {
                 foreach (string route in JsonConvert.DeserializeObject<List<string>>(Configuration["ProfileUrls"]))
                 {
                     string urlOnly = route.Split("?").First();
-                    routes.MapRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Get" });
-                    routes.MapRoute(urlOnly + "Post", urlOnly, new { controller = "HttpListener", action = "Post" });
+                    endpoints.MapControllerRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Get" });
+                    endpoints.MapControllerRoute(urlOnly + "Post", urlOnly, new { controller = "HttpListener", action = "Post" });
                 }
             });
 

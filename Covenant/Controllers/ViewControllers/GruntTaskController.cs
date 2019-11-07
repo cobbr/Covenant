@@ -1,5 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -22,7 +25,7 @@ namespace Covenant.Controllers
             _context = context;
         }
 
-        // GET: /grunttask
+        [Authorize, HttpGet, Route("GruntTask"), Route("GruntTask/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.ReferenceSourceLibraries = await _context.GetReferenceSourceLibraries();
@@ -31,7 +34,7 @@ namespace Covenant.Controllers
             return View(await _context.GetGruntTasks());
         }
 
-        // GET: /grunttask/edit/{id}
+        [Authorize, HttpGet, Route("GruntTask/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -54,8 +57,7 @@ namespace Covenant.Controllers
             public new List<int> ReferenceSourceLibraries { get; set; } = new List<int>();
         }
 
-        // POST: /grunttask/edit
-        [HttpPost]
+        [Authorize, HttpPost, Route("GruntTask/Edit")]
         public async Task<IActionResult> Edit(GruntTaskModel taskModel)
         {
             try
@@ -91,7 +93,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /grunttask/create
+        [Authorize, HttpGet, Route("GruntTask/Create")]
         public async Task<IActionResult> Create()
         {
             try
@@ -107,8 +109,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /grunttask/create
-        [HttpPost]
+        [Authorize, HttpPost, Route("GruntTask/Create")]
         public async Task<IActionResult> Create(GruntTaskModel taskModel)
         {
             try

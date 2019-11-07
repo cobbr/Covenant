@@ -3,6 +3,7 @@
 // License: GNU GPLv3
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -180,6 +181,11 @@ namespace Covenant.Models
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
+            );
+            builder.Entity<GruntTask>().Property(GT => GT.SupportedDotNetVersions).HasConversion
+            (
+                v => JsonConvert.SerializeObject(v),
+                v => v == null ? new List<Common.DotNetVersion>() : JsonConvert.DeserializeObject<List<Common.DotNetVersion>>(v)
             );
 
             builder.Entity<GruntTaskOption>().Property(GTO => GTO.SuggestedValues).HasConversion
@@ -1017,7 +1023,8 @@ namespace Covenant.Models
                 }
             }
 
-            matching_grunt.DotNetFrameworkVersion = grunt.DotNetFrameworkVersion;
+            matching_grunt.DotNetVersion = grunt.DotNetVersion;
+            matching_grunt.RuntimeIdentifier = grunt.RuntimeIdentifier;
 
             matching_grunt.GruntChallenge = grunt.GruntChallenge;
             matching_grunt.GruntNegotiatedSessionKey = grunt.GruntNegotiatedSessionKey;
@@ -1053,13 +1060,13 @@ namespace Covenant.Models
             await this.SaveChangesAsync();
         }
 
-        public async Task<byte[]> CompileGruntStagerCode(int id, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
+        public async Task<byte[]> CompileGruntStagerCode(int id, Launcher launcher)
         {
             Grunt grunt = await this.GetGrunt(id);
             ImplantTemplate template = await this.GetImplantTemplate(grunt.ImplantTemplateId);
             Listener listener = await this.GetListener(grunt.ListenerId);
             Profile profile = await this.GetProfile(listener.ProfileId);
-            return CompileGruntCode(template.StagerCode, template, grunt, listener, profile, outputKind, Compress);
+            return CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher);
         }
 
         public async Task<byte[]> CompileGruntExecutorCode(int id, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
@@ -1068,19 +1075,74 @@ namespace Covenant.Models
             ImplantTemplate template = await this.GetImplantTemplate(grunt.ImplantTemplateId);
             Listener listener = await this.GetListener(grunt.ListenerId);
             Profile profile = await this.GetProfile(listener.ProfileId);
-            return CompileGruntCode(template.ExecutorCode, template, grunt, listener, profile, outputKind, Compress);
+            return CompileGruntCode(template.ExecutorCode, template, grunt, listener, profile, outputKind, Compress, grunt.RuntimeIdentifier);
         }
 
-        private byte[] CompileGruntCode(string CodeTemplate, ImplantTemplate template, Grunt grunt, Listener listener, Profile profile, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
+        private byte[] CompileGruntCode(string CodeTemplate, ImplantTemplate template, Grunt grunt, Listener listener, Profile profile, Launcher launcher)
         {
-            byte[] ILBytes = Compiler.Compile(new Compiler.CompilationRequest
+            return CompileGruntCode(CodeTemplate, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager, launcher.RuntimeIdentifier);
+        }
+
+        private byte[] CompileGruntCode(string CodeTemplate, ImplantTemplate template, Grunt grunt, Listener listener, Profile profile, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false, Compiler.RuntimeIdentifier runtimeIdentifier = Compiler.RuntimeIdentifier.win_x64)
+        {
+            byte[] ILBytes = null;
+            if (grunt.DotNetVersion == Common.DotNetVersion.Net35 || grunt.DotNetVersion == Common.DotNetVersion.Net40 || grunt.DotNetVersion == Common.DotNetVersion.NetCore21)
             {
-                Language = template.Language,
-                Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
-                TargetDotNetVersion = grunt.DotNetFrameworkVersion,
-                OutputKind = outputKind,
-                References = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References
-            });
+                List<Compiler.Reference> references = null;
+                switch (grunt.DotNetVersion)
+                {
+                    case Common.DotNetVersion.Net35:
+                        references = Common.DefaultNet35References;
+                        break;
+                    case Common.DotNetVersion.Net40:
+                        references = Common.DefaultNet40References;
+                        break;
+                    case Common.DotNetVersion.NetCore21:
+                        references = Common.DefaultReferencesCore21;
+                        break;
+                    case Common.DotNetVersion.NetCore30:
+                        references = Common.DefaultReferencesCore21;
+                        break;
+                }
+                ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                {
+                    Language = template.Language,
+                    Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
+                    TargetDotNetVersion = grunt.DotNetVersion,
+                    OutputKind = outputKind,
+                    References = references
+                });
+            }
+            else if(grunt.DotNetVersion == Common.DotNetVersion.NetCore30)
+            {
+                string src = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile);
+                string sanitizedName = Utilities.GetSanitizedFilename(template.Name);
+                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + sanitizedName + Path.DirectorySeparatorChar;
+                string ResultName = "";
+                if (template.StagerCode == CodeTemplate)
+                {
+                    ResultName = sanitizedName + "Stager";
+                    dir += sanitizedName + "Stager" + Path.DirectorySeparatorChar;
+                    string file = sanitizedName + "Stager" + Utilities.GetExtensionForLanguage(template.Language);
+                    File.WriteAllText(dir + file, src);
+                }
+                else
+                {
+                    ResultName = sanitizedName;
+                    dir += sanitizedName + Path.DirectorySeparatorChar;
+                    string file =  sanitizedName + Utilities.GetExtensionForLanguage(template.Language);
+                    File.WriteAllText(dir + file, src);
+                }
+                ILBytes = Compiler.Compile(new Compiler.CsharpCoreCompilationRequest
+                {
+                    ResultName = ResultName,
+                    Language = template.Language,
+                    TargetDotNetVersion = grunt.DotNetVersion,
+                    SourceDirectory = dir,
+                    OutputKind = outputKind,
+                    RuntimeIdentifier = runtimeIdentifier
+                });
+            }
             if (ILBytes == null || ILBytes.Length == 0)
             {
                 throw new CovenantCompileGruntStagerFailedException("Compiling Grunt code failed");
@@ -1948,7 +2010,7 @@ public static class Task
             tasking.Parameters = parameters;
             try
             {
-                tasking.GruntTask.Compile();
+                tasking.GruntTask.Compile(tasking.Grunt.RuntimeIdentifier);
             }
             catch (CompilerException e)
             {
@@ -3273,7 +3335,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3281,7 +3344,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3307,6 +3370,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3314,7 +3379,6 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             this.Launchers.Update(matchingLauncher);
             await this.SaveChangesAsync();
@@ -3350,7 +3414,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3358,7 +3423,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3384,6 +3449,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3391,7 +3458,6 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             this.Launchers.Update(matchingLauncher);
             await this.SaveChangesAsync();
@@ -3427,7 +3493,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3435,7 +3502,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3461,6 +3528,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3468,7 +3537,6 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             this.Launchers.Update(matchingLauncher);
             await this.SaveChangesAsync();
@@ -3504,7 +3572,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3512,7 +3581,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3538,6 +3607,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3545,7 +3616,6 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -3583,7 +3653,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3591,7 +3662,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3617,6 +3688,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3625,7 +3698,6 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -3663,7 +3735,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3671,7 +3744,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3697,6 +3770,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3707,7 +3782,6 @@ public static class Task
             matchingLauncher.ParameterString = launcher.ParameterString;
             matchingLauncher.DllName = launcher.DllName;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -3745,7 +3819,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3753,7 +3828,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3779,6 +3854,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3787,7 +3864,6 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -3825,7 +3901,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3833,7 +3910,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3859,6 +3936,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3867,7 +3946,6 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -3905,7 +3983,8 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
-                DotNetFrameworkVersion = launcher.DotNetFrameworkVersion
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
             };
 
             await this.Grunts.AddAsync(grunt);
@@ -3913,7 +3992,7 @@ public static class Task
 
             launcher.GetLauncher(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher.OutputKind, launcher.CompressStager),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
@@ -3939,6 +4018,8 @@ public static class Task
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
             matchingLauncher.SMBPipeName = launcher.SMBPipeName;
             matchingLauncher.ValidateCert = launcher.ValidateCert;
             matchingLauncher.UseCertPinning = launcher.UseCertPinning;
@@ -3947,7 +4028,6 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.DotNetFrameworkVersion = launcher.DotNetFrameworkVersion;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;

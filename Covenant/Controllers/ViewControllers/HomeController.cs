@@ -1,8 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 
 using Covenant.Models;
 
@@ -18,7 +21,7 @@ namespace Covenant.Controllers
             _context = context;
         }
 
-        // GET: /
+        [Authorize, HttpGet, Route(""), Route("Home"), Route("Home/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.Grunts = await _context.GetGrunts();

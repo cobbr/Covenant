@@ -30,19 +30,19 @@ namespace Covenant.Models.Launchers
             this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
             string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
 
-            List<Compiler.Reference> references = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
+            List<Compiler.Reference> references = grunt.DotNetVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
             references.Add(new Compiler.Reference
             {
-                File = grunt.DotNetFrameworkVersion == Common.DotNetVersion.Net35 ? Common.CovenantAssemblyReferenceNet35Directory + "System.Configuration.Install.dll" :
+                File = grunt.DotNetVersion == Common.DotNetVersion.Net35 ? Common.CovenantAssemblyReferenceNet35Directory + "System.Configuration.Install.dll" :
                                                                                     Common.CovenantAssemblyReferenceNet40Directory + "System.Configuration.Install.dll",
-                Framework = grunt.DotNetFrameworkVersion,
+                Framework = grunt.DotNetVersion,
                 Enabled = true
             });
-            this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CompilationRequest
+            this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
             {
                 Language = template.Language,
                 Source = code,
-                TargetDotNetVersion = grunt.DotNetFrameworkVersion,
+                TargetDotNetVersion = grunt.DotNetVersion,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,
                 References = references
             }));

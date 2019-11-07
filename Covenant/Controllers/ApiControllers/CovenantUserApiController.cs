@@ -2,8 +2,6 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 

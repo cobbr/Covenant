@@ -66,7 +66,7 @@ namespace Covenant.Controllers
                 guid = GetGuid(HttpContext);
                 using (StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8))
                 {
-                    string body = reader.ReadToEnd();
+                    string body = await reader.ReadToEndAsync();
                     string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")).FirstOrDefault();
                     string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
                     string postRead = await _internalListener.Read(guidToRead);

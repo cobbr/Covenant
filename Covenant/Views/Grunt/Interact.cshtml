@@ -138,9 +138,9 @@
             <input asp-for="ListenerId" value="@Model.ListenerId" type="hidden" readonly>
             <div class="form-row">
                 <div class="form-group col-md-4">
-                    <label asp-for="DotNetFrameworkVersion"></label>
-                    <select asp-for="DotNetFrameworkVersion" asp-items="Html.GetEnumSelectList<Common.DotNetVersion>()" class="form-control" disabled></select>
-                    <input asp-for="DotNetFrameworkVersion" value="@Model.DotNetFrameworkVersion" class="form-control" type="hidden" readonly>
+                    <label asp-for="DotNetVersion"></label>
+                    <select asp-for="DotNetVersion" asp-items="Html.GetEnumSelectList<Common.DotNetVersion>()" class="form-control" disabled></select>
+                    <input asp-for="DotNetVersion" value="@Model.DotNetVersion" class="form-control" type="hidden" readonly>
                 </div>
                 <div class="form-group col-md-4">
                     <label asp-for="Integrity"></label>

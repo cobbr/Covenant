@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,7 +27,7 @@ namespace Covenant.Controllers
             _userManager = userManager;
         }
 
-        // GET: /graph
+        [Authorize, HttpGet, Route("Graph"), Route("Graph/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.Listeners = await _context.GetHttpListeners();

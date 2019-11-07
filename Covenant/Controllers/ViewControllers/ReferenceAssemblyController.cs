@@ -1,7 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -22,6 +24,7 @@ namespace Covenant.Controllers.ViewControllers
             _context = context;
         }
 
+        [Authorize, HttpGet, Route("ReferenceAssembly/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -34,8 +37,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // POST: /referenceassembly/edit
-        [HttpPost]
+        [Authorize, HttpPost, Route("ReferenceAssembly/Edit")]
         public async Task<IActionResult> Edit(ReferenceAssembly assembly)
         {
             try
@@ -48,7 +50,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // GET: /referenceassembly/create
+        [Authorize, HttpGet, Route("ReferenceAssembly/Create")]
         public IActionResult Create()
         {
             try
@@ -61,8 +63,7 @@ namespace Covenant.Controllers.ViewControllers
             }
         }
 
-        // POST: /referenceassembly/create
-        [HttpPost]
+        [Authorize, HttpPost, Route("ReferenceAssembly/Create")]
         public async Task<IActionResult> Create(ReferenceAssembly assembly)
         {
             try

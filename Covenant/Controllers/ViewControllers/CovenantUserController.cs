@@ -1,5 +1,8 @@
-﻿using System;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -29,15 +32,14 @@ namespace Covenant.Controllers
             _userManager = userManager;
         }
 
-        // GET: /covenantuser/login
+        [AllowAnonymous, HttpGet, Route("CovenantUser/Login")]
         public IActionResult Login(string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
-        // POST: /covenantuser/login
-        [HttpPost]
+        [AllowAnonymous, HttpPost, Route("CovenantUser/Login")]
         public async Task<IActionResult> Login(CovenantUserLogin login, string returnUrl = "")
         {
             try
@@ -61,8 +63,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /covenantuser/logout
-        [Authorize]
+        [Authorize, HttpGet, Route("CovenantUser/Logout")]
         public async Task<IActionResult> Logout()
         {
             try
@@ -77,8 +78,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /users/
-        [Authorize]
+        [Authorize, HttpGet, Route("CovenantUser"), Route("CovenantUser/Index")]
         public async Task<IActionResult> Index()
         {
             IEnumerable<CovenantUser> users = await _context.GetUsers();
@@ -107,15 +107,13 @@ namespace Covenant.Controllers
             return View(users);
         }
 
-        // GET: /covenantuser/create
-        [Authorize(Policy = "RequireAdministratorRole")]
+        [Authorize(Policy = "RequireAdministratorRole"), HttpGet, Route("CovenantUser/Create")]
         public IActionResult Create()
         {
             return View(new CovenantUserRegister());
         }
 
-        // POST: /covenantuser/create
-        [HttpPost]
+        [AllowAnonymous, HttpPost, Route("CovenantUser/Create")]
         public async Task<IActionResult> Create(CovenantUserRegister register)
         {
             try
@@ -152,7 +150,7 @@ namespace Covenant.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize, HttpGet, Route("CovenantUser/Edit/{id}")]
         public async Task<IActionResult> Edit(string id)
         {
             try
@@ -174,8 +172,7 @@ namespace Covenant.Controllers
             }
         }
 
-        [Authorize(Policy = "RequireAdministratorRole")]
-        [HttpPost]
+        [Authorize(Policy = "RequireAdministratorRole"), HttpPost, Route("CovenantUser/Edit")]
         public async Task<IActionResult> Edit(CovenantUserLogin login)
         {
             try
@@ -196,8 +193,7 @@ namespace Covenant.Controllers
             public List<string> Rolenames { get; set; }
         }
 
-        [Authorize(Policy = "RequireAdministratorRole")]
-        [HttpPost]
+        [Authorize(Policy = "RequireAdministratorRole"), HttpPost, Route("CovenantUser/EditRoles")]
         public async Task<IActionResult> EditRoles(EditRolesModel roleadd)
         {
             try
@@ -236,7 +232,7 @@ namespace Covenant.Controllers
             }
         }
 
-        [Authorize(Policy = "RequireAdministratorRole")]
+        [Authorize(Policy = "RequireAdministratorRole"), HttpGet, Route("CovenantUser/Delete/{id}")]
         public async Task<IActionResult> Delete(string id)
         {
             try

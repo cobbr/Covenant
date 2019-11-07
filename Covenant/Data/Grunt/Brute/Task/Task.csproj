@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Runtime.InteropServices">
+      <HintPath>/Users/cobbr/Projects/specter-bitbucket/Covenant/Covenant/Data/AssemblyReferences/netcoreapp3.0/System.Runtime.InteropServices.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

@@ -58,17 +58,17 @@
     <div class="btn-group" role="group">
         @if (Model.Status == ListenerStatus.Active)
         {
-            <form asp-action="Stop" asp-route-id="@Model.Id">
+            <form method="GET" asp-action="Stop" asp-route-id="@Model.Id">
                 <button type="submit" class="btn btn-warning"><span data-feather="stop-circle"></span> Stop</button>
             </form>
         }
         else
         {
-            <form asp-action="Start" asp-route-id="@Model.Id">
+            <form method="GET" asp-action="Start" asp-route-id="@Model.Id">
                 <button type="submit" class="btn btn-primary"><span data-feather="play"></span> Start</button>
             </form>
         }
-        <form asp-action="Delete" asp-route-id="@Model.Id">
+        <form method="GET" asp-action="Delete" asp-route-id="@Model.Id">
             <button type="submit" class="btn btn-danger ml-2"><span data-feather="x"></span> Delete</button>
         </form>
     </div>

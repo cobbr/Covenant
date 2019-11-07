@@ -42,6 +42,7 @@ namespace Covenant.Models.Grunts
         public string Description { get; set; } = "A generic GruntTask.";
         public string Help { get; set; }
         public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
+        public List<Common.DotNetVersion> SupportedDotNetVersions { get; set; } = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 };
 
         public string Code { get; set; } = "";
         public GruntTaskingType TaskingType { get; set; } = GruntTaskingType.Assembly;
@@ -122,7 +123,7 @@ namespace Covenant.Models.Grunts
             return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + this.Name + ".compiled");
         }
 
-        public void Compile()
+        public void Compile(Compiler.RuntimeIdentifier runtimeIdentifier)
         {
             if (!this.Compiled)
             {
@@ -169,8 +170,9 @@ namespace Covenant.Models.Grunts
                 );
 
                 File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet35Directory + this.Name + ".compiled",
-                    Utilities.Compress(Compiler.Compile(new Compiler.CompilationRequest
+                    Utilities.Compress(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
                     {
+                        Language = this.Language,
                         Source = this.Code,
                         SourceDirectories = this.ReferenceSourceLibraries.Select(RSL => RSL.Location).ToList(),
                         TargetDotNetVersion = Common.DotNetVersion.Net35,
@@ -204,8 +206,9 @@ namespace Covenant.Models.Grunts
                     })
                 );
                 File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + this.Name + ".compiled",
-                    Utilities.Compress(Compiler.Compile(new Compiler.CompilationRequest
+                    Utilities.Compress(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
                     {
+                        Language = this.Language,
                         Source = this.Code,
                         SourceDirectories = this.ReferenceSourceLibraries.Select(RSL => RSL.Location).ToList(),
                         TargetDotNetVersion = Common.DotNetVersion.Net40,
@@ -220,6 +223,22 @@ namespace Covenant.Models.Grunts
                                !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDump") &&
                                !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpUp") &&
                                !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI")
+                    }))
+                );
+
+                string sanitizedName = Utilities.GetSanitizedFilename("Brute");
+                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + sanitizedName + Path.DirectorySeparatorChar + "Task" + Path.DirectorySeparatorChar;
+                string file = "Task" + Utilities.GetExtensionForLanguage(this.Language);
+                File.WriteAllText(dir + file, this.Code);
+                File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNetCoreApp30Directory + this.Name + ".compiled",
+                    Utilities.Compress(Compiler.Compile(new Compiler.CsharpCoreCompilationRequest
+                    {
+                        ResultName = "Task",
+                        Language = this.Language,
+                        TargetDotNetVersion = Common.DotNetVersion.NetCore30,
+                        SourceDirectory = dir,
+                        OutputKind = OutputKind.DynamicallyLinkedLibrary,
+                        RuntimeIdentifier = runtimeIdentifier
                     }))
                 );
             }

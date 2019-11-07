@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Covenant.Controllers
 {
     [Authorize]
     public class EventController : Controller
     {
-        // GET: /<controller>/
+        [Authorize, HttpGet, Route("Event"), Route("Event/Index")]
         public IActionResult Index()
         {
             return View();

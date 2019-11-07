@@ -1,8 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +40,7 @@ namespace Covenant.Controllers
             _eventhub = eventhub;
         }
 
-        // GET: /listener/
+        [Authorize, HttpGet, Route("Listener"), Route("Listener/Index")]
         public async Task<IActionResult> Index()
         {
             ViewBag.ListenerTypes = await _context.GetListenerTypes();
@@ -46,7 +48,7 @@ namespace Covenant.Controllers
             return View(await _context.GetListeners());
         }
 
-        // GET: /listener/create
+        [Authorize, HttpGet, Route("Listener/Create")]
         public async Task<IActionResult> Create()
         {
             try
@@ -62,8 +64,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /listener/createhttp
-        [HttpPost]
+        [Authorize, HttpPost, Route("Listener/CreateHttp")]
         public async Task<IActionResult> CreateHttp(HttpListener listener)
         {
             try
@@ -80,8 +81,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // POST: /listener/createbridge
-        [HttpPost]
+        [Authorize, HttpPost, Route("Listener/CreateBridge")]
         public async Task<IActionResult> CreateBridge(BridgeListener listener)
         {
             try
@@ -98,7 +98,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /listener/interact/{id}
+        [Authorize, HttpGet, Route("Listener/Interact/{id}")]
         public async Task<IActionResult> Interact(int id)
         {
             try
@@ -116,10 +116,9 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /listener/start/{id}
+        [Authorize, HttpGet, Route("Listener/Start/{id}")]
         public async Task<IActionResult> Start(int id)
         {
-            Console.WriteLine("Start: " + id);
             try
             {
                 Listener listener = await _context.GetListener(id);
@@ -129,7 +128,6 @@ namespace Covenant.Controllers
                 }
                 _context.Entry(listener).State = EntityState.Detached;
                 listener.Status = ListenerStatus.Active;
-                Console.WriteLine("EditListener");
                 await _context.EditListener(listener, _ListenerCancellationTokens, _eventhub);
                 return RedirectToAction(nameof(Interact), new { id = id });
             }
@@ -140,7 +138,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /listener/stop/{id}
+        [Authorize, HttpGet, Route("Listener/Stop/{id}")]
         public async Task<IActionResult> Stop(int id)
         {
             try
@@ -162,7 +160,7 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: /listener/delete/{id}
+        [Authorize, HttpGet, Route("Listener/Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             try

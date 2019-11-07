@@ -75,7 +75,7 @@ namespace Covenant.Models.Listeners
         {
             _transform = new ProfileTransformAssembly
             {
-                ProfileTransformBytes = Compiler.Compile(new Compiler.CompilationRequest
+                ProfileTransformBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
                 {
                     Language = Grunts.ImplantLanguage.CSharp,
                     Source = profile.MessageTransform,
@@ -147,13 +147,13 @@ namespace Covenant.Models.Listeners
 
         private ModelUtilities.GruntEncryptedMessage CreateMessageForGrunt(APIModels.Grunt grunt, APIModels.Grunt targetGrunt, byte[] message)
         {
-            List<string> path = _client.ApiGruntsByIdPathByCidGet(grunt.Id ?? default, targetGrunt.Id ?? default).ToList();
+            List<string> path = _client.GetPathToChildGrunt(grunt.Id ?? default, targetGrunt.Id ?? default).ToList();
             path.Reverse();
             ModelUtilities.GruntEncryptedMessage finalMessage = null;
             ModelUtilities.GruntEncryptedMessageType messageType = ModelUtilities.GruntEncryptedMessageType.Tasking;
             foreach (string guid in path)
             {
-                APIModels.Grunt thisGrunt = _client.ApiGruntsGuidByGuidGet(guid);
+                APIModels.Grunt thisGrunt = _client.GetGruntByGUID(guid);
                 finalMessage = ModelUtilities.GruntEncryptedMessage.Create(
                     thisGrunt,
                     message,
@@ -175,6 +175,11 @@ namespace Covenant.Models.Listeners
             return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + taskname + ".compiled");
         }
 
+        private byte[] GetCompressedILAssembly30(string taskname)
+        {
+            return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNetCoreApp30Directory + taskname + ".compiled");
+        }
+
         private APIModels.GruntTaskingMessage GetGruntTaskingMessage(APIModels.GruntTasking tasking, APIModels.DotNetVersion version)
         {
             string Message = "";
@@ -192,6 +197,13 @@ namespace Covenant.Models.Listeners
                             break;
                         case APIModels.DotNetVersion.Net40:
                             Message = Convert.ToBase64String(this.GetCompressedILAssembly40(tasking.GruntTask.Name));
+                            if (tasking.Parameters.Any())
+                            {
+                                Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
+                            }
+                            break;
+                        case APIModels.DotNetVersion.NetCore30:
+                            Message = Convert.ToBase64String(this.GetCompressedILAssembly30(tasking.GruntTask.Name));
                             if (tasking.Parameters.Any())
                             {
                                 Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
@@ -284,7 +296,7 @@ namespace Covenant.Models.Listeners
             {
                 if (!string.IsNullOrEmpty(guid))
                 {
-                    return await _client.ApiGruntsGuidByGuidGetAsync(guid);
+                    return await _client.GetGruntByGUIDAsync(guid);
                 }
             }
             catch (HttpOperationException) { }
@@ -298,7 +310,7 @@ namespace Covenant.Models.Listeners
                 return null;
             }
             grunt.LastCheckIn = DateTime.UtcNow;
-            return await _client.ApiGruntsPutAsync(grunt);
+            return await _client.EditGruntAsync(grunt);
         }
 
         private async Task<APIModels.GruntTasking> MarkTasked(APIModels.GruntTasking tasking)
@@ -309,7 +321,7 @@ namespace Covenant.Models.Listeners
             }
             tasking.Status = APIModels.GruntTaskingStatus.Tasked;
             tasking.TaskingTime = DateTime.UtcNow;
-            return await _client.ApiTaskingsPutAsync(tasking);
+            return await _client.EditGruntTaskingAsync(tasking);
         }
 
         public async Task<string> Read(string guid)
@@ -351,7 +363,7 @@ namespace Covenant.Models.Listeners
                 }
                 else
                 {
-                    IList<APIModels.GruntTasking> gruntTaskings = await _client.ApiGruntsByIdTaskingsSearchUninitializedGetAsync(grunt.Id ?? default);
+                    IList<APIModels.GruntTasking> gruntTaskings = await _client.GetSearchUninitializedGruntTaskingsAsync(grunt.Id ?? default);
                     if (gruntTaskings == null || gruntTaskings.Count == 0)
                     {
                         // No GruntTasking assigned. Respond with empty template
@@ -369,11 +381,11 @@ namespace Covenant.Models.Listeners
                             }
                             else
                             {
-                                gruntTasking.Grunt = gruntTasking.GruntId == grunt.Id ? grunt : await _client.ApiGruntsByIdGetAsync(gruntTasking.GruntId);
+                                gruntTasking.Grunt = gruntTasking.GruntId == grunt.Id ? grunt : await _client.GetGruntAsync(gruntTasking.GruntId);
                                 ModelUtilities.GruntEncryptedMessage message = null;
                                 try
                                 {
-                                    message = this.CreateMessageForGrunt(grunt, gruntTasking.Grunt, this.GetGruntTaskingMessage(gruntTasking, gruntTasking.Grunt.DotNetFrameworkVersion));
+                                    message = this.CreateMessageForGrunt(grunt, gruntTasking.Grunt, this.GetGruntTaskingMessage(gruntTasking, gruntTasking.Grunt.DotNetVersion));
                                     // Transform response
                                     string transformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
                                     this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.Ok, Message = transformed, Tasking = gruntTasking });
@@ -381,7 +393,7 @@ namespace Covenant.Models.Listeners
                                 catch (HttpOperationException)
                                 {
                                     gruntTasking.Status = APIModels.GruntTaskingStatus.Aborted;
-                                    await _client.ApiTaskingsPutAsync(gruntTasking);
+                                    await _client.EditGruntTaskingAsync(gruntTasking);
                                     this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
                                 }
                             }
@@ -414,7 +426,7 @@ namespace Covenant.Models.Listeners
                 APIModels.Grunt egressGrunt;
                 try
                 {
-                    egressGrunt = guid == null ? null : await _client.ApiGruntsGuidByGuidGetAsync(guid);
+                    egressGrunt = guid == null ? null : await _client.GetGruntByGUIDAsync(guid);
                 }
                 catch (HttpOperationException)
                 {
@@ -423,7 +435,7 @@ namespace Covenant.Models.Listeners
                 APIModels.Grunt targetGrunt = null;
 				try
 				{
-					targetGrunt = await _client.ApiGruntsGuidByGuidGetAsync(message.GUID);
+					targetGrunt = await _client.GetGruntByGUIDAsync(message.GUID);
 				}
 				catch (HttpOperationException)
 				{
@@ -432,14 +444,14 @@ namespace Covenant.Models.Listeners
                     if (message.GUID.Length == 20)
                     {
                         string originalServerGuid = message.GUID.Substring(0, 10);
-                        targetGrunt = await _client.ApiGruntsOriginalguidByServerguidGetAsync(originalServerGuid);
+                        targetGrunt = await _client.GetGruntByOriginalServerGUIDAsync(originalServerGuid);
 						if (targetGrunt != null)
 						{
-							var it = await _client.ApiImplanttemplatesByIdGetAsync(targetGrunt.ImplantTemplateId);
+							var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
 							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.SMB)
 							{
 								// Get connecting Grunt as egress
-								List<APIModels.GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
+								List<APIModels.GruntTasking> taskings = (await _client.GetAllGruntTaskingsAsync()).ToList();
 								// TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
 								APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
 								if (connectTasking == null)
@@ -447,8 +459,8 @@ namespace Covenant.Models.Listeners
 									this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
 									return guid;
 								}
-								APIModels.Grunt taskedGrunt = await _client.ApiGruntsByIdGetAsync(connectTasking.GruntId);
-								egressGrunt = await _client.ApiGruntsByIdOutboundGetAsync(taskedGrunt.Id ?? default);
+								APIModels.Grunt taskedGrunt = await _client.GetGruntAsync(connectTasking.GruntId);
+								egressGrunt = await _client.GetOutboundGruntAsync(taskedGrunt.Id ?? default);
 							}
 						}
 						await this.PostStage0(egressGrunt, targetGrunt, message, message.GUID.Substring(10), guid);
@@ -462,10 +474,10 @@ namespace Covenant.Models.Listeners
                 }
 				if (targetGrunt != null)
 				{
-					var it = await _client.ApiImplanttemplatesByIdGetAsync(targetGrunt.ImplantTemplateId);
+					var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
 					if (it.CommType == APIModels.CommunicationType.SMB)
 					{
-						egressGrunt = await _client.ApiGruntsByIdOutboundGetAsync(targetGrunt.Id ?? default);
+						egressGrunt = await _client.GetOutboundGruntAsync(targetGrunt.Id ?? default);
 					}
 				}
 				switch (targetGrunt.Status)
@@ -519,7 +531,7 @@ namespace Covenant.Models.Listeners
             APIModels.GruntTasking gruntTasking;
 			try
 			{
-				gruntTasking = await _client.ApiGruntsTaskingsByTaskingnameGetAsync(TaskName);
+				gruntTasking = await _client.GetGruntTaskingByNameAsync(TaskName);
 			}
 			catch (HttpOperationException)
 			{
@@ -550,15 +562,15 @@ namespace Covenant.Models.Listeners
 			gruntTasking.GruntCommand.CommandOutputId = 0;
 			gruntTasking.Status = APIModels.GruntTaskingStatus.Completed;
 			gruntTasking.CompletionTime = DateTime.UtcNow;
-            gruntTasking.GruntCommand = await _client.ApiCommandsPutAsync(gruntTasking.GruntCommand);
-            await _client.ApiTaskingsPutAsync(gruntTasking);
+			gruntTasking.GruntCommand = await _client.EditGruntCommandAsync(gruntTasking.GruntCommand);
+			await _client.EditGruntTaskingAsync(gruntTasking);
             lock (_hashCodesLock)
             {
                 this.CacheTaskHashCodes.Remove(GetTaskingHashCode(gruntTasking));
             }
             if(gruntTasking.Type == APIModels.GruntTaskingType.SetOption || gruntTasking.Type == APIModels.GruntTaskingType.Exit)
             {
-                targetGrunt = await _client.ApiGruntsByIdGetAsync(targetGrunt.Id ?? default);
+                targetGrunt = await _client.GetGruntAsync(targetGrunt.Id ?? default);
             }
             await CheckInGrunt(targetGrunt);
             return;
@@ -566,7 +578,7 @@ namespace Covenant.Models.Listeners
 
 		private async Task PostStage0(APIModels.Grunt egressGrunt, APIModels.Grunt targetGrunt, ModelUtilities.GruntEncryptedMessage gruntStage0Response, string targetGuid, string guid)
 		{
-			if (targetGrunt == null || !gruntStage0Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntSharedSecretPassword)))
+            if (targetGrunt == null || !gruntStage0Response.VerifyHMAC(Convert.FromBase64String(targetGrunt.GruntSharedSecretPassword)))
 			{
                 // Always return NotFound, don't give away unnecessary info
                 this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
@@ -595,17 +607,17 @@ namespace Covenant.Models.Listeners
 					JitterPercent = targetGrunt.JitterPercent,
 					KillDate = targetGrunt.KillDate,
 					ConnectAttempts = targetGrunt.ConnectAttempts,
-					DotNetFrameworkVersion = targetGrunt.DotNetFrameworkVersion,
+					DotNetVersion = targetGrunt.DotNetVersion,
 					LastCheckIn = DateTime.UtcNow
 				};
-				targetGrunt = await _client.ApiGruntsPostAsync(tempModel);
+				targetGrunt = await _client.CreateGruntAsync(tempModel);
 			}
 			else
 			{
 				targetGrunt.Status = APIModels.GruntStatus.Stage0;
 				targetGrunt.Guid = targetGuid;
 				targetGrunt.LastCheckIn = DateTime.UtcNow;
-				targetGrunt = await _client.ApiGruntsPutAsync(targetGrunt);
+				targetGrunt = await _client.EditGruntAsync(targetGrunt);
 			}
 			if (!egressGruntExists)
 			{
@@ -622,13 +634,13 @@ namespace Covenant.Models.Listeners
 			{
 				newAesKey.GenerateKey();
 				targetGrunt.GruntNegotiatedSessionKey = Convert.ToBase64String(newAesKey.Key);
-				await _client.ApiGruntsPutAsync(targetGrunt);
+				await _client.EditGruntAsync(targetGrunt);
 			}
 
             if (egressGruntExists)
             {
-				// Add this as Child grunt to Grunt that connects it
-				List<APIModels.GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
+                // Add this as Child grunt to Grunt that connects it
+                List<APIModels.GruntTasking> taskings = _client.GetAllGruntTaskings().ToList();
                 // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
                 APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
                 if (connectTasking == null)
@@ -636,13 +648,13 @@ namespace Covenant.Models.Listeners
                     this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
                     return;
                 }
-                APIModels.GruntTaskingMessage tmessage = this.GetGruntTaskingMessage(connectTasking, targetGrunt.DotNetFrameworkVersion);
+                APIModels.GruntTaskingMessage tmessage = this.GetGruntTaskingMessage(connectTasking, targetGrunt.DotNetVersion);
                 targetGrunt.Hostname = tmessage.Message.Split(",")[0];
-                await _client.ApiGruntsPutAsync(targetGrunt);
+                await _client.EditGruntAsync(targetGrunt);
                 connectTasking.Status = APIModels.GruntTaskingStatus.Completed;
-                await _client.ApiTaskingsPutAsync(connectTasking);
-				targetGrunt = await _client.ApiGruntsByIdGetAsync(targetGrunt.Id ?? default);
-			}
+                await _client.EditGruntTaskingAsync(connectTasking);
+                targetGrunt = await _client.GetGruntAsync(targetGrunt.Id ?? default);
+            }
 
 			byte[] rsaEncryptedBytes = EncryptUtilities.GruntRSAEncrypt(targetGrunt, Convert.FromBase64String(targetGrunt.GruntNegotiatedSessionKey));
 			ModelUtilities.GruntEncryptedMessage message = null;
@@ -684,7 +696,7 @@ namespace Covenant.Models.Listeners
 			targetGrunt.GruntChallenge = Convert.ToBase64String(challenge2);
 			targetGrunt.Status = APIModels.GruntStatus.Stage1;
 			targetGrunt.LastCheckIn = DateTime.UtcNow;
-			await _client.ApiGruntsPutAsync(targetGrunt);
+			await _client.EditGruntAsync(targetGrunt);
 
 			ModelUtilities.GruntEncryptedMessage message;
 			try
@@ -725,8 +737,8 @@ namespace Covenant.Models.Listeners
             }
 			targetGrunt.Status = APIModels.GruntStatus.Stage2;
 			targetGrunt.LastCheckIn = DateTime.UtcNow;
-			await _client.ApiGruntsPutAsync(targetGrunt);
-            byte[] GruntExecutorAssembly = await this._client.ApiGruntsByIdCompileexecutorGetAsync(targetGrunt.Id ?? default);
+			await _client.EditGruntAsync(targetGrunt);
+            byte[] GruntExecutorAssembly = await this._client.CompileGruntExecutorAsync(targetGrunt.Id ?? default);
 
 			ModelUtilities.GruntEncryptedMessage message;
 			try
@@ -771,7 +783,7 @@ namespace Covenant.Models.Listeners
 			targetGrunt.Process = grunt.Process;
 			targetGrunt.LastCheckIn = DateTime.UtcNow;
 
-			await _client.ApiGruntsPutAsync(targetGrunt);
+			await _client.EditGruntAsync(targetGrunt);
 
             APIModels.GruntTaskingMessage tasking = new APIModels.GruntTaskingMessage
 			{
