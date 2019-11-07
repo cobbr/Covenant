@@ -1,0 +1,15 @@
+﻿using System;
+using System.IO;
+
+public static class Task
+{
+    public static string Execute(string DirectoryName)
+    {
+        try
+        {
+            Directory.SetCurrentDirectory(DirectoryName);
+            return Directory.GetCurrentDirectory();
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}
