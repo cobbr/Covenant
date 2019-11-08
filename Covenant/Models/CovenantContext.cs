@@ -66,31 +66,31 @@ namespace Covenant.Models
         {
             builder.Entity<GruntTaskOption>().ToTable("GruntTaskOption");
 
-            builder.Entity<HttpListener>().ToTable("HttpListener");
-            builder.Entity<HttpProfile>().HasBaseType<Profile>().ToTable("HttpProfile");
-            builder.Entity<BridgeListener>().ToTable("BridgeListener");
-            builder.Entity<BridgeProfile>().HasBaseType<Profile>().ToTable("BridgeProfile");
+            builder.Entity<HttpListener>();
+            builder.Entity<HttpProfile>().HasBaseType<Profile>();
+            builder.Entity<BridgeListener>();
+            builder.Entity<BridgeProfile>().HasBaseType<Profile>();
 
-            builder.Entity<WmicLauncher>().ToTable("WmicLauncher");
-            builder.Entity<Regsvr32Launcher>().ToTable("Regsvr32Launcher");
-            builder.Entity<MshtaLauncher>().ToTable("MshtaLauncher");
-            builder.Entity<CscriptLauncher>().ToTable("CscriptLauncher");
-            builder.Entity<WscriptLauncher>().ToTable("WscriptLauncher");
-            builder.Entity<InstallUtilLauncher>().ToTable("InstallUtilLauncher");
-            builder.Entity<MSBuildLauncher>().ToTable("MSBuildLauncher");
-            builder.Entity<PowerShellLauncher>().ToTable("PowerShellLauncher");
-            builder.Entity<BinaryLauncher>().ToTable("BinaryLauncher");
+            builder.Entity<WmicLauncher>();
+            builder.Entity<Regsvr32Launcher>();
+            builder.Entity<MshtaLauncher>();
+            builder.Entity<CscriptLauncher>();
+            builder.Entity<WscriptLauncher>();
+            builder.Entity<InstallUtilLauncher>();
+            builder.Entity<MSBuildLauncher>();
+            builder.Entity<PowerShellLauncher>();
+            builder.Entity<BinaryLauncher>();
 
-            builder.Entity<CapturedPasswordCredential>().ToTable("CapturedPasswordCredential");
-            builder.Entity<CapturedHashCredential>().ToTable("CapturedHashCredential");
-            builder.Entity<CapturedTicketCredential>().ToTable("CapturedTicketCredential");
+            builder.Entity<CapturedPasswordCredential>();
+            builder.Entity<CapturedHashCredential>();
+            builder.Entity<CapturedTicketCredential>();
 
-            builder.Entity<DownloadEvent>().ToTable("DownloadEvent");
-            builder.Entity<ScreenshotEvent>().ToTable("ScreenshotEvent");
+            builder.Entity<DownloadEvent>();
+            builder.Entity<ScreenshotEvent>();
 
-            builder.Entity<FileIndicator>().ToTable("FileIndicator");
-            builder.Entity<NetworkIndicator>().ToTable("NetworkIndicator");
-            builder.Entity<TargetIndicator>().ToTable("TargetIndicator");
+            builder.Entity<FileIndicator>();
+            builder.Entity<NetworkIndicator>();
+            builder.Entity<TargetIndicator>();
 
             builder.Entity<Grunt>()
                 .HasOne(G => G.ImplantTemplate)
@@ -929,7 +929,7 @@ namespace Covenant.Models
             {
                 if (matching_grunt.ConnectAttempts != grunt.ConnectAttempts)
                 {
-                    GruntTask setTask = await this.GetGruntTaskByName("Set");
+                    GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
                     matching_grunt.ConnectAttempts = grunt.ConnectAttempts;
                     setTask.Options[0].Value = "ConnectAttempts";
                     setTask.Options[1].Value = grunt.ConnectAttempts.ToString();
@@ -959,7 +959,7 @@ namespace Covenant.Models
                 }
                 if (matching_grunt.Delay != grunt.Delay)
                 {
-                    GruntTask setTask = await this.GetGruntTaskByName("Set");
+                    GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
                     matching_grunt.Delay = grunt.Delay;
                     setTask.Options[0].Value = "Delay";
                     setTask.Options[1].Value = grunt.Delay.ToString();
@@ -989,7 +989,7 @@ namespace Covenant.Models
                 }
                 if (matching_grunt.JitterPercent != grunt.JitterPercent)
                 {
-                    GruntTask setTask = await this.GetGruntTaskByName("Set");
+                    GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
                     matching_grunt.JitterPercent = grunt.JitterPercent;
                     setTask.Options[0].Value = "JitterPercent";
                     setTask.Options[1].Value = grunt.JitterPercent.ToString();
@@ -1507,17 +1507,20 @@ namespace Covenant.Models
             return task;
         }
 
-        public async Task<GruntTask> GetGruntTaskByName(string name)
+        public async Task<GruntTask> GetGruntTaskByName(string name, Common.DotNetVersion version = Common.DotNetVersion.Net35)
         {
-            GruntTask task = await this.GruntTasks
-                .Where(T => T.Name.Equals(name, StringComparison.OrdinalIgnoreCase) || T.AlternateNames.Contains(name, StringComparer.OrdinalIgnoreCase))
+            GruntTask task = this.GruntTasks
+                .Where(T => (T.Name.ToLower() == name.ToLower() || T.AlternateNames.Contains(name.ToLower())))
+                // .Where(T => T.SupportedDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
                 .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
                 .Include("GruntTaskEmbeddedResources.EmbeddedResource")
-                .FirstOrDefaultAsync();
+                .AsEnumerable()
+                .Where(T => T.SupportedDotNetVersions.Contains(version))
+                .FirstOrDefault();
             if (task == null)
             {
                 throw new ControllerNotFoundException($"NotFound - GruntTask with Name: {name}");
@@ -2010,7 +2013,7 @@ public static class Task
             tasking.Parameters = parameters;
             try
             {
-                tasking.GruntTask.Compile(tasking.Grunt.RuntimeIdentifier);
+                tasking.GruntTask.Compile(tasking.Grunt.ImplantTemplate, tasking.Grunt.RuntimeIdentifier);
             }
             catch (CompilerException e)
             {
@@ -2174,10 +2177,16 @@ public static class Task
                     updatingGruntTasking.CompletionTime = DateTime.UtcNow;
                 }
                 string verb = newStatus == GruntTaskingStatus.Completed ? "completed" : "progressed";
-                GruntTask DownloadTask = await this.GetGruntTaskByName("Download");
-                GruntTask ScreenshotTask = await this.GetGruntTaskByName("ScreenShot");
+                GruntTask DownloadTask = null;
+                GruntTask ScreenshotTask = null;
+                try
+                {
+                    DownloadTask = await this.GetGruntTaskByName("Download", grunt.DotNetVersion);
+                    ScreenshotTask = await this.GetGruntTaskByName("ScreenShot", grunt.DotNetVersion);
+                }
+                catch (ControllerNotFoundException) { }
 
-                if (tasking.GruntTaskId == DownloadTask.Id)
+                if (DownloadTask != null && tasking.GruntTaskId == DownloadTask.Id)
                 {
                     ev = new Event
                     {
@@ -2201,7 +2210,7 @@ public static class Task
                     downloadEvent.WriteToDisk();
                     await this.Events.AddAsync(downloadEvent);
                 }
-                else if (tasking.GruntTaskId == ScreenshotTask.Id)
+                else if (ScreenshotTask != null && tasking.GruntTaskId == ScreenshotTask.Id)
                 {
                     ev = new Event
                     {

@@ -17,15 +17,15 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum EventLevel
     {
-        [EnumMember(Value = "Silent")]
+        [EnumMember(Value = "silent")]
         Silent,
-        [EnumMember(Value = "Info")]
+        [EnumMember(Value = "info")]
         Info,
-        [EnumMember(Value = "Warning")]
+        [EnumMember(Value = "warning")]
         Warning,
-        [EnumMember(Value = "Highlight")]
+        [EnumMember(Value = "highlight")]
         Highlight,
-        [EnumMember(Value = "Error")]
+        [EnumMember(Value = "error")]
         Error
     }
     internal static class EventLevelEnumExtension
@@ -40,15 +40,15 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case EventLevel.Silent:
-                    return "Silent";
+                    return "silent";
                 case EventLevel.Info:
-                    return "Info";
+                    return "info";
                 case EventLevel.Warning:
-                    return "Warning";
+                    return "warning";
                 case EventLevel.Highlight:
-                    return "Highlight";
+                    return "highlight";
                 case EventLevel.Error:
-                    return "Error";
+                    return "error";
             }
             return null;
         }
@@ -57,15 +57,15 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Silent":
+                case "silent":
                     return EventLevel.Silent;
-                case "Info":
+                case "info":
                     return EventLevel.Info;
-                case "Warning":
+                case "warning":
                     return EventLevel.Warning;
-                case "Highlight":
+                case "highlight":
                     return EventLevel.Highlight;
-                case "Error":
+                case "error":
                     return EventLevel.Error;
             }
             return null;

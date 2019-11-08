@@ -17,15 +17,15 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum GruntTaskingStatus
     {
-        [EnumMember(Value = "Uninitialized")]
+        [EnumMember(Value = "uninitialized")]
         Uninitialized,
-        [EnumMember(Value = "Tasked")]
+        [EnumMember(Value = "tasked")]
         Tasked,
-        [EnumMember(Value = "Progressed")]
+        [EnumMember(Value = "progressed")]
         Progressed,
-        [EnumMember(Value = "Completed")]
+        [EnumMember(Value = "completed")]
         Completed,
-        [EnumMember(Value = "Aborted")]
+        [EnumMember(Value = "aborted")]
         Aborted
     }
     internal static class GruntTaskingStatusEnumExtension
@@ -40,15 +40,15 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case GruntTaskingStatus.Uninitialized:
-                    return "Uninitialized";
+                    return "uninitialized";
                 case GruntTaskingStatus.Tasked:
-                    return "Tasked";
+                    return "tasked";
                 case GruntTaskingStatus.Progressed:
-                    return "Progressed";
+                    return "progressed";
                 case GruntTaskingStatus.Completed:
-                    return "Completed";
+                    return "completed";
                 case GruntTaskingStatus.Aborted:
-                    return "Aborted";
+                    return "aborted";
             }
             return null;
         }
@@ -57,15 +57,15 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Uninitialized":
+                case "uninitialized":
                     return GruntTaskingStatus.Uninitialized;
-                case "Tasked":
+                case "tasked":
                     return GruntTaskingStatus.Tasked;
-                case "Progressed":
+                case "progressed":
                     return GruntTaskingStatus.Progressed;
-                case "Completed":
+                case "completed":
                     return GruntTaskingStatus.Completed;
-                case "Aborted":
+                case "aborted":
                     return GruntTaskingStatus.Aborted;
             }
             return null;

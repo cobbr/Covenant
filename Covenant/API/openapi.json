@@ -113,8 +113,7 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -136,8 +135,7 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -244,8 +242,7 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -277,15 +274,13 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
             "in": "path",
             "name": "rid",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -312,15 +307,13 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
             "in": "path",
             "name": "rid",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -342,15 +335,13 @@
             "in": "path",
             "name": "id",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
             "in": "path",
             "name": "rid",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -400,8 +391,7 @@
             "in": "path",
             "name": "rid",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -1433,8 +1423,7 @@
             "in": "path",
             "name": "name",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -1463,8 +1452,7 @@
             "in": "path",
             "name": "guid",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -1493,8 +1481,7 @@
             "in": "path",
             "name": "serverguid",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -1935,36 +1922,6 @@
         }
       }
     },
-    "/api/grunttasks/{taskname}": {
-      "get": {
-        "tags": [
-          "GruntTaskApi"
-        ],
-        "operationId": "GetGruntTaskByName",
-        "produces": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "taskname",
-            "required": true,
-            "type": "string",
-            "default": ""
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/GruntTask"
-            }
-          }
-        }
-      }
-    },
     "/api/taskings": {
       "get": {
         "tags": [
@@ -2255,8 +2212,7 @@
             "in": "path",
             "name": "taskingname",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -2427,8 +2383,7 @@
             "in": "path",
             "name": "name",
             "required": true,
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
         ],
         "responses": {
@@ -4902,9 +4857,9 @@
     },
     "CredentialType": {
       "enum": [
-        "Password",
-        "Hash",
-        "Ticket"
+        "password",
+        "hash",
+        "ticket"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -4953,9 +4908,9 @@
     },
     "HashType": {
       "enum": [
-        "NTLM",
-        "LM",
-        "SHA1"
+        "ntlm",
+        "lm",
+        "shA1"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -4989,8 +4944,8 @@
     },
     "TicketType": {
       "enum": [
-        "RC4",
-        "AES"
+        "rC4",
+        "aes"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5027,10 +4982,10 @@
     },
     "DotNetVersion": {
       "enum": [
-        "Net40",
-        "Net35",
-        "NetCore21",
-        "NetCore30"
+        "net40",
+        "net35",
+        "netCore21",
+        "netCore30"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5040,7 +4995,7 @@
     },
     "ImplantLanguage": {
       "enum": [
-        "CSharp"
+        "cSharp"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5050,12 +5005,12 @@
     },
     "GruntTaskingType": {
       "enum": [
-        "Assembly",
-        "SetOption",
-        "Exit",
-        "Connect",
-        "Disconnect",
-        "Jobs"
+        "assembly",
+        "setOption",
+        "exit",
+        "connect",
+        "disconnect",
+        "jobs"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5140,23 +5095,11 @@
         "code": {
           "type": "string"
         },
-        "taskingType": {
-          "$ref": "#/definitions/GruntTaskingType"
-        },
         "compiled": {
           "type": "boolean"
         },
-        "unsafeCompile": {
-          "type": "boolean"
-        },
-        "tokenTask": {
-          "type": "boolean"
-        },
-        "options": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GruntTaskOption"
-          }
+        "taskingType": {
+          "$ref": "#/definitions/GruntTaskingType"
         },
         "referenceSourceLibraries": {
           "type": "array",
@@ -5178,6 +5121,18 @@
             "$ref": "#/definitions/EmbeddedResource"
           },
           "readOnly": true
+        },
+        "unsafeCompile": {
+          "type": "boolean"
+        },
+        "tokenTask": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GruntTaskOption"
+          }
         }
       }
     },
@@ -5289,11 +5244,11 @@
     },
     "EventLevel": {
       "enum": [
-        "Silent",
-        "Info",
-        "Warning",
-        "Highlight",
-        "Error"
+        "silent",
+        "info",
+        "warning",
+        "highlight",
+        "error"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5303,9 +5258,9 @@
     },
     "EventType": {
       "enum": [
-        "Normal",
-        "Download",
-        "Screenshot"
+        "normal",
+        "download",
+        "screenshot"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5343,8 +5298,8 @@
     },
     "DownloadProgress": {
       "enum": [
-        "Portion",
-        "Complete"
+        "portion",
+        "complete"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5391,9 +5346,9 @@
     },
     "CommunicationType": {
       "enum": [
-        "HTTP",
-        "SMB",
-        "Bridge"
+        "http",
+        "smb",
+        "bridge"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5403,8 +5358,8 @@
     },
     "ImplantDirection": {
       "enum": [
-        "Push",
-        "Pull"
+        "push",
+        "pull"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5473,8 +5428,8 @@
     },
     "ProfileType": {
       "enum": [
-        "HTTP",
-        "Bridge"
+        "http",
+        "bridge"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5505,9 +5460,9 @@
     },
     "ListenerStatus": {
       "enum": [
-        "Uninitialized",
-        "Active",
-        "Stopped"
+        "uninitialized",
+        "active",
+        "stopped"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5634,15 +5589,15 @@
     },
     "GruntStatus": {
       "enum": [
-        "Uninitialized",
-        "Stage0",
-        "Stage1",
-        "Stage2",
-        "Active",
-        "Lost",
-        "Exited",
-        "Disconnected",
-        "Hidden"
+        "uninitialized",
+        "stage0",
+        "stage1",
+        "stage2",
+        "active",
+        "lost",
+        "exited",
+        "disconnected",
+        "hidden"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5652,11 +5607,11 @@
     },
     "IntegrityLevel": {
       "enum": [
-        "Untrusted",
-        "Low",
-        "Medium",
-        "High",
-        "System"
+        "untrusted",
+        "low",
+        "medium",
+        "high",
+        "system"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5688,11 +5643,11 @@
     },
     "GruntTaskingStatus": {
       "enum": [
-        "Uninitialized",
-        "Tasked",
-        "Progressed",
-        "Completed",
-        "Aborted"
+        "uninitialized",
+        "tasked",
+        "progressed",
+        "completed",
+        "aborted"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5955,9 +5910,9 @@
     },
     "IndicatorType": {
       "enum": [
-        "FileIndicator",
-        "NetworkIndicator",
-        "TargetIndicator"
+        "fileIndicator",
+        "networkIndicator",
+        "targetIndicator"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6052,15 +6007,15 @@
     },
     "LauncherType": {
       "enum": [
-        "Wmic",
-        "Regsvr32",
-        "Mshta",
-        "Cscript",
-        "Wscript",
-        "PowerShell",
-        "Binary",
-        "MSBuild",
-        "InstallUtil"
+        "wmic",
+        "regsvr32",
+        "mshta",
+        "cscript",
+        "wscript",
+        "powerShell",
+        "binary",
+        "msBuild",
+        "installUtil"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6070,12 +6025,12 @@
     },
     "OutputKind": {
       "enum": [
-        "ConsoleApplication",
-        "WindowsApplication",
-        "DynamicallyLinkedLibrary",
-        "NetModule",
-        "WindowsRuntimeMetadata",
-        "WindowsRuntimeApplication"
+        "consoleApplication",
+        "windowsApplication",
+        "dynamicallyLinkedLibrary",
+        "netModule",
+        "windowsRuntimeMetadata",
+        "windowsRuntimeApplication"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6485,8 +6440,8 @@
     },
     "ScriptingLanguage": {
       "enum": [
-        "JScript",
-        "VBScript"
+        "jScript",
+        "vbScript"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -7073,5 +7028,10 @@
       "in": "header",
       "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
     }
-  }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
 }

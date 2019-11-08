@@ -17,10 +17,10 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum TicketType
     {
-        [EnumMember(Value = "RC4")]
+        [EnumMember(Value = "rC4")]
         RC4,
-        [EnumMember(Value = "AES")]
-        AES
+        [EnumMember(Value = "aes")]
+        Aes
     }
     internal static class TicketTypeEnumExtension
     {
@@ -34,9 +34,9 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case TicketType.RC4:
-                    return "RC4";
-                case TicketType.AES:
-                    return "AES";
+                    return "rC4";
+                case TicketType.Aes:
+                    return "aes";
             }
             return null;
         }
@@ -45,10 +45,10 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "RC4":
+                case "rC4":
                     return TicketType.RC4;
-                case "AES":
-                    return TicketType.AES;
+                case "aes":
+                    return TicketType.Aes;
             }
             return null;
         }

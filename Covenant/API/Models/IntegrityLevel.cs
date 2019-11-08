@@ -17,15 +17,15 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum IntegrityLevel
     {
-        [EnumMember(Value = "Untrusted")]
+        [EnumMember(Value = "untrusted")]
         Untrusted,
-        [EnumMember(Value = "Low")]
+        [EnumMember(Value = "low")]
         Low,
-        [EnumMember(Value = "Medium")]
+        [EnumMember(Value = "medium")]
         Medium,
-        [EnumMember(Value = "High")]
+        [EnumMember(Value = "high")]
         High,
-        [EnumMember(Value = "System")]
+        [EnumMember(Value = "system")]
         System
     }
     internal static class IntegrityLevelEnumExtension
@@ -40,15 +40,15 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case IntegrityLevel.Untrusted:
-                    return "Untrusted";
+                    return "untrusted";
                 case IntegrityLevel.Low:
-                    return "Low";
+                    return "low";
                 case IntegrityLevel.Medium:
-                    return "Medium";
+                    return "medium";
                 case IntegrityLevel.High:
-                    return "High";
+                    return "high";
                 case IntegrityLevel.System:
-                    return "System";
+                    return "system";
             }
             return null;
         }
@@ -57,15 +57,15 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Untrusted":
+                case "untrusted":
                     return IntegrityLevel.Untrusted;
-                case "Low":
+                case "low":
                     return IntegrityLevel.Low;
-                case "Medium":
+                case "medium":
                     return IntegrityLevel.Medium;
-                case "High":
+                case "high":
                     return IntegrityLevel.High;
-                case "System":
+                case "system":
                     return IntegrityLevel.System;
             }
             return null;

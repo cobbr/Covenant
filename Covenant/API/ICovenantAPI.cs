@@ -674,16 +674,6 @@ namespace Covenant.API
         /// </param>
         Task<HttpOperationResponse> DeleteGruntTaskWithHttpMessagesAsync(int id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <param name='taskname'>
-        /// </param>
-        /// <param name='customHeaders'>
-        /// The headers that will be added to request.
-        /// </param>
-        /// <param name='cancellationToken'>
-        /// The cancellation token.
-        /// </param>
-        Task<HttpOperationResponse<GruntTask>> GetGruntTaskByNameWithHttpMessagesAsync(string taskname, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
-
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
         /// </param>

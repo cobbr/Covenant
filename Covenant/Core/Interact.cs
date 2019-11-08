@@ -111,7 +111,7 @@ namespace Covenant.Core
 
         public async Task<List<string>> GetSuggestions(string GruntName)
         {
-            Grunt grunt = await _context.Grunts.FirstOrDefaultAsync(G => G.Name.Equals(GruntName, StringComparison.OrdinalIgnoreCase));
+            Grunt grunt = await _context.Grunts.FirstOrDefaultAsync(G => G.Name.ToLower() == GruntName.ToLower());
             IEnumerable<GruntTasking> taskings = await _context.GetGruntTaskingsForGrunt(grunt.Id);
             List<string> suggestions = new List<string>();
             foreach (var task in await _context.GetGruntTasks())
@@ -173,7 +173,7 @@ namespace Covenant.Core
                 GruntTask commandTask = null;
                 try
                 {
-                    commandTask = await _context.GetGruntTaskByName(parameters.FirstOrDefault().Value);
+                    commandTask = await _context.GetGruntTaskByName(parameters.FirstOrDefault().Value, grunt.DotNetVersion);
                     if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
                     {
                         parameters = new List<ParsedParameter>
@@ -401,7 +401,7 @@ namespace Covenant.Core
                 toPrint.Append(EliteConsole.PrintFormattedErrorLine("Usage: Exit"));
                 return toPrint.ToString();
             }
-            GruntTask exitTask = await _context.GetGruntTaskByName("Exit");
+            GruntTask exitTask = await _context.GetGruntTaskByName("Exit", grunt.DotNetVersion);
             await _context.CreateGruntTasking(new GruntTasking
             {
                 Id = 0,
@@ -452,7 +452,7 @@ namespace Covenant.Core
             {
                 return EliteConsole.PrintFormattedErrorLine("Usage: Jobs");
             }
-            GruntTask jobsTask = await _context.GetGruntTaskByName("Jobs");
+            GruntTask jobsTask = await _context.GetGruntTaskByName("Jobs", grunt.DotNetVersion);
             await _context.CreateGruntTasking(new GruntTasking
             {
                 Id = 0,

@@ -17,11 +17,11 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum CredentialType
     {
-        [EnumMember(Value = "Password")]
+        [EnumMember(Value = "password")]
         Password,
-        [EnumMember(Value = "Hash")]
+        [EnumMember(Value = "hash")]
         Hash,
-        [EnumMember(Value = "Ticket")]
+        [EnumMember(Value = "ticket")]
         Ticket
     }
     internal static class CredentialTypeEnumExtension
@@ -36,11 +36,11 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case CredentialType.Password:
-                    return "Password";
+                    return "password";
                 case CredentialType.Hash:
-                    return "Hash";
+                    return "hash";
                 case CredentialType.Ticket:
-                    return "Ticket";
+                    return "ticket";
             }
             return null;
         }
@@ -49,11 +49,11 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Password":
+                case "password":
                     return CredentialType.Password;
-                case "Hash":
+                case "hash":
                     return CredentialType.Hash;
-                case "Ticket":
+                case "ticket":
                     return CredentialType.Ticket;
             }
             return null;

@@ -17,23 +17,23 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum LauncherType
     {
-        [EnumMember(Value = "Wmic")]
+        [EnumMember(Value = "wmic")]
         Wmic,
-        [EnumMember(Value = "Regsvr32")]
+        [EnumMember(Value = "regsvr32")]
         Regsvr32,
-        [EnumMember(Value = "Mshta")]
+        [EnumMember(Value = "mshta")]
         Mshta,
-        [EnumMember(Value = "Cscript")]
+        [EnumMember(Value = "cscript")]
         Cscript,
-        [EnumMember(Value = "Wscript")]
+        [EnumMember(Value = "wscript")]
         Wscript,
-        [EnumMember(Value = "PowerShell")]
+        [EnumMember(Value = "powerShell")]
         PowerShell,
-        [EnumMember(Value = "Binary")]
+        [EnumMember(Value = "binary")]
         Binary,
-        [EnumMember(Value = "MSBuild")]
-        MSBuild,
-        [EnumMember(Value = "InstallUtil")]
+        [EnumMember(Value = "msBuild")]
+        MsBuild,
+        [EnumMember(Value = "installUtil")]
         InstallUtil
     }
     internal static class LauncherTypeEnumExtension
@@ -48,23 +48,23 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case LauncherType.Wmic:
-                    return "Wmic";
+                    return "wmic";
                 case LauncherType.Regsvr32:
-                    return "Regsvr32";
+                    return "regsvr32";
                 case LauncherType.Mshta:
-                    return "Mshta";
+                    return "mshta";
                 case LauncherType.Cscript:
-                    return "Cscript";
+                    return "cscript";
                 case LauncherType.Wscript:
-                    return "Wscript";
+                    return "wscript";
                 case LauncherType.PowerShell:
-                    return "PowerShell";
+                    return "powerShell";
                 case LauncherType.Binary:
-                    return "Binary";
-                case LauncherType.MSBuild:
-                    return "MSBuild";
+                    return "binary";
+                case LauncherType.MsBuild:
+                    return "msBuild";
                 case LauncherType.InstallUtil:
-                    return "InstallUtil";
+                    return "installUtil";
             }
             return null;
         }
@@ -73,23 +73,23 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Wmic":
+                case "wmic":
                     return LauncherType.Wmic;
-                case "Regsvr32":
+                case "regsvr32":
                     return LauncherType.Regsvr32;
-                case "Mshta":
+                case "mshta":
                     return LauncherType.Mshta;
-                case "Cscript":
+                case "cscript":
                     return LauncherType.Cscript;
-                case "Wscript":
+                case "wscript":
                     return LauncherType.Wscript;
-                case "PowerShell":
+                case "powerShell":
                     return LauncherType.PowerShell;
-                case "Binary":
+                case "binary":
                     return LauncherType.Binary;
-                case "MSBuild":
-                    return LauncherType.MSBuild;
-                case "InstallUtil":
+                case "msBuild":
+                    return LauncherType.MsBuild;
+                case "installUtil":
                     return LauncherType.InstallUtil;
             }
             return null;

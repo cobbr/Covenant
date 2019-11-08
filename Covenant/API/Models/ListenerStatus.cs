@@ -17,11 +17,11 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ListenerStatus
     {
-        [EnumMember(Value = "Uninitialized")]
+        [EnumMember(Value = "uninitialized")]
         Uninitialized,
-        [EnumMember(Value = "Active")]
+        [EnumMember(Value = "active")]
         Active,
-        [EnumMember(Value = "Stopped")]
+        [EnumMember(Value = "stopped")]
         Stopped
     }
     internal static class ListenerStatusEnumExtension
@@ -36,11 +36,11 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case ListenerStatus.Uninitialized:
-                    return "Uninitialized";
+                    return "uninitialized";
                 case ListenerStatus.Active:
-                    return "Active";
+                    return "active";
                 case ListenerStatus.Stopped:
-                    return "Stopped";
+                    return "stopped";
             }
             return null;
         }
@@ -49,11 +49,11 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Uninitialized":
+                case "uninitialized":
                     return ListenerStatus.Uninitialized;
-                case "Active":
+                case "active":
                     return ListenerStatus.Active;
-                case "Stopped":
+                case "stopped":
                     return ListenerStatus.Stopped;
             }
             return null;

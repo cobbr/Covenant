@@ -17,11 +17,11 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum CommunicationType
     {
-        [EnumMember(Value = "HTTP")]
-        HTTP,
-        [EnumMember(Value = "SMB")]
-        SMB,
-        [EnumMember(Value = "Bridge")]
+        [EnumMember(Value = "http")]
+        Http,
+        [EnumMember(Value = "smb")]
+        Smb,
+        [EnumMember(Value = "bridge")]
         Bridge
     }
     internal static class CommunicationTypeEnumExtension
@@ -35,12 +35,12 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case CommunicationType.HTTP:
-                    return "HTTP";
-                case CommunicationType.SMB:
-                    return "SMB";
+                case CommunicationType.Http:
+                    return "http";
+                case CommunicationType.Smb:
+                    return "smb";
                 case CommunicationType.Bridge:
-                    return "Bridge";
+                    return "bridge";
             }
             return null;
         }
@@ -49,11 +49,11 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "HTTP":
-                    return CommunicationType.HTTP;
-                case "SMB":
-                    return CommunicationType.SMB;
-                case "Bridge":
+                case "http":
+                    return CommunicationType.Http;
+                case "smb":
+                    return CommunicationType.Smb;
+                case "bridge":
                     return CommunicationType.Bridge;
             }
             return null;

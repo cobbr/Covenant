@@ -22,12 +22,12 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the DownloadEvent class.
         /// </summary>
-        /// <param name="progress">Possible values include: 'Portion',
-        /// 'Complete'</param>
-        /// <param name="level">Possible values include: 'Silent', 'Info',
-        /// 'Warning', 'Highlight', 'Error'</param>
-        /// <param name="type">Possible values include: 'Normal', 'Download',
-        /// 'Screenshot'</param>
+        /// <param name="progress">Possible values include: 'portion',
+        /// 'complete'</param>
+        /// <param name="level">Possible values include: 'silent', 'info',
+        /// 'warning', 'highlight', 'error'</param>
+        /// <param name="type">Possible values include: 'normal', 'download',
+        /// 'screenshot'</param>
         public DownloadEvent(string fileName = default(string), string fileContents = default(string), DownloadProgress? progress = default(DownloadProgress?), int? id = default(int?), System.DateTime? time = default(System.DateTime?), string messageHeader = default(string), string messageBody = default(string), EventLevel? level = default(EventLevel?), EventType? type = default(EventType?), string context = default(string))
         {
             FileName = fileName;
@@ -59,7 +59,7 @@ namespace Covenant.API.Models
         public string FileContents { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Portion', 'Complete'
+        /// Gets or sets possible values include: 'portion', 'complete'
         /// </summary>
         [JsonProperty(PropertyName = "progress")]
         public DownloadProgress? Progress { get; set; }
@@ -85,15 +85,15 @@ namespace Covenant.API.Models
         public string MessageBody { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Silent', 'Info', 'Warning',
-        /// 'Highlight', 'Error'
+        /// Gets or sets possible values include: 'silent', 'info', 'warning',
+        /// 'highlight', 'error'
         /// </summary>
         [JsonProperty(PropertyName = "level")]
         public EventLevel? Level { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Normal', 'Download',
-        /// 'Screenshot'
+        /// Gets or sets possible values include: 'normal', 'download',
+        /// 'screenshot'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public EventType? Type { get; set; }

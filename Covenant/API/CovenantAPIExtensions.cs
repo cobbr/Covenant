@@ -1657,32 +1657,6 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='taskname'>
-            /// </param>
-            public static GruntTask GetGruntTaskByName(this ICovenantAPI operations, string taskname)
-            {
-                return operations.GetGruntTaskByNameAsync(taskname).GetAwaiter().GetResult();
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
-            /// <param name='taskname'>
-            /// </param>
-            /// <param name='cancellationToken'>
-            /// The cancellation token.
-            /// </param>
-            public static async Task<GruntTask> GetGruntTaskByNameAsync(this ICovenantAPI operations, string taskname, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                using (var _result = await operations.GetGruntTaskByNameWithHttpMessagesAsync(taskname, null, cancellationToken).ConfigureAwait(false))
-                {
-                    return _result.Body;
-                }
-            }
-
-            /// <param name='operations'>
-            /// The operations group for this extension method.
-            /// </param>
             public static IList<GruntTasking> GetAllGruntTaskings(this ICovenantAPI operations)
             {
                 return operations.GetAllGruntTaskingsAsync().GetAwaiter().GetResult();

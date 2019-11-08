@@ -19,11 +19,13 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
 using Microsoft.IdentityModel.Tokens;
-using Swashbuckle.AspNetCore.SwaggerGen;
+
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 using Covenant.Hubs;
 using Covenant.Core;
@@ -133,6 +135,7 @@ namespace Covenant
             services.AddMvc().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                options.SerializerSettings.Converters.Add(new StringEnumConverter(new CamelCaseNamingStrategy()));
             }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
             services.AddRouting(options => options.LowercaseUrls = true);
             services.AddSwaggerGen(c =>
@@ -141,39 +144,34 @@ namespace Covenant
                 {
                     return desc.RelativePath.StartsWith("api", StringComparison.CurrentCultureIgnoreCase);
                 });
+
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Covenant API", Version = "v0.1" });
                 
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
-                });
-
-                /*
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
                     Scheme = "bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http,
+                    Type = SecuritySchemeType.ApiKey,
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
                 });
+                
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
                         {
-                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
                         },
                         new string[] { }
                     }
                 });
-                */
-                c.DescribeAllEnumsAsStrings();
-                c.UseReferencedDefinitionsForEnums();
+                
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
 
@@ -229,13 +227,14 @@ namespace Covenant
         {
             public void Apply(OpenApiSchema schema, SchemaFilterContext context)
             {
-                if (context.Type.IsEnum)
+                var type = context.ApiModel.Type;
+                if (type.IsEnum)
                 {
                     schema.Extensions.Add(
                         "x-ms-enum",
                         new OpenApiObject
                         {
-                            ["name"] = new OpenApiString(context.Type.Name),
+                            ["name"] = new OpenApiString(type.Name),
                             ["modelAsString"] = new OpenApiBoolean(false)
                         }
                     );

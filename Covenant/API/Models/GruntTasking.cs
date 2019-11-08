@@ -25,10 +25,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTasking class.
         /// </summary>
-        /// <param name="type">Possible values include: 'Assembly',
-        /// 'SetOption', 'Exit', 'Connect', 'Disconnect', 'Jobs'</param>
-        /// <param name="status">Possible values include: 'Uninitialized',
-        /// 'Tasked', 'Progressed', 'Completed', 'Aborted'</param>
+        /// <param name="type">Possible values include: 'assembly',
+        /// 'setOption', 'exit', 'connect', 'disconnect', 'jobs'</param>
+        /// <param name="status">Possible values include: 'uninitialized',
+        /// 'tasked', 'progressed', 'completed', 'aborted'</param>
         public GruntTasking(string name, int gruntId, int gruntCommandId, int? id = default(int?), Grunt grunt = default(Grunt), int? gruntTaskId = default(int?), GruntTask gruntTask = default(GruntTask), GruntTaskingType? type = default(GruntTaskingType?), IList<string> parameters = default(IList<string>), GruntCommand gruntCommand = default(GruntCommand), GruntTaskingStatus? status = default(GruntTaskingStatus?), System.DateTime? taskingTime = default(System.DateTime?), System.DateTime? completionTime = default(System.DateTime?))
         {
             Id = id;
@@ -83,8 +83,8 @@ namespace Covenant.API.Models
         public GruntTask GruntTask { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Assembly', 'SetOption',
-        /// 'Exit', 'Connect', 'Disconnect', 'Jobs'
+        /// Gets or sets possible values include: 'assembly', 'setOption',
+        /// 'exit', 'connect', 'disconnect', 'jobs'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public GruntTaskingType? Type { get; set; }
@@ -105,8 +105,8 @@ namespace Covenant.API.Models
         public GruntCommand GruntCommand { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Uninitialized', 'Tasked',
-        /// 'Progressed', 'Completed', 'Aborted'
+        /// Gets or sets possible values include: 'uninitialized', 'tasked',
+        /// 'progressed', 'completed', 'aborted'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public GruntTaskingStatus? Status { get; set; }

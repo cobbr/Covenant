@@ -130,8 +130,9 @@ namespace Covenant.Core
                 await context.Profiles.AddRangeAsync(bridgeProfiles);
                 await context.SaveChangesAsync();
             }
+            var listeners = context.Listeners.Where(L => L.Status == ListenerStatus.Active);
 
-            foreach (Listener l in context.Listeners.Where(L => L.Status == ListenerStatus.Active))
+            foreach (Listener l in listeners)
             {
                 l.Profile = await context.GetProfile(l.ProfileId);
                 await context.StartListener(l.Id, ListenerCancellationTokens);
@@ -2349,6 +2350,141 @@ namespace Covenant.Core
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "WhoAmI" + ".task")),
                         SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>()
+                    },
+                    new GruntTask
+                    {
+                        Name = "Shell",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute a Shell command.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "Shell" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 121,
+                                Name = "ShellCommand",
+                                Description = "The ShellCommand to execute.",
+                                Value = "whoami",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ShellCmd",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute a Shell command using \"cmd.exe /c\"",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ShellCmd" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 122,
+                                Name = "ShellCommand",
+                                Description = "The ShellCommand to execute.",
+                                Value = "whoami",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "Assembly",
+                        AlternateNames = new List<string>(),
+                        Description = "Execute a dotnet Assembly EntryPoint.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "Assembly" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 123,
+                                Name = "AssemblyName",
+                                Description = "Name of the assembly.",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 124,
+                                Name = "EncodedAssembly",
+                                Description = "The Base64 encoded Assembly bytes.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = false
+                            },
+                            new GruntTaskOption
+                            {
+                                Id = 125,
+                                Name = "Parameters",
+                                Description = "The command-line parameters to pass to the assembly's EntryPoint.",
+                                Value = "",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = "",
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ListDirectory",
+                        AlternateNames = new List<string> { "ls" },
+                        Description = "Get a listing of the current directory.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ListDirectory" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 126,
+                                Name = "Path",
+                                Description = "Directory to list.",
+                                Value = ".",
+                                SuggestedValues = new List<string>(),
+                                Optional = true,
+                                DefaultValue = ".",
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ChangeDirectory",
+                        AlternateNames = new List<string> { "cd" },
+                        Description = "Change the current directory.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ChangeDirectory" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 127,
+                                Name = "Directory",
+                                Description = "Directory to change to.",
+                                Value = ".",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DisplayInCommand = true
+                            }
+                        }
+                    },
+                    new GruntTask
+                    {
+                        Name = "ProcessList",
+                        AlternateNames = new List<string> { "ps" },
+                        Description = "Get a list of currently running processes.",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ProcessList" + ".task")),
+                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        Options = new List<GruntTaskOption> { }
                     }
                     #endregion
                 };

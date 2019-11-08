@@ -134,7 +134,7 @@ namespace Covenant.Models.Listeners
             {
                 Id = profile.Id,
                 Name = profile.Name,
-                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString()),
+                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString(), true),
                 Description = profile.Description,
                 MessageTransform = profile.MessageTransform
             };
@@ -448,7 +448,7 @@ namespace Covenant.Models.Listeners
 						if (targetGrunt != null)
 						{
 							var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
-							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.SMB)
+							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.Smb)
 							{
 								// Get connecting Grunt as egress
 								List<APIModels.GruntTasking> taskings = (await _client.GetAllGruntTaskingsAsync()).ToList();
@@ -475,7 +475,7 @@ namespace Covenant.Models.Listeners
 				if (targetGrunt != null)
 				{
 					var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
-					if (it.CommType == APIModels.CommunicationType.SMB)
+					if (it.CommType == APIModels.CommunicationType.Smb)
 					{
 						egressGrunt = await _client.GetOutboundGruntAsync(targetGrunt.Id ?? default);
 					}

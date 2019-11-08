@@ -22,8 +22,8 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CapturedCredential class.
         /// </summary>
-        /// <param name="type">Possible values include: 'Password', 'Hash',
-        /// 'Ticket'</param>
+        /// <param name="type">Possible values include: 'password', 'hash',
+        /// 'ticket'</param>
         public CapturedCredential(int? id = default(int?), CredentialType? type = default(CredentialType?), string domain = default(string), string username = default(string))
         {
             Id = id;
@@ -44,7 +44,7 @@ namespace Covenant.API.Models
         public int? Id { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Password', 'Hash', 'Ticket'
+        /// Gets or sets possible values include: 'password', 'hash', 'ticket'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public CredentialType? Type { get; set; }

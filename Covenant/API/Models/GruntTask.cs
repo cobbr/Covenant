@@ -25,10 +25,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        /// <param name="language">Possible values include: 'CSharp'</param>
-        /// <param name="taskingType">Possible values include: 'Assembly',
-        /// 'SetOption', 'Exit', 'Connect', 'Disconnect', 'Jobs'</param>
-        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> supportedDotNetVersions = default(IList<DotNetVersion?>), string code = default(string), GruntTaskingType? taskingType = default(GruntTaskingType?), bool? compiled = default(bool?), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>))
+        /// <param name="language">Possible values include: 'cSharp'</param>
+        /// <param name="taskingType">Possible values include: 'assembly',
+        /// 'setOption', 'exit', 'connect', 'disconnect', 'jobs'</param>
+        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> supportedDotNetVersions = default(IList<DotNetVersion?>), string code = default(string), bool? compiled = default(bool?), GruntTaskingType? taskingType = default(GruntTaskingType?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
@@ -38,14 +38,14 @@ namespace Covenant.API.Models
             Language = language;
             SupportedDotNetVersions = supportedDotNetVersions;
             Code = code;
-            TaskingType = taskingType;
             Compiled = compiled;
-            UnsafeCompile = unsafeCompile;
-            TokenTask = tokenTask;
-            Options = options;
+            TaskingType = taskingType;
             ReferenceSourceLibraries = referenceSourceLibraries;
             ReferenceAssemblies = referenceAssemblies;
             EmbeddedResources = embeddedResources;
+            UnsafeCompile = unsafeCompile;
+            TokenTask = tokenTask;
+            Options = options;
             CustomInit();
         }
 
@@ -80,7 +80,7 @@ namespace Covenant.API.Models
         public string Help { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'CSharp'
+        /// Gets or sets possible values include: 'cSharp'
         /// </summary>
         [JsonProperty(PropertyName = "language")]
         public ImplantLanguage? Language { get; set; }
@@ -96,31 +96,16 @@ namespace Covenant.API.Models
         public string Code { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Assembly', 'SetOption',
-        /// 'Exit', 'Connect', 'Disconnect', 'Jobs'
-        /// </summary>
-        [JsonProperty(PropertyName = "taskingType")]
-        public GruntTaskingType? TaskingType { get; set; }
-
-        /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "compiled")]
         public bool? Compiled { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'assembly', 'setOption',
+        /// 'exit', 'connect', 'disconnect', 'jobs'
         /// </summary>
-        [JsonProperty(PropertyName = "unsafeCompile")]
-        public bool? UnsafeCompile { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "tokenTask")]
-        public bool? TokenTask { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "options")]
-        public IList<GruntTaskOption> Options { get; set; }
+        [JsonProperty(PropertyName = "taskingType")]
+        public GruntTaskingType? TaskingType { get; set; }
 
         /// <summary>
         /// </summary>
@@ -136,6 +121,21 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "embeddedResources")]
         public IList<EmbeddedResource> EmbeddedResources { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "unsafeCompile")]
+        public bool? UnsafeCompile { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "tokenTask")]
+        public bool? TokenTask { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "options")]
+        public IList<GruntTaskOption> Options { get; set; }
 
         /// <summary>
         /// Validate the object.

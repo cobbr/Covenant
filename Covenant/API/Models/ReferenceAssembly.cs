@@ -24,8 +24,8 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ReferenceAssembly class.
         /// </summary>
-        /// <param name="dotNetVersion">Possible values include: 'Net40',
-        /// 'Net35', 'NetCore21', 'NetCore30'</param>
+        /// <param name="dotNetVersion">Possible values include: 'net40',
+        /// 'net35', 'netCore21', 'netCore30'</param>
         public ReferenceAssembly(int? id = default(int?), string name = default(string), string location = default(string), DotNetVersion? dotNetVersion = default(DotNetVersion?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<GruntTask> gruntTasks = default(IList<GruntTask>))
         {
             Id = id;
@@ -58,8 +58,8 @@ namespace Covenant.API.Models
         public string Location { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Net40', 'Net35',
-        /// 'NetCore21', 'NetCore30'
+        /// Gets or sets possible values include: 'net40', 'net35',
+        /// 'netCore21', 'netCore30'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion? DotNetVersion { get; set; }

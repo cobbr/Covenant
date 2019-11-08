@@ -57,27 +57,6 @@ namespace Covenant.Controllers
             }
         }
 
-        // GET: api/grunttasks/{taskname}
-        // <summary>
-        // Get a Task by Name
-        // </summary>
-        [HttpGet("{taskname}", Name = "GetGruntTaskByName")]
-        public async Task<ActionResult<GruntTask>> GetGruntTaskByName(string taskname)
-        {
-            try
-            {
-                return await _context.GetGruntTaskByName(taskname);
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
         // POST api/grunttasks
         // <summary>
         // Create a Task

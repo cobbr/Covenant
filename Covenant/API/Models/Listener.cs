@@ -25,8 +25,8 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the Listener class.
         /// </summary>
-        /// <param name="status">Possible values include: 'Uninitialized',
-        /// 'Active', 'Stopped'</param>
+        /// <param name="status">Possible values include: 'uninitialized',
+        /// 'active', 'stopped'</param>
         public Listener(string name, string guid, string description, string bindAddress, int bindPort, IList<string> connectAddresses, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             Id = id;
@@ -113,8 +113,8 @@ namespace Covenant.API.Models
         public ListenerType ListenerType { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Uninitialized', 'Active',
-        /// 'Stopped'
+        /// Gets or sets possible values include: 'uninitialized', 'active',
+        /// 'stopped'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public ListenerStatus Status { get; set; }

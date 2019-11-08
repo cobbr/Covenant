@@ -17,23 +17,23 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum GruntStatus
     {
-        [EnumMember(Value = "Uninitialized")]
+        [EnumMember(Value = "uninitialized")]
         Uninitialized,
-        [EnumMember(Value = "Stage0")]
+        [EnumMember(Value = "stage0")]
         Stage0,
-        [EnumMember(Value = "Stage1")]
+        [EnumMember(Value = "stage1")]
         Stage1,
-        [EnumMember(Value = "Stage2")]
+        [EnumMember(Value = "stage2")]
         Stage2,
-        [EnumMember(Value = "Active")]
+        [EnumMember(Value = "active")]
         Active,
-        [EnumMember(Value = "Lost")]
+        [EnumMember(Value = "lost")]
         Lost,
-        [EnumMember(Value = "Exited")]
+        [EnumMember(Value = "exited")]
         Exited,
-        [EnumMember(Value = "Disconnected")]
+        [EnumMember(Value = "disconnected")]
         Disconnected,
-        [EnumMember(Value = "Hidden")]
+        [EnumMember(Value = "hidden")]
         Hidden
     }
     internal static class GruntStatusEnumExtension
@@ -48,23 +48,23 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case GruntStatus.Uninitialized:
-                    return "Uninitialized";
+                    return "uninitialized";
                 case GruntStatus.Stage0:
-                    return "Stage0";
+                    return "stage0";
                 case GruntStatus.Stage1:
-                    return "Stage1";
+                    return "stage1";
                 case GruntStatus.Stage2:
-                    return "Stage2";
+                    return "stage2";
                 case GruntStatus.Active:
-                    return "Active";
+                    return "active";
                 case GruntStatus.Lost:
-                    return "Lost";
+                    return "lost";
                 case GruntStatus.Exited:
-                    return "Exited";
+                    return "exited";
                 case GruntStatus.Disconnected:
-                    return "Disconnected";
+                    return "disconnected";
                 case GruntStatus.Hidden:
-                    return "Hidden";
+                    return "hidden";
             }
             return null;
         }
@@ -73,23 +73,23 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Uninitialized":
+                case "uninitialized":
                     return GruntStatus.Uninitialized;
-                case "Stage0":
+                case "stage0":
                     return GruntStatus.Stage0;
-                case "Stage1":
+                case "stage1":
                     return GruntStatus.Stage1;
-                case "Stage2":
+                case "stage2":
                     return GruntStatus.Stage2;
-                case "Active":
+                case "active":
                     return GruntStatus.Active;
-                case "Lost":
+                case "lost":
                     return GruntStatus.Lost;
-                case "Exited":
+                case "exited":
                     return GruntStatus.Exited;
-                case "Disconnected":
+                case "disconnected":
                     return GruntStatus.Disconnected;
-                case "Hidden":
+                case "hidden":
                     return GruntStatus.Hidden;
             }
             return null;

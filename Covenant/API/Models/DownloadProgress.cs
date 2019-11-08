@@ -17,9 +17,9 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum DownloadProgress
     {
-        [EnumMember(Value = "Portion")]
+        [EnumMember(Value = "portion")]
         Portion,
-        [EnumMember(Value = "Complete")]
+        [EnumMember(Value = "complete")]
         Complete
     }
     internal static class DownloadProgressEnumExtension
@@ -34,9 +34,9 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case DownloadProgress.Portion:
-                    return "Portion";
+                    return "portion";
                 case DownloadProgress.Complete:
-                    return "Complete";
+                    return "complete";
             }
             return null;
         }
@@ -45,9 +45,9 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Portion":
+                case "portion":
                     return DownloadProgress.Portion;
-                case "Complete":
+                case "complete":
                     return DownloadProgress.Complete;
             }
             return null;

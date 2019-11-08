@@ -304,7 +304,7 @@ namespace Covenant.Models.Listeners
             {
                 Id = profile.Id,
                 Name = profile.Name,
-                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString()),
+                Type = (APIModels.ProfileType)Enum.Parse(typeof(APIModels.ProfileType), profile.Type.ToString(), true),
                 Description = profile.Description,
                 MessageTransform = profile.MessageTransform,
                 HttpGetResponse = profile.HttpGetResponse,

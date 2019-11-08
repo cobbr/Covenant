@@ -22,8 +22,8 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the Profile class.
         /// </summary>
-        /// <param name="type">Possible values include: 'HTTP',
-        /// 'Bridge'</param>
+        /// <param name="type">Possible values include: 'http',
+        /// 'bridge'</param>
         public Profile(int? id = default(int?), string name = default(string), string description = default(string), ProfileType? type = default(ProfileType?), string messageTransform = default(string))
         {
             Id = id;
@@ -55,7 +55,7 @@ namespace Covenant.API.Models
         public string Description { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'HTTP', 'Bridge'
+        /// Gets or sets possible values include: 'http', 'bridge'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public ProfileType? Type { get; set; }

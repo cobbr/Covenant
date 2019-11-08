@@ -17,11 +17,11 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum IndicatorType
     {
-        [EnumMember(Value = "FileIndicator")]
+        [EnumMember(Value = "fileIndicator")]
         FileIndicator,
-        [EnumMember(Value = "NetworkIndicator")]
+        [EnumMember(Value = "networkIndicator")]
         NetworkIndicator,
-        [EnumMember(Value = "TargetIndicator")]
+        [EnumMember(Value = "targetIndicator")]
         TargetIndicator
     }
     internal static class IndicatorTypeEnumExtension
@@ -36,11 +36,11 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case IndicatorType.FileIndicator:
-                    return "FileIndicator";
+                    return "fileIndicator";
                 case IndicatorType.NetworkIndicator:
-                    return "NetworkIndicator";
+                    return "networkIndicator";
                 case IndicatorType.TargetIndicator:
-                    return "TargetIndicator";
+                    return "targetIndicator";
             }
             return null;
         }
@@ -49,11 +49,11 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "FileIndicator":
+                case "fileIndicator":
                     return IndicatorType.FileIndicator;
-                case "NetworkIndicator":
+                case "networkIndicator":
                     return IndicatorType.NetworkIndicator;
-                case "TargetIndicator":
+                case "targetIndicator":
                     return IndicatorType.TargetIndicator;
             }
             return null;

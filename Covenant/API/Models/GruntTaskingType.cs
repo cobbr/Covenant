@@ -17,17 +17,17 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum GruntTaskingType
     {
-        [EnumMember(Value = "Assembly")]
+        [EnumMember(Value = "assembly")]
         Assembly,
-        [EnumMember(Value = "SetOption")]
+        [EnumMember(Value = "setOption")]
         SetOption,
-        [EnumMember(Value = "Exit")]
+        [EnumMember(Value = "exit")]
         Exit,
-        [EnumMember(Value = "Connect")]
+        [EnumMember(Value = "connect")]
         Connect,
-        [EnumMember(Value = "Disconnect")]
+        [EnumMember(Value = "disconnect")]
         Disconnect,
-        [EnumMember(Value = "Jobs")]
+        [EnumMember(Value = "jobs")]
         Jobs
     }
     internal static class GruntTaskingTypeEnumExtension
@@ -42,17 +42,17 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case GruntTaskingType.Assembly:
-                    return "Assembly";
+                    return "assembly";
                 case GruntTaskingType.SetOption:
-                    return "SetOption";
+                    return "setOption";
                 case GruntTaskingType.Exit:
-                    return "Exit";
+                    return "exit";
                 case GruntTaskingType.Connect:
-                    return "Connect";
+                    return "connect";
                 case GruntTaskingType.Disconnect:
-                    return "Disconnect";
+                    return "disconnect";
                 case GruntTaskingType.Jobs:
-                    return "Jobs";
+                    return "jobs";
             }
             return null;
         }
@@ -61,17 +61,17 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "Assembly":
+                case "assembly":
                     return GruntTaskingType.Assembly;
-                case "SetOption":
+                case "setOption":
                     return GruntTaskingType.SetOption;
-                case "Exit":
+                case "exit":
                     return GruntTaskingType.Exit;
-                case "Connect":
+                case "connect":
                     return GruntTaskingType.Connect;
-                case "Disconnect":
+                case "disconnect":
                     return GruntTaskingType.Disconnect;
-                case "Jobs":
+                case "jobs":
                     return GruntTaskingType.Jobs;
             }
             return null;

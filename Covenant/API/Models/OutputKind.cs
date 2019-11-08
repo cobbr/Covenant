@@ -17,17 +17,17 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum OutputKind
     {
-        [EnumMember(Value = "ConsoleApplication")]
+        [EnumMember(Value = "consoleApplication")]
         ConsoleApplication,
-        [EnumMember(Value = "WindowsApplication")]
+        [EnumMember(Value = "windowsApplication")]
         WindowsApplication,
-        [EnumMember(Value = "DynamicallyLinkedLibrary")]
+        [EnumMember(Value = "dynamicallyLinkedLibrary")]
         DynamicallyLinkedLibrary,
-        [EnumMember(Value = "NetModule")]
+        [EnumMember(Value = "netModule")]
         NetModule,
-        [EnumMember(Value = "WindowsRuntimeMetadata")]
+        [EnumMember(Value = "windowsRuntimeMetadata")]
         WindowsRuntimeMetadata,
-        [EnumMember(Value = "WindowsRuntimeApplication")]
+        [EnumMember(Value = "windowsRuntimeApplication")]
         WindowsRuntimeApplication
     }
     internal static class OutputKindEnumExtension
@@ -42,17 +42,17 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case OutputKind.ConsoleApplication:
-                    return "ConsoleApplication";
+                    return "consoleApplication";
                 case OutputKind.WindowsApplication:
-                    return "WindowsApplication";
+                    return "windowsApplication";
                 case OutputKind.DynamicallyLinkedLibrary:
-                    return "DynamicallyLinkedLibrary";
+                    return "dynamicallyLinkedLibrary";
                 case OutputKind.NetModule:
-                    return "NetModule";
+                    return "netModule";
                 case OutputKind.WindowsRuntimeMetadata:
-                    return "WindowsRuntimeMetadata";
+                    return "windowsRuntimeMetadata";
                 case OutputKind.WindowsRuntimeApplication:
-                    return "WindowsRuntimeApplication";
+                    return "windowsRuntimeApplication";
             }
             return null;
         }
@@ -61,17 +61,17 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "ConsoleApplication":
+                case "consoleApplication":
                     return OutputKind.ConsoleApplication;
-                case "WindowsApplication":
+                case "windowsApplication":
                     return OutputKind.WindowsApplication;
-                case "DynamicallyLinkedLibrary":
+                case "dynamicallyLinkedLibrary":
                     return OutputKind.DynamicallyLinkedLibrary;
-                case "NetModule":
+                case "netModule":
                     return OutputKind.NetModule;
-                case "WindowsRuntimeMetadata":
+                case "windowsRuntimeMetadata":
                     return OutputKind.WindowsRuntimeMetadata;
-                case "WindowsRuntimeApplication":
+                case "windowsRuntimeApplication":
                     return OutputKind.WindowsRuntimeApplication;
             }
             return null;
