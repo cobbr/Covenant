@@ -9,6 +9,8 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Identity;
 
 using Covenant.Models;
+using Covenant.Models.Covenant;
+using Covenant.Models.Settings;
 using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
@@ -26,6 +28,7 @@ namespace Covenant.Core
             await InitializeLaunchers(context);
             await InitializeTasks(context);
             await InitializeRoles(roleManager);
+            await InitializeThemes(context);
         }
 
         public async static Task InitializeImplantTemplates(CovenantContext context)
@@ -2527,6 +2530,53 @@ namespace Covenant.Core
                 {
                     IdentityResult roleResult = await roleManager.CreateAsync(new IdentityRole(role));
                 }
+            }
+        }
+
+        public async static Task InitializeThemes(CovenantContext context)
+        { 
+            if (!context.Themes.Any())
+            {
+                var themes = new List<Theme>
+                {
+                    new Theme { Id = 1, Name = "Covenant", Description = "Covenant Standard Theme" },
+                    new Theme { Id = 2, Name = "Dark Theme", Description = "Covenant Dark Theme" }
+                };
+
+                await context.Themes.AddRangeAsync(themes);
+                await context.SaveChangesAsync();
+            }
+
+            if (!context.ThemeOptions.Any())
+            {
+                // standard
+                var stamdardThemeOptions = new List<ThemeOption>
+                {
+                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.BackgroundColor, Value = "", Description = "", DefaultValue = "" }
+                };
+                await context.ThemeOptions.AddRangeAsync(stamdardThemeOptions);
+                // dark
+                var darkThemeOptions = new List<ThemeOption>
+                {
+                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.BackgroundColor, Value = "", Description = "", DefaultValue = "" }
+                };
+                await context.ThemeOptions.AddRangeAsync(darkThemeOptions);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        public async static Task InitializeSettings(CovenantContext context) {
+            if (!context.Settings.Any())
+            {
+                var themes = new List<Setting>
+                {
+                    // default theme settings
+                    new Setting { Title = "Theme", Key = Common.Settings.Themes.Standard,  Value = "1", DefaultValue = null, Description = "Standard Theme" },
+                    new Setting { Title = "Dark Theme", Key = Common.Settings.Themes.Dark, Value = "2", DefaultValue = null, Description = "Dark Theme" }
+                };
+
+                await context.Settings.AddRangeAsync(themes);
+                await context.SaveChangesAsync();
             }
         }
     }
