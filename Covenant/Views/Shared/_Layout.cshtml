@@ -26,6 +26,7 @@
         <link rel="stylesheet" href="~/css/datatables.min.css" />
         <link rel="stylesheet" href="~/css/dashboard.css" />
         <link rel="stylesheet" href="~/css/covenant.css" />
+        <link rel="stylesheet" href="/api/themes/style.css" />
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -41,31 +42,40 @@
         <link rel="stylesheet" href="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.css" />
         <link rel="stylesheet" href="~/css/dashboard.css" />
         <link rel="stylesheet" href="~/css/covenant.css" />
+        <link rel="stylesheet" href="/api/themes/style.css" />
     </environment>
     @RenderSection("Sheets", required: false)
 </head>
-<body>
+<body class="standard">
     @if (SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User))
     {
-        <nav class="navbar navbar-expand navbar-dark sticky-top bg-dark">
-            <a class="navbar-brand ml-3 align-items-center" href="/">
-                <img src="~/images/covenant-white.png" alt="Covenant" height="28" width="101">
-            </a>
-            <ul class="navbar-nav ml-auto">
-                @{
-                    CovenantUser covuser = await UserManager.GetUserAsync(User);
-                }
-                @if (covuser != null)
-                {
-                    <li class="nav-item text-nowrap">
-                        <a class="nav-link" asp-controller="CovenantUser" asp-action="Edit" asp-route-id="@covuser.Id">Welcome, @User.Identity.Name!</a>
-                    </li>
-                    <li class="nav-item text-nowrap">
-                        <a class="nav-link" asp-controller="CovenantUser" asp-action="Logout">Logout</a>
-                    </li>
-                }
-            </ul>
-        </nav>
+    <nav class="navbar navbar-expand navbar-dark sticky-top bg-dark">
+        <a class="navbar-brand ml-3 align-items-center" href="/">
+            <img src="~/images/covenant-white.png" alt="Covenant" height="28" width="101">
+        </a>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item text-nowrap">
+                <div class="switch">
+                    Dark mode:
+                    <span class="inner-switch">OFF</span>
+                </div>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            @{
+                CovenantUser covuser = await UserManager.GetUserAsync(User);
+            }
+            @if (covuser != null)
+            {
+                <li class="nav-item text-nowrap">
+                    <a class="nav-link" asp-controller="CovenantUser" asp-action="Edit" asp-route-id="@covuser.Id">Welcome, @User.Identity.Name!</a>
+                </li>
+                <li class="nav-item text-nowrap">
+                    <a class="nav-link" asp-controller="CovenantUser" asp-action="Logout">Logout</a>
+                </li>
+            }
+        </ul>
+    </nav>
         <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="position: absolute; top: 60px; right: 10px; z-index: 1;" data-delay="15000">
             <div class="toast-header">
                 <strong class="mr-auto">Event</strong>
@@ -80,7 +90,7 @@
         </div>
         <div id="covenant-container" class="container-fluid">
             <div class="d-flex flex-row">
-                <nav class="col-sm-2 bg-light sidebar">
+                <nav class="col-sm-2 sidebar">
                     <div class="sidebar-sticky">
                         <ul class="nav flex-column">
                             <li class="nav-item">
@@ -141,6 +151,12 @@
                                 <a asp-controller="CovenantUser" asp-action="Index" id="nav-users" class="nav-link">
                                     <span data-feather="users"></span>
                                     Users
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Theme" asp-action="Index" id="nav-themes" class="nav-link">
+                                    <span data-feather="eye"></span>
+                                    Themes
                                 </a>
                             </li>
                         </ul>
@@ -214,6 +230,19 @@
                         return console.error(err.toString());
                     });
                 });
+
+            // dark mode switch
+            $( ".inner-switch" ).on("click", function() {
+                if( $( "body" ).hasClass( "dark" )) {
+                    $( "body" ).removeClass("dark");
+                    $( "body").addClass("standard");
+                  $( ".inner-switch" ).text( "OFF" );
+                } else {
+                  $( "body" ).removeClass("standard");
+                  $( "body" ).addClass( "dark" );
+                  $( ".inner-switch" ).text( "ON" );
+                }
+            });
         });
     </script>
 
