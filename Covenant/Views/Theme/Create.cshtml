@@ -1,0 +1,40 @@
+﻿@using Covenant.Models.Covenant
+@model Theme
+@{
+    Layout = "_ThemeLayout";
+    ViewData["Title"] = "Themes";
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create Theme</h1>
+</div>
+
+<form asp-action="Create">
+    <div asp-validation-summary="All"></div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <input asp-for="Name" placeholder="Name" class="form-control">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <input asp-for="Description" type="password" placeholder="Description" class="form-control">
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-row">
+        <h4>Theme Settings</h4>
+    </div>
+    
+    @*<div class="form-row">
+        <div class="form-group col-md-4">
+            <input asp-for="" type="password" placeholder="Confirm Password" class="form-control">
+        </div>
+    </div>*@
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+        </div>
+    </div>
+</form>

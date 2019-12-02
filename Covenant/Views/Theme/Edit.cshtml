@@ -1,0 +1,60 @@
+﻿@using Covenant.Models
+@using Covenant.Models.Covenant
+@using Covenant.Models.Settings
+@using Microsoft.AspNetCore.Identity
+@model Tuple<Theme, ThemeOptionsViewModel>
+@{
+    Layout = "_ThemeLayout";
+    ViewData["Title"] = "EditTheme";
+    IEnumerable<string> RolesSelected = ViewBag.RolesSelected;
+    IEnumerable<string> RolesNotSelected = ViewBag.RolesNotSelected;
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Theme: <span id="user-name" class="text-primary">@Html.DisplayFor(model => model.Item1.Name)</span></h1>
+</div>
+
+<div class="row">
+    <form asp-action="Edit" asp-route-id="@Model.Item1.Id">
+        <div class="col-md border-right">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Item1.Name"></label>
+                <input asp-for="Item1.Name" value="@Model.Item1.Name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label asp-for="Item1.Description"></label>
+                <input asp-for="Item1.Description" value="@Model.Item1.Description" class="form-control">
+            </div>
+        </div>
+        <div class="col-md">
+
+        </div>
+        @if (User.IsInRole("Administrator"))
+        {
+            <button type="submit" class="btn btn-primary"><span data-feather="edit"></span> Save</button>
+        }
+    </form>
+
+    <hr />    
+    <form asp-action="EditThemeOption">
+        <h4>Theme Options</h4>
+        <div class="col-md border-right">
+            <div class="form-group">
+                <label asp-for="Item2.BackgroundColor"></label>
+                <input asp-for="Item2.BackgroundColor" value="@Model.Item2.BackgroundColor" placeholder="@Model.Item2.BackgroundColorPlaceholder" class="form-control">
+            </div>
+        </div>
+        <div class="col-md border-right">
+            <div class="form-group">
+                <label asp-for="Item2.BackgroundColor"></label>
+                <input asp-for="Item2.BackgroundColor" value="@Model.Item2.BackgroundColor" placeholder="@Model.Item2.BackgroundColorPlaceholder" class="form-control">
+            </div>
+        </div>
+    </form>
+</div>
+<form asp-action="Delete" asp-route-id="@Model.Item1.Id">
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="submit" class="btn btn-danger mt-2"><span data-feather="x"></span> Delete</button>
+    }
+</form>

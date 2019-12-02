@@ -1,0 +1,95 @@
+﻿@using System.Linq
+@using Covenant.Models
+@using Covenant.Models.Covenant
+@using Covenant.Models.Settings
+@using Microsoft.AspNetCore.Identity
+@using Common = Covenant.Core.Common;
+@model Tuple<IEnumerable<Setting>, IEnumerable<Theme>>
+@{
+    Layout = "_ThemeLayout";
+    ViewData["Title"] = "Themes";
+    Dictionary<string, string> UserRoleDict = ViewBag.UserRoleDict;
+}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Themes</h1>
+</div>
+
+<form id="edit-settings-theme" asp-action="EditThemeSettings">
+    <div class="row">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="col-md">
+            <div class="form-group">
+                <label for="set-standard-theme">Standard Theme</label><br />
+                <select name="StandardThemeId" id="set-standard-theme" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                    @foreach (var theme in Model.Item2)
+                    {
+                        if (theme.Id.ToString() == (Model.Item1.SingleOrDefault(s => s.Key == Common.Settings.Themes.Standard))?.Value)
+                        {
+                            <option value="@theme.Id" selected>@theme.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@theme.Id">@theme.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md">
+            <div class="form-group">
+                <label for="set-dark-theme">Dark Theme</label><br />
+                <select name="DarkThemeId" id="set-dark-theme" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                    @foreach (var theme in Model.Item2)
+                    {
+                        if (theme.Id.ToString() == (Model.Item1.SingleOrDefault(s => s.Key == Common.Settings.Themes.Dark))?.Value)
+                        {
+                            <option value="@theme.Id" selected>@theme.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@theme.Id">@theme.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="submit" class="btn btn-primary"><span data-feather="edit"></span> Save</button>
+    }
+</form>
+
+<br />
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Themes</h4>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Themes</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Item2)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id">
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </a>
+                    </td>
+                    <td>@item.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (User.IsInRole("Administrator"))
+{
+    <a class="btn btn-primary" asp-action="Create" role="button"><span data-feather="plus"></span> Create</a>
+}
