@@ -24,7 +24,7 @@ namespace Covenant.Core
 
         public static string CovenantDirectory = Assembly.GetExecutingAssembly().Location.Split("bin")[0].Split("Covenant.dll")[0];
         public static string CovenantDataDirectory = CovenantDirectory + "Data" + Path.DirectorySeparatorChar;
-		public static string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
+        public static string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
         public static string CovenantTempDirectory = CovenantDataDirectory + "Temp" + Path.DirectorySeparatorChar;
 
         public static string CovenantProfileDirectory = CovenantDataDirectory + "Profiles" + Path.DirectorySeparatorChar;
@@ -93,6 +93,31 @@ namespace Covenant.Core
             Net40,
             Net35,
             NetCore21
+        }
+
+        public static class Settings {
+            // themes
+            public static class Themes
+            {
+                public static string Standard { get; } = "StandardTheme";
+                public static string Dark { get; } = "DarkTheme";
+
+                public static class Options
+                {
+                    /// <summary>
+                    /// Name: BackgroundColor
+                    /// </summary>
+                    public static string BackgroundColor { get; } = "BackgroundColor";
+                    /// <summary>
+                    /// Name: Sidebar
+                    /// </summary>
+                    public static string Sidebar { get; } = "Sidebar";
+                    /// <summary>
+                    /// Name: TextColor
+                    /// </summary>
+                    public static string TextColor { get; } = "TextColor";
+                }
+            }            
         }
     }
 }
