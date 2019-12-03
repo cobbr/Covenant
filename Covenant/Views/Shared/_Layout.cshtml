@@ -46,7 +46,12 @@
     </environment>
     @RenderSection("Sheets", required: false)
 </head>
-<body class="standard">
+
+@{ 
+    var bodyClass = (SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User) ? "standard" : "");
+}
+
+<body class="@bodyClass">
     @if (SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User))
     {
     <nav class="navbar navbar-expand navbar-dark sticky-top bg-dark">
@@ -177,41 +182,43 @@
         await Html.RenderPartialAsync("../CovenantUser/_LoginPartial", new CovenantUserRegister());
         IgnoreBody();
     }
-    <environment include="Development">
-        <script src="~/js/jquery.min.js"></script>
-        <script src="~/js/popper.min.js"></script>
-        <script src="~/js/bootstrap.min.js"></script>
-        <script src="~/js/moment.min.js"></script>
-        <script src="~/js/feather.min.js"></script>
-        <script>feather.replace();</script>
-        <script src="~/lib/signalr/dist/browser/signalr.js"></script>
-        <script src="~/js/datatables.min.js"></script>
-        <script src="~/js/bootstrap-select.min.js"></script>
-        <script src="~/js/bootstrap-multiselect.js"></script>
-    </environment>
-    <environment exclude="Development">
-        <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-                asp-fallback-src="~/js/jquery.min.js"
-                asp-fallback-test="window.jQuery"
-                crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-                integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-                crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-                asp-fallback-src="~/js/bootstrap.min.js"
-                asp-fallback-test="window.jQuery && window.jQuery.fn && window.JQuery.fn.modal"
-                integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-                crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"
-                type="text/javascript"></script>
-        <script src="~/js/feather.min.js"></script>
-        <script>feather.replace();</script>
-        <script src="~/lib/signalr/dist/browser/signalr.js"></script>
-        <script src="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.js"
-                type="text/javascript"></script>
-        <script src="~/js/bootstrap-multiselect.js"></script>
-        <script src="~/js/bootstrap-select.min.js"></script>
-    </environment>
+<environment include="Development">
+    <script src="~/js/jquery.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script src="~/js/moment.min.js"></script>
+    <script src="~/js/feather.min.js"></script>
+    <script>feather.replace();</script>
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/datatables.min.js"></script>
+    <script src="~/js/bootstrap-select.min.js"></script>
+    <script src="~/js/bootstrap-multiselect.js"></script>
+    <script src="~/js/cookies.js"></script>
+</environment>
+<environment exclude="Development">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            asp-fallback-src="~/js/jquery.min.js"
+            asp-fallback-test="window.jQuery"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            asp-fallback-src="~/js/bootstrap.min.js"
+            asp-fallback-test="window.jQuery && window.jQuery.fn && window.JQuery.fn.modal"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"
+            type="text/javascript"></script>
+    <script src="~/js/feather.min.js"></script>
+    <script>feather.replace();</script>
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script src="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.js"
+            type="text/javascript"></script>
+    <script src="~/js/bootstrap-multiselect.js"></script>
+    <script src="~/js/bootstrap-select.min.js"></script>
+    <script src="~/js/cookies.js"></script>
+</environment>
     <script type="text/javascript">
         $(document).ready(function () {
             var displayEvent = function (event) {
@@ -232,15 +239,31 @@
                 });
 
             // dark mode switch
-            $( ".inner-switch" ).on("click", function() {
-                if( $( "body" ).hasClass( "dark" )) {
-                    $( "body" ).removeClass("dark");
-                    $( "body").addClass("standard");
-                  $( ".inner-switch" ).text( "OFF" );
+            var setTheme = function (theme) {
+                if (theme === 'dark') {
+                    // dark
+                    $( "body" ).removeClass("standard");
+                    $( "body" ).addClass( "dark" );
+                    $(".inner-switch").text("ON");
+                    setCookie('Theme', 'dark', 30);                    
                 } else {
-                  $( "body" ).removeClass("standard");
-                  $( "body" ).addClass( "dark" );
-                  $( ".inner-switch" ).text( "ON" );
+                    $("body").removeClass("dark");
+                    $("body").addClass("standard");
+                    $(".inner-switch").text("OFF");
+                    setCookie('Theme', 'standard', 30);
+                }
+            };
+
+            currentTheme = getCookie('Theme');
+            setTheme(currentTheme);
+            
+            $( ".inner-switch" ).on("click", function() {
+                if ($("body").hasClass("dark")) {
+                    // standard
+                    setTheme('standard');
+                } else {
+                    // dark mode
+                    setTheme('dark');
                 }
             });
         });
