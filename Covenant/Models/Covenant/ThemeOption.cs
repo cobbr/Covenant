@@ -15,15 +15,14 @@ namespace Covenant.Models.Covenant
 {
     public class ThemeOption
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        [Key]
         [Required]
         public string Name { get; set; }
         [Required]
         public string Value { get; set; }
         public string DefaultValue { get; set; }
         public string Description { get; set; }
-
+        [Key]
         [Required]
         public int ThemeId { get; set; }
         public Theme Theme { get; set; }
