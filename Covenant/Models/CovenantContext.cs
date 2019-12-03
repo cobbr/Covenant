@@ -173,10 +173,11 @@ namespace Covenant.Models
                 .HasOne(gtrsl => gtrsl.ReferenceSourceLibrary)
                 .WithMany("GruntTaskReferenceSourceLibraries");
 
-            //builder.Entity<ThemeOption>()
-            //    .HasOne(TO => TO.Theme)
-            //    .HasForeignKey<Theme>(TO => TO.ThemeId);
-
+            builder.Entity<ThemeOption>()
+                .HasKey(t => new { t.Name, t.ThemeId });
+            builder.Entity<ThemeOption>()
+                .HasOne(t => t.Theme);
+            
             builder.Entity<Listener>().Property(L => L.ConnectAddresses).HasConversion(
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
@@ -2800,10 +2801,19 @@ public static class Task
 
             // background
             string backgroundColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.BackgroundColor);
-            string sidebarColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.Sidebar);
+            string sidebarColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.SidebarColor);
 
             // text elements
             string textColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.TextColor);
+            string textHeaderColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.TextHeaderColor);
+            string textLinksColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.TextLinksColor);
+            string textLinksHoverColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.TextLinksHoverColor);
+            string navLinksColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.NavLinksColor);
+            string navLinksColorSelected = theme.Options?.GetValueByName(Common.Settings.Themes.Options.NavLinksColorSelected);
+            string navLinksColorHover = theme.Options?.GetValueByName(Common.Settings.Themes.Options.NavLinksColorHover);
+            string buttonDefaultColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.ButtonDefaultColor);
+            string buttonPrimaryColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.ButtonPrimaryColor);
+            string buttonDangerColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.ButtonDangerColor);
 
             tempCss = $@"
 body{themeClass} {{
@@ -2813,6 +2823,14 @@ body{themeClass} {{
 
 {themeClass} .sidebar {{
     {buildCssAttribute("background-color", sidebarColor)}
+}}
+
+{themeClass} .sidebar .nav-link {{
+    {buildCssAttribute("color", navLinksColor)}
+}}
+
+{themeClass} .table {{
+    {buildCssAttribute("color", textColor)}
 }}
 ";
             css.AppendLine(tempCss);
