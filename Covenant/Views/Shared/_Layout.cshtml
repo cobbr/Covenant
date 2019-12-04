@@ -49,6 +49,7 @@
 
 @{ 
     var bodyClass = (SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User) ? "standard" : "");
+    var signedIn = (SignInManager.UserManager.Users.Any() && SignInManager.IsSignedIn(User) ? 1 : 0);
 }
 
 <body class="@bodyClass">
@@ -228,7 +229,6 @@
             }
 
             var connection = new signalR.HubConnectionBuilder().withUrl("/eventHub").build();
-
             connection.on("ReceiveEvent", displayEvent);
 
             connection.start()
@@ -246,16 +246,14 @@
                     $( "body" ).addClass( "dark" );
                     $(".inner-switch").text("ON");
                     setCookie('Theme', 'dark', 30);                    
-                } else {
+                } else if (theme === 'standard') {
+                    // standard
                     $("body").removeClass("dark");
                     $("body").addClass("standard");
                     $(".inner-switch").text("OFF");
                     setCookie('Theme', 'standard', 30);
                 }
             };
-
-            currentTheme = getCookie('Theme');
-            setTheme(currentTheme);
             
             $( ".inner-switch" ).on("click", function() {
                 if ($("body").hasClass("dark")) {
@@ -266,7 +264,14 @@
                     setTheme('dark');
                 }
             });
-        });
+
+            var signedIn = @signedIn;
+            if (signedIn === 1) {
+                currentTheme = getCookie('Theme');
+                setTheme(currentTheme);
+            }
+            
+            });
     </script>
 
     @RenderSection("Scripts", required: false)
