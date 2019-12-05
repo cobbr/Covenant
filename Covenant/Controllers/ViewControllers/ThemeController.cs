@@ -65,11 +65,12 @@ namespace Covenant.Controllers.ViewControllers
             try
             {
                 Theme theme = await _context.GetTheme(id);
-                ThemeOptionsViewModel themeOptions = new ThemeOptionsViewModel(theme.Options);
+                ThemeOptionsViewModel themeOptions = new ThemeOptionsViewModel(theme.Id, theme.Options);
                 return View(Tuple.Create(theme, themeOptions));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
+                ModelState.AddModelError(string.Empty, e.Message);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -80,14 +81,13 @@ namespace Covenant.Controllers.ViewControllers
         {
             try
             {
-                //CovenantUser user = await _context.GetUserByUsername(login.UserName);
-                //await _context.EditUser(_userManager, user, login);
+                await _context.EditTheme(theme);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
+                ModelState.AddModelError(string.Empty, e.Message);
                 return RedirectToAction(nameof(Index));
-                //return View(new CovenantUserLogin { Id = login.Id, UserName = login.UserName, Password = "12345678" });
             }
         }
 
@@ -99,6 +99,22 @@ namespace Covenant.Controllers.ViewControllers
             {
                 await _context.ChangeSettingValue(Common.Settings.Themes.Standard, settings.StandardThemeId);
                 await _context.ChangeSettingValue(Common.Settings.Themes.Dark, settings.DarkThemeId);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [Authorize(Policy = "RequireAdministratorRole")]
+        [HttpPost]
+        public async Task<IActionResult> EditThemeOptions(ThemeOptionsViewModel themeOptions)
+        {
+            try
+            {
+                await _context.SaveThemeOptions(themeOptions);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

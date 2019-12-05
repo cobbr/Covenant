@@ -8,51 +8,102 @@
     ViewData["Title"] = "EditTheme";
     IEnumerable<string> RolesSelected = ViewBag.RolesSelected;
     IEnumerable<string> RolesNotSelected = ViewBag.RolesNotSelected;
+
+    ThemeOptionsViewModel themeOptions = Model.Item2 as ThemeOptionsViewModel;
 }
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Theme: <span id="user-name" class="text-primary">@Html.DisplayFor(model => model.Item1.Name)</span></h1>
 </div>
 
-<div class="row">
-    <form asp-action="Edit" asp-route-id="@Model.Item1.Id">
-        <div class="col-md border-right">
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Item1.Name"></label>
-                <input asp-for="Item1.Name" value="@Model.Item1.Name" class="form-control">
-            </div>
-            <div class="form-group">
-                <label asp-for="Item1.Description"></label>
-                <input asp-for="Item1.Description" value="@Model.Item1.Description" class="form-control">
-            </div>
+<form asp-action="Edit" asp-route-id="@Model.Item1.Id">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label asp-for="Item1.Name"></label>
+            <input asp-for="Item1.Name" name="Name" value="@Model.Item1.Name" class="form-control">
         </div>
-        <div class="col-md">
+        <div class="form-group col-md-6">
+            <label asp-for="Item1.Description"></label>
+            <input asp-for="Item1.Description" name="Description" value="@Model.Item1.Description" class="form-control">
+        </div>
+    </div>
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="submit" class="btn btn-primary"><span data-feather="edit"></span> Save</button>
+    }
+</form>
 
-        </div>
-        @if (User.IsInRole("Administrator"))
-        {
-            <button type="submit" class="btn btn-primary"><span data-feather="edit"></span> Save</button>
-        }
-    </form>
+<hr />
 
-    <hr />    
-    <form asp-action="EditThemeOption">
-        <h4>Theme Options</h4>
-        <div class="col-md border-right">
-            <div class="form-group">
-                <label asp-for="Item2.BackgroundColor"></label>
-                <input asp-for="Item2.BackgroundColor" value="@Model.Item2.BackgroundColor" placeholder="@Model.Item2.BackgroundColorPlaceholder" class="form-control">
-            </div>
+<form asp-action="EditThemeOptions" asp-route-id="@Model.Item2.ThemeId">
+    <h4>Theme Options</h4>
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input asp-for="@Model.Item2.ThemeId" name="ThemeId" value="@Model.Item2.ThemeId" type="hidden">
+    <h5>Background Colors</h5>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label asp-for="@themeOptions.BackgroundColor"></label>
+            <input asp-for="@themeOptions.BackgroundColor" name="BackgroundColor" value="@themeOptions.BackgroundColor" placeholder="@themeOptions.BackgroundColorPlaceholder" class="form-control">
         </div>
-        <div class="col-md border-right">
-            <div class="form-group">
-                <label asp-for="Item2.BackgroundColor"></label>
-                <input asp-for="Item2.BackgroundColor" value="@Model.Item2.BackgroundColor" placeholder="@Model.Item2.BackgroundColorPlaceholder" class="form-control">
-            </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.SidebarColor"></label>
+            <input asp-for="Item2.SidebarColor" name="SidebarColor" value="@Model.Item2.SidebarColor" placeholder="@Model.Item2.SidebarColorPlaceholder" class="form-control">
         </div>
-    </form>
-</div>
+    </div>
+
+    <h5>Navigation Colors</h5>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.TextHeaderColor"></label>
+            <input asp-for="Item2.TextHeaderColor" name="TextHeaderColor" value="@Model.Item2.TextHeaderColor" placeholder="@Model.Item2.TextHeaderColor" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.NavLinksColor"></label>
+            <input asp-for="Item2.NavLinksColor" name="NavLinksColor" value="@Model.Item2.NavLinksColor" placeholder="@Model.Item2.NavLinksColor" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.NavLinksColorSelected"></label>
+            <input asp-for="Item2.NavLinksColorSelected" name="NavLinksColorSelected" value="@Model.Item2.NavLinksColorSelected" placeholder="@Model.Item2.NavLinksColorSelected" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.NavLinksColorHover"></label>
+            <input asp-for="Item2.NavLinksColorHover" name="NavLinksColorHover" value="@Model.Item2.NavLinksColorHover" placeholder="@Model.Item2.NavLinksColorHover" class="form-control">
+        </div>
+    </div>
+
+    <h5>Text Colors</h5>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.TextColor"></label>
+            <input asp-for="Item2.TextColor" name="TextColor" value="@Model.Item2.TextColor" placeholder="@Model.Item2.TextColor" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.TextLinksColor"></label>
+            <input asp-for="Item2.TextLinksColor" name="TextLinksColor" value="@Model.Item2.TextLinksColor" placeholder="@Model.Item2.TextLinksColor" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Item2.TextLinksHoverColor"></label>
+            <input asp-for="Item2.TextLinksHoverColor" name="TextLinksHoverColor" value="@Model.Item2.TextLinksHoverColor" placeholder="@Model.Item2.TextLinksHoverColor" class="form-control">
+        </div>
+    </div>
+
+    <h5>Custom CSS</h5>
+    <p>Tags should start with either ".standard" or ".dark".</p>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label asp-for="Item2.CustomCss"></label>
+            <textarea asp-for="Item2.CustomCss" name="CustomCss" value="@Model.Item2.CustomCss" placeholder="@Model.Item2.CustomCss" class="form-control" rows="8"></textarea>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="submit" class="btn btn-primary"><span data-feather="edit"></span> Save</button>
+    }
+</form>
+
 <form asp-action="Delete" asp-route-id="@Model.Item1.Id">
+    <div asp-validation-summary="All" class="text-danger"></div>
     @if (User.IsInRole("Administrator"))
     {
         <button type="submit" class="btn btn-danger mt-2"><span data-feather="x"></span> Delete</button>

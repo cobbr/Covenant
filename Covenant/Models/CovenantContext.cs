@@ -2815,6 +2815,9 @@ public static class Task
             string buttonPrimaryColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.ButtonPrimaryColor);
             string buttonDangerColor = theme.Options?.GetValueByName(Common.Settings.Themes.Options.ButtonDangerColor);
 
+            // custom css
+            string customCss = theme.Options?.GetValueByName(Common.Settings.Themes.Options.CustomCss);
+
             tempCss = $@"
 body{themeClass} {{
     {buildCssAttribute("background-color", backgroundColor)}
@@ -2832,25 +2835,29 @@ body{themeClass} {{
 {themeClass} .table {{
     {buildCssAttribute("color", textColor)}
 }}
+
+{themeClass} .table-hover tbody tr:hover {{
+    {buildCssAttribute("color", textColor)}    
+}}
+
+{{customCss}}
 ";
+
+            //background-color: rgba(0,0,0,.075);
+
             css.AppendLine(tempCss);
 
             return css.ToString();
         }
 
-        public async Task<Theme> CreateTheme(Theme theme, CovenantUser currentUser)
+        public async Task<Theme> CreateTheme(Theme theme)
         {
-            //// TODO: check if this is current user or admin
-            //if (!await this.IsAdmin(currentUser))
-            //{
-            //    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
-            //}
             await this.Themes.AddAsync(theme);
             await this.SaveChangesAsync();
             return await this.GetTheme(theme.Id);
         }
 
-        public async Task<Theme> EditTheme(Theme theme, CovenantUser currentUser)
+        public async Task<Theme> EditTheme(Theme theme)
         {
             Theme matchingTheme = await this.GetTheme(theme.Id);
             matchingTheme.Description = theme.Description;
@@ -2864,6 +2871,34 @@ body{themeClass} {{
         {
             Profile profile = await this.GetProfile(id);
             this.Profiles.Remove(profile);
+            await this.SaveChangesAsync();
+        } 
+
+        public async Task SaveThemeOptions(ThemeOptionsViewModel themeOptions)
+        {
+            Func<int, string, string, Task> update = async (int themeId, string name, string value) =>
+            {
+                ThemeOption option = await this.ThemeOptions.SingleOrDefaultAsync(t => t.ThemeId == themeId && t.Name == name);
+                if (option != null)
+                {
+                    // update
+                    option.Value = value;
+                } else
+                {
+                    // create 
+                    await this.ThemeOptions.AddAsync(new ThemeOption() { ThemeId = themeId, Name = name, Value = value });
+                }
+            };
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.BackgroundColor, themeOptions.BackgroundColor);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.SidebarColor, themeOptions.SidebarColor);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.TextColor, themeOptions.TextColor);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.TextHeaderColor, themeOptions.TextHeaderColor);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.TextLinksColor, themeOptions.TextLinksColor);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.TextLinksHoverColor, themeOptions.TextLinksHoverColor);            
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.NavLinksColor, themeOptions.NavLinksColor);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.NavLinksColorSelected, themeOptions.NavLinksColorSelected);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.NavLinksColorHover, themeOptions.NavLinksColorHover);
+            await update(themeOptions.ThemeId, Common.Settings.Themes.Options.CustomCss, themeOptions.CustomCss);
             await this.SaveChangesAsync();
         }
         #endregion
