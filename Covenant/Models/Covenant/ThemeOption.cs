@@ -20,7 +20,6 @@ namespace Covenant.Models.Covenant
         public string Name { get; set; }
         [Required]
         public string Value { get; set; }
-        public string DefaultValue { get; set; }
         public string Description { get; set; }
         [Key]
         [Required]
