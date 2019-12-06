@@ -4134,8 +4134,15 @@ body{themeClass} {{
         public async Task<Setting> ChangeSettingValue(string key, string value)
         {
             Setting setting = await GetSetting(key);
-            setting.Value = value;
-            this.Update(setting);
+            if (setting == null)
+            {
+                setting = new Setting() { Key = key, Value = value };
+                this.Settings.Add(setting);
+            } else
+            {
+                setting.Value = value;
+                this.Update(setting);
+            }            
             await this.SaveChangesAsync();
             return await this.GetSetting(setting.Key);
         }

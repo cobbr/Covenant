@@ -2547,6 +2547,20 @@ namespace Covenant.Core
                 await context.SaveChangesAsync();
             }
 
+            if (!context.Settings.Any(s => s.Key == Common.Settings.Themes.Standard))
+            {
+                var setting = new Setting() { Key = Common.Settings.Themes.Standard, Value = "1", Title = "Standard Theme", Description = "Standard Theme" };
+                context.Settings.Add(setting);
+                await context.SaveChangesAsync();
+            }
+
+            if (!context.Settings.Any(s => s.Key == Common.Settings.Themes.Dark))
+            {
+                var setting = new Setting() { Key = Common.Settings.Themes.Dark, Value = "2", Title = "Dark Theme", Description = "Dark Theme" };
+                context.Settings.Add(setting);
+                await context.SaveChangesAsync();
+            }
+
             if (!context.ThemeOptions.Any())
             {
                 // standard
@@ -2559,10 +2573,10 @@ namespace Covenant.Core
                     new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.TextLinksColor, Value = "#007bff", Description = "Text Links" },
                     new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.NavLinksColor, Value = "#333333", Description = "Navigation Links Color" },
                     new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.NavLinksColorSelected, Value = "#ffffff", Description = "Navigation Links Color Selected" },
-                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.NavLinksColorHover, Value = "", Description = "Navigation Links Color Hover" },
-                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.ButtonDefaultColor, Value = "", Description = "Button Default Color" },
-                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.ButtonPrimaryColor, Value = "", Description = "Button Primary Color" },
-                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.ButtonDangerColor, Value = "", Description = "Button Danger Color" },
+                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.NavLinksColorHover, Value = "#333333", Description = "Navigation Links Color Hover" },
+                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.ButtonDefaultColor, Value = "#333333", Description = "Button Default Color" },
+                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.ButtonPrimaryColor, Value = "#333333", Description = "Button Primary Color" },
+                    new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.ButtonDangerColor, Value = "#333333", Description = "Button Danger Color" },
                     new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.NavLinksIconColor, Value = "#333333", Description = "Navigation Links Icon Color" },
                     new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.TextLinksHoverColor, Value = "#212529", Description = "Text Links Hover Color" },
                     new ThemeOption { ThemeId = 1, Name = Common.Settings.Themes.Options.CustomCss, Value = "", Description = "Custom CSS" }
@@ -2577,11 +2591,11 @@ namespace Covenant.Core
                     new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.TextHeaderColor, Value = "#e6e6e6", Description = "Header Color" },
                     new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.TextLinksColor, Value = "#757475", Description = "Text Links" },
                     new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.NavLinksColor, Value = "#e6e6e6", Description = "Navigation Links Color" },
-                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.NavLinksColorSelected, Value = "", Description = "Navigation Links Color Selected" },
-                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.NavLinksColorHover, Value = "", Description = "Navigation Links Color Hover" },
-                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.ButtonDefaultColor, Value = "", Description = "Button Default Color" },
-                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.ButtonPrimaryColor, Value = "", Description = "Button Primary Color" },
-                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.ButtonDangerColor, Value = "", Description = "Button Danger Color" },
+                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.NavLinksColorSelected, Value = "#333333", Description = "Navigation Links Color Selected" },
+                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.NavLinksColorHover, Value = "#333333", Description = "Navigation Links Color Hover" },
+                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.ButtonDefaultColor, Value = "#333333", Description = "Button Default Color" },
+                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.ButtonPrimaryColor, Value = "#333333", Description = "Button Primary Color" },
+                    new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.ButtonDangerColor, Value = "#333333", Description = "Button Danger Color" },
                     new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.NavLinksIconColor, Value = "#333333", Description = "Navigation Links Icon Color" },
                     new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.TextLinksHoverColor, Value = "#4b4b4b", Description = "Text Links Hover Color" },
                     new ThemeOption { ThemeId = 2, Name = Common.Settings.Themes.Options.CustomCss, Value = "", Description = "Custom CSS" }
