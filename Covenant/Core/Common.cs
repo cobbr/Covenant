@@ -133,6 +133,10 @@ namespace Covenant.Core
                     /// </summary>
                     public static string NavLinksColor { get; } = "NavLinksColor";
                     /// <summary>
+                    /// Name: NavLinksIconColor
+                    /// </summary>
+                    public static string NavLinksIconColor { get; } = "NavLinksIconColor";
+                    /// <summary>
                     /// Name: NavLinksColorSelected
                     /// </summary>
                     public static string NavLinksColorSelected { get; } = "NavLinksColorSelected";
