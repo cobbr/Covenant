@@ -105,15 +105,15 @@ namespace Covenant.Models.Covenant
         {
             List<ThemeOption> options = new List<ThemeOption>();
             options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.BackgroundColor, Value = BackgroundColor });
-            //SidebarColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.SidebarColor)?.Value;
-            //TextColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextColor)?.Value;
-            //TextHeaderColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextHeaderColor)?.Value;
-            //TextLinksColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextLinksColor)?.Value;
-            //TextLinksHoverColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextLinksHoverColor)?.Value;
-            //NavLinksColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.NavLinksColor)?.Value;
-            //NavLinksColorSelected = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.NavLinksColorSelected)?.Value;
-            //NavLinksColorHover = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.NavLinksColorHover)?.Value;
-            //CustomCss = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.CustomCss)?.Value;
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.SidebarColor, Value = SidebarColor });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.TextColor, Value = TextColor });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.TextHeaderColor, Value = TextHeaderColor });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.TextLinksColor, Value = TextLinksColor });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.TextLinksHoverColor, Value = TextLinksHoverColor });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.NavLinksColor, Value = NavLinksColor });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.NavLinksColorSelected, Value = NavLinksColorSelected });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.NavLinksColorHover, Value = NavLinksColorHover });
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.CustomCss, Value = CustomCss });
             return options;
         }
     }
