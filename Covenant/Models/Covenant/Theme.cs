@@ -31,8 +31,21 @@ namespace Covenant.Models.Covenant
 
         public Theme()
         {
-
+            Options = new List<ThemeOption>();
         }
+    }
+
+    public class ThemeOption
+    {
+        [Key]
+        [Required]
+        public int ThemeId { get; set; }
+        [Key]
+        [Required]
+        public string Name { get; set; }
+        public string Value { get; set; }
+        public string Description { get; set; }
+        public Theme Theme { get; set; }
     }
 
     public class ThemeViewModel
@@ -54,7 +67,7 @@ namespace Covenant.Models.Covenant
 
     public class ThemeOptionsViewModel
     {
-        [Required]
+        [Required]        
         public int ThemeId { get; set; }
         [Required]
         public string BackgroundColor { get; set; }
@@ -115,6 +128,14 @@ namespace Covenant.Models.Covenant
             options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.NavLinksColorHover, Value = NavLinksColorHover });
             options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.CustomCss, Value = CustomCss });
             return options;
+        }
+    }
+
+    public static class ThemeOptionExtension
+    {
+        public static string GetValueByName(this IEnumerable<ThemeOption> themeOptions, string name)
+        {
+            return themeOptions.SingleOrDefault(to => to.Name == name)?.Value;
         }
     }
 }
