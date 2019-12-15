@@ -45,7 +45,7 @@ namespace Covenant.Controllers.ViewControllers
 
         // POST: /theme/create
         [HttpPost]
-        public async Task<IActionResult> Create(Theme theme)
+        public async Task<IActionResult> Create(ThemeViewModel vm)
         {
             try
             {
@@ -63,10 +63,10 @@ namespace Covenant.Controllers.ViewControllers
         public async Task<IActionResult> Edit(int id)
         {
             try
-            {
+            {                
                 Theme theme = await _context.GetTheme(id);
                 ThemeOptionsViewModel themeOptions = new ThemeOptionsViewModel(theme.Id, theme.Options);
-                return View(Tuple.Create(theme, themeOptions));
+                return View(new ThemeViewModel(theme, themeOptions));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -113,7 +113,7 @@ namespace Covenant.Controllers.ViewControllers
         public async Task<IActionResult> EditThemeOptions(ThemeOptionsViewModel themeOptions)
         {
             try
-            {
+            { 
                 await _context.SaveThemeOptions(themeOptions);
                 return RedirectToAction(nameof(Index));
             }
@@ -136,7 +136,7 @@ namespace Covenant.Controllers.ViewControllers
                     Theme theme = await _context.GetTheme(id);
                     return View(nameof(Edit), theme);
                 }
-                //await _context.DeleteTheme(id);
+                await _context.DeleteTheme(id);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
