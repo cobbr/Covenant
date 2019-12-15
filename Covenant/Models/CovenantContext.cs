@@ -95,13 +95,16 @@ namespace Covenant.Models
             builder.Entity<ScreenshotEvent>().ToTable("ScreenshotEvent");
 
             builder.Entity<Theme>().ToTable("Themes");
-            builder.Entity<ThemeOption>().ToTable("ThemeOptions");
+            builder.Entity<Setting>().ToTable("Settings");
 
             builder.Entity<FileIndicator>().ToTable("FileIndicator");
             builder.Entity<NetworkIndicator>().ToTable("NetworkIndicator");
             builder.Entity<TargetIndicator>().ToTable("TargetIndicator");
-
-            builder.Entity<Setting>().ToTable("Settings");
+            
+            builder.Entity<ThemeOption>()
+                .HasKey(t => new { t.Name, t.ThemeId });
+            builder.Entity<ThemeOption>()
+                .HasOne(t => t.Theme);
 
             builder.Entity<Grunt>()
                 .HasOne(G => G.ImplantTemplate)
@@ -173,11 +176,8 @@ namespace Covenant.Models
                 .HasOne(gtrsl => gtrsl.ReferenceSourceLibrary)
                 .WithMany("GruntTaskReferenceSourceLibraries");
 
-            builder.Entity<ThemeOption>()
-                .HasKey(t => new { t.Name, t.ThemeId });
-            builder.Entity<ThemeOption>()
-                .HasOne(t => t.Theme);
-            
+
+
             builder.Entity<Listener>().Property(L => L.ConnectAddresses).HasConversion(
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
