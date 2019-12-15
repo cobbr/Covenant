@@ -35,10 +35,25 @@ namespace Covenant.Models.Covenant
         }
     }
 
+    public class ThemeViewModel
+    {
+        public Theme Theme { get; set; }
+        public ThemeOptionsViewModel ThemeOptions { get; set; }
+
+        public ThemeViewModel()
+        {
+
+        }
+
+        public ThemeViewModel(Theme theme, ThemeOptionsViewModel themeOptions)
+        {
+            Theme = theme;
+            ThemeOptions = themeOptions;
+        }
+    }
+
     public class ThemeOptionsViewModel
     {
-        private IEnumerable<ThemeOption> Options { get; set; }
-
         [Required]
         public int ThemeId { get; set; }
         [Required]
@@ -63,7 +78,7 @@ namespace Covenant.Models.Covenant
 
         public ThemeOptionsViewModel()
         {
-            Options = new List<ThemeOption>();
+
         }
 
         public ThemeOptionsViewModel(int themeId, IEnumerable<ThemeOption> options)
@@ -86,9 +101,20 @@ namespace Covenant.Models.Covenant
             CustomCss = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.CustomCss)?.Value;
         }   
         
-        public IEnumerable<ThemeOption> MapFieldsToOptions()
+        public IEnumerable<ThemeOption> GetThemeOptionsList()
         {
-            return Options;
+            List<ThemeOption> options = new List<ThemeOption>();
+            options.Add(new ThemeOption() { ThemeId = ThemeId, Name = Common.Settings.Themes.Options.BackgroundColor, Value = BackgroundColor });
+            //SidebarColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.SidebarColor)?.Value;
+            //TextColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextColor)?.Value;
+            //TextHeaderColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextHeaderColor)?.Value;
+            //TextLinksColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextLinksColor)?.Value;
+            //TextLinksHoverColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.TextLinksHoverColor)?.Value;
+            //NavLinksColor = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.NavLinksColor)?.Value;
+            //NavLinksColorSelected = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.NavLinksColorSelected)?.Value;
+            //NavLinksColorHover = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.NavLinksColorHover)?.Value;
+            //CustomCss = options.SingleOrDefault(o => o.Name == Common.Settings.Themes.Options.CustomCss)?.Value;
+            return options;
         }
     }
 }
