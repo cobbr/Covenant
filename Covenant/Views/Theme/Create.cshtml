@@ -8,33 +8,20 @@
     <h1 class="h2">Create Theme</h1>
 </div>
 
-<form asp-action="Create">
-    <div asp-validation-summary="All"></div>
+<form id="create-theme-form" asp-action="Create">
+    <div asp-validation-summary="All" class="text-danger"></div>
     <div class="form-row">
-        <div class="form-group col-md-4">
-            <input asp-for="Name" placeholder="Name" class="form-control">
+        <div class="form-group col-md-6">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" name="Name" value="@Model.Name" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+            <label asp-for="Description"></label>
+            <input asp-for="Description" name="Description" value="@Model.Description" class="form-control">
         </div>
     </div>
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <input asp-for="Description" type="password" placeholder="Description" class="form-control">
-        </div>
-    </div>
-
-    <hr />
-
-    <div class="form-row">
-        <h4>Theme Settings</h4>
-    </div>
-    
-    @*<div class="form-row">
-        <div class="form-group col-md-4">
-            <input asp-for="" type="password" placeholder="Confirm Password" class="form-control">
-        </div>
-    </div>*@
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
-        </div>
-    </div>
+    @if (User.IsInRole("Administrator"))
+    {
+        <button type="submit" class="btn btn-primary"><span data-feather="plus"></span> Create</button>
+    }
 </form>

@@ -1,0 +1,68 @@
+﻿@using Covenant.Models.Covenant
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<CovenantUser> UserManager
+@model ThemeViewModel
+@{
+    Theme theme = Model.Theme as Theme;
+    ThemeOptionsViewModel themeOptions = Model.ThemeOptions as ThemeOptionsViewModel;
+}
+
+<h4>Theme Options</h4>
+<div asp-validation-summary="All" class="text-danger"></div>
+<input asp-for="@themeOptions.ThemeId" name="ThemeId" value="@themeOptions.ThemeId" type="hidden">
+<h5>Background Colors</h5>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.BackgroundColor"></label>
+        <input asp-for="@themeOptions.BackgroundColor" name="BackgroundColor" value="@themeOptions.BackgroundColor" placeholder="@themeOptions.BackgroundColor" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.SidebarColor"></label>
+        <input asp-for="@themeOptions.SidebarColor" name="SidebarColor" value="@themeOptions.SidebarColor" placeholder="@themeOptions.SidebarColor" class="form-control">
+    </div>
+</div>
+
+<h5>Navigation Colors</h5>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.TextHeaderColor"></label>
+        <input asp-for="@themeOptions.TextHeaderColor" name="TextHeaderColor" value="@themeOptions.TextHeaderColor" placeholder="@themeOptions.TextHeaderColor" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.NavLinksColor"></label>
+        <input asp-for="@themeOptions.NavLinksColor" name="NavLinksColor" value="@themeOptions.NavLinksColor" placeholder="@themeOptions.NavLinksColor" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.NavLinksColorSelected"></label>
+        <input asp-for="@themeOptions.NavLinksColorSelected" name="NavLinksColorSelected" value="@themeOptions.NavLinksColorSelected" placeholder="@themeOptions.NavLinksColorSelected" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.NavLinksColorHover"></label>
+        <input asp-for="@themeOptions.NavLinksColorHover" name="NavLinksColorHover" value="@themeOptions.NavLinksColorHover" placeholder="@themeOptions.NavLinksColorHover" class="form-control">
+    </div>
+</div>
+
+<h5>Text Colors</h5>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.TextColor"></label>
+        <input asp-for="@themeOptions.TextColor" name="TextColor" value="@themeOptions.TextColor" placeholder="@themeOptions.TextColor" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.TextLinksColor"></label>
+        <input asp-for="@themeOptions.TextLinksColor" name="TextLinksColor" value="@themeOptions.TextLinksColor" placeholder="@themeOptions.TextLinksColor" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="@themeOptions.TextLinksHoverColor"></label>
+        <input asp-for="@themeOptions.TextLinksHoverColor" name="TextLinksHoverColor" value="@themeOptions.TextLinksHoverColor" placeholder="@themeOptions.TextLinksHoverColor" class="form-control">
+    </div>
+</div>
+
+<h5>Custom CSS</h5>
+<p>Tags should start with either ".standard" or ".dark".</p>
+<div class="form-row">
+    <div class="form-group col-md-12">
+        <label asp-for="@themeOptions.CustomCss"></label>
+        <textarea asp-for="@themeOptions.CustomCss" name="CustomCss" value="@themeOptions.CustomCss" placeholder="@themeOptions.CustomCss" class="form-control" rows="8"></textarea>
+    </div>
+</div>

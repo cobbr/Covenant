@@ -1,4 +1,9 @@
 ﻿@using Covenant.Models.Covenant
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<CovenantUser> UserManager
-@model CovenantUserRegister
+@model Tuple<Theme, ThemeOptionsViewModel>
+@{
+    Theme theme = Model.Item1 as Theme;
+    ThemeOptionsViewModel themeOptions = Model.Item2 as ThemeOptionsViewModel;
+}
+
