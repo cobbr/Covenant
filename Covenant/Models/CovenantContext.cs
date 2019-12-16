@@ -2869,8 +2869,9 @@ body{themeClass} {{
 
         public async Task DeleteTheme(int id)
         {
-            Profile profile = await this.GetProfile(id);
-            this.Profiles.Remove(profile);
+            Theme theme = await this.GetTheme(id);
+            this.Themes.Remove(theme);
+            this.ThemeOptions.RemoveRange(this.ThemeOptions.Where(x => x.ThemeId == id));
             await this.SaveChangesAsync();
         } 
 

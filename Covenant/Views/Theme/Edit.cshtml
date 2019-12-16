@@ -2,29 +2,32 @@
 @using Covenant.Models.Covenant
 @using Covenant.Models.Settings
 @using Microsoft.AspNetCore.Identity
-@model Tuple<Theme, ThemeOptionsViewModel>
+@model ThemeViewModel
 @{
     Layout = "_ThemeLayout";
     ViewData["Title"] = "EditTheme";
     IEnumerable<string> RolesSelected = ViewBag.RolesSelected;
     IEnumerable<string> RolesNotSelected = ViewBag.RolesNotSelected;
 
-    ThemeOptionsViewModel themeOptions = Model.Item2 as ThemeOptionsViewModel;
+    Theme theme = Model.Theme as Theme;
+    ThemeOptionsViewModel themeOptions = Model.ThemeOptions as ThemeOptionsViewModel;
 }
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
-    <h1 class="h2">Theme: <span id="user-name" class="text-primary">@Html.DisplayFor(model => model.Item1.Name)</span></h1>
+    <h1 class="h2">Theme: <span id="user-name" class="text-primary">@Html.DisplayFor(model => model.Theme.Name)</span></h1>
 </div>
 
-<form asp-action="Edit" asp-route-id="@Model.Item1.Id">
+@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+<form asp-action="Edit" asp-route-id="@theme.Id">
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="form-row">
         <div class="form-group col-md-6">
-            <label asp-for="Item1.Name"></label>
-            <input asp-for="Item1.Name" name="Name" value="@Model.Item1.Name" class="form-control">
+            <label asp-for="@theme.Name"></label>
+            <input asp-for="@theme.Name" name="Theme.Name" value="@theme.Name" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item1.Description"></label>
-            <input asp-for="Item1.Description" name="Description" value="@Model.Item1.Description" class="form-control">
+            <label asp-for="@theme.Description"></label>
+            <input asp-for="@theme.Description" name="Theme.Description" value="@theme.Description" class="form-control">
         </div>
     </div>
     @if (User.IsInRole("Administrator"))
@@ -35,10 +38,10 @@
 
 <hr />
 
-<form asp-action="EditThemeOptions" asp-route-id="@Model.Item2.ThemeId">
+<form asp-action="EditThemeOptions" asp-route-id="@themeOptions.ThemeId">
     <h4>Theme Options</h4>
     <div asp-validation-summary="All" class="text-danger"></div>
-    <input asp-for="@Model.Item2.ThemeId" name="ThemeId" value="@Model.Item2.ThemeId" type="hidden">
+    <input asp-for="@themeOptions.ThemeId" name="ThemeId" value="@themeOptions.ThemeId" type="hidden">
     <h5>Background Colors</h5>
     <div class="form-row">
         <div class="form-group col-md-6">
@@ -46,44 +49,44 @@
             <input asp-for="@themeOptions.BackgroundColor" name="BackgroundColor" value="@themeOptions.BackgroundColor" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item2.SidebarColor"></label>
-            <input asp-for="Item2.SidebarColor" name="SidebarColor" value="@Model.Item2.SidebarColor" class="form-control">
+            <label asp-for="@themeOptions.SidebarColor"></label>
+            <input asp-for="@themeOptions.SidebarColor" name="SidebarColor" value="@themeOptions.SidebarColor" class="form-control">
         </div>
     </div>
 
     <h5>Navigation Colors</h5>
     <div class="form-row">
         <div class="form-group col-md-6">
-            <label asp-for="Item2.TextHeaderColor"></label>
-            <input asp-for="Item2.TextHeaderColor" name="TextHeaderColor" value="@Model.Item2.TextHeaderColor" class="form-control">
+            <label asp-for="@themeOptions.TextHeaderColor"></label>
+            <input asp-for="@themeOptions.TextHeaderColor" name="TextHeaderColor" value="@themeOptions.TextHeaderColor" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item2.NavLinksColor"></label>
-            <input asp-for="Item2.NavLinksColor" name="NavLinksColor" value="@Model.Item2.NavLinksColor" class="form-control">
+            <label asp-for="@themeOptions.NavLinksColor"></label>
+            <input asp-for="@themeOptions.NavLinksColor" name="NavLinksColor" value="@themeOptions.NavLinksColor" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item2.NavLinksColorSelected"></label>
-            <input asp-for="Item2.NavLinksColorSelected" name="NavLinksColorSelected" value="@Model.Item2.NavLinksColorSelected" class="form-control">
+            <label asp-for="@themeOptions.NavLinksColorSelected"></label>
+            <input asp-for="@themeOptions.NavLinksColorSelected" name="NavLinksColorSelected" value="@themeOptions.NavLinksColorSelected" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item2.NavLinksColorHover"></label>
-            <input asp-for="Item2.NavLinksColorHover" name="NavLinksColorHover" value="@Model.Item2.NavLinksColorHover" class="form-control">
+            <label asp-for="@themeOptions.NavLinksColorHover"></label>
+            <input asp-for="@themeOptions.NavLinksColorHover" name="NavLinksColorHover" value="@themeOptions.NavLinksColorHover" class="form-control">
         </div>
     </div>
 
     <h5>Text Colors</h5>
     <div class="form-row">
         <div class="form-group col-md-6">
-            <label asp-for="Item2.TextColor"></label>
-            <input asp-for="Item2.TextColor" name="TextColor" value="@Model.Item2.TextColor" class="form-control">
+            <label asp-for="@themeOptions.TextColor"></label>
+            <input asp-for="@themeOptions.TextColor" name="TextColor" value="@themeOptions.TextColor" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item2.TextLinksColor"></label>
-            <input asp-for="Item2.TextLinksColor" name="TextLinksColor" value="@Model.Item2.TextLinksColor" class="form-control">
+            <label asp-for="@themeOptions.TextLinksColor"></label>
+            <input asp-for="@themeOptions.TextLinksColor" name="TextLinksColor" value="@themeOptions.TextLinksColor" class="form-control">
         </div>
         <div class="form-group col-md-6">
-            <label asp-for="Item2.TextLinksHoverColor"></label>
-            <input asp-for="Item2.TextLinksHoverColor" name="TextLinksHoverColor" value="@Model.Item2.TextLinksHoverColor" class="form-control">
+            <label asp-for="@themeOptions.TextLinksHoverColor"></label>
+            <input asp-for="@themeOptions.TextLinksHoverColor" name="TextLinksHoverColor" value="@themeOptions.TextLinksHoverColor" class="form-control">
         </div>
     </div>
 
@@ -91,8 +94,8 @@
     <p>Tags should start with either ".standard" or ".dark".</p>
     <div class="form-row">
         <div class="form-group col-md-12">
-            <label asp-for="Item2.CustomCss"></label>
-            <textarea asp-for="Item2.CustomCss" name="CustomCss" value="@Model.Item2.CustomCss" class="form-control" rows="8"></textarea>
+            <label asp-for="@themeOptions.CustomCss"></label>
+            <textarea asp-for="@themeOptions.CustomCss" name="CustomCss" value="@themeOptions.CustomCss" class="form-control" rows="8"></textarea>
         </div>
     </div>
 
@@ -102,7 +105,7 @@
     }
 </form>
 
-<form asp-action="Delete" asp-route-id="@Model.Item1.Id">
+<form asp-action="Delete" asp-route-id="@theme.Id">
     <div asp-validation-summary="All" class="text-danger"></div>
     @if (User.IsInRole("Administrator"))
     {

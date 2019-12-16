@@ -55,7 +55,8 @@ namespace Covenant.Models.Covenant
 
         public ThemeViewModel()
         {
-
+            Theme = new Theme();
+            ThemeOptions = new ThemeOptionsViewModel();
         }
 
         public ThemeViewModel(Theme theme, ThemeOptionsViewModel themeOptions)

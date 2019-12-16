@@ -45,11 +45,12 @@ namespace Covenant.Controllers.ViewControllers
 
         // POST: /theme/create
         [HttpPost]
-        public async Task<IActionResult> Create(ThemeViewModel vm)
+        public async Task<IActionResult> Create(Theme theme)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                theme = await _context.CreateTheme(theme);
+                return RedirectToAction(nameof(Edit), new { id = theme.Id });
             }
             catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
             {
@@ -133,8 +134,7 @@ namespace Covenant.Controllers.ViewControllers
                 IEnumerable<Setting> settings = await _context.GetSettings(new List<string> { Common.Settings.Themes.Standard, Common.Settings.Themes.Dark });
                 if (settings.Where(s => s.Key == Common.Settings.Themes.Standard || s.Key == Common.Settings.Themes.Dark).Any(s => s.Value == id.ToString())) {
                     ModelState.AddModelError(string.Empty, "Unable to delete. This theme is currently being used.");
-                    Theme theme = await _context.GetTheme(id);
-                    return View(nameof(Edit), theme);
+                    return RedirectToAction(nameof(Edit), new { id = id });
                 }
                 await _context.DeleteTheme(id);
                 return RedirectToAction(nameof(Index));
