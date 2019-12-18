@@ -78,9 +78,16 @@
             {
                 <tr>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id">
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id">
+                                @Html.DisplayFor(modelItem => item.Name)
+                            </a>
+                        }
+                        else
+                        {
                             @Html.DisplayFor(modelItem => item.Name)
-                        </a>
+                        }
                     </td>
                     <td>@item.Description</td>
                 </tr>
