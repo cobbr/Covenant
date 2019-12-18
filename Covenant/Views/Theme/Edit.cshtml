@@ -16,10 +16,9 @@
     <h1 class="h2">Theme: <span id="user-name" class="text-primary">@Html.DisplayFor(model => model.Theme.Name)</span></h1>
 </div>
 
-@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+<div asp-validation-summary="All" class="text-danger"></div>
 
-<form asp-action="Edit" asp-route-id="@theme.Id">
-    <div asp-validation-summary="All" class="text-danger"></div>
+<form asp-action="Edit" asp-route-id="@theme.Id">    
     <div class="form-row">
         <div class="form-group col-md-6">
             <label asp-for="@theme.Name"></label>
@@ -40,7 +39,6 @@
 
 <form asp-action="EditThemeOptions" asp-route-id="@themeOptions.ThemeId">
     <h4>Theme Options</h4>
-    <div asp-validation-summary="All" class="text-danger"></div>
     <input asp-for="@themeOptions.ThemeId" name="ThemeId" value="@themeOptions.ThemeId" type="hidden">
     <h5>Background Colors</h5>
     <div class="form-row">
@@ -106,7 +104,6 @@
 </form>
 
 <form asp-action="Delete" asp-route-id="@theme.Id">
-    <div asp-validation-summary="All" class="text-danger"></div>
     @if (User.IsInRole("Administrator"))
     {
         <button type="submit" class="btn btn-danger mt-2"><span data-feather="x"></span> Delete</button>
