@@ -6,17 +6,12 @@ public static class Task
 {
     public static string Execute(string ComputerName, string Command, string Domain = "", string Username = "", string Password = "")
     {
+        string result = string.Empty;
         try
         {
-            if(PowerShellRemoting.InvokeCommand(ComputerName, Command, Domain, Username, Password))
-            {
-                return "PowerShellRemoting execution successful. Executed: \"" + Command + "\" on: " + ComputerName;
-            }
-            else
-            {
-                return "PowerShellRemoting execution failed.";
-            }
+            result = PowerShellRemoting.InvokeCommand(ComputerName, Command, Domain, Username, Password);
         }
         catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        return result;
     }
 }
