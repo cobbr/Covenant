@@ -2357,6 +2357,36 @@ namespace Covenant.Core
                                 DisplayInCommand = true
                             }
                         }
+                    },
+					new GruntTask
+                    {
+                        Name = "BypassUACRegistry",
+                        AlternateNames = new List<string>(),
+                        Description = "Bypass UAC with EventVwr or Fodhelper",
+                        Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassUACRegistry" + ".task")),
+						Options = new List<GruntTaskOption>
+                        {
+                            new GruntTaskOption
+                            {
+                                Id = 123,
+                                Name = "Registry Key",
+                                Description = "Choose which registry key to use for UAC bypass: fodhelper or eventvwr",
+                                SuggestedValues = new List<string>{ "fodhelper","eventvwr" },
+                                Optional = false,
+                                DefaultValue = "",
+                                DisplayInCommand = true
+                            },
+							new GruntTaskOption
+                            {
+                                Id = 124,
+                                Name = "Command",
+                                Description = "Command to execute in an elevated context",
+                                SuggestedValues = new List<string>(),
+                                Optional = false,
+                                DefaultValue = "",
+                                DisplayInCommand = true
+                            }
+                        }
                     }
                 };
                 await context.GruntTasks.AddRangeAsync(GruntTasks);
@@ -2463,6 +2493,7 @@ namespace Covenant.Core
                 var delete = await context.GetGruntTaskByName("Delete");
                 var kill = await context.GetGruntTaskByName("Kill");
                 var getcurrentdir = await context.GetGruntTaskByName("GetCurrentDirectory");
+				var bypassUACRegistry = await context.GetGruntTaskByName("BypassUACRegistry");
 
                 await context.AddRangeAsync(
     new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
@@ -2513,7 +2544,14 @@ namespace Covenant.Core
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
     new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) },
+	
+	new GruntTaskReferenceAssembly { GruntTask = bypassUACRegistry, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+new GruntTaskReferenceAssembly { GruntTask = bypassUACRegistry, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+new GruntTaskReferenceAssembly { GruntTask = bypassUACRegistry, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+new GruntTaskReferenceAssembly { GruntTask = bypassUACRegistry, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+new GruntTaskReferenceAssembly { GruntTask = bypassUACRegistry, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+new GruntTaskReferenceAssembly { GruntTask = bypassUACRegistry, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) }
                 );
             }
         }
