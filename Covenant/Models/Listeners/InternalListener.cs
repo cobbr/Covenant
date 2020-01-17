@@ -442,14 +442,14 @@ namespace Covenant.Models.Listeners
 								List<APIModels.GruntTasking> taskings = _client.ApiTaskingsGet().ToList();
 								// TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
 								APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
-								if ( connectTasking == null)
+								if (connectTasking == null)
 								{
-									egressGrunt = null;
+								    egressGrunt = null;
 								}
 								else
 								{
-									APIModels.Grunt taskedGrunt = await _client.ApiGruntsByIdGetAsync(connectTasking.GruntId);
-									egressGrunt = await _client.ApiGruntsByIdOutboundGetAsync(taskedGrunt.Id ?? default);
+								    APIModels.Grunt taskedGrunt = await _client.ApiGruntsByIdGetAsync(connectTasking.GruntId);
+								    egressGrunt = await _client.ApiGruntsByIdOutboundGetAsync(taskedGrunt.Id ?? default);
 								}
 							}
 						}

