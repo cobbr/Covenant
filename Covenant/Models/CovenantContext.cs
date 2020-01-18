@@ -1969,13 +1969,7 @@ public static class Task
             }
             await this.GruntTaskings.AddAsync(tasking);
             await this.SaveChangesAsync();
-            Grunt parent = await this.GetParentGrunt(tasking.Grunt);
-
-	    if(parent == null)
-	    {
-		    parent = tasking.Grunt;
-	    }
-
+            Grunt parent = (await this.GetParentGrunt(tasking.Grunt)) ?? tasking.Grunt;
             parent.Listener = await this.GetListener(parent.ListenerId);
             await GruntHubProxy.NotifyListener(_grunthub, parent);
             return tasking;
