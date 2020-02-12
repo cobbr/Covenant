@@ -1542,6 +1542,8 @@ namespace Covenant.Models
         {
             return await this.GruntCommands
                 .Include(GC => GC.User)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GT => GT.GruntTask)
                 .ToListAsync();
         }
 
@@ -1550,6 +1552,8 @@ namespace Covenant.Models
             return await this.GruntCommands
                 .Where(GC => GC.GruntId == gruntId)
                 .Include(GC => GC.User)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GT => GT.GruntTask)
                 .ToListAsync();
         }
 
@@ -1558,6 +1562,9 @@ namespace Covenant.Models
             GruntCommand command = await this.GruntCommands
                 .Where(GC => GC.Id == id)
                 .Include(GC => GC.User)
+                .Include(GC => GC.GruntTasking)
+                    .ThenInclude(GT => GT.GruntTask)
+                .Include(GC => GC.CommandOutput)
                 .FirstOrDefaultAsync();
             if (command == null)
             {
