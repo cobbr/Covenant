@@ -1,0 +1,27 @@
+﻿@using Covenant.Models.Covenant
+
+<form>
+    <div class="form-group">
+        <label for="UserName">UserName</label>
+        <input id="UserName" name="UserName" @bind="CovenantUserRegister.UserName" class="form-control" readonly>
+    </div>
+    <div class="form-group">
+        <label for="Password">Password</label>
+        <input type="password" id="Password" name="Password" @bind="CovenantUserRegister.Password" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="ConfirmPassword">Confirm Password</label>
+        <input type="password" id="ConfirmPassword" name="ConfirmPassword" @bind="CovenantUserRegister.ConfirmPassword" class="form-control">
+    </div>
+    <button type="button" @onclick="(e => OnChangePassword.InvokeAsync(CovenantUserRegister))" class="btn btn-primary">
+        <span class="fe fe-edit"></span> Change Password
+    </button>
+</form>
+
+@code {
+    [Parameter]
+    public CovenantUserRegister CovenantUserRegister { get; set; }
+
+    [Parameter]
+    public EventCallback<CovenantUserRegister> OnChangePassword { get; set; }
+}

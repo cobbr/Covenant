@@ -22,11 +22,11 @@ namespace Covenant.Controllers
 	[Route("api/launchers")]
     public class LauncherApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public LauncherApiController(CovenantContext context)
+        public LauncherApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/launchers
@@ -36,7 +36,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetLaunchers")]
         public async Task<ActionResult<IEnumerable<Launcher>>> GetLaunchers()
         {
-            return Ok(await _context.GetLaunchers());
+            return Ok(await _service.GetLaunchers());
         }
 
         // GET api/launchers/binary
@@ -48,7 +48,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetBinaryLauncher();
+                return await _service.GetBinaryLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -69,7 +69,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateBinaryLauncher();
+                return await _service.GenerateBinaryLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -90,7 +90,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateBinaryHostedLauncher(file);
+                return await _service.GenerateBinaryHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -111,7 +111,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditBinaryLauncher(launcher);
+                return await _service.EditBinaryLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -132,7 +132,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetPowerShellLauncher();
+                return await _service.GetPowerShellLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -153,7 +153,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GeneratePowerShellLauncher();
+                return await _service.GeneratePowerShellLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -174,7 +174,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GeneratePowerShellHostedLauncher(file);
+                return await _service.GeneratePowerShellHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -195,7 +195,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditPowerShellLauncher(launcher);
+                return await _service.EditPowerShellLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -216,7 +216,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetMSBuildLauncher();
+                return await _service.GetMSBuildLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -237,7 +237,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateMSBuildLauncher();
+                return await _service.GenerateMSBuildLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -258,7 +258,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateMSBuildHostedLauncher(file);
+                return await _service.GenerateMSBuildHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -279,7 +279,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditMSBuildLauncher(launcher);
+                return await _service.EditMSBuildLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -300,7 +300,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetInstallUtilLauncher();
+                return await _service.GetInstallUtilLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -321,7 +321,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateInstallUtilLauncher();
+                return await _service.GenerateInstallUtilLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -342,7 +342,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateInstallUtilHostedLauncher(file);
+                return await _service.GenerateInstallUtilHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -363,7 +363,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditInstallUtilLauncher(launcher);
+                return await _service.EditInstallUtilLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -384,7 +384,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetWmicLauncher();
+                return await _service.GetWmicLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -405,7 +405,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateWmicLauncher();
+                return await _service.GenerateWmicLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -426,7 +426,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateWmicHostedLauncher(file);
+                return await _service.GenerateWmicHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -447,7 +447,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditWmicLauncher(launcher);
+                return await _service.EditWmicLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -468,7 +468,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetRegsvr32Launcher();
+                return await _service.GetRegsvr32Launcher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -489,7 +489,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateRegsvr32Launcher();
+                return await _service.GenerateRegsvr32Launcher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -510,7 +510,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateRegsvr32HostedLauncher(file);
+                return await _service.GenerateRegsvr32HostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -531,7 +531,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditRegsvr32Launcher(launcher);
+                return await _service.EditRegsvr32Launcher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -552,7 +552,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetMshtaLauncher();
+                return await _service.GetMshtaLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -573,7 +573,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateMshtaLauncher();
+                return await _service.GenerateMshtaLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -594,7 +594,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateMshtaHostedLauncher(file);
+                return await _service.GenerateMshtaHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -615,7 +615,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditMshtaLauncher(launcher);
+                return await _service.EditMshtaLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -636,7 +636,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetCscriptLauncher();
+                return await _service.GetCscriptLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -657,7 +657,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateCscriptLauncher();
+                return await _service.GenerateCscriptLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -678,7 +678,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateCscriptHostedLauncher(file);
+                return await _service.GenerateCscriptHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -699,7 +699,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditCscriptLauncher(launcher);
+                return await _service.EditCscriptLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {
@@ -720,7 +720,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetWscriptLauncher();
+                return await _service.GetWscriptLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -741,7 +741,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateWscriptLauncher();
+                return await _service.GenerateWscriptLauncher();
             }
             catch (ControllerNotFoundException e)
             {
@@ -762,7 +762,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GenerateWscriptHostedLauncher(file);
+                return await _service.GenerateWscriptHostedLauncher(file);
             }
             catch (ControllerNotFoundException e)
             {
@@ -783,7 +783,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditWscriptLauncher(launcher);
+                return await _service.EditWscriptLauncher(launcher);
             }
             catch (ControllerNotFoundException e)
             {

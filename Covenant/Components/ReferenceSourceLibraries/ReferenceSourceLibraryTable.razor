@@ -1,0 +1,93 @@
+﻿@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+@inherits CovenantServiceComponentBase
+
+<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="ReferenceSourceLibraries.ToList()" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => library.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => library.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => library.Location">
+            <HeaderContent>Location</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => GetReferenceAssemblies(library)">
+            <HeaderContent>ReferenceAssemblies</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => GetEmbeddedResources(library)">
+            <HeaderContent>EmbeddedResources</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => GetSuportedDotNetVersions(library)">
+            <HeaderContent>SupportedDotNetVersions</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="library">
+        <FilterableTableRow Item="library" IsDisplayed="IsRowDisplayed">
+            <RowContent>
+                <td>
+                    <a href="/referencesourcelibrary/edit/@library.Id">
+                        @library.Name
+                    </a>
+                </td>
+                <td>@library.Description</td>
+                <td>@library.Location</td>
+                <td>@GetReferenceAssemblies(library)</td>
+                <td>@GetEmbeddedResources(library)</td>
+                <td>@GetSuportedDotNetVersions(library)</td>
+            </RowContent>
+        </FilterableTableRow>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = false;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        this.ReferenceSourceLibraries = await ICovenantService.GetReferenceSourceLibraries();
+    }
+
+    private string GetReferenceAssemblies(ReferenceSourceLibrary library)
+    {
+        return string.Join(",", library.ReferenceAssemblies.Select(RA => RA.Name));
+    }
+
+    private string GetEmbeddedResources(ReferenceSourceLibrary library)
+    {
+        return string.Join(",", library.EmbeddedResources.Select(ER => ER.Name));
+    }
+
+    private string GetSuportedDotNetVersions(ReferenceSourceLibrary library)
+    {
+        return string.Join(",", library.CompatibleDotNetVersions.Select(DNV => DNV.ToString()));
+    }
+
+    private bool IsRowDisplayed(ReferenceSourceLibrary library, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            library.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            library.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            library.Location.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetReferenceAssemblies(library).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetEmbeddedResources(library).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetSuportedDotNetVersions(library).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

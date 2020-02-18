@@ -21,18 +21,18 @@ namespace Covenant.Controllers.ApiControllers
     [Route("api/referenceassemblies")]
     public class ReferenceAssemblyApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public ReferenceAssemblyApiController(CovenantContext context)
+        public ReferenceAssemblyApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/referenceassemblies
         [HttpGet(Name = "GetReferenceAssemblies")]
         public async Task<ActionResult<IEnumerable<ReferenceAssembly>>> GetReferenceAssemblies()
         {
-            return Ok(await _context.GetReferenceAssemblies());
+            return Ok(await _service.GetReferenceAssemblies());
         }
 
         // GET api/referenceassemblies/{id}
@@ -41,7 +41,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                return await _context.GetReferenceAssembly(id);
+                return await _service.GetReferenceAssembly(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -63,7 +63,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                ReferenceAssembly createdAssembly = await _context.CreateReferenceAssembly(assembly);
+                ReferenceAssembly createdAssembly = await _service.CreateReferenceAssembly(assembly);
                 return CreatedAtRoute(nameof(GetReferenceAssembly), new { id = createdAssembly.Id }, createdAssembly);
             }
             catch (ControllerNotFoundException e)
@@ -86,7 +86,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                return await _context.EditReferenceAssembly(assembly);
+                return await _service.EditReferenceAssembly(assembly);
             }
             catch (ControllerNotFoundException e)
             {
@@ -108,7 +108,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                await _context.DeleteReferenceAssembly(id);
+                await _service.DeleteReferenceAssembly(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)

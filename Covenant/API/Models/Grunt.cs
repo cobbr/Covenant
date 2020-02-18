@@ -25,8 +25,8 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the Grunt class.
         /// </summary>
-        /// <param name="dotNetVersion">Possible values include: 'net40',
-        /// 'net35', 'netCore21', 'netCore30'</param>
+        /// <param name="dotNetVersion">Possible values include: 'net35',
+        /// 'net40', 'netCore21', 'netCore30'</param>
         /// <param name="runtimeIdentifier">Possible values include: 'win_x64',
         /// 'win_x86', 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86',
         /// 'win81_x64', 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86',
@@ -170,7 +170,7 @@ namespace Covenant.API.Models
         public System.DateTime KillDate { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'net40', 'net35',
+        /// Gets or sets possible values include: 'net35', 'net40',
         /// 'netCore21', 'netCore30'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]

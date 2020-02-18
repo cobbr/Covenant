@@ -97,13 +97,14 @@ namespace Covenant
                 {
                     var services = scope.ServiceProvider;
                     var context = services.GetRequiredService<CovenantContext>();
+                    var service = services.GetRequiredService<ICovenantService>();
                     var userManager = services.GetRequiredService<UserManager<CovenantUser>>();
                     var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
-                    DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
+                    DbInitializer.Initialize(service, context, roleManager, listenerTokenSources).Wait();
                     if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                     {
                         CovenantUser user = new CovenantUser { UserName = username };
@@ -211,7 +212,8 @@ namespace Covenant
                            .AddFilter("Microsoft", LogLevel.Warning);
                 })
                 .UseStartup<Startup>()
-                .UseSetting("CovenantUri", CovenantUri);
+                .UseSetting("CovenantUri", CovenantUri)
+                .UseSetting(WebHostDefaults.DetailedErrorsKey, "true");
             })
             .Build();
 

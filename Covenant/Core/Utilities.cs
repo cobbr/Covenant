@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -145,6 +146,31 @@ namespace Covenant.Core
                 default:
                     return ".cs";
             }
+        }
+    }
+
+    public static class TaskExtensions
+    {
+        public static T WaitResult<T>(this Task<T> Task)
+        {
+            return TaskExtensions.WaitTask(Task).Result;
+        }
+
+        public static Task<T> WaitTask<T>(this Task<T> Task)
+        {
+            Task.Wait();
+            return Task;
+        }
+
+        public static T WaitResult<T>(this ValueTask<T> Task)
+        {
+            return TaskExtensions.WaitTask(Task).Result;
+        }
+
+        public static ValueTask<T> WaitTask<T>(this ValueTask<T> Task)
+        {
+            Task.AsTask().Wait();
+            return Task;
         }
     }
 

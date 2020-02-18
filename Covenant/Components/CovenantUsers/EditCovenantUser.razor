@@ -1,0 +1,86 @@
+﻿@page "/covenantuser/edit/{CovenantUserId}"
+
+@using Microsoft.AspNetCore.Identity
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inherits CovenantServiceComponentBase
+@inject UserManager<CovenantUser> UserManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">User: <span id="user-name" class="text-primary">@CovenantUser.UserName</span></h1>
+</div>
+
+<div class="row">
+    <div class="col-md border-right">
+        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnChangePassword="OnEditPassword" />
+    </div>
+    <div class="col-md">
+        <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnEditRoles" />
+    </div>
+</div>
+
+<button type="button" class="btn btn-danger mt-2" @onclick="(e => OnDeleteUser(CovenantUser))">
+    <span class="fe fe-x"></span> Delete
+</button>
+
+@code {
+    [Parameter]
+    public string CovenantUserId { get; set; }
+
+    [Parameter]
+    public CovenantUser CovenantUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CovenantUser = this.CovenantUser ?? await ICovenantService.GetUser(this.CovenantUserId);
+    }
+
+    private async Task OnEditRoles(IEnumerable<IdentityRole> roles)
+    {
+        try
+        {
+            IEnumerable<IdentityRole> currentRoles = (await ICovenantService.GetUserRolesForUser(this.CovenantUser.Id)).Select(UR =>
+            {
+                Task<IdentityRole> t = ICovenantService.GetRole(UR.RoleId);
+                t.Wait();
+                return t.Result;
+            });
+
+            IEnumerable<IdentityRole> rolesToAdd = roles.Where(R => !currentRoles.Contains(R));
+            IEnumerable<IdentityRole> rolesToRemove = currentRoles.Where(R => !roles.Contains(R));
+            foreach (IdentityRole role in rolesToAdd)
+            {
+                await ICovenantService.CreateUserRole(this.CovenantUser.Id, role.Id);
+            }
+            foreach (IdentityRole role in rolesToRemove)
+            {
+                await ICovenantService.DeleteUserRole(this.CovenantUser.Id, role.Id);
+            }
+            // return RedirectToAction(nameof(Index));
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private async Task OnEditPassword(CovenantUserRegister register)
+    {
+        await ICovenantService.EditUser(this.CovenantUser, register);
+        // return RedirectToAction(nameof(Index));
+    }
+
+    private async Task OnDeleteUser(CovenantUser user)
+    {
+        try
+        {
+            await ICovenantService.DeleteUser(user.Id);
+            // return RedirectToAction(nameof(Index));
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+}

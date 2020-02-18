@@ -5,6 +5,148 @@
     "version": "v0.1"
   },
   "paths": {
+    "/api/commandoutputs": {
+      "get": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "GetCommandOutputs",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommandOutput"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "CreateCommandOutput",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "EditCommandOutput",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        }
+      }
+    },
+    "/api/commandoutputs/{id}": {
+      "get": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "GetCommandOutput",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "DeleteCommandOutput",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
@@ -49,7 +191,7 @@
             "in": "body",
             "name": "body",
             "schema": {
-              "$ref": "#/definitions/CovenantUserLogin"
+              "$ref": "#/definitions/CovenantUserRegister"
             }
           }
         ],
@@ -4746,6 +4888,25 @@
     }
   },
   "definitions": {
+    "CommandOutput": {
+      "required": [
+        "gruntCommandId"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "output": {
+          "type": "string"
+        },
+        "gruntCommandId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
     "CovenantUser": {
       "type": "object",
       "properties": {
@@ -4795,6 +4956,28 @@
         "accessFailedCount": {
           "format": "int32",
           "type": "integer"
+        }
+      }
+    },
+    "CovenantUserRegister": {
+      "required": [
+        "confirmPassword",
+        "password",
+        "userName"
+      ],
+      "type": "object",
+      "properties": {
+        "confirmPassword": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
         }
       }
     },
@@ -4980,239 +5163,6 @@
         }
       }
     },
-    "DotNetVersion": {
-      "enum": [
-        "net40",
-        "net35",
-        "netCore21",
-        "netCore30"
-      ],
-      "type": "string",
-      "x-ms-enum": {
-        "name": "DotNetVersion",
-        "modelAsString": false
-      }
-    },
-    "ImplantLanguage": {
-      "enum": [
-        "cSharp"
-      ],
-      "type": "string",
-      "x-ms-enum": {
-        "name": "ImplantLanguage",
-        "modelAsString": false
-      }
-    },
-    "GruntTaskingType": {
-      "enum": [
-        "assembly",
-        "setOption",
-        "exit",
-        "connect",
-        "disconnect",
-        "jobs"
-      ],
-      "type": "string",
-      "x-ms-enum": {
-        "name": "GruntTaskingType",
-        "modelAsString": false
-      }
-    },
-    "GruntTaskOption": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "name": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        },
-        "defaultValue": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "suggestedValues": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "optional": {
-          "type": "boolean"
-        },
-        "displayInCommand": {
-          "type": "boolean"
-        },
-        "gruntTaskId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "task": {
-          "$ref": "#/definitions/GruntTask"
-        }
-      }
-    },
-    "GruntTask": {
-      "required": [
-        "name"
-      ],
-      "type": "object",
-      "properties": {
-        "id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "name": {
-          "type": "string"
-        },
-        "alternateNames": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "type": "string"
-        },
-        "help": {
-          "type": "string"
-        },
-        "language": {
-          "$ref": "#/definitions/ImplantLanguage"
-        },
-        "supportedDotNetVersions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/DotNetVersion"
-          }
-        },
-        "code": {
-          "type": "string"
-        },
-        "compiled": {
-          "type": "boolean"
-        },
-        "taskingType": {
-          "$ref": "#/definitions/GruntTaskingType"
-        },
-        "referenceSourceLibraries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ReferenceSourceLibrary"
-          },
-          "readOnly": true
-        },
-        "referenceAssemblies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ReferenceAssembly"
-          },
-          "readOnly": true
-        },
-        "embeddedResources": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/EmbeddedResource"
-          },
-          "readOnly": true
-        },
-        "unsafeCompile": {
-          "type": "boolean"
-        },
-        "tokenTask": {
-          "type": "boolean"
-        },
-        "options": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GruntTaskOption"
-          }
-        }
-      }
-    },
-    "ReferenceAssembly": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "name": {
-          "type": "string"
-        },
-        "location": {
-          "type": "string"
-        },
-        "dotNetVersion": {
-          "$ref": "#/definitions/DotNetVersion"
-        },
-        "referenceSourceLibraries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ReferenceSourceLibrary"
-          },
-          "readOnly": true
-        },
-        "gruntTasks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GruntTask"
-          },
-          "readOnly": true
-        }
-      }
-    },
-    "ReferenceSourceLibrary": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "location": {
-          "type": "string"
-        },
-        "supportedDotNetVersions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/DotNetVersion"
-          }
-        },
-        "referenceAssemblies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ReferenceAssembly"
-          },
-          "readOnly": true
-        },
-        "embeddedResources": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/EmbeddedResource"
-          },
-          "readOnly": true
-        },
-        "gruntTasks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GruntTask"
-          },
-          "readOnly": true
-        }
-      }
-    },
     "EmbeddedResource": {
       "type": "object",
       "properties": {
@@ -5225,20 +5175,6 @@
         },
         "location": {
           "type": "string"
-        },
-        "referenceSourceLibraries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ReferenceSourceLibrary"
-          },
-          "readOnly": true
-        },
-        "gruntTasks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GruntTask"
-          },
-          "readOnly": true
         }
       }
     },
@@ -5344,6 +5280,16 @@
         }
       }
     },
+    "ImplantLanguage": {
+      "enum": [
+        "cSharp"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "ImplantLanguage",
+        "modelAsString": false
+      }
+    },
     "CommunicationType": {
       "enum": [
         "http",
@@ -5379,14 +5325,20 @@
         },
         "description": {
           "type": "string"
-        },
-        "compatibleImplantTemplates": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ImplantTemplate"
-          },
-          "readOnly": true
         }
+      }
+    },
+    "DotNetVersion": {
+      "enum": [
+        "net35",
+        "net40",
+        "netCore21",
+        "netCore30"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "DotNetVersion",
+        "modelAsString": false
       }
     },
     "ImplantTemplate": {
@@ -5417,6 +5369,12 @@
             "$ref": "#/definitions/ListenerType"
           },
           "readOnly": true
+        },
+        "compatibleDotNetVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DotNetVersion"
+          }
         },
         "stagerCode": {
           "type": "string"
@@ -5619,9 +5577,120 @@
         "modelAsString": false
       }
     },
-    "CommandOutput": {
+    "GruntTaskingType": {
+      "enum": [
+        "assembly",
+        "setOption",
+        "exit",
+        "connect",
+        "disconnect",
+        "jobs"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "GruntTaskingType",
+        "modelAsString": false
+      }
+    },
+    "ReferenceAssembly": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        }
+      }
+    },
+    "ReferenceSourceLibrary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/ImplantLanguage"
+        },
+        "compatibleDotNetVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DotNetVersion"
+          }
+        },
+        "referenceAssemblies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceAssembly"
+          },
+          "readOnly": true
+        },
+        "embeddedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EmbeddedResource"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "GruntTaskOption": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "suggestedValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "displayInCommand": {
+          "type": "boolean"
+        },
+        "gruntTaskId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "GruntTask": {
       "required": [
-        "gruntCommandId"
+        "name"
       ],
       "type": "object",
       "properties": {
@@ -5629,15 +5698,71 @@
           "format": "int32",
           "type": "integer"
         },
-        "output": {
+        "name": {
           "type": "string"
         },
-        "gruntCommandId": {
-          "format": "int32",
-          "type": "integer"
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "gruntCommand": {
-          "$ref": "#/definitions/GruntCommand"
+        "description": {
+          "type": "string"
+        },
+        "help": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/ImplantLanguage"
+        },
+        "compatibleDotNetVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DotNetVersion"
+          }
+        },
+        "code": {
+          "type": "string"
+        },
+        "compiled": {
+          "type": "boolean"
+        },
+        "taskingType": {
+          "$ref": "#/definitions/GruntTaskingType"
+        },
+        "referenceSourceLibraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceSourceLibrary"
+          },
+          "readOnly": true
+        },
+        "referenceAssemblies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceAssembly"
+          },
+          "readOnly": true
+        },
+        "embeddedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EmbeddedResource"
+          },
+          "readOnly": true
+        },
+        "unsafeCompile": {
+          "type": "boolean"
+        },
+        "tokenTask": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GruntTaskOption"
+          }
         }
       }
     },
@@ -5657,8 +5782,8 @@
     },
     "GruntTasking": {
       "required": [
-        "gruntCommandId",
         "gruntId",
+        "gruntTaskId",
         "name"
       ],
       "type": "object",
@@ -5693,13 +5818,6 @@
             "type": "string"
           }
         },
-        "gruntCommandId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "gruntCommand": {
-          "$ref": "#/definitions/GruntCommand"
-        },
         "status": {
           "$ref": "#/definitions/GruntTaskingStatus"
         },
@@ -5710,12 +5828,17 @@
         "completionTime": {
           "format": "date-time",
           "type": "string"
+        },
+        "gruntCommandId": {
+          "format": "int32",
+          "type": "integer"
         }
       }
     },
     "GruntCommand": {
       "required": [
         "command",
+        "commandOutputId",
         "commandTime",
         "userId"
       ],
@@ -5745,19 +5868,16 @@
         "user": {
           "$ref": "#/definitions/CovenantUser"
         },
-        "gruntId": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "grunt": {
-          "$ref": "#/definitions/Grunt"
-        },
         "gruntTaskingId": {
           "format": "int32",
           "type": "integer"
         },
         "gruntTasking": {
           "$ref": "#/definitions/GruntTasking"
+        },
+        "gruntId": {
+          "format": "int32",
+          "type": "integer"
         }
       }
     },
@@ -6099,9 +6219,6 @@
         "stagerCode": {
           "type": "string"
         },
-        "base64ILByteString": {
-          "type": "string"
-        },
         "outputKind": {
           "$ref": "#/definitions/OutputKind"
         },
@@ -6169,9 +6286,6 @@
           "type": "string"
         },
         "stagerCode": {
-          "type": "string"
-        },
-        "base64ILByteString": {
           "type": "string"
         },
         "outputKind": {
@@ -6271,9 +6385,6 @@
         "stagerCode": {
           "type": "string"
         },
-        "base64ILByteString": {
-          "type": "string"
-        },
         "outputKind": {
           "$ref": "#/definitions/OutputKind"
         },
@@ -6352,9 +6463,6 @@
         "stagerCode": {
           "type": "string"
         },
-        "base64ILByteString": {
-          "type": "string"
-        },
         "outputKind": {
           "$ref": "#/definitions/OutputKind"
         },
@@ -6425,9 +6533,6 @@
           "type": "string"
         },
         "stagerCode": {
-          "type": "string"
-        },
-        "base64ILByteString": {
           "type": "string"
         },
         "outputKind": {
@@ -6519,9 +6624,6 @@
         "stagerCode": {
           "type": "string"
         },
-        "base64ILByteString": {
-          "type": "string"
-        },
         "outputKind": {
           "$ref": "#/definitions/OutputKind"
         },
@@ -6606,9 +6708,6 @@
         "stagerCode": {
           "type": "string"
         },
-        "base64ILByteString": {
-          "type": "string"
-        },
         "outputKind": {
           "$ref": "#/definitions/OutputKind"
         },
@@ -6685,9 +6784,6 @@
           "type": "string"
         },
         "stagerCode": {
-          "type": "string"
-        },
-        "base64ILByteString": {
           "type": "string"
         },
         "outputKind": {
@@ -6768,9 +6864,6 @@
         "stagerCode": {
           "type": "string"
         },
-        "base64ILByteString": {
-          "type": "string"
-        },
         "outputKind": {
           "$ref": "#/definitions/OutputKind"
         },
@@ -6847,9 +6940,6 @@
           "type": "string"
         },
         "stagerCode": {
-          "type": "string"
-        },
-        "base64ILByteString": {
           "type": "string"
         },
         "outputKind": {

@@ -1,0 +1,14 @@
+﻿@page "/covenantuser/create"
+
+@using Covenant.Models.Covenant
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create User</h1>
+</div>
+
+<CovenantUserRegisterForm CovenantUserRegister="CovenantUserRegister" />
+
+@code {
+    [Parameter]
+    public CovenantUserRegister CovenantUserRegister { get; set; } = new CovenantUserRegister();
+}

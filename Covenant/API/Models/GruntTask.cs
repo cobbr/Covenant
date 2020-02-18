@@ -28,15 +28,15 @@ namespace Covenant.API.Models
         /// <param name="language">Possible values include: 'cSharp'</param>
         /// <param name="taskingType">Possible values include: 'assembly',
         /// 'setOption', 'exit', 'connect', 'disconnect', 'jobs'</param>
-        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> supportedDotNetVersions = default(IList<DotNetVersion?>), string code = default(string), bool? compiled = default(bool?), GruntTaskingType? taskingType = default(GruntTaskingType?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
+        public GruntTask(string name, int? id = default(int?), IList<string> aliases = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), string code = default(string), bool? compiled = default(bool?), GruntTaskingType? taskingType = default(GruntTaskingType?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
             Name = name;
-            AlternateNames = alternateNames;
+            Aliases = aliases;
             Description = description;
             Help = help;
             Language = language;
-            SupportedDotNetVersions = supportedDotNetVersions;
+            CompatibleDotNetVersions = compatibleDotNetVersions;
             Code = code;
             Compiled = compiled;
             TaskingType = taskingType;
@@ -66,8 +66,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "alternateNames")]
-        public IList<string> AlternateNames { get; set; }
+        [JsonProperty(PropertyName = "aliases")]
+        public IList<string> Aliases { get; set; }
 
         /// <summary>
         /// </summary>
@@ -87,8 +87,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "supportedDotNetVersions")]
-        public IList<DotNetVersion?> SupportedDotNetVersions { get; set; }
+        [JsonProperty(PropertyName = "compatibleDotNetVersions")]
+        public IList<DotNetVersion?> CompatibleDotNetVersions { get; set; }
 
         /// <summary>
         /// </summary>
@@ -148,16 +148,6 @@ namespace Covenant.API.Models
             if (Name == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "Name");
-            }
-            if (Options != null)
-            {
-                foreach (var element in Options)
-                {
-                    if (element != null)
-                    {
-                        element.Validate();
-                    }
-                }
             }
         }
     }

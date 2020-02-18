@@ -1,0 +1,82 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+
+@if (GruntTasks == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <form>
+        <div class="form-group col-md-4">
+            <label for="GruntTaskId">GruntTask</label>
+            <select id="GruntTaskId" name="GruntTaskId" @onchange="(e => OnChangeGruntTask(e))" class="form-control">
+                @foreach (GruntTask task in this.GruntTasks)
+                {
+                    @if (this.GruntTask.Id == task.Id)
+                    {
+                        <option selected value="@task.Id">@task.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@task.Id">@task.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div>
+            @for (int i = 0; i < this.GruntTask.Options.Count; i++)
+            {
+                int number = i;
+                var fileinputs = new List<string> { "EncodedAssembly", "FileContents", "Script" };
+                @if (!fileinputs.Contains(this.GruntTask.Options[i].Name))
+                {
+                    <div class="form-group col-md-12">
+                        <label for="GruntTask.Options[@number].Name">@GruntTask.Options[number].Name</label>
+                        <input id="GruntTask.Options[@number].Name" name="GruntTask.Options[@number].Name" @bind="GruntTask.Options[number].Value" class="form-control">
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group col-md-12">
+                        <label for="GruntTask.Options[@number].Name">@GruntTask.Options[number].Name</label>
+                        <input id="GruntTask.Options[@number].Name" name="GruntTask.Options[@number].Name" class="form-control file-filler" type="hidden" readonly disabled>
+                        <input type="file" id="GruntTask.Options[@number].Name" class="form-control-file" disabled>
+                    </div>
+                }
+            }
+        </div>
+        <div class="form-group col-md-4">
+            <button type="button" @onclick="(e => OnSubmit.InvokeAsync(this.GruntTask))" class="btn btn-primary"><span class="fe fe-play"></span> Task</button>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter]
+    public int GruntId { get; set; }
+
+    [Parameter]
+    public EventCallback<GruntTask> OnSubmit { get; set; }
+
+    private IList<GruntTask> GruntTasks { get; set; }
+    private GruntTask GruntTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTasks = (await Service.GetGruntTasksForGrunt(this.GruntId)).ToList();
+        Service.DisposeContext();
+        this.GruntTask = this.GruntTasks.First();
+    }
+
+    private void OnChangeGruntTask(ChangeEventArgs e)
+    {
+        if (int.TryParse((string)e.Value, out int GruntTaskId))
+        {
+            this.GruntTask = this.GruntTasks.FirstOrDefault(GT => GT.Id == GruntTaskId);
+            this.StateHasChanged();
+        }
+    }
+}

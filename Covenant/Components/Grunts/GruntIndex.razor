@@ -1,0 +1,47 @@
+﻿@page "/grunt"
+@page "/grunt/index"
+@implements IDisposable
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inherits OwningComponentBase<ICovenantService>
+@inject INotificationService INotificationService
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Grunts</h1>
+</div>
+
+<GruntTable @bind-Grunts="Grunts" class="p-2" style="white-space: nowrap" />
+
+@code {
+    [Parameter]
+    public List<Grunt> Grunts { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Grunts = this.Grunts ?? (await Service.GetGrunts()).OrderByDescending(G => G.LastCheckIn).ToList();
+        this.INotificationService.OnCreateGrunt += OnCreateGrunt;
+        this.INotificationService.OnEditGrunt += OnEditGrunt;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateGrunt -= OnCreateGrunt;
+        this.INotificationService.OnEditGrunt -= OnEditGrunt;
+    }
+
+    private void OnCreateGrunt(object sender, Grunt grunt)
+    {
+        this.Grunts.Add(grunt);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnEditGrunt(object sender, Grunt grunt)
+    {
+        if (this.Grunts.Any(G => G.Id == grunt.Id))
+        {
+            this.Grunts[this.Grunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+}

@@ -1,0 +1,62 @@
+﻿@using System.Collections.Generic
+@using Microsoft.JSInterop
+@using Covenant.Models.Listeners
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="Profiles.ToList()" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="Profile" TItem2="string" GetSortableProperty="(profile) => profile.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Profile" TItem2="string" GetSortableProperty="(profile) => profile.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Profile" TItem2="ProfileType" GetSortableProperty="(profile) => profile.Type">
+            <HeaderContent>Type</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="profile">
+        <FilterableTableRow Item="profile" IsDisplayed="IsRowDisplayed">
+            <RowContent>
+                <td>
+                    <a href="/profile/edit/@profile.Id">
+                        @profile.Name
+                    </a>
+                </td>
+                <td>@profile.Description</td>
+                <td>@profile.Type</td>
+            </RowContent>
+        </FilterableTableRow>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<Profile> Profiles { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private string ToString(List<string> list)
+    {
+        return string.Join(",", list);
+    }
+
+    private bool IsRowDisplayed(Profile profile, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            profile.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            profile.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            profile.Type.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

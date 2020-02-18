@@ -53,6 +53,7 @@ namespace Covenant.Core
         public static string CovenantPrivateCertFile = CovenantDataDirectory + "covenant-dev-private.pfx";
         public static string CovenantPublicCertFile = CovenantDataDirectory + "covenant-dev-public.cer";
         public static string CovenantListenersDirectory = CovenantDataDirectory + "Listeners" + Path.DirectorySeparatorChar;
+        public static string CovenantLauncherDirectory = CovenantDataDirectory + "Launchers" + Path.DirectorySeparatorChar;
 
         public static string CovenantAppSettingsFile = CovenantDataDirectory + "appsettings.json";
         public static string CovenantJwtKeyReplaceMessage = "[KEY USED TO SIGN/VERIFY JWT TOKENS, ALWAYS REPLACE THIS VALUE]";
@@ -101,10 +102,24 @@ namespace Covenant.Core
 
         public enum DotNetVersion
         {
-            Net40,
             Net35,
+            Net40,
             NetCore21,
             NetCore30
         }
     }
+
+    public interface IYamlSerializable<T>
+    {
+        public string ToYaml();
+        public T FromYaml(string yaml);
+    }
+
+    public interface IJsonSerializable<T>
+    {
+        public string ToJson();
+        public T FromJson(string json);
+    }
+
+    public interface ISerializable<T> : IYamlSerializable<T>, IJsonSerializable<T> { }
 }

@@ -6,11 +6,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,29 +20,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.4.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.0-preview2.19528.8" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="3.1.0-preview2.19528.8" />
+    <PackageReference Include="BlazorInputFile" Version="0.1.0-preview-00002" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.4.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.1.0-preview2.19528.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="3.1.0" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.9.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="5.0.0-rc4" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.0.0-rc4" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.0.0-rc4" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.0-preview2.19525.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.0" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0-preview2.19525.5" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.0-preview2.19528.8" />
-    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.0-preview2.19525.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.0" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.6.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.0-preview2.19525.5" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.1.0-preview1-final" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,7 +50,6 @@
     <Content Remove="Data\Grunt\Brute\BruteStager\bin\release\netcoreapp3.0\win10-x64\BruteStager.runtimeconfig.dev.json" />
     <Content Remove="Data\Grunt\Brute\BruteStager\dotnetwarp_temp\BruteStager.runtimeconfig.json" />
     <Content Remove="Data\Grunt\Brute\BruteStager\dotnetwarp_temp\BruteStager.deps.json" />
-    <Content Remove="API\openapi6.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">

@@ -24,7 +24,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTaskOption class.
         /// </summary>
-        public GruntTaskOption(int? id = default(int?), string name = default(string), string value = default(string), string defaultValue = default(string), string description = default(string), IList<string> suggestedValues = default(IList<string>), bool? optional = default(bool?), bool? displayInCommand = default(bool?), int? gruntTaskId = default(int?), GruntTask task = default(GruntTask))
+        public GruntTaskOption(int? id = default(int?), string name = default(string), string value = default(string), string defaultValue = default(string), string description = default(string), IList<string> suggestedValues = default(IList<string>), bool? optional = default(bool?), bool? displayInCommand = default(bool?), int? gruntTaskId = default(int?))
         {
             Id = id;
             Name = name;
@@ -35,7 +35,6 @@ namespace Covenant.API.Models
             Optional = optional;
             DisplayInCommand = displayInCommand;
             GruntTaskId = gruntTaskId;
-            Task = task;
             CustomInit();
         }
 
@@ -89,23 +88,5 @@ namespace Covenant.API.Models
         [JsonProperty(PropertyName = "gruntTaskId")]
         public int? GruntTaskId { get; set; }
 
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "task")]
-        public GruntTask Task { get; set; }
-
-        /// <summary>
-        /// Validate the object.
-        /// </summary>
-        /// <exception cref="Microsoft.Rest.ValidationException">
-        /// Thrown if validation fails
-        /// </exception>
-        public virtual void Validate()
-        {
-            if (Task != null)
-            {
-                Task.Validate();
-            }
-        }
     }
 }

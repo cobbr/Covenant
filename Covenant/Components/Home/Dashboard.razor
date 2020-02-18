@@ -1,0 +1,51 @@
+﻿@page "/"
+@page "/home"
+@page "/home/index"
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
+@using Covenant.Components.Listeners
+@using Covenant.Components.Grunts
+@using Covenant.Components.GruntTaskings
+@inherits CovenantServiceComponentBase
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Grunts</h4>
+</div>
+<GruntTable @bind-Grunts="Grunts" IsPaginated="true" PageLength="10" IsSearchable="false" />
+<br />
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Listeners</h4>
+</div>
+<ListenerTable Listeners="Listeners" IsPaginated="true" PageLength="5" IsSearchable="false" />
+<br />
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Taskings</h4>
+</div>
+<GruntTaskingTable GruntTaskings="GruntTaskings" IsPaginated="true" PageLength="10" IsSearchable="false" />
+<br />
+
+@code {
+    [Parameter]
+    public List<Grunt> Grunts { get; set; }
+
+    [Parameter]
+    public IEnumerable<Listener> Listeners { get; set; }
+
+    [Parameter]
+    public List<GruntTasking> GruntTaskings { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Grunts = this.Grunts ?? (await ICovenantService.GetGrunts()).OrderByDescending(G => G.LastCheckIn).ToList();
+        this.Listeners = this.Listeners ?? await ICovenantService.GetListeners();
+        this.GruntTaskings = this.GruntTaskings ?? (await ICovenantService.GetGruntTaskings()).ToList();
+    }
+}

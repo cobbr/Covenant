@@ -1,0 +1,32 @@
+﻿@page "/indicator/create"
+
+@using Covenant.Core
+@using Covenant.Models.Indicators
+@inherits CovenantServiceComponentBase
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create Indicator</h1>
+</div>
+
+<IndicatorForm Indicator="Indicator" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
+@code {
+    [Parameter]
+    public Indicator Indicator { get; set; }
+
+    private async Task OnCreate(Indicator indicator)
+    {
+        switch (indicator.Type)
+        {
+            case IndicatorType.FileIndicator:
+                this.Indicator = await ICovenantService.CreateIndicator((FileIndicator)indicator);
+                break;
+            case IndicatorType.NetworkIndicator:
+                this.Indicator = await ICovenantService.CreateIndicator((NetworkIndicator)indicator);
+                break;
+            case IndicatorType.TargetIndicator:
+                this.Indicator = await ICovenantService.CreateIndicator((TargetIndicator)indicator);
+                break;
+        }
+    }
+}

@@ -1,0 +1,212 @@
+﻿@typeparam TItem
+
+@using System.Threading
+@using System.Threading.Tasks
+
+<CascadingValue Value="this">
+    @if (this.IsSearchable)
+    {
+        <div class="form-group row float-right">
+            <label for="Search" class="col-sm-2 col-form-label">Search:</label>
+            <div class="col-sm-10">
+                <input class="form-control" @bind="SearchTerm" @bind:event="oninput" placeholder="Search..." />
+            </div>
+        </div>
+    }
+    <div class="table-responsive">
+        <table @attributes="InputAttributes">
+            <thead>
+                <tr>
+                    @TableHeader
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = (this.CurrentPage * this.PageLength); i < Math.Min((this.CurrentPage * this.PageLength) + this.PageLength, this.Items.Count); i++)
+                {
+                    int number = i;
+                    @TableRow(this.Items[number])
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (this.IsPaginated)
+    {
+        <div class="d-flex flex-nowrap float-right">
+            <span class="text-muted mt-2 mr-2">Page @(CurrentPage + 1) of @TotalPages</span>
+            <div class="btn-group-sm" role="group">
+                @if (this.CurrentPage == 0)
+                {
+                    <button class="btn btn-sm btn-info-outline disabled" @onclick="OnNavigateToFront">
+                        <span class="fe fe-arrow-left-circle"></span>
+                    </button>
+                    <button class="btn btn-sm btn-secondary-outline disabled" @onclick="OnNavigateToLeft">
+                        <span class="fe fe-arrow-left"></span>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-info-outline" @onclick="OnNavigateToFront">
+                        <span class="fe fe-arrow-left-circle"></span>
+                    </button>
+                    <button class="btn btn-sm btn-secondary-outline" @onclick="OnNavigateToLeft">
+                        <span class="fe fe-arrow-left"></span>
+                    </button>
+                }
+                @for (int i = 1; i <= TotalPages; i++)
+                {
+                    int number = i;
+                    if ((number - 1) == this.CurrentPage)
+                    {
+                        <button class="btn btn-sm btn-primary text-white disabled">
+                            @number
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
+                            @number
+                        </button>
+                    }
+                }
+                @if (this.CurrentPage == (this.TotalPages - 1))
+                {
+                    <button class="btn btn-sm btn-secondary-outline disabled" @onclick="OnNavigateToRight">
+                        <span class="fe fe-arrow-right"></span>
+                    </button>
+                    <button class="btn btn-sm btn-info-outline disabled" @onclick="OnNavigateToBack">
+                        <span class="fe fe-arrow-right-circle"></span>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-secondary-outline" @onclick="OnNavigateToRight">
+                        <span class="fe fe-arrow-right"></span>
+                    </button>
+                    <button class="btn btn-sm btn-info-outline" @onclick="OnNavigateToBack">
+                        <span class="fe fe-arrow-right-circle"></span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</CascadingValue>
+
+@functions {
+    [Parameter]
+    public RenderFragment TableHeader { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem> TableRow { get; set; }
+
+    [Parameter]
+    public List<TItem> Items { get; set; }
+
+    [Parameter]
+    public EventCallback<List<TItem>> ItemsChanged { get; set; }
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public int PageLength { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> InputAttributes { get; set; }
+
+    public event EventHandler OnSortHeader = delegate { };
+
+    CancellationTokenSource searchTokenSource;
+    private string _searchTerm = "";
+    public string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            _searchTerm = value;
+            if (!string.IsNullOrEmpty(_searchTerm))
+            {
+                searchTokenSource?.Cancel();
+                searchTokenSource = new CancellationTokenSource();
+                Task.Delay(700).Wait();
+                if (!searchTokenSource.Token.IsCancellationRequested)
+                {
+                    this.StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private int TotalPages
+    {
+        get
+        {
+            return (int)Math.Ceiling(Math.Max(this.Items.Count(), 1) / (decimal)PageLength);
+        }
+    }
+
+    private int CurrentPage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (!this.IsPaginated)
+        {
+            this.PageLength = this.Items.Count();
+        }
+        this.CurrentPage = 0;
+    }
+
+    private void OnNavigateToFront()
+    {
+        this.CurrentPage = 0;
+    }
+
+    private void OnNavigateToBack()
+    {
+        this.CurrentPage = this.TotalPages - 1;
+    }
+
+    private void OnNavigateToLeft()
+    {
+        if (this.CurrentPage > 0)
+        {
+            this.CurrentPage--;
+        }
+    }
+
+    private void OnNavigateToRight()
+    {
+        if (this.CurrentPage < this.TotalPages - 1)
+        {
+            this.CurrentPage++;
+        }
+    }
+
+    private void OnNavigateToPage(int page)
+    {
+        this.CurrentPage = page;
+    }
+
+    public async Task OnSort<T>(Func<TItem, T> GetSortableProperty, bool Direction)
+    {
+        if (this.IsSortable)
+        {
+            if (Direction)
+            {
+                this.Items = this.Items.OrderBy(GetSortableProperty).ToList();
+            }
+            else
+            {
+                this.Items = this.Items.OrderByDescending(GetSortableProperty).ToList();
+            }
+            this.OnSortHeader(this, new EventArgs { });
+            this.StateHasChanged();
+            await this.ItemsChanged.InvokeAsync(Items);
+        }
+    }
+}

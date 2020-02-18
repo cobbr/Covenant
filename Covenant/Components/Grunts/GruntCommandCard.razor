@@ -1,0 +1,121 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject INotificationService INotificationService
+@inject IJSRuntime IJSRuntime
+
+<div class="card task-card w-100 border-right-0 border-top-1" id="tasking-card-@GruntCommand.Id">
+    <div class="d-flex flex-row">
+        <div class="col-auto p-0">
+            <a class="expand-button p-0" type="button" @onclick="OnToggle">
+                @if (this.IsMinimized)
+                {
+                    <span class="fe fe-plus text-muted font-weight-bold"></span>
+                }
+                else
+                {
+                    <span class="fe fe-minus text-muted font-weight-bold"></span>
+                }
+            </a>
+        </div>
+        <div class="col-auto pl-0 pr-2">
+            @if (GruntCommand.GruntTasking == null)
+            {
+                <p class="text-info task-text-head">[@GruntCommand.CommandTime UTC] Command submitted</p>
+            }
+            else
+            {
+                <p class="text-info task-text-head">[@GruntCommand.CommandTime UTC] @GruntCommand.GruntTasking.GruntTask.Name @GruntCommand.GruntTasking.Status.ToString().ToLower()</p>
+            }
+            <p class="text-white task-text-body">(<b>@GruntCommand.User.UserName</b>) > @GruntCommand.Command</p>
+        </div>
+    </div>
+    <div class="card-header p-0 border-top-0 border-bottom-0" id="tasking-header-@GruntCommand.Id"></div>
+    @if (!this.IsMinimized)
+    {
+        <div class="card-body">
+            @if (GruntCommand.CommandOutput != null)
+            {
+                if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
+                {
+                    <img style="max-width: 100%" src="data:image/png;base64, @GruntCommand.CommandOutput.Output" />
+                }
+                else
+                {
+                    <p class="text-white task-text-body" style="white-space:pre-wrap">@GruntCommand.CommandOutput.Output</p>
+                }
+            }
+            else
+            {
+                <p class="text-white task-text-body" style="white-space:pre-wrap"></p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int GruntCommandId { get; set; }
+    private GruntCommand GruntCommand { get; set; }
+
+    [Parameter]
+    public bool IsMinimized { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+        Service.DisposeContext();
+        this.INotificationService.OnEditGruntCommand += OnEditGruntCommand;
+        this.INotificationService.OnEditCommandOutput += OnEditCommandOutput;
+        this.INotificationService.OnEditGruntTasking += OnEditGruntTasking;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditGruntCommand -= OnEditGruntCommand;
+        this.INotificationService.OnEditCommandOutput -= OnEditCommandOutput;
+        this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
+    }
+
+    private async void OnEditCommandOutput(object sender, CommandOutput commandOutput)
+    {
+        if (this.GruntCommand.CommandOutput != null && this.GruntCommand.CommandOutput.Id == commandOutput.Id)
+        {
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
+            await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async void OnEditGruntCommand(object sender, GruntCommand gruntCommand)
+    {
+        if (this.GruntCommandId == gruntCommand.Id)
+        {
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
+            await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async void OnEditGruntTasking(object sender, GruntTasking gruntTasking)
+    {
+        if (this.GruntCommand.GruntTasking != null && this.GruntCommand.GruntTasking.Id == gruntTasking.Id)
+        {
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
+            await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task OnToggle()
+    {
+        if (this.IsMinimized && this.GruntCommand.CommandOutput == null)
+        {
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommand.Id);
+            Service.DisposeContext();
+        }
+        this.IsMinimized = !IsMinimized;
+    }
+}

@@ -23,6 +23,7 @@ _/
 # Visual Studio cache/options
 .vs/
 .vscode/
+*.user
 *.userprefs
 
 # Mac files

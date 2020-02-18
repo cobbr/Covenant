@@ -24,11 +24,7 @@ namespace Covenant.Models.Listeners
         public string Name { get; set; }
         public string Description { get; set; }
 
-        private List<ListenerTypeImplantTemplate> ListenerTypeImplantTemplates { get; set; } = new List<ListenerTypeImplantTemplate>();
-        [NotMapped]
-        public List<ImplantTemplate> CompatibleImplantTemplates => ListenerTypeImplantTemplates.Select(l => l.ImplantTemplate).ToList();
-
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<Listener> Listeners { get; set; }
     }
 

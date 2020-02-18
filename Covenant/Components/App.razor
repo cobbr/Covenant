@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Components.Shared
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout)" />
+        </Found>
+            
+        <NotFound>
+            <LayoutView Layout="typeof(Layout)">
+                <h1>Page not found</h1>
+                <p>Sorry, but there's nothing here!</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

@@ -7,8 +7,6 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
 
     public partial class ReferenceAssembly
@@ -24,16 +22,14 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ReferenceAssembly class.
         /// </summary>
-        /// <param name="dotNetVersion">Possible values include: 'net40',
-        /// 'net35', 'netCore21', 'netCore30'</param>
-        public ReferenceAssembly(int? id = default(int?), string name = default(string), string location = default(string), DotNetVersion? dotNetVersion = default(DotNetVersion?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<GruntTask> gruntTasks = default(IList<GruntTask>))
+        /// <param name="dotNetVersion">Possible values include: 'net35',
+        /// 'net40', 'netCore21', 'netCore30'</param>
+        public ReferenceAssembly(int? id = default(int?), string name = default(string), string location = default(string), DotNetVersion? dotNetVersion = default(DotNetVersion?))
         {
             Id = id;
             Name = name;
             Location = location;
             DotNetVersion = dotNetVersion;
-            ReferenceSourceLibraries = referenceSourceLibraries;
-            GruntTasks = gruntTasks;
             CustomInit();
         }
 
@@ -58,21 +54,11 @@ namespace Covenant.API.Models
         public string Location { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'net40', 'net35',
+        /// Gets or sets possible values include: 'net35', 'net40',
         /// 'netCore21', 'netCore30'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion? DotNetVersion { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "referenceSourceLibraries")]
-        public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "gruntTasks")]
-        public IList<GruntTask> GruntTasks { get; private set; }
 
     }
 }

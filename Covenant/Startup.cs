@@ -4,10 +4,7 @@
 
 using System;
 using System.Net;
-using System.Linq;
 using System.Threading;
-using System.Reflection;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -46,7 +43,10 @@ namespace Covenant
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<CovenantContext>();
+            services.AddDbContext<CovenantContext>(options =>
+            {
+                options.EnableSensitiveDataLogging(true);
+            }, ServiceLifetime.Transient);
 
             services.AddIdentity<CovenantUser, IdentityRole>()
                 .AddEntityFrameworkStores<CovenantContext>()
@@ -132,11 +132,20 @@ namespace Covenant
                     .Build());
             });
 
+            services.AddSignalR(options =>
+            {
+                options.MaximumReceiveMessageSize = 2000 * 1024;
+            }).AddNewtonsoftJsonProtocol(options =>
+            {
+                options.PayloadSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
             services.AddMvc().AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 options.SerializerSettings.Converters.Add(new StringEnumConverter(new CamelCaseNamingStrategy()));
             }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
+            services.AddServerSideBlazor();
+
             services.AddRouting(options => options.LowercaseUrls = true);
             services.AddSwaggerGen(c =>
             {
@@ -175,15 +184,11 @@ namespace Covenant
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
 
-            services.AddSignalR(options =>
-            {
-                options.MaximumReceiveMessageSize = 2000 * 1024;
-            }).AddNewtonsoftJsonProtocol(options =>
-            {
-                options.PayloadSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-            });
-
             services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
+            services.AddSingleton<INotificationService, NotificationService>();
+            services.AddTransient<ICovenantService, CovenantService>();
+            // services.AddTransient<CovenantBlazorService>();
+            // services.AddSingleton<SignalRCovenantService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -215,11 +220,16 @@ namespace Covenant
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseStaticFiles();
+
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapBlazorHub();
+                // endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapHub<GruntHub>("/grunthub");
                 endpoints.MapHub<EventHub>("/eventhub");
+                endpoints.MapHub<CovenantHub>("/covenanthub");
+                endpoints.MapFallbackToPage("/_Host");
             });
         }
 

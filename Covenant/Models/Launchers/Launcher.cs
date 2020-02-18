@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Newtonsoft.Json;
 using Microsoft.CodeAnalysis;
 
 using Covenant.Core;
@@ -58,7 +59,26 @@ namespace Covenant.Models.Launchers
 
         public string LauncherString { get; set; } = "";
         public string StagerCode { get; set; } = "";
-        public string Base64ILByteString { get; set; } = "";
+
+        [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public string Base64ILByteString
+        {
+            get
+            {
+                try
+                {
+                    return Convert.ToBase64String(System.IO.File.ReadAllBytes(Common.CovenantLauncherDirectory + Name));
+                }
+                catch
+                {
+                    return "";
+                }
+            }
+            set
+            {
+                System.IO.File.WriteAllBytes(Common.CovenantLauncherDirectory + Name, Convert.FromBase64String(value)); 
+            }
+        }
 
         public virtual string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template) { return ""; }
         public virtual string GetHostedLauncher(Listener listener, HostedFile hostedFile) { return ""; }

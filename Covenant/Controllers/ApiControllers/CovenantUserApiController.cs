@@ -22,19 +22,11 @@ namespace Covenant.Controllers
 	[Authorize(Policy = "RequireJwtBearer"), ApiController, Route("api")]
     public class CovenantUserApiController : Controller
     {
-		private readonly CovenantContext _context;
-		private readonly UserManager<CovenantUser> _userManager;
-        private readonly SignInManager<CovenantUser> _signInManager;
-        private readonly IConfiguration _configuration;
-        private readonly IHubContext<EventHub> _eventhub;
+		private readonly ICovenantService _service;
 
-		public CovenantUserApiController(CovenantContext context, UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, IConfiguration configuration, IHubContext<EventHub> eventhub)
+		public CovenantUserApiController(ICovenantService service)
         {
-			_context = context;
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _configuration = configuration;
-            _eventhub = eventhub;
+			_service = service;
         }
 
         // GET: api/users
@@ -44,7 +36,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                IEnumerable<CovenantUser> users = await _context.GetUsers();
+                IEnumerable<CovenantUser> users = await _service.GetUsers();
                 foreach (CovenantUser user in users)
                 {
                     user.PasswordHash = "";
@@ -72,7 +64,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                CovenantUser user = await _context.GetUser(id);
+                CovenantUser user = await _service.GetUser(id);
                 user.PasswordHash = "";
                 return user;
             }
@@ -97,7 +89,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                CovenantUser user = await _context.GetCurrentUser(_userManager, HttpContext.User);
+                CovenantUser user = await _service.GetCurrentUser(HttpContext.User);
                 user.PasswordHash = "";
                 return user;
             }
@@ -123,7 +115,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.Login(_signInManager, _configuration, login);
+                return await _service.Login(login);
             }
             catch (ControllerNotFoundException e)
             {
@@ -141,14 +133,14 @@ namespace Covenant.Controllers
 
         // POST api/users
         // Create a User
-        [Authorize(Policy = "RequireJwtBearerRequireAdministratorRole")]
+        [AllowAnonymous]
         [HttpPost("users", Name = "CreateUser")]
 		[ProducesResponseType(typeof(CovenantUser), 201)]
-		public async Task<ActionResult<CovenantUser>> CreateUser([FromBody] CovenantUserLogin login)
+		public async Task<ActionResult<CovenantUser>> CreateUser([FromBody] CovenantUserRegister register)
 		{
             try
             {
-                CovenantUser user = await _context.CreateUser(_userManager, login, _eventhub);
+                CovenantUser user = await _service.CreateUserVerify(HttpContext.User, register);
                 return CreatedAtRoute(nameof(GetUser), new { id = user.Id }, user);
             }
             catch (ControllerNotFoundException e)
@@ -172,7 +164,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                CovenantUser editedUser = await _context.EditUser(_userManager, HttpContext.User, user);
+                CovenantUser editedUser = await _service.EditUser(await _service.GetCurrentUser(HttpContext.User), user);
                 editedUser.PasswordHash = "";
                 return editedUser;
             }
@@ -199,7 +191,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteUser(id);
+                await _service.DeleteUser(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)
@@ -223,7 +215,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return Ok(await _context.GetUserRoles());
+                return Ok(await _service.GetUserRoles());
             }
             catch (ControllerNotFoundException e)
             {
@@ -246,7 +238,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return Ok(await _context.GetUserRoles(id));
+                return Ok(await _service.GetUserRolesForUser(id));
             }
             catch (ControllerNotFoundException e)
             {
@@ -269,7 +261,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetUserRole(id, rid);
+                return await _service.GetUserRole(id, rid);
             }
             catch (ControllerNotFoundException e)
             {
@@ -294,7 +286,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                IdentityUserRole<string> userRole = await _context.CreateUserRole(_userManager, id, rid);
+                IdentityUserRole<string> userRole = await _service.CreateUserRole(id, rid);
                 return CreatedAtRoute(nameof(GetUserRole), new { id = id, rid = rid }, userRole);
             }
             catch (ControllerNotFoundException e)
@@ -320,7 +312,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteUserRole(_userManager, id, rid);
+                await _service.DeleteUserRole(id, rid);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)
@@ -344,7 +336,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return Ok(await _context.GetRoles());
+                return Ok(await _service.GetRoles());
             }
             catch (ControllerNotFoundException e)
             {
@@ -367,7 +359,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetRole(rid);
+                return await _service.GetRole(rid);
             }
             catch (ControllerNotFoundException e)
             {

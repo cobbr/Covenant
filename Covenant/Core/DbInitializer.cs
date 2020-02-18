@@ -21,22 +21,20 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-        public async static Task Initialize(CovenantContext context, RoleManager<IdentityRole> roleManager, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
-            context.Database.EnsureCreated();
-
-            await InitializeListeners(context, ListenerCancellationTokens);
-            await InitializeImplantTemplates(context);
-            await InitializeLaunchers(context);
-            await InitializeTasks(context);
+            await InitializeListeners(service, context, ListenerCancellationTokens);
+            await InitializeImplantTemplates(service, context);
+            await InitializeLaunchers(service, context);
+            await InitializeTasks(service, context);
             await InitializeRoles(roleManager);
         }
 
-        public async static Task InitializeImplantTemplates(CovenantContext context)
+        public async static Task InitializeImplantTemplates(ICovenantService service, CovenantContext context)
         {
             if (!context.ImplantTemplates.Any())
             {
-                var templates = new List<ImplantTemplate>
+                var templates = new ImplantTemplate[]
                 {
                     new ImplantTemplate
                     {
@@ -44,7 +42,8 @@ namespace Covenant.Core
                         Description = "A Windows implant written in C# that communicates over HTTP.",
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.HTTP,
-                        ImplantDirection = ImplantDirection.Pull
+                        ImplantDirection = ImplantDirection.Pull,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ImplantTemplate
                     {
@@ -52,7 +51,8 @@ namespace Covenant.Core
                         Description = "A Windows implant written in C# that communicates over SMB.",
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.SMB,
-                        ImplantDirection = ImplantDirection.Push
+                        ImplantDirection = ImplantDirection.Push,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ImplantTemplate
                     {
@@ -60,7 +60,8 @@ namespace Covenant.Core
                         Description = "A customizable implant written in C# that communicates with a custom C2Bridge.",
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.Bridge,
-                        ImplantDirection = ImplantDirection.Push
+                        ImplantDirection = ImplantDirection.Push,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ImplantTemplate
                     {
@@ -68,82 +69,78 @@ namespace Covenant.Core
                         Description = "A cross-platform implant built on .NET Core 3.0.",
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.HTTP,
-                        ImplantDirection = ImplantDirection.Pull
+                        ImplantDirection = ImplantDirection.Pull,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 }
                     }
                 };
-                templates.ForEach(t => t.ReadFromDisk());
-                await context.ImplantTemplates.AddRangeAsync(templates);
-                await context.SaveChangesAsync();
-                
-                await context.AddRangeAsync(
+                templates.ToList().ForEach(t => t.ReadFromDisk());
+                await service.CreateImplantTemplates(templates);
+
+                await service.CreateEntities(
                     new ListenerTypeImplantTemplate
                     {
-                        ListenerType = await context.GetListenerTypeByName("HTTP"),
-                        ImplantTemplate = await context.GetImplantTemplateByName("GruntHTTP")
+                        ListenerType = await service.GetListenerTypeByName("HTTP"),
+                        ImplantTemplate = await service.GetImplantTemplateByName("GruntHTTP")
                     },
                     new ListenerTypeImplantTemplate
                     {
-                        ListenerType = await context.GetListenerTypeByName("HTTP"),
-                        ImplantTemplate = await context.GetImplantTemplateByName("GruntSMB")
+                        ListenerType = await service.GetListenerTypeByName("HTTP"),
+                        ImplantTemplate = await service.GetImplantTemplateByName("GruntSMB")
                     },
                     new ListenerTypeImplantTemplate
                     {
-                        ListenerType = await context.GetListenerTypeByName("Bridge"),
-                        ImplantTemplate = await context.GetImplantTemplateByName("GruntBridge")
+                        ListenerType = await service.GetListenerTypeByName("Bridge"),
+                        ImplantTemplate = await service.GetImplantTemplateByName("GruntBridge")
                     },
                     new ListenerTypeImplantTemplate
                     {
-                        ListenerType = await context.GetListenerTypeByName("Bridge"),
-                        ImplantTemplate = await context.GetImplantTemplateByName("GruntSMB")
+                        ListenerType = await service.GetListenerTypeByName("Bridge"),
+                        ImplantTemplate = await service.GetImplantTemplateByName("GruntSMB")
                     },
                     new ListenerTypeImplantTemplate
                     {
-                        ListenerType = await context.GetListenerTypeByName("HTTP"),
-                        ImplantTemplate = await context.GetImplantTemplateByName("Brute")
+                        ListenerType = await service.GetListenerTypeByName("HTTP"),
+                        ImplantTemplate = await service.GetImplantTemplateByName("Brute")
                     }
                 );
             }
         }
 
-        public async static Task InitializeListeners(CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public async static Task InitializeListeners(ICovenantService service, CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
         {
             if (!context.ListenerTypes.Any())
             {
-                var listenerTypes = new List<ListenerType>
-                {
+                await service.CreateEntities<ListenerType>(
                     new ListenerType { Name = "HTTP", Description = "Listens on HTTP protocol." },
-                    new ListenerType { Name= "Bridge", Description = "Creates a C2 Bridge for custom listeners." }
-                };
-                await context.ListenerTypes.AddRangeAsync(listenerTypes);
-                await context.SaveChangesAsync();
+                    new ListenerType { Name = "Bridge", Description = "Creates a C2 Bridge for custom listeners." }
+                );
             }
             if (!context.Profiles.Any())
             {
                 string[] files = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories);
-                List<HttpProfile> httpProfiles = files.Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+                HttpProfile[] httpProfiles = files.Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
                     .Select(F => HttpProfile.Create(F))
-                    .ToList();
-                List<BridgeProfile> bridgeProfiles = files.Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
+                    .ToArray();
+                BridgeProfile[] bridgeProfiles = files.Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
                     .Select(F => BridgeProfile.Create(F))
-                    .ToList();
-                await context.Profiles.AddRangeAsync(httpProfiles);
-                await context.Profiles.AddRangeAsync(bridgeProfiles);
-                await context.SaveChangesAsync();
+                    .ToArray();
+                await service.CreateProfiles(httpProfiles);
+                await service.CreateProfiles(bridgeProfiles);
             }
-            var listeners = context.Listeners.Where(L => L.Status == ListenerStatus.Active);
+            var listeners = (await service.GetListeners()).Where(L => L.Status == ListenerStatus.Active);
 
             foreach (Listener l in listeners)
             {
-                l.Profile = await context.GetProfile(l.ProfileId);
-                await context.StartListener(l.Id, ListenerCancellationTokens);
+                l.Profile = await service.GetProfile(l.ProfileId);
+                await service.StartListener(l.Id);
             }
         }
 
-        public async static Task InitializeLaunchers(CovenantContext context)
+        public async static Task InitializeLaunchers(ICovenantService service, CovenantContext context)
         {
             if (!context.Launchers.Any())
             {
-                var launchers = new List<Launcher>
+                var launchers = new Launcher[]
                 {
                     new BinaryLauncher(),
                     new PowerShellLauncher(),
@@ -155,12 +152,11 @@ namespace Covenant.Core
                     new CscriptLauncher(),
                     new WscriptLauncher()
                 };
-                await context.Launchers.AddRangeAsync(launchers);
-                await context.SaveChangesAsync();
+                await service.CreateEntities(launchers);
             }
         }
 
-        public async static Task InitializeTasks(CovenantContext context)
+        public async static Task InitializeTasks(ICovenantService service, CovenantContext context)
         {
             if (!context.ReferenceAssemblies.Any())
             {
@@ -184,12 +180,11 @@ namespace Covenant.Core
                         DotNetVersion = Common.DotNetVersion.Net40
                     });
                 });
-                await context.ReferenceAssemblies.AddRangeAsync(ReferenceAssemblies);
-                await context.SaveChangesAsync();
+                await service.CreateReferenceAssemblies(ReferenceAssemblies.ToArray());
             }
             if (!context.EmbeddedResources.Any())
             {
-                IEnumerable<EmbeddedResource> EmbeddedResources = Directory.GetFiles(Common.CovenantEmbeddedResourcesDirectory).Select(R =>
+                EmbeddedResource[] EmbeddedResources = Directory.GetFiles(Common.CovenantEmbeddedResourcesDirectory).Select(R =>
                 {
                     FileInfo info = new FileInfo(R);
                     return new EmbeddedResource
@@ -197,39 +192,38 @@ namespace Covenant.Core
                         Name = info.Name,
                         Location = info.FullName
                     };
-                });
-                await context.EmbeddedResources.AddRangeAsync(EmbeddedResources);
-                await context.SaveChangesAsync();
+                }).ToArray();
+                await service.CreateEmbeddedResources(EmbeddedResources);
             }
 
             #region ReferenceSourceLibraries
             if (!context.ReferenceSourceLibraries.Any())
             {
-                var ReferenceSourceLibraries = new List<ReferenceSourceLibrary>
+                var ReferenceSourceLibraries = new ReferenceSourceLibrary[]
                 {
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpSploit", Description = "SharpSploit is a library for C# post-exploitation modules.",
                         Location = Common.CovenantReferenceSourceLibraries + "SharpSploit" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "Rubeus", Description = "Rubeus is a C# toolset for raw Kerberos interaction and abuses.",
                         Location = Common.CovenantReferenceSourceLibraries + "Rubeus" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "Seatbelt", Description = "Seatbelt is a C# project that performs a number of security oriented host-survey \"safety checks\" relevant from both offensive and defensive security perspectives.",
                         Location = Common.CovenantReferenceSourceLibraries + "Seatbelt" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpDPAPI", Description = "SharpDPAPI is a C# port of some Mimikatz DPAPI functionality.",
                         Location = Common.CovenantReferenceSourceLibraries + "SharpDPAPI" + Path.DirectorySeparatorChar + "SharpDPAPI" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     // new ReferenceSourceLibrary
                     // {
@@ -241,141 +235,140 @@ namespace Covenant.Core
                     {
                         Name = "SharpDump", Description = "SharpDump is a C# port of PowerSploit's Out-Minidump.ps1 functionality.",
                         Location = Common.CovenantReferenceSourceLibraries + "SharpDump" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpUp", Description = "SharpUp is a C# port of various PowerUp functionality.",
                         Location = Common.CovenantReferenceSourceLibraries + "SharpUp" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpWMI", Description = "SharpWMI is a C# implementation of various WMI functionality.",
                         Location = Common.CovenantReferenceSourceLibraries + "SharpWMI" + Path.DirectorySeparatorChar,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     }
                 };
-                await context.ReferenceSourceLibraries.AddRangeAsync(ReferenceSourceLibraries);
-                await context.SaveChangesAsync();
+                await service.CreateReferenceSourceLibraries(ReferenceSourceLibraries);
 
-                var ss = await context.GetReferenceSourceLibraryByName("SharpSploit");
-                var ru = await context.GetReferenceSourceLibraryByName("Rubeus");
-                var se = await context.GetReferenceSourceLibraryByName("Seatbelt");
-                var sd = await context.GetReferenceSourceLibraryByName("SharpDPAPI");
-                // var sc = await context.GetReferenceSourceLibraryByName("SharpChrome");
-                var sdu = await context.GetReferenceSourceLibraryByName("SharpDump");
-                var su = await context.GetReferenceSourceLibraryByName("SharpUp");
-                var sw = await context.GetReferenceSourceLibraryByName("SharpWMI");
-                await context.AddRangeAsync(
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net40) },
+                var ss = await service.GetReferenceSourceLibraryByName("SharpSploit");
+                var ru = await service.GetReferenceSourceLibraryByName("Rubeus");
+                var se = await service.GetReferenceSourceLibraryByName("Seatbelt");
+                var sd = await service.GetReferenceSourceLibraryByName("SharpDPAPI");
+                // var sc = await service.GetReferenceSourceLibraryByName("SharpChrome");
+                var sdu = await service.GetReferenceSourceLibraryByName("SharpDump");
+                var su = await service.GetReferenceSourceLibraryByName("SharpUp");
+                var sw = await service.GetReferenceSourceLibraryByName("SharpWMI");
+                await service.CreateEntities(
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net40) },
 
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ru, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40) },
 
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = se, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net40) },
 
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net40) },
 
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net35) },
-    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net40) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net35) },
+    // new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net40) },
 
 
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sdu, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
 
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = su, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
 
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) }
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sw, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40) }
                 );
             }
             #endregion
             if (!context.GruntTasks.Any())
             {
-                var GruntTasks = new List<GruntTask>
+                var GruntTasks = new GruntTask[]
                 {
                     #region GruntTasks DotNetFramework
                     new GruntTask
                     {
                         Name = "Shell",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Shell command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Shell" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -395,7 +388,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ShellCmd",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Shell command using \"cmd.exe /c\"",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ShellCmd" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -415,7 +408,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ShellRunAs",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Shell command as a specified user.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ShellRunAs" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -465,7 +458,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ShellCmdRunAs",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Shell command using \"cmd.exe /c\" as a specified user.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ShellCmdRunAs" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -515,7 +508,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PowerShell",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a PowerShell command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PowerShell" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -535,7 +528,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Assembly",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a dotnet Assembly EntryPoint.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Assembly" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -575,7 +568,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "AssemblyReflect",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a dotnet Assembly method using reflection.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "AssemblyReflect" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -636,7 +629,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ListDirectory",
-                        AlternateNames = new List<string> { "ls" },
+                        Aliases = new List<string> { "ls" },
                         Description = "Get a listing of the current directory.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ListDirectory" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -657,7 +650,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetCurrentDirectory",
-                        AlternateNames = new List<string>{ "pwd" },
+                        Aliases = new List<string>{ "pwd" },
                         Description = "Get the Grunt's Current Working Directory",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetCurrentDirectory" + ".task")),
                         Options = new List<GruntTaskOption>{ }
@@ -665,7 +658,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ChangeDirectory",
-                        AlternateNames = new List<string> { "cd" },
+                        Aliases = new List<string> { "cd" },
                         Description = "Change the current directory.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ChangeDirectory" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -685,7 +678,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ReadTextFile",
-                        AlternateNames = new List<string>{"cat"},
+                        Aliases = new List<string>{"cat"},
                         Description = "Read a text file on disk.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ReadTextFile" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -705,7 +698,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Delete",
-                        AlternateNames = new List<string>{ "rm", "del" },
+                        Aliases = new List<string>{ "rm", "del" },
                         Description = "Delete a file or directory.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Delete" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -725,7 +718,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ProcessList",
-                        AlternateNames = new List<string> { "ps" },
+                        Aliases = new List<string> { "ps" },
                         Description = "Get a list of currently running processes.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ProcessList" + ".task")),
                         Options = new List<GruntTaskOption> { }
@@ -733,7 +726,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Kill",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Kills the process of a given Process ID.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Kill" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -754,7 +747,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Upload",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Upload a file.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Upload" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -783,7 +776,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Download",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Download a file.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Download" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -810,7 +803,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Mimikatz",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Mimikatz" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -830,7 +823,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "LogonPasswords",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute the 'privilege::debug sekurlsa::logonPasswords' Mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "LogonPasswords" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -838,7 +831,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "LsaSecrets",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute the 'privilege::debug lsadump::secrets' Mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "LsaSecrets" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -846,7 +839,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "LsaCache",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute the 'privilege::debug lsadump::cache' Mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "LsaCache" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -854,7 +847,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SamDump",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute the 'privilege::debug lsadump::sam' Mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SamDump" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -862,7 +855,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Wdigest",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute the 'sekurlsa::wdigest' Mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Wdigest" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -870,7 +863,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "DCSync",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute the 'lsadump::dcsync Mimikatz command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "DCSync" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -910,7 +903,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PortScan",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Perform a TCP port scan.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PortScan" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -951,7 +944,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Rubeus",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use a rubeus command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Rubeus" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -972,7 +965,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Kerberoast",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Perform a \"Kerberoast\" attack that retrieves crackable service tickets for Domain User's w/ an SPN set.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Kerberoast" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1002,7 +995,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SafetyKatz",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use SafetyKatz.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SafetyKatz" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -1010,7 +1003,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SharpDPAPI",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use a SharpDPAPI command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpDPAPI" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1052,7 +1045,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SharpUp",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use a SharpUp command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpUp" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1073,7 +1066,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SharpDump",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use a SharpDump command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpDump" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1094,7 +1087,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Seatbelt",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use a Seatbelt command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "Seatbelt" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1121,7 +1114,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SharpWMI",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Use a SharpWMI command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SharpWMI" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1142,7 +1135,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "WhoAmI",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets the username of the currently used/impersonated token.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "WhoAmI" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -1150,7 +1143,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ImpersonateUser",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Find a process owned by the specified user and impersonate the token. Used to execute subsequent commands as the specified user.",
                         TokenTask = true,
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ImpersonateUser" + ".task")),
@@ -1171,7 +1164,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ImpersonateProcess",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Impersonate the token of the specified process. Used to execute subsequent commands as the user associated with the token of the specified process.",
                         TokenTask = true,
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ImpersonateProcess" + ".task")),
@@ -1192,7 +1185,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetSystem",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Impersonate the SYSTEM user. Equates to ImpersonateUser(\"NT AUTHORITY\\SYSTEM\").",
                         TokenTask = true,
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetSystem" + ".task")),
@@ -1201,7 +1194,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "MakeToken",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Makes a new token with a specified username and password, and impersonates it to conduct future actions as the specified user.",
                         TokenTask = true,
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "MakeToken" + ".task")),
@@ -1253,7 +1246,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "RevertToSelf",
-                        AlternateNames = new List<string> { "RevToSelf" },
+                        Aliases = new List<string> { "RevToSelf" },
                         Description = "Ends the impersonation of any token, reverting back to the initial token associated with the current process. Useful in conjuction with functions impersonate a token and do not automatically RevertToSelf, such as ImpersonateUser(), ImpersonateProcess(), GetSystem(), and MakeToken().",
                         TokenTask = true,
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "RevertToSelf" + ".task")),
@@ -1262,7 +1255,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "WMICommand",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a process on a remote system using Win32_Process Create, optionally with alternate credentials.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "WMI" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1314,7 +1307,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "WMIGrunt",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using Win32_Process Create, optionally with alternate credentials.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "WMI" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1366,7 +1359,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "DCOMCommand",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a process on a remote system using various DCOM methods.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "DCOM" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1429,7 +1422,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "DCOMGrunt",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using various DCOM methods.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "DCOM" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1470,7 +1463,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PowerShellRemotingCommand",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a PowerShell command on a remote system using PowerShell Remoting, optionally with alternate credentials.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PowerShellRemoting" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1529,7 +1522,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PowerShellRemotingGrunt",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Grunt Launcher on a remote system using PowerShell Remoting, optionally with alternate credentials.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PowerShellRemoting" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1588,7 +1581,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "BypassUACCommand",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Bypasses UAC through token duplication and executes a command with high integrity.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassUAC" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1641,7 +1634,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "BypassUACGrunt",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Bypasses UAC through token duplication and executes a Grunt Launcher with high integrity.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassUAC" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1661,7 +1654,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetDomainUser",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of specified (or all) user `DomainObject`s in the current Domain.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetDomainUser" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1682,7 +1675,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetDomainGroup",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of specified (or all) group `DomainObject`s in the current Domain.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetDomainGroup" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1703,7 +1696,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetDomainComputer",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of specified (or all) computer `DomainObject`s in the current Domain.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetDomainComputer" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1724,7 +1717,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetNetLocalGroup",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of `LocalGroup`s from specified remote computer(s).",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetLocalGroup" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1745,7 +1738,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetNetLocalGroupMember",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of `LocalGroupMember`s from specified remote computer(s).",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetLocalGroupMember" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1777,7 +1770,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetNetLoggedOnUser",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of `LoggedOnUser`s from specified remote computer(s).",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetLoggedOnUser" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1798,7 +1791,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetNetSession",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a list of `SessionInfo`s from specified remote computer(s).",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetNetSession" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1819,7 +1812,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetRegistryKey",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a value stored in registry.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1839,7 +1832,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SetRegistryKey",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Sets a value into the registry.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1869,7 +1862,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "GetRemoteRegistryKey",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets a value stored in registry on a remote system.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "GetRemoteRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1899,7 +1892,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SetRemoteRegistryKey",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Sets a value into the registry on a remote system.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "SetRemoteRegistryKey" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1939,7 +1932,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ShellCode",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Executes a specified shellcode byte array by copying it to pinned memory, modifying the memory permissions, and executing.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "ShellCode" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1959,7 +1952,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PrivExchange",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Performs the PrivExchange attack by sending a push notification to EWS.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PrivExchange" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -1999,7 +1992,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PersistCOMHijack",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Hijacks a CLSID key to execute a payload for persistence.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistCOMHijack" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -2029,7 +2022,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PersistStartup",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Installs a payload into the current users startup folder.\n\n\tPayload: Payload to write to a file. E.g. \"powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>\".\n\tFileName: Name of the file to write. E.g. \"startup.bat\".\n",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistStartup" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -2059,7 +2052,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PersistAutorun",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Installs an autorun value in HKCU or HKLM to execute a payload.\n\n\tTargetHive: Target hive to install autorun. Specify \"CurrentUser\" for HKCU and \"LocalMachine\" for HKLM.\n\tValue: Value to set in the registry. E.g. \"C:\\Example\\GruntStager.exe\"\n\tName: Name for the registy value.E.g. \"Updater\".\n",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "PersistAutorun" + ".task")),
                         Options = new List<GruntTaskOption>
@@ -2168,7 +2161,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "BypassAmsi",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Bypasses AMSI by patching the AmsiScanBuffer function.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpDirectory, "BypassAmsi" + ".task")),
                         Options = new List<GruntTaskOption>()
@@ -2178,11 +2171,11 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Set",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Set a Grunt setting.",
                         Code = "",
                         TaskingType = GruntTaskingType.SetOption,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2210,27 +2203,27 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Jobs",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Get active Jobs.",
                         Code = "",
                         TaskingType = GruntTaskingType.Jobs,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "Exit",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Exits the Grunt.",
                         Code = "",
                         TaskingType = GruntTaskingType.Exit,
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "Connect",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Connect to a P2P Grunt.",
                         Code = "",
                         TaskingType = GruntTaskingType.Connect,
@@ -2261,7 +2254,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Disconnect",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Disconnect from a ChildGrunt.",
                         Code = "",
                         TaskingType = GruntTaskingType.Disconnect,
@@ -2282,7 +2275,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "SharpShell",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute custom c# code.",
                         Code = "",
                         Options = new List<GruntTaskOption>
@@ -2302,7 +2295,7 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "PowerShellImport",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Import a PowerShell script.",
                         Code = "",
                         Options = new List<GruntTaskOption>
@@ -2322,10 +2315,10 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Help",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Show the help menu.",
                         Code = "",
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40, Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2345,19 +2338,19 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "WhoAmI",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Gets the username of the currently used/impersonated token.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "WhoAmI" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>()
                     },
                     new GruntTask
                     {
                         Name = "Shell",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Shell command.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "Shell" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2375,10 +2368,10 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ShellCmd",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a Shell command using \"cmd.exe /c\"",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ShellCmd" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2396,10 +2389,10 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "Assembly",
-                        AlternateNames = new List<string>(),
+                        Aliases = new List<string>(),
                         Description = "Execute a dotnet Assembly EntryPoint.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "Assembly" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2437,10 +2430,10 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ListDirectory",
-                        AlternateNames = new List<string> { "ls" },
+                        Aliases = new List<string> { "ls" },
                         Description = "Get a listing of the current directory.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ListDirectory" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2459,10 +2452,10 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ChangeDirectory",
-                        AlternateNames = new List<string> { "cd" },
+                        Aliases = new List<string> { "cd" },
                         Description = "Change the current directory.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ChangeDirectory" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption>
                         {
                             new GruntTaskOption
@@ -2480,166 +2473,165 @@ namespace Covenant.Core
                     new GruntTask
                     {
                         Name = "ProcessList",
-                        AlternateNames = new List<string> { "ps" },
+                        Aliases = new List<string> { "ps" },
                         Description = "Get a list of currently running processes.",
                         Code = File.ReadAllText(Path.Combine(Common.CovenantTaskCSharpNetCoreApp30Directory, "ProcessList" + ".task")),
-                        SupportedDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 },
                         Options = new List<GruntTaskOption> { }
                     }
                     #endregion
                 };
-                await context.GruntTasks.AddRangeAsync(GruntTasks);
-                await context.SaveChangesAsync();
+                await service.CreateGruntTasks(GruntTasks);
 
-                var ss = await context.GetReferenceSourceLibraryByName("SharpSploit");
-                var ru = await context.GetReferenceSourceLibraryByName("Rubeus");
-                var se = await context.GetReferenceSourceLibraryByName("Seatbelt");
-                var sd = await context.GetReferenceSourceLibraryByName("SharpDPAPI");
-                // var sc = await context.GetReferenceSourceLibraryByName("SharpChrome");
-                var sdu = await context.GetReferenceSourceLibraryByName("SharpDump");
-                var su = await context.GetReferenceSourceLibraryByName("SharpUp");
-                var sw = await context.GetReferenceSourceLibraryByName("SharpWMI");
-                await context.AddRangeAsync(
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Shell") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCmd") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellRunAs") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCmdRunAs") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PowerShell") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Assembly") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassAmsi") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("AssemblyReflect") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ListDirectory") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ChangeDirectory") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ProcessList") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("LogonPasswords") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("LsaSecrets") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("LsaCache") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SamDump") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Wdigest") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCSync") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PortScan") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ru, GruntTask = await context.GetGruntTaskByName("Rubeus") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("Kerberoast") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SafetyKatz") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sd, GruntTask = await context.GetGruntTaskByName("SharpDPAPI") },
-    // new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sc, GruntTask = await context.GetGruntTaskByName("SharpChrome") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = su, GruntTask = await context.GetGruntTaskByName("SharpUp") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sdu, GruntTask = await context.GetGruntTaskByName("SharpDump") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = se, GruntTask = await context.GetGruntTaskByName("Seatbelt") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sw, GruntTask = await context.GetGruntTaskByName("SharpWMI") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WhoAmI") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ImpersonateUser") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ImpersonateProcess") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetSystem") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("MakeToken") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("RevertToSelf") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WMICommand") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("WMIGrunt") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCOMCommand") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("DCOMGrunt") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PowerShellRemotingCommand") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PowerShellRemotingGrunt") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassUACCommand") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("BypassUACGrunt") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainUser") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainGroup") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetDomainComputer") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLocalGroup") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLocalGroupMember") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetLoggedOnUser") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetNetSession") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRegistryKey") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SetRegistryKey") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("GetRemoteRegistryKey") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SetRemoteRegistryKey") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("ShellCode") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("SharpShell") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PrivExchange") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistCOMHijack") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistStartup") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistAutorun") },
-    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await context.GetGruntTaskByName("PersistWMI") }
+                var ss = await service.GetReferenceSourceLibraryByName("SharpSploit");
+                var ru = await service.GetReferenceSourceLibraryByName("Rubeus");
+                var se = await service.GetReferenceSourceLibraryByName("Seatbelt");
+                var sd = await service.GetReferenceSourceLibraryByName("SharpDPAPI");
+                // var sc = await service.GetReferenceSourceLibraryByName("SharpChrome");
+                var sdu = await service.GetReferenceSourceLibraryByName("SharpDump");
+                var su = await service.GetReferenceSourceLibraryByName("SharpUp");
+                var sw = await service.GetReferenceSourceLibraryByName("SharpWMI");
+                await service.CreateEntities(
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("Shell") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ShellCmd") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ShellRunAs") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ShellCmdRunAs") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PowerShell") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("Assembly") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("BypassAmsi") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("AssemblyReflect") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ListDirectory") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ChangeDirectory") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ProcessList") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("Mimikatz") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("LogonPasswords") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("LsaSecrets") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("LsaCache") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("SamDump") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("Wdigest") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("DCSync") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PortScan") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ru, GruntTask = await service.GetGruntTaskByName("Rubeus") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("Kerberoast") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("SafetyKatz") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sd, GruntTask = await service.GetGruntTaskByName("SharpDPAPI") },
+    // new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sc, GruntTask = await service.GetGruntTaskByName("SharpChrome") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = su, GruntTask = await service.GetGruntTaskByName("SharpUp") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sdu, GruntTask = await service.GetGruntTaskByName("SharpDump") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = se, GruntTask = await service.GetGruntTaskByName("Seatbelt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = sw, GruntTask = await service.GetGruntTaskByName("SharpWMI") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("WhoAmI") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ImpersonateUser") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ImpersonateProcess") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetSystem") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("MakeToken") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("RevertToSelf") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("WMICommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("WMIGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("DCOMCommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("DCOMGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PowerShellRemotingCommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PowerShellRemotingGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("BypassUACCommand") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("BypassUACGrunt") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetDomainUser") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetDomainGroup") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetDomainComputer") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetNetLocalGroup") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetNetLocalGroupMember") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetNetLoggedOnUser") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetNetSession") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("SetRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("GetRemoteRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("SetRemoteRegistryKey") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("ShellCode") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("SharpShell") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PrivExchange") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PersistCOMHijack") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PersistStartup") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PersistAutorun") },
+    new GruntTaskReferenceSourceLibrary { ReferenceSourceLibrary = ss, GruntTask = await service.GetGruntTaskByName("PersistWMI") }
                 );
 
-                var er1 = await context.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x64.dll");
-                var er2 = await context.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x86.dll");
-                await context.AddRangeAsync(
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("LogonPasswords") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("LsaSecrets") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("LsaCache") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("SamDump") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("Wdigest") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("DCSync") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await context.GetGruntTaskByName("SafetyKatz") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("Mimikatz") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("LogonPasswords") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("LsaSecrets") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("LsaCache") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("SamDump") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("Wdigest") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("DCSync") },
-                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await context.GetGruntTaskByName("SafetyKatz") }
+                var er1 = await service.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x64.dll");
+                var er2 = await service.GetEmbeddedResourceByName("SharpSploit.Resources.powerkatz_x86.dll");
+                await service.CreateEntities(
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("Mimikatz") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("LogonPasswords") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("LsaSecrets") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("LsaCache") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("SamDump") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("Wdigest") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("DCSync") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er1, GruntTask = await service.GetGruntTaskByName("SafetyKatz") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("Mimikatz") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("LogonPasswords") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("LsaSecrets") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("LsaCache") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("SamDump") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("Wdigest") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("DCSync") },
+                    new GruntTaskEmbeddedResource { EmbeddedResource = er2, GruntTask = await service.GetGruntTaskByName("SafetyKatz") }
                 );
-                var upload = await context.GetGruntTaskByName("Upload");
-                var download = await context.GetGruntTaskByName("Download");
-                var privexchange = await context.GetGruntTaskByName("PrivExchange");
-                var screenshot = await context.GetGruntTaskByName("ScreenShot");
-                var readtextfile = await context.GetGruntTaskByName("ReadTextFile");
-                var delete = await context.GetGruntTaskByName("Delete");
-                var kill = await context.GetGruntTaskByName("Kill");
-                var getcurrentdir = await context.GetGruntTaskByName("GetCurrentDirectory");
-                await context.AddRangeAsync(
-    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
+                var upload = await service.GetGruntTaskByName("Upload");
+                var download = await service.GetGruntTaskByName("Download");
+                var privexchange = await service.GetGruntTaskByName("PrivExchange");
+                var screenshot = await service.GetGruntTaskByName("ScreenShot");
+                var readtextfile = await service.GetGruntTaskByName("ReadTextFile");
+                var delete = await service.GetGruntTaskByName("Delete");
+                var kill = await service.GetGruntTaskByName("Kill");
+                var getcurrentdir = await service.GetGruntTaskByName("GetCurrentDirectory");
+                await service.CreateEntities(
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = upload, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = download, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = readtextfile, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = delete, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = kill, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = getcurrentdir, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = privexchange, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40) },
 
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
-    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await context.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Drawing.dll", Common.DotNetVersion.Net40) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35) },
+    new GruntTaskReferenceAssembly { GruntTask = screenshot, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40) }
 
                 );
             }
@@ -2647,7 +2639,7 @@ namespace Covenant.Core
 
         public async static Task InitializeRoles(RoleManager<IdentityRole> roleManager)
         {
-            List<string> roles = new List<string> { "Administrator", "User", "Listener" };
+            List<string> roles = new List<string> { "Administrator", "User", "Listener", "SignalR" };
             foreach (string role in roles)
             {
                 if (!(await roleManager.RoleExistsAsync(role)))

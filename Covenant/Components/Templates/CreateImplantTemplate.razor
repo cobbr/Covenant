@@ -1,0 +1,33 @@
+﻿@page "/template/create"
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inherits CovenantServiceComponentBase
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Create Implant Template</h1>
+</div>
+
+<ImplantTemplateForm ImplantTemplate="ImplantTemplate" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
+@code {
+    [Parameter]
+    public ImplantTemplate ImplantTemplate { get; set; }
+
+    private async Task OnCreate(ImplantTemplate template)
+    {
+        try
+        {
+            await ImplantTemplateForm.SubmitCompatibleListenerTypes(this.ImplantTemplate, this.ICovenantService, this.IJSRuntime);
+            this.ImplantTemplate = await ICovenantService.CreateImplantTemplate(template);
+            this.StateHasChanged();
+            // return RedirectToAction(nameof(Index));
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+}

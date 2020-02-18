@@ -1,0 +1,17 @@
+﻿@using Covenant.Models.Launchers
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="TargetName">TargetName</label>
+        <input id="TargetName" name="TargetName" value="@Launcher.TargetName" class="form-control">
+    </div>
+    <div class="form-group col-md-6">
+        <label for="TaskName">TaskName</label>
+        <input id="TaskName" name="TaskName" value="@Launcher.TaskName" class="form-control">
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public MSBuildLauncher Launcher { get; set; }
+}

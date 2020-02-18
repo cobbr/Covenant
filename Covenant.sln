@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.161
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Covenant", "Covenant\Covenant.csproj", "{D5865774-CD82-4CCE-A3F1-7F2C4639301B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Covenant", "Covenant\Covenant.csproj", "{D5865774-CD82-4CCE-A3F1-7F2C4639301B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

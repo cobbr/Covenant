@@ -54,10 +54,12 @@ namespace Covenant.Models.Grunts
         [NotMapped]
         public List<ListenerType> CompatibleListenerTypes => ListenerTypeImplantTemplates.Select(l => l.ListenerType).ToList();
 
-        public string StagerCode { get; set; }
-        public string ExecutorCode { get; set; }
+        public List<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion>();
 
-        [JsonIgnore]
+        public string StagerCode { get; set; } = "";
+        public string ExecutorCode { get; set; } = "";
+
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<Grunt> Grunts { get; set; } = new List<Grunt>();
 
         private string StagerLocation

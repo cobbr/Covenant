@@ -49,6 +49,12 @@ namespace Covenant.Models.Listeners
             this.ProfileId = ProfileId;
         }
 
+        public BridgeListener(ListenerType type, Profile profile) : this(type.Id, profile.Id)
+        {
+            this.ListenerType = type;
+            this.Profile = profile;
+        }
+
         public override CancellationTokenSource Start()
         {
             this.InternalListener = new InternalListener();

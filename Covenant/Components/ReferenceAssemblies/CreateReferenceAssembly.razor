@@ -1,0 +1,30 @@
+﻿@page "/referenceassembly/create"
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inherits CovenantServiceComponentBase
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Create ReferenceAssembly</h1>
+</div>
+
+<ReferenceAssemblyForm ReferenceAssembly="ReferenceAssembly" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
+@code {
+    [Parameter]
+    public ReferenceAssembly ReferenceAssembly { get; set; }
+
+    public async Task OnCreate(ReferenceAssembly assembly)
+    {
+        try
+        {
+            this.ReferenceAssembly = await ICovenantService.CreateReferenceAssembly(assembly);
+            this.StateHasChanged();
+            // return RedirectToAction(nameof(Edit), new { Id = createdAssembly.Id });
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return View(new ReferenceAssembly());
+        }
+    }
+}

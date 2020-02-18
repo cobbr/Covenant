@@ -19,11 +19,11 @@ namespace Covenant.Controllers
     [Route("api/events")]
     public class EventApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public EventApiController(CovenantContext context)
+        public EventApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/events
@@ -33,7 +33,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetEvents")]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
-            return Ok(await _context.GetEvents());
+            return Ok(await _service.GetEvents());
         }
 
         // GET api/events/{id}
@@ -45,7 +45,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetEvent(id);
+                return await _service.GetEvent(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -66,7 +66,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return _context.GetEventTime();
+                return _service.GetEventTime();
             }
             catch (ControllerNotFoundException e)
             {
@@ -87,7 +87,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return Ok(await _context.GetEventsAfter(fromdate));
+                return Ok(await _service.GetEventsAfter(fromdate));
             }
             catch (ControllerNotFoundException e)
             {
@@ -108,7 +108,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return Ok(await _context.GetEventsRange(fromdate, todate));
+                return Ok(await _service.GetEventsRange(fromdate, todate));
             }
             catch (ControllerNotFoundException e)
             {
@@ -130,7 +130,7 @@ namespace Covenant.Controllers
 		{
             try
             {
-                Event createdEvent = await _context.CreateEvent(anEvent);
+                Event createdEvent = await _service.CreateEvent(anEvent);
                 return CreatedAtRoute(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
             }
             catch (ControllerNotFoundException e)
@@ -152,7 +152,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetDownloadEvent(id);
+                return await _service.GetDownloadEvent(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -173,7 +173,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetDownloadContent(id);
+                return await _service.GetDownloadContent(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -195,7 +195,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                DownloadEvent createdEvent = await _context.CreateDownloadEvent(downloadEvent);
+                DownloadEvent createdEvent = await _service.CreateDownloadEvent(downloadEvent);
                 return CreatedAtRoute(nameof(GetEvent), new { id = createdEvent.Id }, createdEvent);
             }
             catch (ControllerNotFoundException e)

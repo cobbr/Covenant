@@ -123,6 +123,12 @@ namespace Covenant.Models.Listeners
             this.ProfileId = ProfileId;
         }
 
+        public HttpListener(ListenerType type, Profile profile) : this(type.Id, profile.Id)
+        {
+            this.ListenerType = type;
+            this.Profile = profile;
+        }
+
         private bool CreateDirectories()
         {
             if (!Directory.Exists(this.ListenerDirectory))

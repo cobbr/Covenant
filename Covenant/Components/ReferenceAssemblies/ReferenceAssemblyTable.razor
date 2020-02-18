@@ -1,0 +1,57 @@
+﻿@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="ReferenceAssemblies.ToList()" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="ReferenceAssembly" TItem2="string" GetSortableProperty="(assembly) => assembly.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceAssembly" TItem2="Common.DotNetVersion" GetSortableProperty="(assembly) => assembly.DotNetVersion">
+            <HeaderContent>DotNetVersion</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceAssembly" TItem2="string" GetSortableProperty="(assembly) => assembly.Location">
+            <HeaderContent>Location</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="assembly">
+        <FilterableTableRow Item="assembly" IsDisplayed="IsRowDisplayed">
+            <RowContent>
+                <td>
+                    <a href="/referenceassembly/edit/@assembly.Id">
+                        @assembly.Name
+                    </a>
+                </td>
+                <td>@assembly.DotNetVersion</td>
+                <td>@assembly.Location</td>
+            </RowContent>
+        </FilterableTableRow>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<ReferenceAssembly> ReferenceAssemblies { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = true;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 10;
+
+    private bool IsRowDisplayed(ReferenceAssembly assembly, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            assembly.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            assembly.DotNetVersion.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            assembly.Location.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

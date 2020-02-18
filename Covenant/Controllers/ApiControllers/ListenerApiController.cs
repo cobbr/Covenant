@@ -26,19 +26,11 @@ namespace Covenant.Controllers
     [Route("api/listeners")]
     public class ListenerApiController : Controller
     {
-        private readonly CovenantContext _context;
-        private readonly UserManager<CovenantUser> _userManager;
-        private readonly IConfiguration _configuration;
-        private readonly ConcurrentDictionary<int, CancellationTokenSource> _ListenerCancellationTokens;
-        private readonly IHubContext<EventHub> _eventhub;
+        private readonly ICovenantService _service;
 
-        public ListenerApiController(CovenantContext context, UserManager<CovenantUser> userManager, IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens, IHubContext<EventHub> eventhub)
+        public ListenerApiController(ICovenantService service)
         {
-            _context = context;
-            _userManager = userManager;
-            _configuration = configuration;
-            _ListenerCancellationTokens = ListenerCancellationTokens;
-            _eventhub = eventhub;
+            _service = service;
         }
 
         // GET: api/listeners/types
@@ -48,7 +40,7 @@ namespace Covenant.Controllers
         [HttpGet("types", Name = "GetListenerTypes")]
         public async Task<ActionResult<IEnumerable<ListenerType>>> GetListenerTypes()
         {
-            return Ok(await _context.GetListenerTypes());
+            return Ok(await _service.GetListenerTypes());
         }
 
         // GET: api/listeners/types/{id}
@@ -60,7 +52,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetListenerType(id);
+                return await _service.GetListenerType(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -79,7 +71,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetListeners")]
         public async Task<ActionResult<IEnumerable<Listener>>> GetListeners()
         {
-            return Ok(await _context.GetListeners());
+            return Ok(await _service.GetListeners());
         }
 
         // GET: api/listeners/{id}
@@ -91,7 +83,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetListener(id);
+                return await _service.GetListener(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -112,7 +104,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditListener(listener, _ListenerCancellationTokens, _eventhub);
+                return await _service.EditListener(listener);
             }
             catch (ControllerNotFoundException e)
             {
@@ -133,7 +125,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteListener(id, _ListenerCancellationTokens);
+                await _service.DeleteListener(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)
@@ -155,7 +147,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetHttpListener(id);
+                return await _service.GetHttpListener(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -176,7 +168,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.CreateHttpListener(_userManager, _configuration, listener, _ListenerCancellationTokens, _eventhub);
+                return await _service.CreateHttpListener(listener);
             }
             catch (ControllerNotFoundException e)
             {
@@ -197,7 +189,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHttpListener(listener, _ListenerCancellationTokens, _eventhub);
+                return await _service.EditHttpListener(listener);
             }
             catch (ControllerNotFoundException e)
             {
@@ -217,7 +209,7 @@ namespace Covenant.Controllers
         [HttpGet("{id}/hostedfiles", Name = "GetHostedFiles")]
         public async Task<ActionResult<IEnumerable<HostedFile>>> GetHostedFiles(int id)
         {
-            return Ok(await _context.GetHostedFiles(id));
+            return Ok(await _service.GetHostedFilesForListener(id));
         }
 
         // GET api/listeners/{id}/hostedfiles/{hfid}
@@ -229,7 +221,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetHostedFile(id, hfid);
+                return await _service.GetHostedFileForListener(id, hfid);
             }
             catch (ControllerNotFoundException e)
             {
@@ -251,7 +243,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                HostedFile hostedFile = await _context.CreateHostedFile(file);
+                HostedFile hostedFile = await _service.CreateHostedFile(file);
                 return CreatedAtRoute(nameof(GetHostedFile), new { id = id, hfid = file.Id }, hostedFile);
             }
             catch (ControllerNotFoundException e)
@@ -273,7 +265,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHostedFile(id, file);
+                return await _service.EditHostedFile(id, file);
             }
             catch (ControllerNotFoundException e)
             {

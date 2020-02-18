@@ -21,18 +21,18 @@ namespace Covenant.Controllers.ApiControllers
     [Route("api/embeddedresources")]
     public class EmbeddedResourceApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public EmbeddedResourceApiController(CovenantContext context)
+        public EmbeddedResourceApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/embeddedresources
         [HttpGet(Name = "GetEmbeddedResources")]
         public async Task<ActionResult<IEnumerable<EmbeddedResource>>> GetEmbeddedResources()
         {
-            return Ok(await _context.GetEmbeddedResources());
+            return Ok(await _service.GetEmbeddedResources());
         }
 
         // GET api/embeddedresources/{id}
@@ -41,7 +41,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                return await _context.GetEmbeddedResource(id);
+                return await _service.GetEmbeddedResource(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -63,7 +63,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                EmbeddedResource createdResource = await _context.CreateEmbeddedResource(resource);
+                EmbeddedResource createdResource = await _service.CreateEmbeddedResource(resource);
                 return CreatedAtRoute(nameof(GetEmbeddedResource), new { id = createdResource.Id }, createdResource);
             }
             catch (ControllerNotFoundException e)
@@ -86,7 +86,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                return await _context.EditEmbeddedResource(resource);
+                return await _service.EditEmbeddedResource(resource);
             }
             catch (ControllerNotFoundException e)
             {
@@ -108,7 +108,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                await _context.DeleteEmbeddedResource(id);
+                await _service.DeleteEmbeddedResource(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)

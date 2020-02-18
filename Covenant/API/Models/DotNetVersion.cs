@@ -17,10 +17,10 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum DotNetVersion
     {
-        [EnumMember(Value = "net40")]
-        Net40,
         [EnumMember(Value = "net35")]
         Net35,
+        [EnumMember(Value = "net40")]
+        Net40,
         [EnumMember(Value = "netCore21")]
         NetCore21,
         [EnumMember(Value = "netCore30")]
@@ -37,10 +37,10 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case DotNetVersion.Net40:
-                    return "net40";
                 case DotNetVersion.Net35:
                     return "net35";
+                case DotNetVersion.Net40:
+                    return "net40";
                 case DotNetVersion.NetCore21:
                     return "netCore21";
                 case DotNetVersion.NetCore30:
@@ -53,10 +53,10 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "net40":
-                    return DotNetVersion.Net40;
                 case "net35":
                     return DotNetVersion.Net35;
+                case "net40":
+                    return DotNetVersion.Net40;
                 case "netCore21":
                     return DotNetVersion.NetCore21;
                 case "netCore30":

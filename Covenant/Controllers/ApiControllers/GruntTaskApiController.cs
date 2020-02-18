@@ -19,11 +19,11 @@ namespace Covenant.Controllers
     [Route("api/grunttasks")]
     public class GruntTaskApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public GruntTaskApiController(CovenantContext context)
+        public GruntTaskApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/grunttasks
@@ -33,7 +33,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetGruntTasks")]
         public async Task<ActionResult<IEnumerable<GruntTask>>> GetGruntTasks()
         {
-            return Ok(await _context.GetGruntTasks());
+            return Ok(await _service.GetGruntTasks());
         }
 
         // GET: api/grunttasks/{id}
@@ -45,7 +45,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntTask(id);
+                return await _service.GetGruntTask(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -65,7 +65,7 @@ namespace Covenant.Controllers
         [ProducesResponseType(typeof(GruntTask), 201)]
         public async Task<ActionResult<GruntTask>> CreateGruntTask([FromBody] GruntTask task)
         {
-            GruntTask savedTask = await _context.CreateGruntTask(task);
+            GruntTask savedTask = await _service.CreateGruntTask(task);
             return CreatedAtRoute(nameof(GetGruntTask), new { id = savedTask.Id }, savedTask);
         }
 
@@ -78,7 +78,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditGruntTask(task);
+                return await _service.EditGruntTask(task);
             }
             catch (ControllerNotFoundException e)
             {
@@ -100,7 +100,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteGruntTask(id);
+                await _service.DeleteGruntTask(id);
             }
             catch (ControllerNotFoundException e)
             {

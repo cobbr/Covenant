@@ -1,0 +1,33 @@
+﻿@page "/profile/edit/{ProfileId:int}"
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Listeners
+@inject IJSRuntime IJSRuntime
+@inherits CovenantServiceComponentBase
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Profile: <span id="task-name" class="text-primary">@Profile.Name</span></h1>
+</div>
+
+@if (Profile.Type == ProfileType.HTTP)
+{
+    <HttpProfileForm Profile=@((HttpProfile)Profile) Action="/profile/edithttp"></HttpProfileForm>
+}
+else if (Profile.Type == ProfileType.Bridge)
+{
+    <BridgeProfileForm Profile=@((BridgeProfile)Profile) Action="/profile/editbridge"></BridgeProfileForm>
+}
+
+@code {
+    [Parameter]
+    public int ProfileId { get; set; }
+
+    [Parameter]
+    public Profile Profile { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Profile = this.Profile ?? await ICovenantService.GetProfile(this.ProfileId);
+    }
+}

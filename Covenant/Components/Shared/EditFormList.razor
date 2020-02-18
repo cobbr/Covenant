@@ -1,0 +1,42 @@
+﻿@using System.Collections.Generic
+
+<div class="form-row">
+    <div class="form-group col-md-6 mb-0">
+        <label for=@(InputName + "_0_")>@InputName</label><br />
+    </div>
+</div>
+@for (int i = 0; i < FormList.Count; i++)
+{
+    int number = i;
+    <div class="form-row form-group">
+        <div class="col-md-6">
+            <input id=@(InputName + "_" + number + "_") name=@(InputName + "[" + number + "]") value="@FormList[i]" class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" @onclick="(e => RemoveRow(number))" class="btn btn-outline-danger btn-sm xbutton">
+                <span class="fe fe-x"></span>
+            </button>
+        </div>
+    </div>
+}
+<button type="button" @onclick="AddRow" class="btn btn-outline-primary btn-sm mb-4">
+    <span class="fe fe-plus"></span> Add
+</button>
+
+@code {
+    [Parameter]
+    public IList<string> FormList { get; set; }
+
+    [Parameter]
+    public string InputName { get; set; }
+
+    private void AddRow()
+    {
+        FormList.Add("");
+    }
+
+    private void RemoveRow(int row)
+    {
+        FormList.RemoveAt(row);
+    }
+}
