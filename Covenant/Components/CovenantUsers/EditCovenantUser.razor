@@ -12,7 +12,7 @@
 
 <div class="row">
     <div class="col-md border-right">
-        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnChangePassword="OnEditPassword" />
+        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnChangePassword="OnEditPassword" readonly />
     </div>
     <div class="col-md">
         <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnEditRoles" />

@@ -3,7 +3,7 @@
 <form>
     <div class="form-group">
         <label for="UserName">UserName</label>
-        <input id="UserName" name="UserName" @bind="CovenantUserRegister.UserName" class="form-control" readonly>
+        <input id="UserName" name="UserName" @bind="CovenantUserRegister.UserName" class="form-control" @attributes="InputAttributes">
     </div>
     <div class="form-group">
         <label for="Password">Password</label>
@@ -24,4 +24,7 @@
 
     [Parameter]
     public EventCallback<CovenantUserRegister> OnChangePassword { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> InputAttributes { get; set; }
 }
