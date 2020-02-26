@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Improved ComputerName parsing and output for Domain tasks
+- Made changes necessary for C3 integration, allowing outbound SMB grunts
 
 ### Fixed
 - Fixed missing http profiles on Ubuntu w/ workaround due to corefx issue
+- Fix GET /api/gruntcommand/{id} endpoint missing output
 
 ## [v0.4] - 2019-10-30
 ### Added
