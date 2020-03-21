@@ -33,7 +33,7 @@
                             <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
                             <td>@Html.DisplayFor(modelItem => item.UserName)</td>
                             <td>@Html.DisplayFor(modelItem => item.Status)</td>
-                            <td>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
+                            <td><span style="display: none">@item.LastCheckIn.Ticks</span>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
                             <td>@Html.DisplayFor(modelItem => item.Integrity)</td>
                             <td>@Html.DisplayFor(modelItem => item.OperatingSystem)</td>
                             <td>@Html.DisplayFor(modelItem => item.Process)</td>
@@ -51,7 +51,7 @@
                             <td>@Html.DisplayFor(modelItem => item.Hostname)</td>
                             <td>@Html.DisplayFor(modelItem => item.UserName)</td>
                             <td>@Html.DisplayFor(modelItem => item.Status)</td>
-                            <td>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
+                            <td><span style="display: none">@item.LastCheckIn.Ticks</span>@Html.DisplayFor(modelItem => item.LastCheckIn)</td>
                             <td>@Html.DisplayFor(modelItem => item.Integrity)</td>
                             <td>@Html.DisplayFor(modelItem => item.OperatingSystem)</td>
                             <td>@Html.DisplayFor(modelItem => item.Process)</td>
