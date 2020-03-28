@@ -43,7 +43,7 @@
     <script type="text/javascript">
         $(document).ready(function () {
             var addAddress = function () {
-                var num = $(".address-row").length;
+                var num = $(".address-row").length - 1;
                 var newitem = '<div class="d-flex flex-row address-row">' +
                               '    <div class="form-group col-md-4 pl-0 mt-1 mb-1">' +
                               '        <input id="ConnectAddresses_' + num + '_" name="ConnectAddresses[' + num + ']" class="form-control address">' +
@@ -130,7 +130,7 @@
             $('.remove-connectaddress-button').click(removeAddress);
 
             $("#http-tab").tab('show');
-            
+
             swapOptions();
             setUrl();
         });
