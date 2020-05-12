@@ -1,8 +1,16 @@
 ﻿@page "/profile/create"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
 @using Covenant.Models.Listeners
+@inject UserManager<CovenantUser> UserManager
 @inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Create Profile</h1>
@@ -25,10 +33,10 @@
 
 <div class="tab-content" id="listener-tab-content">
     <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab">
-        <HttpProfileForm Profile="@(new HttpProfile())" Action="/profile/createhttp" SubmitIcon="plus" SubmitLabel="Create"></HttpProfileForm>
+        <HttpProfileForm Profile="@(new HttpProfile())" OnSubmit="OnCreateHttpProfile" SubmitIcon="plus" SubmitLabel="Create"></HttpProfileForm>
     </div>
     <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
-        <BridgeProfileForm Profile="@(new BridgeProfile())" Action="/profile/createbridge" SubmitIcon="plus" SubmitLabel="Create"></BridgeProfileForm>
+        <BridgeProfileForm Profile="@(new BridgeProfile())" OnSubmit="OnCreateBridgeProfile" SubmitIcon="plus" SubmitLabel="Create"></BridgeProfileForm>
     </div>
 </div>
 
@@ -36,5 +44,33 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+    }
+
+    private async Task OnCreateHttpProfile(HttpProfile profile)
+    {
+        try
+        {
+            AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
+            await Service.CreateHttpProfile(profile, await UserManager.GetUserAsync(state.User));
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+
+    private async Task OnCreateBridgeProfile(BridgeProfile profile)
+    {
+        try
+        {
+            AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
+            await Service.CreateBridgeProfile(profile, await UserManager.GetUserAsync(state.User));
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
     }
 }

@@ -24,7 +24,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Covenant.Hubs
 {
-    public class CovenantHub : Hub, IRemoteCovenantService
+    public class CovenantHub : Hub
     {
         private readonly ICovenantService _service;
 
@@ -32,11 +32,7 @@ namespace Covenant.Hubs
         {
             _service = service;
         }
-
-        public override Task OnConnectedAsync()
-        {
-            return base.OnConnectedAsync();
-        }
+        /*
 
         public Task<byte[]> CompileGruntExecutorCode(int id, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
         {
@@ -162,12 +158,12 @@ namespace Covenant.Hubs
         {
             return _service.CreateHostedFiles(files);
         }
-
+        */
         public Task<HttpListener> CreateHttpListener(HttpListener listener)
         {
             return _service.CreateHttpListener(listener);
         }
-
+        /*
         public Task<HttpProfile> CreateHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
             return _service.CreateHttpProfile(profile, currentUser);
@@ -703,7 +699,7 @@ namespace Covenant.Hubs
             return _service.GetEventsRange(fromdate, todate);
         }
 
-        public long GetEventTime()
+        public Task<long> GetEventTime()
         {
             return _service.GetEventTime();
         }
@@ -1122,5 +1118,36 @@ namespace Covenant.Hubs
         {
             return _service.StartListener(listenerId);
         }
+
+        public Task<string> ParseParametersIntoTask(GruntTask task, List<ParsedParameter> parameters)
+        {
+            return _service.ParseParametersIntoTask(task, parameters);
+        }
+
+        public Task<GruntTaskAuthor> GetGruntTaskAuthor(int id)
+        {
+            return _service.GetGruntTaskAuthor(id);
+        }
+
+        public Task<GruntTaskAuthor> GetGruntTaskAuthorByName(string Name)
+        {
+            return _service.GetGruntTaskAuthorByName(Name);
+        }
+
+        public Task<IEnumerable<GruntTaskAuthor>> GetGruntTaskAuthors()
+        {
+            return _service.GetGruntTaskAuthors();
+        }
+
+        public Task<GruntTaskAuthor> CreateGruntTaskAuthor(GruntTaskAuthor author)
+        {
+            return _service.CreateGruntTaskAuthor(author);
+        }
+
+        public Task<GruntTaskAuthor> EditGruntTaskAuthor(GruntTaskAuthor author)
+        {
+            return _service.EditGruntTaskAuthor(author);
+        }
+        */
     }
 }

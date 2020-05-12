@@ -186,7 +186,9 @@ namespace Covenant
 
             services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
             services.AddSingleton<INotificationService, NotificationService>();
+            services.AddSingleton<CovenantAPIService, CovenantAPIService>();
             services.AddTransient<ICovenantService, CovenantService>();
+            // services.AddTransient<IRemoteCovenantService, CovenantHubService>();
             // services.AddTransient<CovenantBlazorService>();
             // services.AddSingleton<SignalRCovenantService>();
         }
@@ -237,7 +239,7 @@ namespace Covenant
         {
             public void Apply(OpenApiSchema schema, SchemaFilterContext context)
             {
-                var type = context.ApiModel.Type;
+                var type = context.Type;
                 if (type.IsEnum)
                 {
                     schema.Extensions.Add(

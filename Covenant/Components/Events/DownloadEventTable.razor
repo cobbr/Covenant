@@ -4,7 +4,8 @@
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="DownloadEvents.ToList()" class="table table-hover">
+<CovenantTable TItem="DownloadEvent" Items="DownloadEvents.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="DownloadEvent" TItem2="string" GetSortableProperty="(download) => download.FileName">
             <HeaderContent>FileName</HeaderContent>
@@ -17,22 +18,20 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="download">
-        <FilterableTableRow Item="download" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>
-                    @download.FileName
-                </td>
-                <td>
-                    @Convert.FromBase64String(download.FileContents).Length
-                </td>
-                <td>
-                    <a class="btn btn-primary" href="/data/download/@download.Id">
-                        <span class="fe fe-download"></span>
-                        Download
-                    </a>
-                </td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>
+                @download.FileName
+            </td>
+            <td>
+                @Convert.FromBase64String(download.FileContents).Length
+            </td>
+            <td>
+                <a class="btn btn-primary" href="/data/download/@download.Id">
+                    <span class="fe fe-download"></span>
+                    Download
+                </a>
+            </td>
+        </tr>
     </TableRow>
 </CovenantTable>
 

@@ -46,8 +46,8 @@ namespace Covenant.Models.Launchers
         public Compiler.RuntimeIdentifier RuntimeIdentifier { get; set; } = Compiler.RuntimeIdentifier.win_x64;
 
         // Http Options
-        public bool ValidateCert { get; set; } = true;
-        public bool UseCertPinning { get; set; } = true;
+        public bool ValidateCert { get; set; } = false;
+        public bool UseCertPinning { get; set; } = false;
 
         // Smb Options
         public string SMBPipeName { get; set; } = "gruntsvc";
@@ -55,8 +55,7 @@ namespace Covenant.Models.Launchers
         public int Delay { get; set; } = 5;
         public int JitterPercent { get; set; } = 10;
         public int ConnectAttempts { get; set; } = 5000;
-        public DateTime KillDate { get; set; } = new DateTime(2020, 12, 31);
-
+        public DateTime KillDate { get; set; } = DateTime.Now.AddDays(30);
         public string LauncherString { get; set; } = "";
         public string StagerCode { get; set; } = "";
 

@@ -1,9 +1,10 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Models.Listeners
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
 <div class="d-flex flex-wrap">
     <div id="graph-box" class="border m-1 p-1"></div>
@@ -106,7 +107,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.Grunts = await ICovenantService.GetGrunts();
+        this.Grunts = await Service.GetGrunts();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -127,7 +128,7 @@
             {
                 foreach (string child in grunt.Children)
                 {
-                    Grunt childGrunt = await ICovenantService.GetGruntByGUID(child);
+                    Grunt childGrunt = await Service.GetGruntByGUID(child);
                     await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntLink", grunt.GUID, childGrunt.GUID);
                 }
             }
@@ -137,7 +138,7 @@
                     .ToList();
             foreach (Grunt grunt in grunts)
             {
-                Listener listener = await ICovenantService.GetListener(grunt.ListenerId);
+                Listener listener = await Service.GetListener(grunt.ListenerId);
                 await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntListenerLink", listener.GUID, grunt.GUID);
             }
         }

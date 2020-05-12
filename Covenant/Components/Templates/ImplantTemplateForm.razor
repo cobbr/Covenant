@@ -1,31 +1,36 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Models.Listeners
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
-<form>
-    <input id="Id" name="Id" @bind="ImplantTemplate.Id" type="hidden">
+<EditForm Model="ImplantTemplate" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Name">Name</label>
             <input id="Name" name="Name" @bind="ImplantTemplate.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.Name" /></div>
         </div>
         <div class="form-group col-md-8">
             <label for="Description">Description</label>
             <input id="Description" name="Description" @bind="ImplantTemplate.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.Description" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-3">
-            <label for="Language">Language</label><br/>
+            <label for="Language">Language</label><br />
             <select id="Language" name="Language" @bind="ImplantTemplate.Language" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
                 @foreach (var n in Enum.GetNames(typeof(ImplantLanguage)))
                 {
                     <option value="@(((Enum)typeof(ImplantLanguage).GetField(n).GetValue(null)).ToString("d"))">@n</option>
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.Language" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="CommType">CommType</label><br />
@@ -35,6 +40,7 @@
                     <option value="@(((Enum)typeof(CommunicationType).GetField(n).GetValue(null)).ToString("d"))">@n</option>
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.CommType" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="ImplantDirection">ImplantDirection</label><br />
@@ -44,6 +50,7 @@
                     <option value="@(((Enum)typeof(ImplantDirection).GetField(n).GetValue(null)).ToString("d"))">@n</option>
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.ImplantDirection" /></div>
         </div>
     </div>
     <div class="form-row">
@@ -55,11 +62,12 @@
                     <option value="@lt.Id">@lt.Name</option>
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.CompatibleListenerTypes" /></div>
         </div>
         @if (ImplantTemplate.Language == ImplantLanguage.CSharp)
         {
             <div class="form-group col-md-3">
-                <label for="CompatibleDotNetVersions">CompatibleDotNetVersions</label><br/>
+                <label for="CompatibleDotNetVersions">CompatibleDotNetVersions</label><br />
                 <select id="CompatibleDotNetVersions" name="CompatibleDotNetVersions" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
                     @foreach (var n in Enum.GetNames(typeof(Common.DotNetVersion)))
                     {
@@ -73,6 +81,7 @@
                         }
                     }
                 </select>
+                <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.CompatibleDotNetVersions" /></div>
             </div>
         }
     </div>
@@ -80,23 +89,26 @@
         <div class="form-group col-md-12">
             <label for="StagerCode">StagerCode</label>
             <textarea id="StagerCode" name="StagerCode" @ref="CodeMirrorElements[0]" @bind="ImplantTemplate.StagerCode" rows="5" class="form-control border-1 code-mirror-csharp"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.StagerCode" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="ExecutorCode">ExecutorCode</label>
             <textarea id="ExecutorCode" name="ExecutorCode" @ref="CodeMirrorElements[1]" @bind="ImplantTemplate.ExecutorCode" rows="5" class="form-control border-1 code-mirror-csharp"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.ExecutorCode" /></div>
         </div>
     </div>
-    <button type="button" @onclick="Submit" class="btn btn-primary">
+    <button type="submit" class="btn btn-primary">
         <span class="fe fe-@SubmitIcon"></span>@SubmitLabel
     </button>
-</form>
+</EditForm>
 
 @code {
     private ImplantTemplate _ImplantTemplate;
     [Parameter]
-    public ImplantTemplate ImplantTemplate {
+    public ImplantTemplate ImplantTemplate
+    {
         get
         {
             return _ImplantTemplate;
@@ -105,9 +117,7 @@
         {
             if (value.Id > 0)
             {
-                Task<ImplantTemplate> t = ICovenantService.GetImplantTemplate(value.Id);
-                t.Wait();
-                _ImplantTemplate = t.Result;
+                _ImplantTemplate = Service.GetImplantTemplate(value.Id).WaitResult();
             }
             else
             {
@@ -158,35 +168,25 @@
 
     private IEnumerable<ListenerType> GetListenerTypes()
     {
-        Task<IEnumerable<ListenerType>> t = ICovenantService.GetListenerTypes();
-        t.Wait();
-        return t.Result;
+        return Service.GetListenerTypes().WaitResult();
     }
 
-    public static async Task SubmitCompatibleListenerTypes(ImplantTemplate template, ICovenantService service, IJSRuntime runtime)
+    public async Task<List<ListenerTypeImplantTemplate>> GetCompatibleListenerTypeImplantTemplates()
     {
-        string[] clts = await runtime.InvokeAsync<string[]>("GetValue", new object[] { "#CompatibleListenerTypes" });
+        string[] clts = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#CompatibleListenerTypes" });
         IEnumerable<int> ids = clts.Where(id => int.TryParse(id, out _)).Select(sid => int.Parse(sid));
-        IEnumerable<int> adds = ids.Where(id => !template.CompatibleListenerTypes.Select(CLT => CLT.Id).Contains(id));
-        IEnumerable<int> removes = template.CompatibleListenerTypes.Select(CLT => CLT.Id).Where(id => !ids.Contains(id));
-        List<ListenerTypeImplantTemplate> toAdd = new List<ListenerTypeImplantTemplate>();
-        List<ListenerTypeImplantTemplate> toRemove = new List<ListenerTypeImplantTemplate>();
-        foreach (int id in adds)
+        List<ListenerTypeImplantTemplate> types = new List<ListenerTypeImplantTemplate>();
+        foreach (int id in ids)
         {
-            toAdd.Add(new ListenerTypeImplantTemplate
+            types.Add(new ListenerTypeImplantTemplate
             {
                 ListenerTypeId = id,
-                ListenerType = await service.GetListenerType(id),
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template
+                ListenerType = await Service.GetListenerType(id),
+                ImplantTemplateId = this.ImplantTemplate.Id,
+                ImplantTemplate = this.ImplantTemplate
             });
         }
-        foreach (int id in removes)
-        {
-            // toRemove.Add(await service.FindAsync<ListenerTypeImplantTemplate>(id, template.Id));
-        }
-        // service.RemoveRange(toRemove);
-        // await service.AddRangeAsync(toAdd);
+        return types;
     }
 
     private async Task<List<Common.DotNetVersion>> GetCompatibleDotNetVersions()
@@ -198,6 +198,7 @@
     private async Task Submit()
     {
         this.ImplantTemplate.CompatibleDotNetVersions = await GetCompatibleDotNetVersions();
+        this.ImplantTemplate.SetListenerTypeImplantTemplates(await GetCompatibleListenerTypeImplantTemplates());
         await this.OnSubmit.InvokeAsync(this.ImplantTemplate);
     }
 }

@@ -1,17 +1,16 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="GruntTasks.ToList()" class="table table-hover">
+<CovenantTable TItem="GruntTask" Items="GruntTasks.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Name">
             <HeaderContent>Name</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Description">
-            <HeaderContent>Description</HeaderContent>
         </SortableTableHeader>
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetCompatibleDotNetVersions(task)">
             <HeaderContent>CompatibleDotNetVersions</HeaderContent>
@@ -19,28 +18,21 @@
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetReferenceSourceLibraries(task)">
             <HeaderContent>ReferenceSourceLibraries</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetReferenceAssemblies(task)">
-            <HeaderContent>ReferenceAssemblies</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetEmbeddedResources(task)">
-            <HeaderContent>EmbeddedResources</HeaderContent>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Description">
+            <HeaderContent>Description</HeaderContent>
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="task">
-        <FilterableTableRow Item="task" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>
-                    <a href="/grunttask/edit/@task.Id">
-                        @task.Name
-                    </a>
-                </td>
-                <td>@task.Description</td>
-                <td>@GetCompatibleDotNetVersions(task)</td>
-                <td>@GetReferenceSourceLibraries(task)</td>
-                <td>@GetReferenceAssemblies(task)</td>
-                <td>@GetEmbeddedResources(task)</td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>
+                <a href="/grunttask/edit/@task.Id">
+                    @task.Name
+                </a>
+            </td>
+            <td>@GetCompatibleDotNetVersions(task)</td>
+            <td>@GetReferenceSourceLibraries(task)</td>
+            <td>@task.Description</td>
+        </tr>
     </TableRow>
 </CovenantTable>
 
@@ -60,29 +52,19 @@
     [Parameter]
     public int PageLength { get; set; } = 10;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        this.GruntTasks = await ICovenantService.GetGruntTasks();
-    }
-
-    private string GetReferenceSourceLibraries(GruntTask task)
-    {
-        return string.Join(",", task.ReferenceSourceLibraries.Select(RSL => RSL.Name));
-    }
-
-    private string GetReferenceAssemblies(GruntTask task)
-    {
-        return string.Join(",", task.ReferenceAssemblies.Select(RA => RA.Name));
-    }
-
-    private string GetEmbeddedResources(GruntTask task)
-    {
-        return string.Join(",", task.EmbeddedResources.Select(ER => ER.Name));
+        this.GruntTasks = await Service.GetGruntTasks();
     }
 
     private string GetCompatibleDotNetVersions(GruntTask task)
     {
         return string.Join(", ", task.CompatibleDotNetVersions.Select(DN => DN.ToString()));
+    }
+
+    private string GetReferenceSourceLibraries(GruntTask task)
+    {
+        return string.Join(",", task.ReferenceSourceLibraries.Select(RSL => RSL.Name));
     }
 
     private bool IsRowDisplayed(GruntTask task, string SearchTerm)
@@ -91,8 +73,6 @@
             task.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             task.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             GetCompatibleDotNetVersions(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            GetReferenceSourceLibraries(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            GetReferenceAssemblies(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            GetEmbeddedResources(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+            GetReferenceSourceLibraries(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
     }
 }

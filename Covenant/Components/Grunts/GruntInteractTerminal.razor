@@ -11,6 +11,8 @@
 @inject IHubContext<EventHub> EventHub
 @inject INotificationService INotificationService
 
+<GruntTaskOptionsModal @ref="OptionsModal" OnSubmit="OnTaskInteract"></GruntTaskOptionsModal>
+
 <div class="d-flex flex-column rounded-lg border border-primary bg-dark">
     <div id="interact-scroll" class="grunt-interact overflow-auto bg-dark">
         <div id="interact-accordion" class="accordion w-100">
@@ -49,6 +51,8 @@
 
     [Parameter]
     public EventCallback<string> OnInteract { get; set; }
+
+    private GruntTaskOptionsModal OptionsModal { get; set; }
 
     private int HistoryIndex { get; set; }
     private IList<GruntCommand> History { get; set; }
@@ -138,7 +142,7 @@
         }
     }
 
-    private void OnKeyUp(KeyboardEventArgs e)
+    private async Task OnKeyUp(KeyboardEventArgs e)
     {
         switch (e.Key)
         {
@@ -149,17 +153,44 @@
                 HistoryDown();
                 break;
             case "Enter":
-                this.OnSubmit();
+                await this.OnSubmit();
                 break;
         }
     }
 
-    private void OnSubmit()
+    private async Task OnSubmit()
     {
         string copy = this.InteractInput;
         this.InteractInput = "";
         this.StateHasChanged();
-        _ = OnInteract.InvokeAsync(copy);
+
+        List<ParsedParameter> parameters = ParsedParameter.GetParsedCommandParameters(copy);
+        string commandName = parameters.Count > 0 ? parameters.FirstOrDefault().Value : "";
+        GruntTask commandTask = null;
+        try
+        {
+            commandTask = await Service.GetGruntTaskByName(commandName, this.Grunt.DotNetVersion);
+            string errors = await Service.ParseParametersIntoTask(commandTask, parameters);
+        }
+        catch (ControllerNotFoundException) { }
+        if (commandTask != null && commandTask.Options.Any(O => O.FileOption))
+        {
+            await OptionsModal.Show(commandTask);
+        }
+        else
+        {
+            this.OnInteractProxy(copy);
+        }
+    }
+
+    private void OnTaskInteract(GruntTask task)
+    {
+        this.OnInteractProxy(task.GetVerboseCommand(true));
+    }
+
+    private void OnInteractProxy(string input)
+    {
+        _ = OnInteract.InvokeAsync(input);
         _ = IJSRuntime.InvokeAsync<string>("SetTypeaheadVal", ".typeahead", this.InteractInput);
     }
 }

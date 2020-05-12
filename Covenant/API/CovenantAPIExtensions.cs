@@ -3504,9 +3504,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
-            public static HttpListener GetActiveHttpListener(this ICovenantAPI operations, int id)
+            public static HttpListener GetHttpListener(this ICovenantAPI operations, int id)
             {
-                return operations.GetActiveHttpListenerAsync(id).GetAwaiter().GetResult();
+                return operations.GetHttpListenerAsync(id).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -3517,9 +3517,9 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<HttpListener> GetActiveHttpListenerAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<HttpListener> GetHttpListenerAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.GetActiveHttpListenerWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.GetHttpListenerWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -3572,6 +3572,84 @@ namespace Covenant.API
             public static async Task<HttpListener> EditHttpListenerAsync(this ICovenantAPI operations, HttpListener body = default(HttpListener), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.EditHttpListenerWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static BridgeListener GetBridgeListener(this ICovenantAPI operations, int id)
+            {
+                return operations.GetBridgeListenerAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<BridgeListener> GetBridgeListenerAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetBridgeListenerWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static BridgeListener CreateBridgeListener(this ICovenantAPI operations, BridgeListener body = default(BridgeListener))
+            {
+                return operations.CreateBridgeListenerAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<BridgeListener> CreateBridgeListenerAsync(this ICovenantAPI operations, BridgeListener body = default(BridgeListener), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.CreateBridgeListenerWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static BridgeListener EditBridgeListener(this ICovenantAPI operations, BridgeListener body = default(BridgeListener))
+            {
+                return operations.EditBridgeListenerAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<BridgeListener> EditBridgeListenerAsync(this ICovenantAPI operations, BridgeListener body = default(BridgeListener), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.EditBridgeListenerWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }

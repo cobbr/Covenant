@@ -1,17 +1,18 @@
 ﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
-<form>
+<EditForm Model="ReferenceAssembly" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(ReferenceAssembly))">
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Name">Name</label>
             <input id="Name" name="Name" @bind="ReferenceAssembly.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ReferenceAssembly.Name" /></div>
         </div>
         <div class="form-group col-md-4">
-            <label for="DotNetVersion">DotNetVersion</label><br/>
+            <label for="DotNetVersion">DotNetVersion</label><br />
             <select id="DotNetVersion" name="DotNetVersion" @bind="ReferenceAssembly.DotNetVersion" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
                 @foreach (var n in Enum.GetNames(typeof(Common.DotNetVersion)))
                 {
@@ -25,19 +26,20 @@
                     }
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ReferenceAssembly.DotNetVersion" /></div>
         </div>
-
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="Location">Location</label>
             <input id="Location" name="Location" @bind="ReferenceAssembly.Location" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ReferenceAssembly.Location" /></div>
         </div>
     </div>
-    <button type="button" @onclick="(e => OnSubmit.InvokeAsync(this.ReferenceAssembly))" class="btn btn-primary">
+    <button type="button" class="btn btn-primary">
         <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
     </button>
-</form>
+</EditForm>
 
 @code {
     [Parameter]

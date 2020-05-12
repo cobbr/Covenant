@@ -1,8 +1,9 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
 <form>
     <div class="form-row">
@@ -97,11 +98,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasking.Grunt = this.GruntTasking.Grunt ?? await ICovenantService.GetGrunt(this.GruntTasking.GruntId);
-        this.GruntTasking.GruntTask = this.GruntTasking.GruntTask ?? await ICovenantService.GetGruntTask(this.GruntTasking.GruntTaskId);
-        this.GruntTasking.GruntCommand = this.GruntTasking.GruntCommand ?? await ICovenantService.GetGruntCommand(this.GruntTasking.GruntCommandId);
-        this.GruntTasking.GruntCommand.CommandOutput = this.GruntTasking.GruntCommand.CommandOutput ?? await ICovenantService.GetCommandOutput(this.GruntTasking.GruntCommand.CommandOutputId);
-        this.GruntTasking.GruntCommand.User = this.GruntTasking.GruntCommand.User ?? await ICovenantService.GetUser(this.GruntTasking.GruntCommand.UserId);
+        this.GruntTasking.Grunt = this.GruntTasking.Grunt ?? await Service.GetGrunt(this.GruntTasking.GruntId);
+        this.GruntTasking.GruntTask = this.GruntTasking.GruntTask ?? await Service.GetGruntTask(this.GruntTasking.GruntTaskId);
+        this.GruntTasking.GruntCommand = this.GruntTasking.GruntCommand ?? await Service.GetGruntCommand(this.GruntTasking.GruntCommandId);
+        this.GruntTasking.GruntCommand.CommandOutput = this.GruntTasking.GruntCommand.CommandOutput ?? await Service.GetCommandOutput(this.GruntTasking.GruntCommand.CommandOutputId);
+        this.GruntTasking.GruntCommand.User = this.GruntTasking.GruntCommand.User ?? await Service.GetUser(this.GruntTasking.GruntCommand.UserId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

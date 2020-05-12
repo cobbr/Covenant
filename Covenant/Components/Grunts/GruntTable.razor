@@ -1,14 +1,16 @@
-﻿@using System.Collections.Generic
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.Collections.Generic
 @using Microsoft.JSInterop
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 @inject INotificationService INotificationService
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="Grunts" ItemsChanged="GruntsChanged" class="table table-hover">
+<CovenantTable TItem="Grunt" Items="Grunts" ItemsChanged="GruntsChanged" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Name">
             <HeaderContent>Name</HeaderContent>
@@ -31,55 +33,27 @@
         <SortableTableHeader TItem="Grunt" TItem2="IntegrityLevel" GetSortableProperty="(grunt) => grunt.Integrity">
             <HeaderContent>Integrity</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.OperatingSystem">
-            <HeaderContent>OperatingSystem</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Process">
-            <HeaderContent>Process</HeaderContent>
+        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Note">
+            <HeaderContent>Note</HeaderContent>
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="grunt">
         @if (grunt.Status != GruntStatus.Uninitialized && grunt.Status != GruntStatus.Hidden)
         {
-            @if (!this.IsSearchable)
-            {
-                <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
-                    <td @attributes="InputAttributes">
-                        <a href="/grunt/interact/@grunt.Id">
-                            @grunt.Name
-                        </a>
-                    </td>
-                    <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
-                    <td @attributes="InputAttributes">@grunt.Hostname</td>
-                    <td @attributes="InputAttributes">@grunt.UserName</td>
-                    <td @attributes="InputAttributes">@grunt.Status</td>
-                    <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
-                    <td @attributes="InputAttributes">@grunt.Integrity</td>
-                    <td @attributes="InputAttributes">@grunt.OperatingSystem</td>
-                    <td @attributes="InputAttributes">@grunt.Process</td>
-                </tr>
-            }
-            else
-            {
-                string style = "opacity: " + GetGruntStatusOpacity(grunt.Status);
-                <FilterableTableRow Item="grunt" IsDisplayed="IsRowDisplayed" style="@style">
-                    <RowContent>
-                        <td>
-                            <a href="/grunt/interact/@grunt.Id">
-                                @grunt.Name
-                            </a>
-                        </td>
-                        <td>@grunt.ImplantTemplate.Name</td>
-                        <td>@grunt.Hostname</td>
-                        <td>@grunt.UserName</td>
-                        <td>@grunt.Status</td>
-                        <td>@grunt.LastCheckIn</td>
-                        <td>@grunt.Integrity</td>
-                        <td>@grunt.OperatingSystem</td>
-                        <td>@grunt.Process</td>
-                    </RowContent>
-                </FilterableTableRow>
-            }
+            <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
+                <td @attributes="InputAttributes">
+                    <a href="/grunt/interact/@grunt.Id">
+                        @grunt.Name
+                    </a>
+                </td>
+                <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
+                <td @attributes="InputAttributes">@grunt.Hostname</td>
+                <td @attributes="InputAttributes">@grunt.UserName</td>
+                <td @attributes="InputAttributes">@grunt.Status</td>
+                <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
+                <td @attributes="InputAttributes">@grunt.Integrity</td>
+                <td @attributes="InputAttributes">@grunt.Note</td>
+            </tr>
         }
     </TableRow>
 </CovenantTable>
@@ -108,7 +82,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-        this.Grunts = this.Grunts ?? (await ICovenantService.GetGrunts()).ToList();
+        this.Grunts = this.Grunts ?? (await Service.GetGrunts()).ToList();
     }
 
     private string GetGruntStatusOpacity(GruntStatus s)
@@ -116,7 +90,7 @@
         return s == GruntStatus.Active ? "1.0" : "0.3";
     }
 
-    private async Task OnGruntsChanged(List<Grunt> Grunts)
+    private void OnGruntsChanged(List<Grunt> Grunts)
     {
         this.Grunts = Grunts;
         this.GruntsChanged.InvokeAsync(Grunts);

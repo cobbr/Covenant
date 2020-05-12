@@ -19,16 +19,24 @@ namespace Covenant.API.Models
     {
         [EnumMember(Value = "assembly")]
         Assembly,
-        [EnumMember(Value = "setOption")]
-        SetOption,
+        [EnumMember(Value = "setDelay")]
+        SetDelay,
+        [EnumMember(Value = "setJitter")]
+        SetJitter,
+        [EnumMember(Value = "setConnectAttempts")]
+        SetConnectAttempts,
+        [EnumMember(Value = "setKillDate")]
+        SetKillDate,
         [EnumMember(Value = "exit")]
         Exit,
         [EnumMember(Value = "connect")]
         Connect,
         [EnumMember(Value = "disconnect")]
         Disconnect,
-        [EnumMember(Value = "jobs")]
-        Jobs
+        [EnumMember(Value = "tasks")]
+        Tasks,
+        [EnumMember(Value = "taskKill")]
+        TaskKill
     }
     internal static class GruntTaskingTypeEnumExtension
     {
@@ -43,16 +51,24 @@ namespace Covenant.API.Models
             {
                 case GruntTaskingType.Assembly:
                     return "assembly";
-                case GruntTaskingType.SetOption:
-                    return "setOption";
+                case GruntTaskingType.SetDelay:
+                    return "setDelay";
+                case GruntTaskingType.SetJitter:
+                    return "setJitter";
+                case GruntTaskingType.SetConnectAttempts:
+                    return "setConnectAttempts";
+                case GruntTaskingType.SetKillDate:
+                    return "setKillDate";
                 case GruntTaskingType.Exit:
                     return "exit";
                 case GruntTaskingType.Connect:
                     return "connect";
                 case GruntTaskingType.Disconnect:
                     return "disconnect";
-                case GruntTaskingType.Jobs:
-                    return "jobs";
+                case GruntTaskingType.Tasks:
+                    return "tasks";
+                case GruntTaskingType.TaskKill:
+                    return "taskKill";
             }
             return null;
         }
@@ -63,16 +79,24 @@ namespace Covenant.API.Models
             {
                 case "assembly":
                     return GruntTaskingType.Assembly;
-                case "setOption":
-                    return GruntTaskingType.SetOption;
+                case "setDelay":
+                    return GruntTaskingType.SetDelay;
+                case "setJitter":
+                    return GruntTaskingType.SetJitter;
+                case "setConnectAttempts":
+                    return GruntTaskingType.SetConnectAttempts;
+                case "setKillDate":
+                    return GruntTaskingType.SetKillDate;
                 case "exit":
                     return GruntTaskingType.Exit;
                 case "connect":
                     return GruntTaskingType.Connect;
                 case "disconnect":
                     return GruntTaskingType.Disconnect;
-                case "jobs":
-                    return GruntTaskingType.Jobs;
+                case "tasks":
+                    return GruntTaskingType.Tasks;
+                case "taskKill":
+                    return GruntTaskingType.TaskKill;
             }
             return null;
         }

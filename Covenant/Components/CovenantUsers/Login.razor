@@ -1,9 +1,11 @@
 ﻿@using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Identity
 @using Covenant.Models.Covenant
-@inject UserManager<CovenantUser> UserManager
+@*@inject UserManager<CovenantUser> UserManager*@
 @inject NavigationManager NavigationManager
+@inject IJSRuntime IJSRuntime
 
+@*
 <div class="covenant-logo">
     <img class="mb-5" src="/images/covenant-white.png" height="175" width="602">
     @if (!UserManager.Users.Any())
@@ -25,6 +27,7 @@
         </form>
     }
 </div>
+*@
 
 @code {
     [Parameter]
@@ -41,6 +44,15 @@
 
     protected override void OnInitialized()
     {
-        NavigationManager.NavigateTo("/covenantuser/login");
+        try
+        {
+            NavigationManager.NavigateTo("/covenantuser/login");
+        }
+        catch (NavigationException) { }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("RedirectToUrl", "/covenantuser/login");
     }
 }

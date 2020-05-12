@@ -1,5 +1,8 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
+@using System.IO
+@using Microsoft.AspNetCore.Components.Forms
+@using BlazorInputFile
 @using Covenant.Core
 @using Covenant.Models.Grunts
 
@@ -9,7 +12,8 @@
 }
 else
 {
-    <form>
+    <EditForm Model="GruntTask" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(GruntTask))">
+        <DataAnnotationsValidator />
         <div class="form-group col-md-4">
             <label for="GruntTaskId">GruntTask</label>
             <select id="GruntTaskId" name="GruntTaskId" @onchange="(e => OnChangeGruntTask(e))" class="form-control">
@@ -30,28 +34,34 @@ else
             @for (int i = 0; i < this.GruntTask.Options.Count; i++)
             {
                 int number = i;
-                var fileinputs = new List<string> { "EncodedAssembly", "FileContents", "Script" };
-                @if (!fileinputs.Contains(this.GruntTask.Options[i].Name))
+                @if (this.GruntTask.Options[i].FileOption)
                 {
                     <div class="form-group col-md-12">
-                        <label for="GruntTask.Options[@number].Name">@GruntTask.Options[number].Name</label>
-                        <input id="GruntTask.Options[@number].Name" name="GruntTask.Options[@number].Name" @bind="GruntTask.Options[number].Value" class="form-control">
+                        <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
+                        <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                        @if (string.IsNullOrEmpty(this.ErrorMessage))
+                        {
+                            <span class="text-danger">@ErrorMessage</span>
+                        }
                     </div>
                 }
                 else
                 {
                     <div class="form-group col-md-12">
-                        <label for="GruntTask.Options[@number].Name">@GruntTask.Options[number].Name</label>
-                        <input id="GruntTask.Options[@number].Name" name="GruntTask.Options[@number].Name" class="form-control file-filler" type="hidden" readonly disabled>
-                        <input type="file" id="GruntTask.Options[@number].Name" class="form-control-file" disabled>
+                        <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label>
+                        <input id="@GruntTask.Options[number].Name" name="@GruntTask.Options[number].Name" @bind="GruntTask.Options[number].Value" class="form-control">
+                        <div class="text-danger"><ValidationMessage For="() => GruntTask.Options[number].Value" /></div>
                     </div>
                 }
             }
         </div>
         <div class="form-group col-md-4">
-            <button type="button" @onclick="(e => OnSubmit.InvokeAsync(this.GruntTask))" class="btn btn-primary"><span class="fe fe-play"></span> Task</button>
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-play"></span>
+                Task
+            </button>
         </div>
-    </form>
+    </EditForm>
 }
 
 @code {
@@ -61,12 +71,14 @@ else
     [Parameter]
     public EventCallback<GruntTask> OnSubmit { get; set; }
 
+    public InputFile InputFile { get; set; }
+
     private IList<GruntTask> GruntTasks { get; set; }
     private GruntTask GruntTask { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasks = (await Service.GetGruntTasksForGrunt(this.GruntId)).ToList();
+        this.GruntTasks = (await Service.GetGruntTasksForGrunt(this.GruntId)).OrderBy(GT => GT.Name).ToList();
         Service.DisposeContext();
         this.GruntTask = this.GruntTasks.First();
     }
@@ -76,6 +88,32 @@ else
         if (int.TryParse((string)e.Value, out int GruntTaskId))
         {
             this.GruntTask = this.GruntTasks.FirstOrDefault(GT => GT.Id == GruntTaskId);
+            this.StateHasChanged();
+        }
+    }
+
+    private string ErrorMessage { get; set; }
+    private async Task OnUpload(IFileListEntry[] files)
+    {
+        try
+        {
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i] != null)
+                {
+                    MemoryStream ms = new MemoryStream();
+                    await files[i].Data.CopyToAsync(ms);
+
+                    GruntTaskOption option = this.GruntTask.Options.Where(O => O.FileOption).ToList()[i];
+                    option.Value = Convert.ToBase64String(ms.ToArray());
+
+                    files[i] = null;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            this.ErrorMessage = e.Message;
             this.StateHasChanged();
         }
     }

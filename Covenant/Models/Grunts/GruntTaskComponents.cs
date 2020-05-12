@@ -25,47 +25,47 @@ namespace Covenant.Models.Grunts
         public List<ReferenceSourceLibrary> ReferenceSourceLibraries => ReferenceSourceLibraryReferenceAssemblies.Select(e => e.ReferenceSourceLibrary).ToList();
         [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<GruntTask> GruntTasks => GruntTaskReferenceAssemblies.Select(e => e.GruntTask).ToList();
-
-        private class SimpleReferenceAssembly
+        
+        internal SerializedReferenceAssembly ToSerializedReferenceAssembly()
         {
-            public string Name { get; set; }
-            public string Location { get; set; }
-            public Common.DotNetVersion DotNetVersion { get; set; }
+            return new SerializedReferenceAssembly
+            {
+                Name = this.Name,
+                Location = this.Location,
+                DotNetVersion = this.DotNetVersion
+            };
+        }
+
+        internal ReferenceAssembly FromSerializedReferenceAssembly(SerializedReferenceAssembly assembly)
+        {
+            this.Name = assembly.Name;
+            this.Location = assembly.Location;
+            this.DotNetVersion = assembly.DotNetVersion;
+            return this;
         }
 
         public string ToYaml()
         {
             ISerializer serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(new SimpleReferenceAssembly
-            {
-                Name = this.Name,
-                Location = this.Location,
-                DotNetVersion = this.DotNetVersion
-            });
+            return serializer.Serialize(this.ToSerializedReferenceAssembly());
         }
 
         public ReferenceAssembly FromYaml(string yaml)
         {
             IDeserializer deserializer = new DeserializerBuilder().Build();
-            SimpleReferenceAssembly assembly = deserializer.Deserialize<SimpleReferenceAssembly>(yaml);
-            this.Name = assembly.Name;
-            this.Location = assembly.Location;
-            this.DotNetVersion = assembly.DotNetVersion;
-            return this;
+            SerializedReferenceAssembly assembly = deserializer.Deserialize<SerializedReferenceAssembly>(yaml);
+            return this.FromSerializedReferenceAssembly(assembly);
         }
 
         public string ToJson()
         {
-            return JsonConvert.SerializeObject(this);
+            return JsonConvert.SerializeObject(this.ToSerializedReferenceAssembly());
         }
 
         public ReferenceAssembly FromJson(string json)
         {
-            SimpleReferenceAssembly assembly = JsonConvert.DeserializeObject<SimpleReferenceAssembly>(json);
-            this.Name = assembly.Name;
-            this.Location = assembly.Location;
-            this.DotNetVersion = assembly.DotNetVersion;
-            return this;
+            SerializedReferenceAssembly assembly = JsonConvert.DeserializeObject<SerializedReferenceAssembly>(json);
+            return this.FromSerializedReferenceAssembly(assembly);
         }
     }
 
@@ -83,41 +83,44 @@ namespace Covenant.Models.Grunts
         [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<GruntTask> GruntTasks => GruntTaskEmbeddedResources.Select(e => e.GruntTask).ToList();
 
-        private class SimpleEmbeddedResource
+        internal SerializedEmbeddedResource ToSerializedEmbeddedResource()
         {
-            public string Name { get; set; }
-            public string Location { get; set; }
-        }
-        public string ToYaml()
-        {
-            ISerializer serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(new SimpleEmbeddedResource
+            return new SerializedEmbeddedResource
             {
                 Name = this.Name,
                 Location = this.Location
-            });
+            };
+        }
+
+        internal EmbeddedResource FromSerializedEmbeddedResource(SerializedEmbeddedResource resource)
+        {
+            this.Name = resource.Name;
+            this.Location = resource.Location;
+            return this;
+        }
+
+        public string ToYaml()
+        {
+            ISerializer serializer = new SerializerBuilder().Build();
+            return serializer.Serialize(this.ToSerializedEmbeddedResource());
         }
 
         public EmbeddedResource FromYaml(string yaml)
         {
             IDeserializer deserializer = new DeserializerBuilder().Build();
-            SimpleEmbeddedResource resource = deserializer.Deserialize<SimpleEmbeddedResource>(yaml);
-            this.Name = resource.Name;
-            this.Location = resource.Location;
-            return this;
+            SerializedEmbeddedResource resource = deserializer.Deserialize<SerializedEmbeddedResource>(yaml);
+            return FromSerializedEmbeddedResource(resource);
         }
 
         public string ToJson()
         {
-            return JsonConvert.SerializeObject(this);
+            return JsonConvert.SerializeObject(this.ToSerializedEmbeddedResource());
         }
 
         public EmbeddedResource FromJson(string json)
         {
-            SimpleEmbeddedResource resource = JsonConvert.DeserializeObject<SimpleEmbeddedResource>(json);
-            this.Name = resource.Name;
-            this.Location = resource.Location;
-            return this;
+            SerializedEmbeddedResource resource = JsonConvert.DeserializeObject<SerializedEmbeddedResource>(json);
+            return FromSerializedEmbeddedResource(resource);
         }
     }
 
@@ -175,62 +178,54 @@ namespace Covenant.Models.Grunts
         [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<GruntTask> GruntTasks => GruntTaskReferenceSourceLibraries.Select(e => e.GruntTask).ToList();
 
-        private class SimpleReferenceSourceLibrary
+        internal SerializedReferenceSourceLibrary ToSerializedReferenceSourceLibrary()
         {
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public string Location { get; set; }
-            public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
-            public List<Common.DotNetVersion> CompatibleDotNetVersions { get; set; }
-            public List<ReferenceAssembly> ReferenceAssemblies { get; set; }
-            public List<EmbeddedResource> EmbeddedResources { get; set; }
-        }
-
-        public string ToYaml()
-        {
-            ISerializer serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(new SimpleReferenceSourceLibrary
+            return new SerializedReferenceSourceLibrary
             {
                 Name = this.Name,
                 Description = this.Description,
                 Location = this.Location,
                 Language = this.Language,
                 CompatibleDotNetVersions = this.CompatibleDotNetVersions,
-                ReferenceAssemblies = this.ReferenceAssemblies,
-                EmbeddedResources = this.EmbeddedResources
-            });
+                ReferenceAssemblies = this.ReferenceAssemblies.Select(RA => RA.ToSerializedReferenceAssembly()).ToList(),
+                EmbeddedResources = this.EmbeddedResources.Select(ER => ER.ToSerializedEmbeddedResource()).ToList()
+            };
+        }
+
+        internal ReferenceSourceLibrary FromSerializedReferenceSourceLibrary(SerializedReferenceSourceLibrary library)
+        {
+            this.Name = library.Name;
+            this.Description = library.Description;
+            this.Location = library.Location;
+            this.Language = library.Language;
+            this.CompatibleDotNetVersions = library.CompatibleDotNetVersions;
+            library.ReferenceAssemblies.ForEach(A => this.Add(new ReferenceAssembly().FromSerializedReferenceAssembly(A)));
+            library.EmbeddedResources.ForEach(R => this.Add(new EmbeddedResource().FromSerializedEmbeddedResource(R)));
+            return this;
+        }
+
+        public string ToYaml()
+        {
+            ISerializer serializer = new SerializerBuilder().Build();
+            return serializer.Serialize(this.ToSerializedReferenceSourceLibrary());
         }
 
         public ReferenceSourceLibrary FromYaml(string yaml)
         {
             IDeserializer deserializer = new DeserializerBuilder().Build();
-            SimpleReferenceSourceLibrary library = deserializer.Deserialize<SimpleReferenceSourceLibrary>(yaml);
-            this.Name = library.Name;
-            this.Description = library.Description;
-            this.Location = library.Location;
-            this.Language = library.Language;
-            this.CompatibleDotNetVersions = library.CompatibleDotNetVersions;
-            library.ReferenceAssemblies.ForEach(A => this.Add(A));
-            library.EmbeddedResources.ForEach(R => this.Add(R));
-            return this;
+            SerializedReferenceSourceLibrary library = deserializer.Deserialize<SerializedReferenceSourceLibrary>(yaml);
+            return this.FromSerializedReferenceSourceLibrary(library);
         }
 
         public string ToJson()
         {
-            return JsonConvert.SerializeObject(this);
+            return JsonConvert.SerializeObject(this.ToSerializedReferenceSourceLibrary());
         }
 
         public ReferenceSourceLibrary FromJson(string json)
         {
-            SimpleReferenceSourceLibrary library = JsonConvert.DeserializeObject<SimpleReferenceSourceLibrary>(json);
-            this.Name = library.Name;
-            this.Description = library.Description;
-            this.Location = library.Location;
-            this.Language = library.Language;
-            this.CompatibleDotNetVersions = library.CompatibleDotNetVersions;
-            library.ReferenceAssemblies.ForEach(A => this.Add(A));
-            library.EmbeddedResources.ForEach(R => this.Add(R));
-            return this;
+            SerializedReferenceSourceLibrary library = JsonConvert.DeserializeObject<SerializedReferenceSourceLibrary>(json);
+            return this.FromSerializedReferenceSourceLibrary(library);
         }
     }
 
@@ -277,5 +272,29 @@ namespace Covenant.Models.Grunts
 
         public int EmbeddedResourceId { get; set; }
         public EmbeddedResource EmbeddedResource { get; set; }
+    }
+
+    internal class SerializedReferenceAssembly
+    {
+        public string Name { get; set; }
+        public string Location { get; set; }
+        public Common.DotNetVersion DotNetVersion { get; set; }
+    }
+
+    internal class SerializedEmbeddedResource
+    {
+        public string Name { get; set; }
+        public string Location { get; set; }
+    }
+
+    internal class SerializedReferenceSourceLibrary
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Location { get; set; }
+        public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
+        public List<Common.DotNetVersion> CompatibleDotNetVersions { get; set; }
+        public List<SerializedReferenceAssembly> ReferenceAssemblies { get; set; }
+        public List<SerializedEmbeddedResource> EmbeddedResources { get; set; }
     }
 }

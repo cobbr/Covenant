@@ -4,7 +4,8 @@
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="ReferenceAssemblies.ToList()" class="table table-hover">
+<CovenantTable TItem="ReferenceAssembly" Items="ReferenceAssemblies.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="ReferenceAssembly" TItem2="string" GetSortableProperty="(assembly) => assembly.Name">
             <HeaderContent>Name</HeaderContent>
@@ -12,22 +13,16 @@
         <SortableTableHeader TItem="ReferenceAssembly" TItem2="Common.DotNetVersion" GetSortableProperty="(assembly) => assembly.DotNetVersion">
             <HeaderContent>DotNetVersion</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="ReferenceAssembly" TItem2="string" GetSortableProperty="(assembly) => assembly.Location">
-            <HeaderContent>Location</HeaderContent>
-        </SortableTableHeader>
     </TableHeader>
     <TableRow Context="assembly">
-        <FilterableTableRow Item="assembly" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>
-                    <a href="/referenceassembly/edit/@assembly.Id">
-                        @assembly.Name
-                    </a>
-                </td>
-                <td>@assembly.DotNetVersion</td>
-                <td>@assembly.Location</td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>
+                <a href="/referenceassembly/edit/@assembly.Id">
+                    @assembly.Name
+                </a>
+            </td>
+            <td>@assembly.DotNetVersion</td>
+        </tr>
     </TableRow>
 </CovenantTable>
 
@@ -51,7 +46,6 @@
     {
         return SearchTerm == string.Empty ||
             assembly.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            assembly.DotNetVersion.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            assembly.Location.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+            assembly.DotNetVersion.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
     }
 }

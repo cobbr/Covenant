@@ -16,58 +16,64 @@
 @inject IJSRuntime IJSRuntime
 @inject INotificationService INotificationService
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
-    <h1 class="h2">Grunt: <span id="grunt-name" class="text-primary">@Grunt.Name</span></h1>
-</div>
-
-@if (!string.IsNullOrEmpty(this.Grunt.Note))
+@if (this.Grunt == null)
 {
-    <p><b>Note</b>: @Grunt.Note</p>
+    <p>Loading...</p>
 }
+else
+{
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+        <h1 class="h2">Grunt: <span id="grunt-name" class="text-primary">@Grunt.Name</span></h1>
+    </div>
 
-<ul class="nav nav-tabs mb-3" id="grunt-tab" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="false">
-            <span class="fe fe-info"></span>
-            Info
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="interact-tab" data-toggle="tab" href="#interact" role="tab" aria-controls="interact" aria-selected="false">
-            <span class="fe fe-terminal"></span>
-            Interact
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="task-tab" data-toggle="tab" href="#task" role="tab" aria-controls="task" aria-selected="false">
-            <span class="fe fe-box"></span>
-            Task
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="taskings-tab" data-toggle="tab" href="#taskings" role="tab" aria-controls="taskings" aria-selected="false">
-            <span class="fe fe-layers"></span>
-            Taskings
-        </a>
-    </li>
-</ul>
+    @if (!string.IsNullOrEmpty(this.Grunt.Note))
+    {
+        <p><b>Note</b>: @Grunt.Note</p>
+    }
 
-<div class="tab-content" id="grunt-tab-content">
-    <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
-        <GruntForm Grunt="Grunt" OnSubmit="OnEdit" />
+    <ul class="nav nav-tabs mb-3" id="grunt-tab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="false">
+                <span class="fe fe-info"></span>
+                Info
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="interact-tab" data-toggle="tab" href="#interact" role="tab" aria-controls="interact" aria-selected="false">
+                <span class="fe fe-terminal"></span>
+                Interact
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="task-tab" data-toggle="tab" href="#task" role="tab" aria-controls="task" aria-selected="false">
+                <span class="fe fe-box"></span>
+                Task
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="taskings-tab" data-toggle="tab" href="#taskings" role="tab" aria-controls="taskings" aria-selected="false">
+                <span class="fe fe-layers"></span>
+                Taskings
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="grunt-tab-content">
+        <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <GruntForm Grunt="Grunt" OnSubmit="OnEdit" />
+        </div>
+        <div class="tab-pane fade" id="interact" role="tabpanel" aria-labelledby="interact-tab">
+            <GruntInteractTerminal Grunt="Grunt" OnInteract="OnInteract" />
+            <br /><br /><br /><br /><br />
+        </div>
+        <div class="tab-pane fade" id="task" role="tabpanel" aria-labelledby="task-tab">
+            <GruntTaskAssignForm GruntId="GruntId" OnSubmit="OnTask" />
+        </div>
+        <div class="tab-pane fade" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
+            <GruntTaskingTable GruntTaskings="GruntTaskings" PageLength="50" />
+        </div>
     </div>
-    <div class="tab-pane fade" id="interact" role="tabpanel" aria-labelledby="interact-tab">
-        <FileModal />
-        <GruntInteractTerminal Grunt="Grunt" OnInteract="OnInteract" />
-        <br /><br /><br /><br /><br />
-    </div>
-    <div class="tab-pane fade" id="task" role="tabpanel" aria-labelledby="task-tab">
-        <GruntTaskAssignForm GruntId="GruntId" OnSubmit="OnTask" />
-    </div>
-    <div class="tab-pane fade" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
-        <GruntTaskingTable GruntTaskings="GruntTaskings" PageLength="50" />
-    </div>
-</div>
+}
 
 @code {
     [Parameter]
@@ -98,11 +104,16 @@
         this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
     }
 
+    bool scrollToBottom = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "#info-tab");
+        }
+        if (scrollToBottom)
+        {
+            await IJSRuntime.InvokeAsync<string>("ScrollToBottom", "#interact-scroll");
         }
     }
 
@@ -119,6 +130,7 @@
         if (this.GruntId == gruntTasking.GruntId)
         {
             this.GruntTaskings.Add(gruntTasking);
+            scrollToBottom = true;
         }
     }
 
@@ -130,6 +142,7 @@
             if (index != -1)
             {
                 this.GruntTaskings[index] = gruntTasking;
+                scrollToBottom = true;
                 _ = this.InvokeAsync(() => this.StateHasChanged());
             }
         }
@@ -156,19 +169,6 @@
         this.StateHasChanged();
     }
 
-    private static string GetCommand(GruntTask task)
-    {
-        string command = task.Name;
-        for (int i = 0; i < task.Options.Count; i++)
-        {
-            if (task.Options[i].DisplayInCommand)
-            {
-                command += " /" + task.Options[i].Name.ToLower() + ":\"" + task.Options[i].Value.Replace("\"", "\\\"") + "\"";
-            }
-        }
-        return command;
-    }
-
     private async Task OnTask(GruntTask task)
     {
         try
@@ -180,7 +180,7 @@
             CovenantUser currentUser = await Service.GetCurrentUser(state.User);
             GruntCommand command = await Service.CreateGruntCommand(new GruntCommand
             {
-                Command = GetCommand(task),
+                Command = task.GetVerboseCommand(),
                 CommandTime = DateTime.UtcNow,
                 UserId = currentUser.Id,
                 GruntId = this.Grunt.Id,

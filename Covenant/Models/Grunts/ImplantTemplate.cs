@@ -43,7 +43,6 @@ namespace Covenant.Models.Grunts
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-
         public string Name { get; set; } = "";
         public string Description { get; set; }
         public ImplantLanguage Language { get; set; }
@@ -51,6 +50,10 @@ namespace Covenant.Models.Grunts
         public ImplantDirection ImplantDirection { get; set; }
 
         private List<ListenerTypeImplantTemplate> ListenerTypeImplantTemplates { get; set; } = new List<ListenerTypeImplantTemplate>();
+        public void SetListenerTypeImplantTemplates(List<ListenerTypeImplantTemplate> templates)
+        {
+            this.ListenerTypeImplantTemplates = templates;
+        }
         [NotMapped]
         public List<ListenerType> CompatibleListenerTypes => ListenerTypeImplantTemplates.Select(l => l.ListenerType).ToList();
 

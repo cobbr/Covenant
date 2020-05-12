@@ -1,10 +1,11 @@
 ﻿@page "/template/edit/{ImplantTemplateId:int}"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Implant Template: <span id="implant-name" class="text-primary">@ImplantTemplate.Name</span></h1>
@@ -21,17 +22,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.ImplantTemplate = this.ImplantTemplate ?? await ICovenantService.GetImplantTemplate(this.ImplantTemplateId);
+        this.ImplantTemplate = this.ImplantTemplate ?? await Service.GetImplantTemplate(this.ImplantTemplateId);
     }
 
     private async Task OnEdit(ImplantTemplate template)
     {
         try
         {
-            await ImplantTemplateForm.SubmitCompatibleListenerTypes(template, this.ICovenantService, this.IJSRuntime);
-            this.ImplantTemplate = await ICovenantService.EditImplantTemplate(template);
-            this.StateHasChanged();
-            // return RedirectToAction(nameof(Index));
+            await Service.EditImplantTemplate(template);
+            NavigationManager.NavigateTo("/template");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

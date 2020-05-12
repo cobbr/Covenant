@@ -1,5 +1,7 @@
 ﻿@using System
+@using Microsoft.JSInterop
 @using Covenant.Core
+@inject IJSRuntime IJSRuntime
 
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#@GuidId" @attributes="InputAttributes">
     @ButtonContent
@@ -44,4 +46,9 @@
     public Dictionary<string, object> InputAttributes { get; set; }
 
     private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
+
+    public async Task DismissModal()
+    {
+        await IJSRuntime.InvokeAsync<string>("ModalCommand", GuidId, "hide");
+    }
 }

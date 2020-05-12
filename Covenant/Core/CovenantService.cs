@@ -61,7 +61,7 @@ namespace Covenant.Core
     {
         Task<IEnumerable<Event>> GetEvents();
         Task<Event> GetEvent(int eventId);
-        long GetEventTime();
+        Task<long> GetEventTime();
         Task<IEnumerable<Event>> GetEventsAfter(long fromdate);
         Task<IEnumerable<Event>> GetEventsRange(long fromdate, long todate);
         Task<Event> CreateEvent(Event anEvent);
@@ -149,8 +149,17 @@ namespace Covenant.Core
         Task<IEnumerable<GruntTaskOption>> CreateGruntTaskOptions(params GruntTaskOption[] options);
     }
 
+    public interface IGruntTaskAuthorService
+    {
+        Task<IEnumerable<GruntTaskAuthor>> GetGruntTaskAuthors();
+        Task<GruntTaskAuthor> GetGruntTaskAuthor(int id);
+        Task<GruntTaskAuthor> GetGruntTaskAuthorByName(string Name);
+        Task<GruntTaskAuthor> CreateGruntTaskAuthor(GruntTaskAuthor author);
+        Task<GruntTaskAuthor> EditGruntTaskAuthor(GruntTaskAuthor author);
+    }
+
     public interface IGruntTaskService : IReferenceAssemblyService, IEmbeddedResourceService, IReferenceSourceLibraryService,
-        IGruntTaskOptionService
+        IGruntTaskOptionService, IGruntTaskAuthorService
     {
         Task<IEnumerable<GruntTask>> GetGruntTasks();
         Task<IEnumerable<GruntTask>> GetGruntTasksForGrunt(int gruntId);
@@ -160,6 +169,7 @@ namespace Covenant.Core
         Task<IEnumerable<GruntTask>> CreateGruntTasks(params GruntTask[] tasks);
         Task<GruntTask> EditGruntTask(GruntTask task);
         Task DeleteGruntTask(int taskId);
+        Task<string> ParseParametersIntoTask(GruntTask task, List<ParsedParameter> parameters);
     }
 
     public interface IGruntCommandService
@@ -618,25 +628,22 @@ namespace Covenant.Core
 
         public async Task<IdentityUserRole<string>> CreateUserRole(string userId, string roleId)
         {
-            CovenantUser user = await this.GetUser(userId);
-            if (user == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Could not find CovenantUser with id: {userId}");
-            }
+            CovenantUser user = await _userManager.Users.FirstOrDefaultAsync(U => U.Id == userId);
             IdentityRole role = await this.GetRole(roleId);
-            if (role == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Could not find UserRole with id: {roleId}");
-            }
             IdentityUserRole<string> userRole = new IdentityUserRole<string>
             {
                 UserId = user.Id,
                 RoleId = role.Id
             };
-            await _context.UserRoles.AddAsync(userRole);
-            if (userRole == null)
+            IdentityResult result = await _userManager.AddToRoleAsync(user, role.Name);
+            if (!result.Succeeded)
             {
-                throw new ControllerBadRequestException($"BadRequest - Could not add CovenantUser: {user.UserName} to role: {role.Name}");
+                string Errors = $"BadRequest - Could not add CovenantUser: {user.UserName} to role: {role.Name}";
+                foreach (var error in result.Errors)
+                {
+                    Errors += $"{Environment.NewLine}{error.Description} ({error.Code})";
+                }
+                throw new ControllerBadRequestException(Errors);
             }
             // _notifier.OnCreateIdentityUserRole(this, userRole);
             return userRole;
@@ -653,15 +660,15 @@ namespace Covenant.Core
                 ErrorMessage += "Can't remove the last Administrative user.";
                 throw new ControllerBadRequestException(ErrorMessage);
             }
-            IdentityResult result = await _userManager.RemoveFromRoleAsync(user, role.Name);
-            if (!result.Succeeded)
+            IdentityUserRole<string> userRole = new IdentityUserRole<string>
             {
-                string ErrorMessage = $"BadRequest - Could not remove role: {role.Name} from CovenantUser: {user.UserName}";
-                foreach (IdentityError error in result.Errors)
-                {
-                    ErrorMessage += Environment.NewLine + error.Description;
-                }
-                throw new ControllerBadRequestException(ErrorMessage);
+                UserId = user.Id,
+                RoleId = role.Id
+            };
+            var entry = _context.UserRoles.Remove(userRole);
+            if (entry.State != EntityState.Deleted)
+            {
+                throw new ControllerBadRequestException($"BadRequest - Could not remove role: {role.Name} from CovenantUser: {user.UserName}");
             }
             await _context.SaveChangesAsync();
             // _notifier.OnDeleteIdentityUserRole(this, new Tuple<string, string>(user.Id, role.Id));
@@ -684,9 +691,9 @@ namespace Covenant.Core
             return anEvent;
         }
 
-        public long GetEventTime()
+        public Task<long> GetEventTime()
         {
-            return DateTime.UtcNow.ToBinary();
+            return Task.FromResult(DateTime.UtcNow.ToBinary());
         }
 
         public async Task<IEnumerable<Event>> GetEventsAfter(long fromdate)
@@ -839,7 +846,22 @@ namespace Covenant.Core
 
         public async Task<ImplantTemplate> CreateImplantTemplate(ImplantTemplate template)
         {
+            List<ListenerType> types = template.CompatibleListenerTypes.ToList();
+            template.SetListenerTypeImplantTemplates(new List<ListenerTypeImplantTemplate>());
+
             await _context.ImplantTemplates.AddAsync(template);
+            await _context.SaveChangesAsync();
+
+            foreach (ListenerType type in types)
+            {
+                await this.CreateEntities(
+                    new ListenerTypeImplantTemplate
+                    {
+                        ListenerType = await this.GetListenerType(type.Id),
+                        ImplantTemplate = template
+                    }
+                );
+            }
             await _context.SaveChangesAsync();
             // _notifier.OnCreateImplantTemplate(this, template);
             return await this.GetImplantTemplate(template.Id);
@@ -847,9 +869,12 @@ namespace Covenant.Core
 
         public async Task<IEnumerable<ImplantTemplate>> CreateImplantTemplates(params ImplantTemplate[] templates)
         {
-            await _context.ImplantTemplates.AddRangeAsync(templates);
-            await _context.SaveChangesAsync();
-            return templates;
+            List<ImplantTemplate> createdTemplates = new List<ImplantTemplate>();
+            foreach (ImplantTemplate template in templates)
+            {
+                createdTemplates.Add(await this.CreateImplantTemplate(template));
+            }
+            return createdTemplates;
         }
 
         public async Task<ImplantTemplate> EditImplantTemplate(ImplantTemplate template)
@@ -858,9 +883,26 @@ namespace Covenant.Core
             matchingTemplate.Name = template.Name;
             matchingTemplate.Description = template.Description;
             matchingTemplate.Language = template.Language;
+            matchingTemplate.CommType = template.CommType;
             matchingTemplate.ImplantDirection = template.ImplantDirection;
             matchingTemplate.StagerCode = template.StagerCode;
             matchingTemplate.ExecutorCode = template.ExecutorCode;
+            matchingTemplate.CompatibleDotNetVersions = template.CompatibleDotNetVersions;
+
+            IEnumerable<ListenerType> typesToAdd = template.CompatibleListenerTypes.Where(CLT => !matchingTemplate.CompatibleListenerTypes.Select(Two => Two.Id).Contains(CLT.Id));
+            IEnumerable<ListenerType> typesToRemove = matchingTemplate.CompatibleListenerTypes.Where(CLT => !template.CompatibleListenerTypes.Select(Two => Two.Id).Contains(CLT.Id));
+            foreach (ListenerType type in typesToAdd)
+            {
+                _context.Add(new ListenerTypeImplantTemplate
+                {
+                    ImplantTemplateId = matchingTemplate.Id,
+                    ListenerTypeId = type.Id
+                });
+            }
+            foreach (ListenerType type in typesToRemove)
+            {
+                _context.Remove(await _context.FindAsync<ListenerTypeImplantTemplate>(type.Id, matchingTemplate.Id));
+            }
 
             _context.ImplantTemplates.Update(matchingTemplate);
             await _context.SaveChangesAsync();
@@ -1163,7 +1205,6 @@ namespace Covenant.Core
                 if (matching_grunt.ConnectAttempts != grunt.ConnectAttempts)
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
-                    matching_grunt.ConnectAttempts = grunt.ConnectAttempts;
                     setTask.Options[0].Value = "ConnectAttempts";
                     setTask.Options[1].Value = grunt.ConnectAttempts.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
@@ -1184,7 +1225,7 @@ namespace Covenant.Core
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetOption,
+                        Type = GruntTaskingType.SetConnectAttempts,
                         Parameters = new List<string> { "ConnectAttempts", grunt.ConnectAttempts.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
@@ -1193,7 +1234,6 @@ namespace Covenant.Core
                 if (matching_grunt.Delay != grunt.Delay)
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
-                    matching_grunt.Delay = grunt.Delay;
                     setTask.Options[0].Value = "Delay";
                     setTask.Options[1].Value = grunt.Delay.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
@@ -1214,7 +1254,7 @@ namespace Covenant.Core
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetOption,
+                        Type = GruntTaskingType.SetDelay,
                         Parameters = new List<string> { "Delay", grunt.Delay.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
@@ -1223,7 +1263,6 @@ namespace Covenant.Core
                 if (matching_grunt.JitterPercent != grunt.JitterPercent)
                 {
                     GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
-                    matching_grunt.JitterPercent = grunt.JitterPercent;
                     setTask.Options[0].Value = "JitterPercent";
                     setTask.Options[1].Value = grunt.JitterPercent.ToString();
                     GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
@@ -1244,7 +1283,7 @@ namespace Covenant.Core
                         GruntTaskId = setTask.Id,
                         GruntTask = setTask,
                         Status = GruntTaskingStatus.Uninitialized,
-                        Type = GruntTaskingType.SetOption,
+                        Type = GruntTaskingType.SetJitter,
                         Parameters = new List<string> { "JitterPercent", grunt.JitterPercent.ToString() },
                         GruntCommand = createdGruntCommand,
                         GruntCommandId = createdGruntCommand.Id
@@ -1252,7 +1291,32 @@ namespace Covenant.Core
                 }
                 if (matching_grunt.KillDate != grunt.KillDate)
                 {
-                    matching_grunt.KillDate = grunt.KillDate;
+                    GruntTask setTask = await this.GetGruntTaskByName("Set", matching_grunt.DotNetVersion);
+                    setTask.Options[0].Value = "KillDate";
+                    setTask.Options[1].Value = grunt.KillDate.ToString();
+                    GruntCommand createdGruntCommand = await this.CreateGruntCommand(new GruntCommand
+                    {
+                        Command = "Set KillDate " + grunt.KillDate.ToString(),
+                        CommandTime = DateTime.UtcNow,
+                        User = user,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        CommandOutputId = 0,
+                        CommandOutput = new CommandOutput()
+                    });
+                    await this.CreateGruntTasking(new GruntTasking
+                    {
+                        Id = 0,
+                        GruntId = grunt.Id,
+                        Grunt = grunt,
+                        GruntTaskId = setTask.Id,
+                        GruntTask = setTask,
+                        Status = GruntTaskingStatus.Uninitialized,
+                        Type = GruntTaskingType.SetKillDate,
+                        Parameters = new List<string> { "KillDate", grunt.KillDate.ToString() },
+                        GruntCommand = createdGruntCommand,
+                        GruntCommandId = createdGruntCommand.Id
+                    });
                 }
             }
 
@@ -1309,8 +1373,7 @@ namespace Covenant.Core
                     }
                 }
             }
-            suggestions.AddRange(new List<string> { "Show", "Note", "History" });
-            suggestions.AddRange(taskings.Select(GT => $"History {GT.Name}"));
+            suggestions.AddRange(new List<string> { "Note" });
             return suggestions;
         }
 
@@ -1529,9 +1592,34 @@ namespace Covenant.Core
         {
             Grunt grunt = await this.GetGrunt(GruntId);
             CovenantUser user = await this.GetUser(UserId);
+
+            List<ParsedParameter> parameters = ParsedParameter.GetParsedCommandParameters(UserInput);
+            string commandName = parameters.Count > 0 ? parameters.FirstOrDefault().Value : "";
+            GruntTask commandTask = null;
+            try
+            {
+                commandTask = await this.GetGruntTaskByName(commandName, grunt.DotNetVersion);
+                if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
+                {
+                    parameters = new List<ParsedParameter>
+                    {
+                        new ParsedParameter
+                        {
+                            Value = commandTask.Name, Label = "", IsLabeled = false, Position = 0
+                        },
+                        new ParsedParameter
+                        {
+                            Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).Trim('"'),
+                            Label = "", IsLabeled = false, Position = 0
+                        }
+                    };
+                }
+            }
+            catch (ControllerNotFoundException) { }
+
             GruntCommand GruntCommand = await this.CreateGruntCommand(new GruntCommand
             {
-                Command = GetCommandFromInput(UserInput),
+                Command = GetCommandFromInput(UserInput, parameters, commandTask),
                 CommandTime = DateTime.UtcNow,
                 UserId = user.Id,
                 GruntId = grunt.Id,
@@ -1540,46 +1628,10 @@ namespace Covenant.Core
             });
             try
             {
-                List<ParsedParameter> parameters = this.GetParsedCommandParameters(UserInput).ToList() ?? new List<ParsedParameter>();
-                string commandName = parameters.Count > 0 ? parameters.FirstOrDefault().Value : "";
-                GruntTask commandTask = null;
-                try
-                {
-                    commandTask = await this.GetGruntTaskByName(commandName, grunt.DotNetVersion);
-                    if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
-                    {
-                        parameters = new List<ParsedParameter>
-                        {
-                            new ParsedParameter
-                            {
-                                Value = commandTask.Name, Label = "", IsLabeled = false, Position = 0
-                            },
-                            new ParsedParameter
-                            {
-                                Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).Trim('"'),
-                                Label = "", IsLabeled = false, Position = 0
-                            }
-                        };
-                    }
-                }
-                catch (ControllerNotFoundException) { }
-
                 string output = "";
                 if (commandName.ToLower() == "help")
                 {
                     output = await StartHelpCommand(grunt, parameters);
-                }
-                else if (commandName.ToLower() == "exit")
-                {
-                    output = await StartExitGruntTasking(grunt, GruntCommand, parameters);
-                }
-                else if (commandName.ToLower() == "history")
-                {
-                    output = await StartHistoryCommand(grunt, parameters);
-                }
-                else if (commandName.ToLower() == "jobs")
-                {
-                    output = await StartJobsGruntTasking(grunt, GruntCommand, parameters);
                 }
                 else if (commandName.ToLower() == "note")
                 {
@@ -1589,64 +1641,13 @@ namespace Covenant.Core
                 }
                 else if (commandTask != null && commandTask.CompatibleDotNetVersions.Contains(grunt.DotNetVersion))
                 {
-                    parameters = parameters.Skip(1).ToList();
-                    if (parameters.Count() < commandTask.Options.Count(O => !O.Optional))
+                    string errors = await this.ParseParametersIntoTask(commandTask, parameters);
+                    if (!string.IsNullOrEmpty(errors))
                     {
                         this.DisposeContext();
                         GruntCommand = await this.GetGruntCommand(GruntCommand.Id);
-                        GruntCommand.CommandOutput.Output = ConsoleWriter.PrintFormattedErrorLine(await this.GetUsageForGruntTask(commandTask));
+                        GruntCommand.CommandOutput.Output = errors;
                         return await this.EditGruntCommand(GruntCommand);
-                    }
-                    // All options begin unassigned
-                    List<bool> OptionAssignments = commandTask.Options.Select(O => false).ToList();
-                    commandTask.Options.ForEach(O => O.Value = "");
-                    for (int i = 0; i < parameters.Count; i++)
-                    {
-                        if (parameters[i].IsLabeled)
-                        {
-                            var option = commandTask.Options.FirstOrDefault(O => O.Name.Equals(parameters[i].Label, StringComparison.OrdinalIgnoreCase));
-                            option.Value = parameters[i].Value;
-                            OptionAssignments[commandTask.Options.IndexOf(option)] = true;
-                        }
-                        else
-                        {
-                            GruntTaskOption nextOption = null;
-                            // Find next unassigned option
-                            for (int j = 0; j < commandTask.Options.Count; j++)
-                            {
-                                if (!OptionAssignments[j])
-                                {
-                                    nextOption = commandTask.Options[j];
-                                    OptionAssignments[j] = true;
-                                    break;
-                                }
-                            }
-                            if (nextOption == null)
-                            {
-                                // This is an extra parameter
-                                this.DisposeContext();
-                                GruntCommand = await this.GetGruntCommand(GruntCommand.Id);
-                                GruntCommand.CommandOutput.Output = ConsoleWriter.PrintFormattedErrorLine(await this.GetUsageForGruntTask(commandTask));
-                                return await this.EditGruntCommand(GruntCommand);
-                            }
-                            nextOption.Value = parameters[i].Value;
-                        }
-                    }
-
-                    // Check for unassigned required options
-                    for (int i = 0; i < commandTask.Options.Count; i++)
-                    {
-                        if (!OptionAssignments[i] && !commandTask.Options[i].Optional)
-                        {
-                            // This is an extra parameter
-                            StringBuilder toPrint = new StringBuilder();
-                            toPrint.Append(ConsoleWriter.PrintFormattedErrorLine(commandTask.Options[i].Name + " is required."));
-                            toPrint.Append(ConsoleWriter.PrintFormattedErrorLine(await this.GetUsageForGruntTask(commandTask)));
-                            this.DisposeContext();
-                            GruntCommand = await this.GetGruntCommand(GruntCommand.Id);
-                            GruntCommand.CommandOutput.Output = toPrint.ToString();
-                            return await this.EditGruntCommand(GruntCommand);
-                        }
                     }
                     // Parameters have parsed successfully
                     commandTask = await this.EditGruntTask(commandTask);
@@ -1664,7 +1665,10 @@ namespace Covenant.Core
                 }
                 this.DisposeContext();
                 GruntCommand = await this.GetGruntCommand(GruntCommand.Id);
-                GruntCommand.CommandOutput.Output = output;
+                if (GruntCommand.CommandOutput.Output == "" && output != "")
+                {
+                    GruntCommand.CommandOutput.Output = output;
+                }
                 return await this.EditGruntCommand(GruntCommand);
             }
             catch (Exception e)
@@ -1932,11 +1936,54 @@ namespace Covenant.Core
         }
         #endregion
 
+        #region GruntTaskAuthor Actions
+        public async Task<IEnumerable<GruntTaskAuthor>> GetGruntTaskAuthors()
+        {
+            return await _context.GruntTaskAuthors.ToListAsync();
+        }
+
+        public async Task<GruntTaskAuthor> GetGruntTaskAuthor(int id)
+        {
+            GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Id == id);
+            if (author == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - GruntTaskAuthor with id: {id}");
+            }
+            return author;
+        }
+
+        public async Task<GruntTaskAuthor> GetGruntTaskAuthorByName(string Name)
+        {
+            GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == Name);
+            if (author == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - GruntTaskAuthor with Name: {Name}");
+            }
+            return author;
+        }
+
+        public async Task<GruntTaskAuthor> CreateGruntTaskAuthor(GruntTaskAuthor author)
+        {
+            await _context.AddAsync(author);
+            await _context.SaveChangesAsync();
+            // _notifier.OnCreateGruntTaskOption(this, option);
+            return author;
+        }
+
+        public async Task<GruntTaskAuthor> EditGruntTaskAuthor(GruntTaskAuthor author)
+        {
+            _context.Update(author);
+            await _context.SaveChangesAsync();
+            return author;
+        }
+        #endregion
+
         #region GruntTask Actions
         public async Task<IEnumerable<GruntTask>> GetGruntTasks()
         {
             return await _context.GruntTasks
                 .Include(T => T.Options)
+                .Include(T => T.Author)
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
@@ -1951,6 +1998,7 @@ namespace Covenant.Core
             return _context.GruntTasks
                 // .Where(T => T.SupportedDotNetVersions.Contains(version))
                 .Include(T => T.Options)
+                .Include(T => T.Author)
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
@@ -1965,6 +2013,7 @@ namespace Covenant.Core
             GruntTask task = await _context.GruntTasks
                 .Where(T => T.Id == id)
                 .Include(T => T.Options)
+                .Include(T => T.Author)
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
@@ -1984,6 +2033,7 @@ namespace Covenant.Core
                 .Where(T => T.Name.ToLower() == name.ToLower())
                 // .Where(T => T.SupportedDotNetVersions.Contains(version))
                 .Include(T => T.Options)
+                .Include(T => T.Author)
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
@@ -1997,6 +2047,7 @@ namespace Covenant.Core
                 // Probably bad performance here
                 task = _context.GruntTasks
                     .Include(T => T.Options)
+                    .Include(T => T.Author)
                     .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
                     .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
                     .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
@@ -2038,7 +2089,66 @@ namespace Covenant.Core
 
         public async Task<GruntTask> CreateGruntTask(GruntTask task)
         {
+            List<GruntTaskOption> options = task.Options.ToList();
+            List<EmbeddedResource> resources = task.EmbeddedResources.ToList();
+            List<ReferenceAssembly> assemblies = task.ReferenceAssemblies.ToList();
+            List<ReferenceSourceLibrary> libraries = task.ReferenceSourceLibraries.ToList();
+            task.Options = new List<GruntTaskOption>();
+            task.EmbeddedResources.ForEach(ER => task.Remove(ER));
+            task.ReferenceAssemblies.ForEach(RA => task.Remove(RA));
+            task.ReferenceSourceLibraries.ForEach(RSL => task.Remove(RSL));
+
+            GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
+            if (author != null)
+            {
+                task.AuthorId = author.Id;
+                task.Author = author;
+            }
+            else
+            {
+                await _context.GruntTaskAuthors.AddAsync(task.Author);
+                await _context.SaveChangesAsync();
+                task.AuthorId = task.Author.Id;
+            }
+
             await _context.GruntTasks.AddAsync(task);
+            await _context.SaveChangesAsync();
+
+            foreach (GruntTaskOption option in options)
+            {
+                option.GruntTaskId = task.Id;
+                await _context.AddAsync(option);
+            }
+            foreach (EmbeddedResource resource in resources)
+            {
+                await this.CreateEntities(
+                    new GruntTaskEmbeddedResource
+                    {
+                        EmbeddedResource = await this.GetEmbeddedResourceByName(resource.Name),
+                        GruntTask = task
+                    }
+                );
+            }
+            foreach (ReferenceAssembly assembly in assemblies)
+            {
+                await this.CreateEntities(
+                    new GruntTaskReferenceAssembly
+                    {
+                        ReferenceAssembly = await this.GetReferenceAssemblyByName(assembly.Name, assembly.DotNetVersion),
+                        GruntTask = task
+                    }
+                );
+            }
+            foreach (ReferenceSourceLibrary library in libraries)
+            {
+                await this.CreateEntities(
+                    new GruntTaskReferenceSourceLibrary
+                    {
+                        ReferenceSourceLibrary = await this.GetReferenceSourceLibraryByName(library.Name),
+                        GruntTask = task
+                    }
+                );
+            }
             await _context.SaveChangesAsync();
             // _notifier.OnCreateGruntTask(this, task);
             return await this.GetGruntTask(task.Id);
@@ -2046,9 +2156,12 @@ namespace Covenant.Core
 
         public async Task<IEnumerable<GruntTask>> CreateGruntTasks(params GruntTask[] tasks)
         {
-            await _context.GruntTasks.AddRangeAsync(tasks);
-            await _context.SaveChangesAsync();
-            return tasks;
+            List<GruntTask> createdTasks = new List<GruntTask>();
+            foreach (GruntTask t in tasks)
+            {
+                createdTasks.Add(await this.CreateGruntTask(t));
+            }
+            return createdTasks;
         }
 
         public async Task<GruntTask> EditGruntTask(GruntTask task)
@@ -2069,6 +2182,7 @@ namespace Covenant.Core
             updatingTask.UnsafeCompile = task.UnsafeCompile;
             updatingTask.TokenTask = task.TokenTask;
             updatingTask.TaskingType = task.TaskingType;
+
             task.Options.Where(O => O.Id == 0).ToList().ForEach(async O => await this.CreateGruntTaskOption(O));
             var removeOptions = updatingTask.Options.Select(UT => UT.Id).Except(task.Options.Select(O => O.Id));
             removeOptions.ToList().ForEach(RO => updatingTask.Options.Remove(updatingTask.Options.FirstOrDefault(UO => UO.Id == RO)));
@@ -2101,8 +2215,23 @@ namespace Covenant.Core
             removeLibraries.ToList().ForEach(async RL => updatingTask.Remove(await this.GetReferenceSourceLibrary(RL)));
             addLibraries.ToList().ForEach(async AL => updatingTask.Add(await this.GetReferenceSourceLibrary(AL)));
 
+            GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
+            if (author != null)
+            {
+                updatingTask.AuthorId = author.Id;
+                updatingTask.Author = author;
+            }
+            else
+            {
+                await _context.GruntTaskAuthors.AddAsync(task.Author);
+                await _context.SaveChangesAsync();
+                updatingTask.AuthorId = task.Author.Id;
+                updatingTask.Author = task.Author;
+            }
+
             _context.GruntTasks.Update(updatingTask);
             await _context.SaveChangesAsync();
+
             // _notifier.OnEditGruntTask(this, updatingTask);
             return updatingTask;
         }
@@ -2216,74 +2345,76 @@ namespace Covenant.Core
             // _notifier.OnDeleteGruntCommand(this, command.Id);
         }
 
-        internal class ParsedParameter
+        private string GetCommandFromInput(string UserInput, List<ParsedParameter> parameters, GruntTask task = null)
         {
-            public int Position { get; set; }
-            public bool IsLabeled { get; set; }
-            public string Label { get; set; }
-            public string Value { get; set; }
-        }
-
-        private IEnumerable<ParsedParameter> GetParsedCommandParameters(string command)
-        {
-            List<ParsedParameter> ParsedParameters = new List<ParsedParameter>();
-
-            // ("surrounded by quotes") | (/labeled:"with or without quotes") | (orseperatedbyspace)
-            List<string> matches = Regex
-                .Matches(command, @"""[^""\\]*(?:\\.[^""\\]*)*""|(/[^""\\/:]*:[""][^""\\]*(?:\\.[^""\\]*)*[""]|[^ ]+)|[^ ]+")
-                .Cast<Match>()
-                .Select(M => M.Value)
-                .ToList();
-            for (int i = 0; i < matches.Count; i++)
+            if (task != null)
             {
-                if (matches[i].StartsWith("/", StringComparison.Ordinal) && matches[i].IndexOf(":", StringComparison.Ordinal) != -1)
+                for (int i = 0; i < task.Options.Count; i++)
                 {
-                    int labelIndex = matches[i].IndexOf(":", StringComparison.Ordinal);
-                    string label = matches[i].Substring(1, labelIndex - 1);
-                    string val = matches[i].Substring(labelIndex + 1, matches[i].Length - labelIndex - 1);
-                    ParsedParameters.Add(new ParsedParameter
+                    if (!task.Options[i].DisplayInCommand && parameters.Count > (i + 1))
                     {
-                        Position = i,
-                        IsLabeled = true,
-                        Label = label,
-                        Value = (val.StartsWith("\"", StringComparison.Ordinal) && val.EndsWith("\"", StringComparison.Ordinal)) ? val.Trim('"') : val
-                    });
-                }
-                else
-                {
-                    ParsedParameters.Add(new ParsedParameter
-                    {
-                        Position = i,
-                        IsLabeled = false,
-                        Label = "",
-                        Value = matches[i].Trim('"')
-                    });
-                }
-            }
-            return ParsedParameters;
-        }
-
-        private string GetCommandFromInput(string UserInput)
-        {
-            if (UserInput.StartsWith("Assembly", StringComparison.OrdinalIgnoreCase) ||
-                UserInput.StartsWith("AssemblyReflect", StringComparison.OrdinalIgnoreCase) ||
-                UserInput.StartsWith("Upload", StringComparison.OrdinalIgnoreCase))
-            {
-                List<ParsedParameter> parameters = this.GetParsedCommandParameters(UserInput).ToList();
-                if (parameters.Count >= 3)
-                {
-                    return UserInput.Replace(parameters[2].Value, "");
-                }
-            }
-            else if (UserInput.StartsWith("PowerShellImport", StringComparison.OrdinalIgnoreCase))
-            {
-                List<ParsedParameter> parameters = this.GetParsedCommandParameters(UserInput).ToList();
-                if (parameters.Count >= 2)
-                {
-                    return UserInput.Replace(parameters[1].Value, "");
+                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i+1].Value}""", "");
+                    }
                 }
             }
             return UserInput;
+        }
+
+        public async Task<string> ParseParametersIntoTask(GruntTask task, List<ParsedParameter> parameters)
+        {
+            parameters = parameters.Skip(1).ToList();
+            if (parameters.Count() < task.Options.Where(O => !O.FileOption).Count(O => !O.Optional))
+            {
+                this.DisposeContext();
+                return ConsoleWriter.PrintFormattedErrorLine(await this.GetUsageForGruntTask(task));
+            }
+            // All options begin unassigned
+            List<bool> OptionAssignments = task.Options.Select(O => false).ToList();
+            task.Options.ForEach(O => O.Value = "");
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                if (parameters[i].IsLabeled)
+                {
+                    var option = task.Options.FirstOrDefault(O => O.Name.Equals(parameters[i].Label, StringComparison.OrdinalIgnoreCase));
+                    option.Value = parameters[i].Value;
+                    OptionAssignments[task.Options.IndexOf(option)] = true;
+                }
+                else
+                {
+                    GruntTaskOption nextOption = null;
+                    // Find next unassigned option
+                    for (int j = 0; j < task.Options.Count; j++)
+                    {
+                        if (!OptionAssignments[j] && !task.Options[j].FileOption)
+                        {
+                            nextOption = task.Options[j];
+                            OptionAssignments[j] = true;
+                            break;
+                        }
+                    }
+                    if (nextOption == null)
+                    {
+                        // This is an extra parameter
+                        return ConsoleWriter.PrintFormattedErrorLine(await this.GetUsageForGruntTask(task));
+                    }
+                    nextOption.Value = parameters[i].Value;
+                }
+            }
+
+            // Check for unassigned required options
+            for (int i = 0; i < task.Options.Count; i++)
+            {
+                if (!OptionAssignments[i] && !task.Options[i].Optional)
+                {
+                    // This is an extra parameter
+                    StringBuilder toPrint = new StringBuilder();
+                    toPrint.Append(ConsoleWriter.PrintFormattedErrorLine(task.Options[i].Name + " is required."));
+                    toPrint.Append(ConsoleWriter.PrintFormattedErrorLine(await this.GetUsageForGruntTask(task)));
+                    this.DisposeContext();
+                    return toPrint.ToString();
+                }
+            }
+            return null;
         }
 
         private async Task<string> StartHelpCommand(Grunt grunt, List<ParsedParameter> parameters)
@@ -2343,79 +2474,6 @@ namespace Covenant.Core
                 GruntCommandId = command.Id,
                 GruntCommand = command
             });
-        }
-
-        private async Task<string> StartExitGruntTasking(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
-        {
-            if (parameters.Count() != 1)
-            {
-                StringBuilder toPrint = new StringBuilder();
-                toPrint.Append(ConsoleWriter.PrintFormattedErrorLine("Usage: Exit"));
-                return toPrint.ToString();
-            }
-            GruntTask exitTask = await this.GetGruntTaskByName("Exit", grunt.DotNetVersion);
-            await this.CreateGruntTasking(new GruntTasking
-            {
-                Id = 0,
-                GruntId = grunt.Id,
-                GruntTaskId = exitTask.Id,
-                GruntTask = exitTask,
-                Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
-                Status = GruntTaskingStatus.Uninitialized,
-                Type = GruntTaskingType.Exit,
-                GruntCommand = command,
-                GruntCommandId = command.Id
-            });
-            return "";
-        }
-
-        private async Task<string> StartHistoryCommand(Grunt grunt, List<ParsedParameter> parameters)
-        {
-            string Name = "History";
-            if (parameters.Count() != 2 || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
-            {
-                StringBuilder toPrint1 = new StringBuilder();
-                toPrint1.Append(ConsoleWriter.PrintFormattedErrorLine("Usage: History <tasking_name>"));
-                return toPrint1.ToString();
-            }
-            StringBuilder toPrint = new StringBuilder();
-            GruntTasking tasking = await this.GetGruntTaskingByName(parameters[1].Value);
-            if (tasking == null)
-            {
-                toPrint.Append(ConsoleWriter.PrintFormattedErrorLine("Invalid History command, invalid tasking name. Usage is: History [ <tasking_name> ]"));
-            }
-            else
-            {
-                GruntCommand command = await this.GetGruntCommand(tasking.GruntCommandId);
-                toPrint.Append(ConsoleWriter.PrintFormattedInfoLine("[" + tasking.CompletionTime + " UTC] Grunt: " + grunt.Name + " " + "GruntTasking: " + tasking.Name));
-                toPrint.Append(ConsoleWriter.PrintInfoLine("(" + command.User.UserName + ") > " + command.Command));
-                toPrint.Append(ConsoleWriter.PrintInfoLine(command.CommandOutput.Output));
-            }
-            return toPrint.ToString();
-        }
-
-        private async Task<string> StartJobsGruntTasking(Grunt grunt, GruntCommand command, List<ParsedParameter> parameters)
-        {
-            string Name = "Jobs";
-            if (parameters.Count != 1 || !parameters[0].Value.Equals(Name, StringComparison.OrdinalIgnoreCase))
-            {
-                return ConsoleWriter.PrintFormattedErrorLine("Usage: Jobs");
-            }
-            GruntTask jobsTask = await this.GetGruntTaskByName("Jobs", grunt.DotNetVersion);
-            await this.CreateGruntTasking(new GruntTasking
-            {
-                Id = 0,
-                GruntId = grunt.Id,
-                GruntTaskId = jobsTask.Id,
-                GruntTask = jobsTask,
-                Name = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10),
-                Status = GruntTaskingStatus.Uninitialized,
-                Type = GruntTaskingType.Jobs,
-                Parameters = new List<string> { "Jobs" },
-                GruntCommand = command,
-                GruntCommandId = command.Id
-            });
-            return "";
         }
         #endregion
 
@@ -2786,26 +2844,29 @@ public static class Task
                 {
                     grunt.Status = GruntStatus.Exited;
                 }
-                else if (tasking.Type == GruntTaskingType.SetOption && tasking.Parameters.Count >= 2)
+                else if ((tasking.Type == GruntTaskingType.SetDelay || tasking.Type == GruntTaskingType.SetJitter ||
+                    tasking.Type == GruntTaskingType.SetConnectAttempts) && tasking.Parameters.Count >= 2 && int.TryParse(tasking.Parameters[1], out int n))
                 {
-                    bool parsed = int.TryParse(tasking.Parameters[1], out int n);
-                    if (parsed)
+                    if (tasking.Type == GruntTaskingType.SetDelay)
                     {
-                        if (tasking.Parameters[0].Equals("Delay", StringComparison.CurrentCultureIgnoreCase))
-                        {
-                            grunt.Delay = n;
-                        }
-                        else if (tasking.Parameters[0].Equals("JitterPercent", StringComparison.CurrentCultureIgnoreCase))
-                        {
-                            grunt.JitterPercent = n;
-                        }
-                        else if (tasking.Parameters[0].Equals("ConnectAttempts", StringComparison.CurrentCultureIgnoreCase))
-                        {
-                            grunt.ConnectAttempts = n;
-                        }
-                        _context.Grunts.Update(grunt);
-                        await _notifier.NotifyEditGrunt(this, grunt);
+                        grunt.Delay = n;
                     }
+                    else if (tasking.Type == GruntTaskingType.SetJitter)
+                    {
+                        grunt.JitterPercent = n;
+                    }
+                    else if (tasking.Type == GruntTaskingType.SetConnectAttempts)
+                    {
+                        grunt.ConnectAttempts = n;
+                    }
+                    _context.Grunts.Update(grunt);
+                    await _notifier.NotifyEditGrunt(this, grunt);
+                }
+                else if (tasking.Type == GruntTaskingType.SetKillDate && tasking.Parameters.Count >= 2 && DateTime.TryParse(tasking.Parameters[1], out DateTime date))
+                {
+                    grunt.KillDate = date;
+                    _context.Grunts.Update(grunt);
+                    await _notifier.NotifyEditGrunt(this, grunt);
                 }
                 else if (tasking.Type == GruntTaskingType.Connect)
                 {
@@ -3728,16 +3789,7 @@ public static class Task
             {
                 throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
             }
-            CancellationTokenSource listenerCancellationToken = null;
-            try
-            {
-                listenerCancellationToken = listener.Start();
-            }
-            catch (ListenerStartException e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start due to exception: {e.Message}");
-            }
-            _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
+            await this.StartListener(listener.Id);
 
             for (int i = 0; i < listener.ConnectAddresses.Count; i++)
             {
@@ -3757,7 +3809,6 @@ public static class Task
                 }
             }
 
-            _cancellationTokens[listener.Id] = listenerCancellationToken;
             Event listenerEvent = await this.CreateEvent(new Event
             {
                 Time = listener.StartTime,

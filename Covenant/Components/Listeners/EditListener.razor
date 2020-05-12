@@ -1,4 +1,5 @@
 ﻿@page "/listener/edit/{ListenerId:int}"
+@inherits OwningComponentBase<ICovenantService>
 
 @using System.Threading
 @using System.Collections.Concurrent;
@@ -15,9 +16,9 @@
 @using Covenant.Models.Listeners;
 
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 @inject UserManager<CovenantUser> UserManager
 @inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Listener: <span class="text-primary">@Listener.Name</span></h1>
@@ -123,7 +124,7 @@ else if (Listener.ListenerType.Name == "Bridge")
 
     protected override async Task OnInitializedAsync()
     {
-        this.Listener = this.Listener ?? await ICovenantService.GetListener(this.ListenerId);
+        this.Listener = this.Listener ?? await Service.GetListener(this.ListenerId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -135,8 +136,8 @@ else if (Listener.ListenerType.Name == "Bridge")
     {
         try
         {
-            listener = await ICovenantService.EditHttpListener(listener);
-            // return RedirectToAction(nameof(Index));
+            await Service.EditHttpListener(listener);
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
@@ -149,8 +150,8 @@ else if (Listener.ListenerType.Name == "Bridge")
     {
         try
         {
-            listener = await ICovenantService.EditBridgeListener(listener);
-            // return RedirectToAction(nameof(Index));
+            await Service.EditBridgeListener(listener);
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
@@ -166,7 +167,8 @@ else if (Listener.ListenerType.Name == "Bridge")
             if (Listener.Status != ListenerStatus.Active)
             {
                 Listener.Status = ListenerStatus.Active;
-                await ICovenantService.EditListener(Listener);
+                await Service.EditListener(Listener);
+                NavigationManager.NavigateTo("/listener");
             }
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -183,7 +185,8 @@ else if (Listener.ListenerType.Name == "Bridge")
             if (Listener.Status != ListenerStatus.Stopped)
             {
                 Listener.Status = ListenerStatus.Stopped;
-                await ICovenantService.EditListener(Listener);
+                await Service.EditListener(Listener);
+                NavigationManager.NavigateTo("/listener");
             }
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -197,7 +200,8 @@ else if (Listener.ListenerType.Name == "Bridge")
     {
         try
         {
-            await ICovenantService.DeleteListener(Listener.Id);
+            await Service.DeleteListener(Listener.Id);
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

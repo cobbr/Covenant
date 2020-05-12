@@ -1,8 +1,8 @@
 ﻿@page "/referencesourcelibrary/create"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
-@inherits CovenantServiceComponentBase
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Create ReferenceSourceLibrary</h1>
@@ -18,7 +18,7 @@
     {
         try
         {
-            this.ReferenceSourceLibrary = await ICovenantService.CreateReferenceSourceLibrary(library);
+            this.ReferenceSourceLibrary = await Service.CreateReferenceSourceLibrary(library);
             this.StateHasChanged();
             // return View(await _context.EditReferenceSourceLibrary(library));
         }

@@ -1,14 +1,15 @@
 ﻿@page "/referencesourcelibrary/edit/{ReferenceSourceLibraryId:int}"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
-@inherits CovenantServiceComponentBase
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">ReferenceSourceLibrary: <span id="task-name" class="text-primary">@ReferenceSourceLibrary.Name</span></h1>
 </div>
 
-<ReferenceSourceLibraryForm ReferenceSourceLibrary="ReferenceSourceLibrary" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit"/>
+<ReferenceSourceLibraryForm ReferenceSourceLibrary="ReferenceSourceLibrary" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit" />
 
 @code {
     [Parameter]
@@ -19,16 +20,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.ReferenceSourceLibrary = this.ReferenceSourceLibrary ?? await ICovenantService.GetReferenceSourceLibrary(this.ReferenceSourceLibraryId);
+        this.ReferenceSourceLibrary = this.ReferenceSourceLibrary ?? await Service.GetReferenceSourceLibrary(this.ReferenceSourceLibraryId);
     }
 
     public async Task OnEdit(ReferenceSourceLibrary library)
     {
         try
         {
-            this.ReferenceSourceLibrary = await ICovenantService.EditReferenceSourceLibrary(library);
-            this.StateHasChanged();
-            // return View(await _context.EditReferenceSourceLibrary(library));
+            await Service.EditReferenceSourceLibrary(library);
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

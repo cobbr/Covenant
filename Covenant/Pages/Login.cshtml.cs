@@ -37,7 +37,7 @@ namespace Covenant.Pages
 
             try
             {
-                if (!_userManager.Users.Any())
+                if (!_userManager.Users.ToList().Where(U => _userManager.IsInRoleAsync(U, "Administrator").WaitResult()).Any())
                 {
                     if (CovenantUserRegister.Password != CovenantUserRegister.ConfirmPassword)
                     {

@@ -1,5 +1,6 @@
 ﻿@page "/data"
 @page "/data/index"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop
 @using Covenant.Core
@@ -9,7 +10,6 @@
 @using Covenant.Components.Indicators
 @using Covenant.Components.Events
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">Data</h1>
@@ -96,14 +96,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.PasswordCredentials = this.PasswordCredentials ?? await ICovenantService.GetPasswordCredentials();
-        this.HashCredentials = this.HashCredentials ?? await ICovenantService.GetHashCredentials();
-        this.TicketCredentials = this.TicketCredentials ?? await ICovenantService.GetTicketCredentials();
-        this.TargetIndicators = this.TargetIndicators ?? await ICovenantService.GetTargetIndicators();
-        this.NetworkIndicators = this.NetworkIndicators ?? await ICovenantService.GetNetworkIndicators();
-        this.FileIndicators = this.FileIndicators ?? await ICovenantService.GetFileIndicators();
-        this.DownloadEvents = this.DownloadEvents ?? await ICovenantService.GetDownloadEvents();
-        this.ScreenshotEvents = this.ScreenshotEvents ?? await ICovenantService.GetScreenshotEvents();
+        this.PasswordCredentials = this.PasswordCredentials ?? await Service.GetPasswordCredentials();
+        this.HashCredentials = this.HashCredentials ?? await Service.GetHashCredentials();
+        this.TicketCredentials = this.TicketCredentials ?? await Service.GetTicketCredentials();
+        this.TargetIndicators = this.TargetIndicators ?? await Service.GetTargetIndicators();
+        this.NetworkIndicators = this.NetworkIndicators ?? await Service.GetNetworkIndicators();
+        this.FileIndicators = this.FileIndicators ?? await Service.GetFileIndicators();
+        this.DownloadEvents = this.DownloadEvents ?? await Service.GetDownloadEvents();
+        this.ScreenshotEvents = this.ScreenshotEvents ?? await Service.GetScreenshotEvents();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

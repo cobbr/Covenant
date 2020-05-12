@@ -48,23 +48,23 @@
 
     protected override void OnInitialized()
     {
-        this.CovenantTable.OnSortHeader += this.OnSomeHeaderSorted;
+        this.CovenantTable.OnSortHeader += this.OnAnotherHeaderSorted;
     }
 
     public void Dispose()
     {
-        this.CovenantTable.OnSortHeader -= this.OnSomeHeaderSorted;
+        this.CovenantTable.OnSortHeader -= this.OnAnotherHeaderSorted;
     }
 
-    public void OnSomeHeaderSorted(object sender, EventArgs e)
+    public void OnAnotherHeaderSorted(object sender, EventArgs e)
     {
         this.Sorted = false;
         this.StateHasChanged();
     }
 
-    private void OnSortHeader()
+    private async Task OnSortHeader()
     {
-        this.CovenantTable.OnSort(GetSortableProperty, this.Ascending);
+        _ = this.CovenantTable.OnSort(GetSortableProperty, this.Ascending);
         this.Ascending = !this.Ascending;
         this.Sorted = true;
         this.StateHasChanged();

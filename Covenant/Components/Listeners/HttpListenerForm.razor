@@ -1,16 +1,12 @@
-﻿@using System.IO
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
 @using System.Linq
 @using Covenant.Models.Listeners
-@using Covenant.Components.Shared
 
 @using BlazorInputFile
 
-<form>
-    <input id="Id" name="Id" @bind="@Listener.Id" type="hidden">
-    <input id="GUID" name="GUID" @bind="@Listener.GUID" type="hidden">
-    <input id="ListenerTypeId" name="ListenerTypeId" @bind="@Listener.ListenerTypeId" type="hidden">
-    <input id="Status" name="Status" @bind="Listener.Status" type="hidden">
-    <input id="CovenantToken" name="CovenantToken" @bind="@Listener.CovenantToken" type="hidden">
+<EditForm Model="Listener" OnValidSubmit="OnFormSubmit">
+    <DataAnnotationsValidator />
     <div class="form-group">
         <label for="Description">Description</label>
         <input id="Description" name="Description" @bind="@Listener.Description" class="form-control-plaintext" readonly>
@@ -18,21 +14,25 @@
     <div class="form-group">
         <label for="Name">Name</label>
         <input id="Name" name="Name" @bind="@Listener.Name" disabled="@Disabled" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Listener.Name" /></div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="BindAddress">BindAddress</label>
             <input id="BindAddress" name="BindAddress" @bind="@Listener.BindAddress" disabled="@Disabled" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Listener.BindAddress" /></div>
         </div>
         <div class="form-group col-md-4">
             <label for="BindPort">BindPort</label>
             <input id="BindPort" name="BindPort" @bind="@Listener.BindPort" disabled="@Disabled" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Listener.BindPort" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="ConnectPort">ConnectPort</label>
             <input id="ConnectPort" name="ConnectPort" @bind-value="Listener.ConnectPort" @bind-value:event="oninput" disabled="@Disabled" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Listener.ConnectPort" /></div>
         </div>
     </div>
     <div class="form-row">
@@ -63,6 +63,8 @@
             }
         </div>
     }
+    <div class="text-danger"><ValidationMessage For="() => Listener.ConnectAddresses" /></div>
+    <div class="text-danger"><ValidationMessage For="() => Listener.Urls" /></div>
     <button type="button" @onclick="AddRow" disabled="@Disabled" class="btn btn-outline-primary btn-sm mt-2 mb-4">
         <span class="fe fe-plus"></span> Add
     </button>
@@ -74,19 +76,21 @@
                 <option value="False">False</option>
                 <option value="True">True</option>
             </select>
+            <div class="text-danger"><ValidationMessage For="() => Listener.UseSSL" /></div>
         </div>
 
         <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificateFile">SSLCertificate</label>
             <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
-                       disabled="@Disabled"
-                       OnChange="FileUpload" />
+                        disabled="@Disabled"
+                        OnChange="FileUpload" />
         </div>
-        
+
         <div class="form-group col-md-6 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificatePassword">SSLCertificatePassword</label>
             <input id="SSLCertificatePassword" name="SSLCertificatePassword"
-                   @bind="Listener.SSLCertificatePassword" disabled="@Disabled" class="form-control form-control-sm">
+                    @bind="Listener.SSLCertificatePassword" disabled="@Disabled" class="form-control form-control-sm">
+            <div class="text-danger"><ValidationMessage For="() => Listener.SSLCertificatePassword" /></div>
         </div>
     </div>
     <div class="form-group">
@@ -97,14 +101,15 @@
                 <option value="@Profile.Id">@Profile.Name</option>
             }
         </select>
+        <div class="text-danger"><ValidationMessage For="() => Listener.ProfileId" /></div>
     </div>
     @if (!Disabled)
     {
-        <button type="button" @onclick="(e => OnSubmit.InvokeAsync(Listener))" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary">
             <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
         </button>
     }
-</form>
+</EditForm>
 
 @code {
     [Parameter]
@@ -142,7 +147,7 @@
 
     private void UpdateUseSSL(ChangeEventArgs e)
     {
-        if(bool.TryParse(e.Value.ToString(), out bool result))
+        if (bool.TryParse(e.Value.ToString(), out bool result))
         {
             Listener.UseSSL = result;
         }
@@ -157,5 +162,10 @@
             await file.Data.CopyToAsync(ms);
             Listener.SSLCertificate = Convert.ToBase64String(ms.ToArray());
         }
+    }
+
+    private async Task OnFormSubmit()
+    {
+        await this.OnSubmit.InvokeAsync(this.Listener);
     }
 }

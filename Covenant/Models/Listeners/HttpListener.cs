@@ -103,6 +103,12 @@ namespace Covenant.Models.Listeners
         public HttpListener()
         {
             this.Description = "Listens on HTTP protocol.";
+        }
+
+        public HttpListener(int ListenerTypeId, int ProfileId) : this()
+        {
+            this.ListenerTypeId = ListenerTypeId;
+            this.ProfileId = ProfileId;
             try
             {
                 this.ConnectAddresses = new List<string> {
@@ -115,12 +121,6 @@ namespace Covenant.Models.Listeners
             {
                 this.ConnectAddresses = new List<string> { "" };
             }
-        }
-
-        public HttpListener(int ListenerTypeId, int ProfileId) : this()
-        {
-            this.ListenerTypeId = ListenerTypeId;
-            this.ProfileId = ProfileId;
         }
 
         public HttpListener(ListenerType type, Profile profile) : this(type.Id, profile.Id)

@@ -1,8 +1,8 @@
 ﻿@page "/grunttasking/edit/{GruntTaskingId:int}"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
-@inherits CovenantServiceComponentBase
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">GruntTasking: <span id="tasking-name" class="text-primary">@GruntTasking.Name</span></h1>
@@ -19,6 +19,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasking = this.GruntTasking ?? await ICovenantService.GetGruntTasking(this.GruntTaskingId);
+        this.GruntTasking = this.GruntTasking ?? await Service.GetGruntTasking(this.GruntTaskingId);
     }
 }

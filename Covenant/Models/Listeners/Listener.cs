@@ -50,7 +50,7 @@ namespace Covenant.Models.Listeners
         [Required, Range(1, 65535)]
         public int BindPort { get; set; } = 80;
         [Required]
-        public List<string> ConnectAddresses { get; set; }
+        public List<string> ConnectAddresses { get; set; } = new List<string>();
         [Required, Range(1, 65535)]
         public int ConnectPort { get; set; } = 80;
         [Required]

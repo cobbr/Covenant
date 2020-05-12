@@ -1,13 +1,16 @@
-﻿@using System.Net.Mime
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.Net.Mime
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Models.Listeners
 @using Covenant.Models.Launchers
-@inherits CovenantServiceComponentBase
 @inject IJSRuntime IJSRuntime
 
-<form>
+<EditForm Model="Launcher" OnValidSubmit="(e => this.OnGenerate.InvokeAsync(Launcher))">
+    <DataAnnotationsValidator />
     <div class="form-group">
         <label for="Description">Description</label>
         <input id="Description" name="Description" @bind="Launcher.Description" class="form-control-plaintext" readonly>
@@ -21,6 +24,7 @@
                     <option value="@Listener.Id">@Listener.Name</option>
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.ListenerId" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="ImplantTemplateId">ImplantTemplate</label>
@@ -37,6 +41,7 @@
                     }
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.ImplantTemplateId" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="DotNetVersion">DotNetVersion</label><br />
@@ -46,13 +51,14 @@
                     <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.DotNetVersion" /></div>
         </div>
     </div>
     @if (Launcher.DotNetVersion == Common.DotNetVersion.NetCore30)
     {
         <div class="form-row">
             <div class="form-group col-md-3">
-                <label for="RuntimeIdentifier">RuntimeIdentifier</label><br/>
+                <label for="RuntimeIdentifier">RuntimeIdentifier</label><br />
                 <select id="RuntimeIdentifier" name="RuntimeIdentifier" @bind="Launcher.RuntimeIdentifier" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
                     @foreach (var n in Enum.GetNames(typeof(Compiler.RuntimeIdentifier)))
                     {
@@ -66,6 +72,7 @@
                         }
                     }
                 </select>
+                <div class="text-danger"><ValidationMessage For="() => Launcher.RuntimeIdentifier" /></div>
                 @*<EnumSelect id="RuntimeIdentifier" Name="RuntimeIdentifier" @bind-Value="Launcher.RuntimeIdentifier" />*@
             </div>
         </div>
@@ -79,6 +86,7 @@
                     <option value="True">True</option>
                     <option value="False">False</option>
                 </select>
+                <div class="text-danger"><ValidationMessage For="() => Launcher.ValidateCert" /></div>
             </div>
             <div class="form-group col-md-3">
                 <label for="UseCertPinning">UseCertPinning</label>
@@ -86,6 +94,7 @@
                     <option value="True">True</option>
                     <option value="False">False</option>
                 </select>
+                <div class="text-danger"><ValidationMessage For="() => Launcher.UseCertPinning" /></div>
             </div>
         </div>
     }
@@ -94,26 +103,31 @@
         <div class="form-group">
             <label for="SMBPipeName">SMBPipeName</label>
             <input id="SMBPipeName" name="SMBPipeName" @bind="@Launcher.SMBPipeName" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.SMBPipeName" /></div>
         </div>
     }
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="Delay">Delay</label>
             <input id="Delay" name="Delay" @bind="@Launcher.Delay" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.Delay" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="JitterPercent">JitterPercent</label>
             <input id="JitterPercent" name="JitterPercent" @bind="Launcher.JitterPercent" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.JitterPercent" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="ConnectAttempts">ConnectAttempts</label>
             <input id="ConnectAttempts" name="ConnectAttempts" @bind="Launcher.ConnectAttempts" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.ConnectAttempts" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="KillDate">KillDate</label>
             <input id="KillDate" name="KillDate" @bind="Launcher.KillDate" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.KillDate" /></div>
         </div>
     </div>
 
@@ -147,14 +161,14 @@
             break;
     }
     <div class="btn-group" role="group">
-        <button type="button" @onclick="(e => OnGenerate.InvokeAsync(Launcher))" class="btn btn-primary mr-5" id="generate">
+        <button type="submit" class="btn btn-primary mr-5" id="generate">
             <span class="fe fe-zap"></span> Generate
         </button>
         <button type="button" @onclick="OnDownload" class="btn btn-outline-primary ml-5" id="download">
             <span class="fe fe-download"></span> Download
         </button>
     </div>
-</form>
+</EditForm>
 
 @code {
     [Parameter]
@@ -170,9 +184,7 @@
         {
             if (_ActiveListeners == null)
             {
-                Task<IEnumerable<Listener>> task = ICovenantService.GetListeners();
-                task.Wait();
-                _ActiveListeners = task.Result.Where(L => L.Status == ListenerStatus.Active);
+                _ActiveListeners = Service.GetListeners().WaitResult().Where(L => L.Status == ListenerStatus.Active);
             }
             if (Launcher.ListenerId == 0 && _ActiveListeners.Count() > 0)
             {
@@ -190,9 +202,7 @@
         {
             if (_ApplicableImplantTemplates == null)
             {
-                Task<IEnumerable<ImplantTemplate>> task = ICovenantService.GetImplantTemplates();
-                task.Wait();
-                _ApplicableImplantTemplates = task.Result.Where(IT => ActiveListeners.Any(AL => IT.CompatibleListenerTypes.Contains(AL.ListenerType)));
+                _ApplicableImplantTemplates = Service.GetImplantTemplates().WaitResult().Where(IT => ActiveListeners.Any(AL => IT.CompatibleListenerTypes.Contains(AL.ListenerType)));
             }
             if (Launcher.ImplantTemplateId == 0 && _ApplicableImplantTemplates.Count() > 0)
             {
@@ -205,6 +215,11 @@
 
     private bool RefreshNeeded { get; set; } = false;
 
+    protected override void OnInitialized()
+    {
+        this.Launcher.DotNetVersion = GetImplantTemplate().CompatibleDotNetVersions.First();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (RefreshNeeded)
@@ -215,11 +230,6 @@
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#DotNetVersion.selectpicker", ((int)Enum.Parse(typeof(Common.DotNetVersion), this.Launcher.DotNetVersion.ToString())).ToString());
         await IJSRuntime.InvokeAsync<string>("InitializeDateTimePicker", "#KillDate");
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#RuntimeIdentifier.selectpicker", ((int)Enum.Parse(typeof(Compiler.RuntimeIdentifier), this.Launcher.RuntimeIdentifier.ToString())).ToString());
-    }
-
-    protected override void OnParametersSet()
-    {
-        this.Launcher.DotNetVersion = GetImplantTemplate().CompatibleDotNetVersions.First();
     }
 
     private IEnumerable<string> GetApplicableDotNetVersions()
@@ -235,7 +245,7 @@
 
     private void OnImplantTemplateChanged(ChangeEventArgs e)
     {
-        if(int.TryParse((string)e.Value, out int id))
+        if (int.TryParse((string)e.Value, out int id))
         {
             this.Launcher.ImplantTemplateId = id;
             this.Launcher.DotNetVersion = GetImplantTemplate().CompatibleDotNetVersions.First();

@@ -43,6 +43,7 @@ namespace Covenant.Models
         public DbSet<ImplantTemplate> ImplantTemplates { get; set; }
         public DbSet<Grunt> Grunts { get; set; }
         public DbSet<GruntTask> GruntTasks { get; set; }
+        public DbSet<GruntTaskAuthor> GruntTaskAuthors { get; set; }
         public DbSet<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
         public DbSet<ReferenceAssembly> ReferenceAssemblies { get; set; }
         public DbSet<EmbeddedResource> EmbeddedResources { get; set; }
@@ -99,6 +100,11 @@ namespace Covenant.Models
                 .HasOne(G => G.ImplantTemplate)
                 .WithMany(IT => IT.Grunts)
                 .HasForeignKey(G => G.ImplantTemplateId);
+
+            builder.Entity<GruntTask>()
+                .HasOne(GT => GT.Author)
+                .WithMany(GTA => GTA.GruntTasks)
+                .HasForeignKey(GT => GT.AuthorId);
 
             builder.Entity<GruntCommand>()
                 .HasOne(GC => GC.GruntTasking)

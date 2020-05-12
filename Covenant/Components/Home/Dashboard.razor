@@ -1,6 +1,7 @@
 ﻿@page "/"
 @page "/home"
 @page "/home/index"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
@@ -8,7 +9,6 @@
 @using Covenant.Components.Listeners
 @using Covenant.Components.Grunts
 @using Covenant.Components.GruntTaskings
-@inherits CovenantServiceComponentBase
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Dashboard</h1>
@@ -44,8 +44,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.Grunts = this.Grunts ?? (await ICovenantService.GetGrunts()).OrderByDescending(G => G.LastCheckIn).ToList();
-        this.Listeners = this.Listeners ?? await ICovenantService.GetListeners();
-        this.GruntTaskings = this.GruntTaskings ?? (await ICovenantService.GetGruntTaskings()).ToList();
+        this.Grunts = this.Grunts ?? (await Service.GetGrunts()).OrderByDescending(G => G.LastCheckIn).ToList();
+        this.Listeners = this.Listeners ?? await Service.GetListeners();
+        this.GruntTaskings = this.GruntTaskings ?? (await Service.GetGruntTaskings()).ToList();
     }
 }

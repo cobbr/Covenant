@@ -10,6 +10,10 @@ window.SetAttr = (selector, property, value) => {
     $(selector).attr(property, value);
 }
 
+window.RedirectToUrl = (url) => {
+    window.location.href = url;
+}
+
 window.DownloadFile = (filename, mediatype, base64) => {
     var link = document.createElement('a');
     link.download = filename;
@@ -18,6 +22,12 @@ window.DownloadFile = (filename, mediatype, base64) => {
     link.click();
     document.body.removeChild(link);
 }
+
+window.ScrollToBottom = (selector) => {
+    $(selector).animate({
+        scrollTop: $(selector)[0].scrollHeight
+    }, 1000, function () { });
+};
 
 window.HasTypedAhead = false;
 window.InitializeTypeahead = (typeaheadselector, suggestions) => {
@@ -107,6 +117,14 @@ window.RefreshSelectPicker = (selector) => {
 
 window.ShowTab = (id) => {
     $(id).tab('show');
+}
+
+window.ActivateModal = (selector) => {
+    $(selector).modal();
+}
+
+window.ModalCommand = (selector, command) => {
+    $(selector).modal(command);
 }
 
 window.InitializeGruntDataTable = () => {

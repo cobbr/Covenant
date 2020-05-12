@@ -105,23 +105,35 @@ namespace Covenant
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
                     DbInitializer.Initialize(service, context, roleManager, listenerTokenSources).Wait();
-                    if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    CovenantUser serviceUser = new CovenantUser { UserName = "ServiceUser" };
+                    if (!context.Users.Any())
                     {
-                        CovenantUser user = new CovenantUser { UserName = username };
-                        Task<IdentityResult> task = userManager.CreateAsync(user, password);
-                        task.Wait();
-                        IdentityResult userResult = task.Result;
-                        if (userResult.Succeeded)
+                        string serviceUserPassword = Utilities.CreateSecretPassword() + "A";
+                        userManager.CreateAsync(serviceUser, serviceUserPassword).Wait();
+                        userManager.AddToRoleAsync(serviceUser, "ServiceUser").Wait();
+                        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                         {
-                            userManager.AddToRoleAsync(user, "User").Wait();
-                            userManager.AddToRoleAsync(user, "Administrator").Wait();
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine($"Error creating user: {user.UserName}");
-                            return -1;
+                            CovenantUser user = new CovenantUser { UserName = username };
+                            Task<IdentityResult> task = userManager.CreateAsync(user, password);
+                            task.Wait();
+                            IdentityResult userResult = task.Result;
+                            if (userResult.Succeeded)
+                            {
+                                userManager.AddToRoleAsync(user, "User").Wait();
+                                userManager.AddToRoleAsync(user, "Administrator").Wait();
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine($"Error creating user: {user.UserName}");
+                                return -1;
+                            }
                         }
                     }
+                    configuration["ServiceUserToken"] = Utilities.GenerateJwtToken(
+                        serviceUser.UserName, serviceUser.Id, new string[] { "ServiceUser" },
+                        configuration["JwtKey"], configuration["JwtIssuer"],
+                        configuration["JwtAudience"], configuration["JwtExpireDays"]
+                    );
                 }
                 
                 LoggingConfiguration loggingConfig = new LoggingConfiguration();

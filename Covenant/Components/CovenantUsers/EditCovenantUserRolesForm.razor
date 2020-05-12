@@ -1,11 +1,13 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Covenant
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
-<form>
+<EditForm Model="CovenantUser" OnSubmit="OnSubmit">
     <div class="form-group">
         <label for="Roles">Edit Roles</label><br />
         <select name="Roles" id="Roles" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
@@ -22,10 +24,10 @@
             }
         </select>
     </div>
-    <button type="button" @onclick="Submit" class="btn btn-primary">
+    <button type="submit" class="btn btn-primary">
         <span class="fe fe-edit"></span> Edit Roles
     </button>
-</form>
+</EditForm>
 
 @code {
     [Parameter]
@@ -38,7 +40,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Roles = await ICovenantService.GetRoles();
+        Roles = await Service.GetRoles();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -50,8 +52,7 @@
     {
         try
         {
-            var t = ICovenantService.GetUserRole(user.Id, role);
-            t.Wait();
+            Service.GetUserRole(user.Id, role).WaitTask();
             return true;
         }
         catch (Exception)
@@ -63,15 +64,10 @@
     private async Task<IEnumerable<IdentityRole>> GetSelectedRoles()
     {
         string[] ids = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#Roles" });
-        return ids.Select(id =>
-        {
-            var t = ICovenantService.GetRole(id);
-            t.Wait();
-            return t.Result;
-        }).ToList();
+        return ids.Select(id => Service.GetRole(id).WaitResult()).ToList();
     }
 
-    private async Task Submit()
+    private async Task OnSubmit()
     {
         await OnChangeRoles.InvokeAsync(await GetSelectedRoles());
     }

@@ -25,8 +25,9 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTasking class.
         /// </summary>
-        /// <param name="type">Possible values include: 'assembly',
-        /// 'setOption', 'exit', 'connect', 'disconnect', 'jobs'</param>
+        /// <param name="type">Possible values include: 'assembly', 'setDelay',
+        /// 'setJitter', 'setConnectAttempts', 'setKillDate', 'exit',
+        /// 'connect', 'disconnect', 'tasks', 'taskKill'</param>
         /// <param name="status">Possible values include: 'uninitialized',
         /// 'tasked', 'progressed', 'completed', 'aborted'</param>
         public GruntTasking(string name, int gruntId, int gruntTaskId, int? id = default(int?), Grunt grunt = default(Grunt), GruntTask gruntTask = default(GruntTask), GruntTaskingType? type = default(GruntTaskingType?), IList<string> parameters = default(IList<string>), GruntTaskingStatus? status = default(GruntTaskingStatus?), System.DateTime? taskingTime = default(System.DateTime?), System.DateTime? completionTime = default(System.DateTime?), int? gruntCommandId = default(int?))
@@ -82,8 +83,9 @@ namespace Covenant.API.Models
         public GruntTask GruntTask { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'assembly', 'setOption',
-        /// 'exit', 'connect', 'disconnect', 'jobs'
+        /// Gets or sets possible values include: 'assembly', 'setDelay',
+        /// 'setJitter', 'setConnectAttempts', 'setKillDate', 'exit',
+        /// 'connect', 'disconnect', 'tasks', 'taskKill'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public GruntTaskingType? Type { get; set; }

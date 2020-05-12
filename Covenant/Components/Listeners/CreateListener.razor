@@ -1,25 +1,28 @@
 ﻿@page "/listener/create"
+@inherits OwningComponentBase<ICovenantService>
 
 @using System.Threading
-@using System.Collections.Concurrent;
+@using System.Collections.Concurrent
 
 @using Microsoft.JSInterop
-@using Microsoft.AspNetCore.SignalR;
-@using Microsoft.AspNetCore.Identity;
-@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
-@using Covenant.Hubs;
-@using Covenant.Models;
-@using Covenant.Models.Covenant;
-@using Covenant.Models.Listeners;
+@using Covenant.Hubs
+@using Covenant.Models.Covenant
+@using Covenant.Models.Listeners
 
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 @inject UserManager<CovenantUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IConfiguration Configuration
+@inject CovenantAPIService CovenantAPIService
 @inject ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens
 @inject IHubContext<EventHub> EventHub
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Create Listener</h1>
@@ -65,34 +68,30 @@
 
     private IEnumerable<Profile> GetHttpProfiles()
     {
-        Task<IEnumerable<HttpProfile>> task = ICovenantService.GetHttpProfiles();
-        task.Wait();
-        ICovenantService.DisposeContext();
-        return task.Result;
+        IEnumerable<HttpProfile> profiles = Service.GetHttpProfiles().WaitResult();
+        Service.DisposeContext();
+        return profiles;
     }
 
     private IEnumerable<Profile> GetBridgeProfiles()
     {
-        Task<IEnumerable<BridgeProfile>> task = ICovenantService.GetBridgeProfiles();
-        task.Wait();
-        ICovenantService.DisposeContext();
-        return task.Result;
+        IEnumerable<BridgeProfile> profiles = Service.GetBridgeProfiles().WaitResult();
+        Service.DisposeContext();
+        return profiles;
     }
 
     private ListenerType GetHttpListenerType()
     {
-        Task<ListenerType> task = ICovenantService.GetListenerTypeByName("HTTP");
-        task.Wait();
-        ICovenantService.DisposeContext();
-        return task.Result;
+        ListenerType type = Service.GetListenerTypeByName("HTTP").WaitResult();
+        Service.DisposeContext();
+        return type;
     }
 
     private ListenerType GetBridgeListenerType()
     {
-        Task<ListenerType> task = ICovenantService.GetListenerTypeByName("Bridge");
-        task.Wait();
-        ICovenantService.DisposeContext();
-        return task.Result;
+        ListenerType type = Service.GetListenerTypeByName("Bridge").WaitResult();
+        Service.DisposeContext();
+        return type;
     }
 
     private async Task OnSubmitHttpListener(HttpListener listener)
@@ -100,10 +99,8 @@
         try
         {
             listener.Status = ListenerStatus.Active;
-            ICovenantService.DisposeContext();
-            listener = await ICovenantService.CreateHttpListener(listener);
-            ICovenantService.DisposeContext();
-            // return RedirectToAction(nameof(Index));
+            await this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener));
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
@@ -117,13 +114,20 @@
         try
         {
             listener.Status = ListenerStatus.Active;
-            listener = await ICovenantService.CreateBridgeListener(listener);
-            // return RedirectToAction(nameof(Index));
+            await this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener));
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
             // ModelState.AddModelError(string.Empty, e.Message);
             // return RedirectToAction(nameof(Create));
         }
+    }
+
+    private async Task<bool> IsAdmin()
+    {
+        AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CovenantUser user = await UserManager.GetUserAsync(state.User);
+        return await UserManager.IsInRoleAsync(user, "Administrator");
     }
 }

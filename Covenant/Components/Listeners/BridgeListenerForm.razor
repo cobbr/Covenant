@@ -1,13 +1,8 @@
-﻿@using System.Linq
+﻿@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Models.Listeners
-@using Covenant.Components.Shared
 
-<form>
-    <input id="Id" name="Id" @bind="@Listener.Id" type="hidden">
-    <input id="GUID" name="GUID" @bind="@Listener.GUID" type="hidden">
-    <input id="ListenerTypeId" name="ListenerTypeId" @bind="@Listener.ListenerTypeId" type="hidden">
-    <input id="Status" name="Status" @bind="Listener.Status" type="hidden">
-    <input id="CovenantToken" name="CovenantToken" @bind="@Listener.CovenantToken" type="hidden">
+<EditForm Model="Listener" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Listener))">
+    <DataAnnotationsValidator />
     <div class="form-group">
         <label for="Description">Description</label>
         <input id="Description" name="Description" @bind="@Listener.Description" class="form-control-plaintext" readonly>
@@ -15,27 +10,32 @@
     <div class="form-group">
         <label for="Name">Name</label>
         <input id="Name" name="Name" @bind="@Listener.Name" disabled="@Disabled" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Listener.Name" /></div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="BindAddress">BindAddress</label>
             <input id="BindAddress" name="BindAddress" @bind="@Listener.BindAddress" disabled="@Disabled" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Listener.BindAddress" /></div>
         </div>
         <div class="form-group col-md-4">
             <label for="BindPort">BindPort</label>
             <input id="BindPort" name="BindPort" @bind="@Listener.BindPort" disabled="@Disabled" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Listener.BindPort" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="ConnectPort">ConnectPort</label>
             <input id="ConnectPort" name="ConnectPort" @bind-value="Listener.ConnectPort" @bind-value:event="oninput" disabled="@Disabled" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Listener.ConnectPort" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="ConnectAddresses_0_">ConnectAddress</label>
             <input id="ConnectAddresses_0_" name="ConnectAddresses[0]" @bind="@Listener.ConnectAddresses[0]" disabled="@Disabled" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Listener.ConnectAddresses" /></div>
         </div>
     </div>
     <div class="form-group">
@@ -46,14 +46,15 @@
                 <option value="@Profile.Id">@Profile.Name</option>
             }
         </select>
+        <div class="text-danger"><ValidationMessage For="() => Listener.ProfileId" /></div>
     </div>
     @if (!Disabled)
     {
-        <button type="button" @onclick="(e => OnSubmit.InvokeAsync(Listener))" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary">
             <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
         </button>
     }
-</form>
+</EditForm>
 
 @code {
     [Parameter]

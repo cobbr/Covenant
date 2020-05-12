@@ -1,10 +1,10 @@
 ﻿@page "/grunt"
 @page "/grunt/index"
+@inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
-@inherits OwningComponentBase<ICovenantService>
 @inject INotificationService INotificationService
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">

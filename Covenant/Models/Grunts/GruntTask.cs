@@ -18,27 +18,14 @@ using Covenant.Core;
 
 namespace Covenant.Models.Grunts
 {
-    public class GruntTaskOption
-    {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-        public string Value { get; set; } = "";
-        public string DefaultValue { get; set; } = "";
-        public string Description { get; set; } = "";
-        public List<string> SuggestedValues { get; set; } = new List<string>();
-        public bool Optional { get; set; } = false;
-        public bool DisplayInCommand { get; set; } = true;
-        
-        public int GruntTaskId { get; set; }
-        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public GruntTask Task { get; set; }
-    }
-
     public class GruntTask : ISerializable<GruntTask>
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
+        public int AuthorId { get; set; }
+        public GruntTaskAuthor Author { get; set; } = new GruntTaskAuthor();
+
         [Required]
         public string Name { get; set; } = "GenericTask";
         public IList<string> Aliases { get; set; } = new List<string>();
@@ -117,94 +104,85 @@ namespace Covenant.Models.Grunts
             );
         }
 
-        private class SimpleGruntTask
+        public string GetVerboseCommand(bool includeNotForDisplay = false)
         {
-            public string Name { get; set; } = "";
-            public IList<string> Aliases { get; set; } = new List<string>();
-            public string Description { get; set; } = "";
-            public string Help { get; set; } = "";
-            public ImplantLanguage Language { get; set; }
-            public IList<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion>();
-            public string Code { get; set; } = "";
-            public bool Compiled { get; set; } = false;
-            public GruntTaskingType TaskingType { get; set; } = GruntTaskingType.Assembly;
-            public bool UnsafeCompile { get; set; } = false;
-            public bool TokenTask { get; set; } = false;
-            public List<GruntTaskOption> Options { get; set; } = new List<GruntTaskOption>();
-            public List<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<ReferenceSourceLibrary>();
-            public List<ReferenceAssembly> ReferenceAssemblies { get; set; } = new List<ReferenceAssembly>();
-            public List<EmbeddedResource> EmbeddedResources { get; set; } = new List<EmbeddedResource>();
+            string command = this.Name;
+            for (int i = 0; i < this.Options.Count; i++)
+            {
+                if (this.Options[i].DisplayInCommand || includeNotForDisplay)
+                {
+                    command += " /" + this.Options[i].Name.ToLower() + ":\"" + this.Options[i].Value.Replace("\"", "\\\"") + "\"";
+                }
+            }
+            return command;
         }
 
-        public string ToYaml()
+        internal SerializedGruntTask ToSerializedGruntTask()
         {
-            ISerializer serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(new SimpleGruntTask
+            return new SerializedGruntTask
             {
                 Name = this.Name,
+                Author = this.Author.ToSerializedGruntTaskAuthor(),
                 Aliases = this.Aliases,
                 Description = this.Description,
                 Help = this.Help,
                 Language = this.Language,
                 CompatibleDotNetVersions = this.CompatibleDotNetVersions,
                 Code = this.Code,
-                Compiled = this.Compiled,
                 TaskingType = this.TaskingType,
                 UnsafeCompile = this.UnsafeCompile,
                 TokenTask = this.TokenTask,
-                Options = this.Options,
-                ReferenceSourceLibraries = this.ReferenceSourceLibraries,
-                ReferenceAssemblies = this.ReferenceAssemblies,
-                EmbeddedResources = this.EmbeddedResources
-            });
+                Options = this.Options.OrderBy(O => O.Id).Select(O => O.ToSerializedGruntTaskOption()).ToList(),
+                ReferenceSourceLibraries = this.ReferenceSourceLibraries.Select(RSL => RSL.ToSerializedReferenceSourceLibrary()).ToList(),
+                ReferenceAssemblies = this.ReferenceAssemblies.Select(RA => RA.ToSerializedReferenceAssembly()).ToList(),
+                EmbeddedResources = this.EmbeddedResources.Select(ER => ER.ToSerializedEmbeddedResource()).ToList()
+            };
+        }
+
+        internal GruntTask FromSerializedGruntTask(SerializedGruntTask task)
+        {
+            this.Name = task.Name;
+            this.Author = new GruntTaskAuthor().FromSerializedGruntTaskAuthor(task.Author);
+            this.Aliases = task.Aliases;
+            this.Description = task.Description;
+            this.Help = task.Help;
+            this.Language = task.Language;
+            this.CompatibleDotNetVersions = task.CompatibleDotNetVersions;
+            this.Code = task.Code;
+            this.Compiled = false;
+            this.TaskingType = task.TaskingType;
+            this.UnsafeCompile = task.UnsafeCompile;
+            this.TokenTask = task.TokenTask;
+            this.Options = task.Options.Select(O => new GruntTaskOption().FromSerializedGruntTaskOption(O)).ToList();
+            this.Options.ForEach(O => O.GruntTaskId = this.Id);
+            task.ReferenceSourceLibraries.ForEach(RSL => this.Add(new ReferenceSourceLibrary().FromSerializedReferenceSourceLibrary(RSL)));
+            task.ReferenceAssemblies.ForEach(RA => this.Add(new ReferenceAssembly().FromSerializedReferenceAssembly(RA)));
+            task.EmbeddedResources.ForEach(ER => this.Add(new EmbeddedResource().FromSerializedEmbeddedResource(ER)));
+            return this;
+        }
+
+        public string ToYaml()
+        {
+            ISerializer serializer = new SerializerBuilder().Build();
+            return serializer.Serialize(new List<SerializedGruntTask> { this.ToSerializedGruntTask() });
         }
 
         public GruntTask FromYaml(string yaml)
         {
             IDeserializer deserializer = new DeserializerBuilder().Build();
-            SimpleGruntTask task = deserializer.Deserialize<SimpleGruntTask>(yaml);
-            this.Name = task.Name;
-            this.Aliases = task.Aliases;
-            this.Description = task.Description;
-            this.Help = task.Help;
-            this.Language = task.Language;
-            this.CompatibleDotNetVersions = task.CompatibleDotNetVersions;
-            this.Code = task.Code;
-            this.Compiled = task.Compiled;
-            this.TaskingType = task.TaskingType;
-            this.UnsafeCompile = task.UnsafeCompile;
-            this.TokenTask = task.TokenTask;
-            this.Options = task.Options;
-            task.ReferenceSourceLibraries.ForEach(RSL => this.Add(RSL));
-            task.ReferenceAssemblies.ForEach(A => this.Add(A));
-            task.EmbeddedResources.ForEach(R => this.Add(R));
-            return this;
+            SerializedGruntTask task = deserializer.Deserialize<SerializedGruntTask>(yaml);
+            return this.FromSerializedGruntTask(task);
         }
 
         public string ToJson()
         {
-            return JsonConvert.SerializeObject(this);
+            return JsonConvert.SerializeObject(this.ToSerializedGruntTask());
         }
 
         public GruntTask FromJson(string json)
         {
-            SimpleGruntTask task = JsonConvert.DeserializeObject<SimpleGruntTask>(json);
-            this.Name = task.Name;
-            this.Aliases = task.Aliases;
-            this.Description = task.Description;
-            this.Help = task.Help;
-            this.Language = task.Language;
-            this.CompatibleDotNetVersions = task.CompatibleDotNetVersions;
-            this.Code = task.Code;
-            this.Compiled = task.Compiled;
-            this.TaskingType = task.TaskingType;
-            this.UnsafeCompile = task.UnsafeCompile;
-            this.TokenTask = task.TokenTask;
-            this.Options = task.Options;
-            task.ReferenceSourceLibraries.ForEach(RSL => this.Add(RSL));
-            task.ReferenceAssemblies.ForEach(A => this.Add(A));
-            task.EmbeddedResources.ForEach(R => this.Add(R));
-            return this;
+            SerializedGruntTask task = JsonConvert.DeserializeObject<SerializedGruntTask>(json);
+            return this.FromSerializedGruntTask(task);
         }
 
         public byte[] GetCompressedILAssembly35()
@@ -233,10 +211,9 @@ namespace Covenant.Models.Grunts
                     }
                     else if (version == Common.DotNetVersion.NetCore30)
                     {
-                        this.CompileDotNetCore30(template, runtimeIdentifier);
+                        // this.CompileDotNetCore30(template, runtimeIdentifier);
                     }
                 }
-
             }
         }
 
@@ -247,7 +224,7 @@ namespace Covenant.Models.Grunts
                 return new Compiler.EmbeddedResource
                 {
                     Name = ER.Name,
-                    File = ER.Location,
+                    File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
                     Platform = Platform.X64,
                     Enabled = true
                 };
@@ -260,7 +237,7 @@ namespace Covenant.Models.Grunts
                         return new Compiler.EmbeddedResource
                         {
                             Name = ER.Name,
-                            File = ER.Location,
+                            File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
                             Platform = Platform.X64,
                             Enabled = true
                         };
@@ -273,14 +250,14 @@ namespace Covenant.Models.Grunts
                 references35.AddRange(
                     RSL.ReferenceAssemblies.Where(RA => RA.DotNetVersion == Common.DotNetVersion.Net35).Select(RA =>
                     {
-                        return new Compiler.Reference { File = RA.Location, Framework = Common.DotNetVersion.Net35, Enabled = true };
+                        return new Compiler.Reference { File = Common.CovenantAssemblyReferenceDirectory + RA.Location, Framework = Common.DotNetVersion.Net35, Enabled = true };
                     })
                 );
             });
             references35.AddRange(
                 this.ReferenceAssemblies.Where(RA => RA.DotNetVersion == Common.DotNetVersion.Net35).Select(RA =>
                 {
-                    return new Compiler.Reference { File = RA.Location, Framework = Common.DotNetVersion.Net35, Enabled = true };
+                    return new Compiler.Reference { File = Common.CovenantAssemblyReferenceDirectory + RA.Location, Framework = Common.DotNetVersion.Net35, Enabled = true };
                 })
             );
 
@@ -289,7 +266,7 @@ namespace Covenant.Models.Grunts
                 {
                     Language = this.Language,
                     Source = this.Code,
-                    SourceDirectories = this.ReferenceSourceLibraries.Select(RSL => RSL.Location).ToList(),
+                    SourceDirectories = this.ReferenceSourceLibraries.Select(RSL => Common.CovenantReferenceSourceLibraries + RSL.Location).ToList(),
                     TargetDotNetVersion = Common.DotNetVersion.Net35,
                     References = references35,
                     EmbeddedResources = resources,
@@ -313,7 +290,7 @@ namespace Covenant.Models.Grunts
                 return new Compiler.EmbeddedResource
                 {
                     Name = ER.Name,
-                    File = ER.Location,
+                    File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
                     Platform = Platform.X64,
                     Enabled = true
                 };
@@ -326,7 +303,7 @@ namespace Covenant.Models.Grunts
                         return new Compiler.EmbeddedResource
                         {
                             Name = ER.Name,
-                            File = ER.Location,
+                            File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
                             Platform = Platform.X64,
                             Enabled = true
                         };
@@ -339,14 +316,14 @@ namespace Covenant.Models.Grunts
                 references40.AddRange(
                     RSL.ReferenceAssemblies.Where(RA => RA.DotNetVersion == Common.DotNetVersion.Net40).Select(RA =>
                     {
-                        return new Compiler.Reference { File = RA.Location, Framework = Common.DotNetVersion.Net40, Enabled = true };
+                        return new Compiler.Reference { File = Common.CovenantAssemblyReferenceDirectory + RA.Location, Framework = Common.DotNetVersion.Net40, Enabled = true };
                     })
                 );
             });
             references40.AddRange(
                 this.ReferenceAssemblies.Where(RA => RA.DotNetVersion == Common.DotNetVersion.Net40).Select(RA =>
                 {
-                    return new Compiler.Reference { File = RA.Location, Framework = Common.DotNetVersion.Net40, Enabled = true };
+                    return new Compiler.Reference { File = Common.CovenantAssemblyReferenceDirectory + RA.Location, Framework = Common.DotNetVersion.Net40, Enabled = true };
                 })
             );
             File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + this.Name + ".compiled",
@@ -354,7 +331,7 @@ namespace Covenant.Models.Grunts
                 {
                     Language = this.Language,
                     Source = this.Code,
-                    SourceDirectories = this.ReferenceSourceLibraries.Select(RSL => RSL.Location).ToList(),
+                    SourceDirectories = this.ReferenceSourceLibraries.Select(RSL => Common.CovenantReferenceSourceLibraries + RSL.Location).ToList(),
                     TargetDotNetVersion = Common.DotNetVersion.Net40,
                     References = references40,
                     EmbeddedResources = resources,
@@ -416,5 +393,24 @@ namespace Covenant.Models.Grunts
                 }))
             );
         }
+    }
+
+    internal class SerializedGruntTask
+    {
+        public string Name { get; set; } = "";
+        public IList<string> Aliases { get; set; } = new List<string>();
+        public SerializedGruntTaskAuthor Author { get; set; }
+        public string Description { get; set; } = "";
+        public string Help { get; set; } = "";
+        public ImplantLanguage Language { get; set; }
+        public IList<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion>();
+        public string Code { get; set; } = "";
+        public GruntTaskingType TaskingType { get; set; } = GruntTaskingType.Assembly;
+        public bool UnsafeCompile { get; set; } = false;
+        public bool TokenTask { get; set; } = false;
+        public List<SerializedGruntTaskOption> Options { get; set; } = new List<SerializedGruntTaskOption>();
+        public List<SerializedReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<SerializedReferenceSourceLibrary>();
+        public List<SerializedReferenceAssembly> ReferenceAssemblies { get; set; } = new List<SerializedReferenceAssembly>();
+        public List<SerializedEmbeddedResource> EmbeddedResources { get; set; } = new List<SerializedEmbeddedResource>();
     }
 }

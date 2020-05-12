@@ -63,11 +63,15 @@ namespace Covenant.Models.Grunts
     public enum GruntTaskingType
     {
         Assembly,
-        SetOption,
+        SetDelay,
+        SetJitter,
+        SetConnectAttempts,
+        SetKillDate,
         Exit,
         Connect,
         Disconnect,
-        Jobs
+        Tasks,
+        TaskKill
     }
 
     public class GruntTasking

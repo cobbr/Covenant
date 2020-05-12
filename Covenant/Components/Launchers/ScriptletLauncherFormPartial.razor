@@ -1,4 +1,5 @@
 ﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Launchers
 @using Covenant.Components.Shared
@@ -13,11 +14,13 @@
                 <option value="@(((Enum)typeof(ScriptingLanguage).GetField(n).GetValue(null)).ToString("d"))">@n</option>
             }
         </select>
+        <div class="text-danger"><ValidationMessage For="() => Launcher.ScriptLanguage" /></div>
         @*<EnumSelect id="ScriptLanguage" name="ScriptLanguage" EnumType="ScriptingLanguage" @bind-Value="Launcher.ScriptLanguage" />*@
     </div>
     <div class="form-group col-md-6">
         <label for="ProgId">ProgId</label>
         <input id="ProgId" name="ProgId" value="@Launcher.ProgId" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Launcher.ProgId" /></div>
     </div>
 </div>
 

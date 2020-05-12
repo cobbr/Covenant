@@ -1,8 +1,10 @@
 ﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Models.Grunts
-@inject IJSRuntime  IJSRuntime
+@inject IJSRuntime IJSRuntime
 
-<form>
+<EditForm Model="Grunt" OnValidSubmit="OnFormSubmit">
+    <DataAnnotationsValidator />
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Status">Status</label>
@@ -125,18 +127,21 @@
         <div class="form-group col-md-4">
             <label for="Name">Name</label>
             <input id="Name" name="Name" @bind="Grunt.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.Name" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-8">
             <label for="Note">Note</label>
             <input id="Note" name="Note" @bind="Grunt.Note" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.Note" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Delay">Delay</label>
             <input id="Delay" name="Delay" @bind="Grunt.Delay" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.Delay" /></div>
         </div>
         <div class="form-group col-md-4">
             <label for="JitterPercent">JitterPercent</label>
@@ -153,18 +158,21 @@
                     }
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => Grunt.JitterPercent" /></div>
         </div>
         <div class="form-group col-md-4">
             <label for="ConnectAttempts">ConnectAttempts</label>
             <input id="ConnectAttempts" name="ConnectAttempts" @bind="Grunt.ConnectAttempts" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.ConnectAttempts" /></div>
         </div>
     </div>
     <div class="form-group">
         <label for="KillDate">KillDate</label>
         <input id="KillDate" name="KillDate" @bind="Grunt.KillDate" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Grunt.KillDate" /></div>
     </div>
     <div class="btn-group" role="group">
-        <button type="button" @onclick="(e => OnSubmit.InvokeAsync(this.Grunt))" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary">
             <span class="fe fe-edit"></span> Edit
         </button>
         @if (this.Grunt.Status == GruntStatus.Hidden)
@@ -180,7 +188,7 @@
             </button>
         }
     </div>
-</form>
+</EditForm>
 
 @code {
     [Parameter]
@@ -206,6 +214,11 @@
         {
             this.Grunt.Status = GruntStatus.Active;
         }
+        await this.OnSubmit.InvokeAsync(this.Grunt);
+    }
+
+    private async Task OnFormSubmit()
+    {
         await this.OnSubmit.InvokeAsync(this.Grunt);
     }
 }

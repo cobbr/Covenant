@@ -4,7 +4,8 @@
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="ScreenshotEvents.ToList()" class="table table-hover">
+<CovenantTable TItem="ScreenshotEvent" Items="ScreenshotEvents.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => screenshot.FileName">
             <HeaderContent>FileName</HeaderContent>
@@ -17,19 +18,17 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="screenshot">
-        <FilterableTableRow Item="screenshot" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>
-                    @screenshot.FileName
-                </td>
-                <td>
-                    @System.Convert.FromBase64String(screenshot.FileContents).Length
-                </td>
-                <td>
-                    <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
-                </td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>
+                @screenshot.FileName
+            </td>
+            <td>
+                @System.Convert.FromBase64String(screenshot.FileContents).Length
+            </td>
+            <td>
+                <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
+            </td>
+        </tr>
     </TableRow>
 </CovenantTable>
 

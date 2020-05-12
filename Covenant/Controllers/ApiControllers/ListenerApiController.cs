@@ -2,21 +2,13 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
 
 using Covenant.Core;
-using Covenant.Hubs;
-using Covenant.Models;
-using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
@@ -140,9 +132,9 @@ namespace Covenant.Controllers
 
         // GET api/listeners/http/{id}
         // <summary>
-        // Get an  HttpListener
+        // Get an HttpListener
         // </summary>
-        [HttpGet("http/{id}", Name = "GetActiveHttpListener")]
+        [HttpGet("http/{id}", Name = "GetHttpListener")]
         public async Task<ActionResult<HttpListener>> GetHttpListener(int id)
         {
             try
@@ -190,6 +182,69 @@ namespace Covenant.Controllers
             try
             {
                 return await _service.EditHttpListener(listener);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // GET api/listeners/bridge/{id}
+        // <summary>
+        // Get a BridgeListener
+        // </summary>
+        [HttpGet("bridge/{id}", Name = "GetBridgeListener")]
+        public async Task<ActionResult<BridgeListener>> GetBridgeListener(int id)
+        {
+            try
+            {
+                return await _service.GetBridgeListener(id);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // POST api/listeners/bridge
+        // <summary>
+        // Create a BridgeListener
+        // </summary>
+        [HttpPost("bridge", Name = "CreateBridgeListener")]
+        public async Task<ActionResult<BridgeListener>> CreateBridgeListener([FromBody] BridgeListener listener)
+        {
+            try
+            {
+                return await _service.CreateBridgeListener(listener);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // PUT api/listeners/bridge
+        // <summary>
+        // Edit BridgeListener
+        // </summary>
+        [HttpPut("bridge", Name = "EditBridgeListener")]
+        public async Task<ActionResult<BridgeListener>> EditBridgeListener([FromBody] BridgeListener listener)
+        {
+            try
+            {
+                return await _service.EditBridgeListener(listener);
             }
             catch (ControllerNotFoundException e)
             {

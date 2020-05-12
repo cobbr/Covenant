@@ -1,10 +1,11 @@
 ﻿@page "/covenantuser/edit/{CovenantUserId}"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.AspNetCore.Identity
 @using Covenant.Core
 @using Covenant.Models.Covenant
-@inherits CovenantServiceComponentBase
 @inject UserManager<CovenantUser> UserManager
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">User: <span id="user-name" class="text-primary">@CovenantUser.UserName</span></h1>
@@ -12,7 +13,9 @@
 
 <div class="row">
     <div class="col-md border-right">
-        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnChangePassword="OnEditPassword" readonly />
+        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnSubmit="OnEditPassword" readonly>
+            <span class="fe fe-edit"></span> Edit Password
+        </CovenantUserRegisterForm>
     </div>
     <div class="col-md">
         <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnEditRoles" />
@@ -32,31 +35,31 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.CovenantUser = this.CovenantUser ?? await ICovenantService.GetUser(this.CovenantUserId);
+        this.CovenantUser = this.CovenantUser ?? await Service.GetUser(this.CovenantUserId);
     }
 
     private async Task OnEditRoles(IEnumerable<IdentityRole> roles)
     {
         try
         {
-            IEnumerable<IdentityRole> currentRoles = (await ICovenantService.GetUserRolesForUser(this.CovenantUser.Id)).Select(UR =>
+            IEnumerable<IdentityRole> currentRoles = (await Service.GetUserRolesForUser(this.CovenantUser.Id)).Select(UR =>
             {
-                Task<IdentityRole> t = ICovenantService.GetRole(UR.RoleId);
-                t.Wait();
-                return t.Result;
+                return Service.GetRole(UR.RoleId).WaitResult();
             });
 
-            IEnumerable<IdentityRole> rolesToAdd = roles.Where(R => !currentRoles.Contains(R));
-            IEnumerable<IdentityRole> rolesToRemove = currentRoles.Where(R => !roles.Contains(R));
+            IEnumerable<IdentityRole> rolesToAdd = roles.Where(R => !currentRoles.Select(CR => CR.Id).Contains(R.Id));
+            IEnumerable<IdentityRole> rolesToRemove = currentRoles.Where(CR => !roles.Select(R => R.Id).Contains(CR.Id));
+            Service.DisposeContext();
             foreach (IdentityRole role in rolesToAdd)
             {
-                await ICovenantService.CreateUserRole(this.CovenantUser.Id, role.Id);
+                await Service.CreateUserRole(this.CovenantUser.Id, role.Id);
             }
+            Service.DisposeContext();
             foreach (IdentityRole role in rolesToRemove)
             {
-                await ICovenantService.DeleteUserRole(this.CovenantUser.Id, role.Id);
+                await Service.DeleteUserRole(this.CovenantUser.Id, role.Id);
             }
-            // return RedirectToAction(nameof(Index));
+            NavigationManager.NavigateTo("/covenantuser");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
@@ -66,16 +69,16 @@
 
     private async Task OnEditPassword(CovenantUserRegister register)
     {
-        await ICovenantService.EditUser(this.CovenantUser, register);
-        // return RedirectToAction(nameof(Index));
+        await Service.EditUser(this.CovenantUser, register);
+        NavigationManager.NavigateTo("/covenantuser");
     }
 
     private async Task OnDeleteUser(CovenantUser user)
     {
         try
         {
-            await ICovenantService.DeleteUser(user.Id);
-            // return RedirectToAction(nameof(Index));
+            await Service.DeleteUser(user.Id);
+            NavigationManager.NavigateTo("/covenantuser");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

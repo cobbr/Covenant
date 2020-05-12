@@ -1,7 +1,8 @@
-﻿@typeparam TItem
-
+﻿@using System
 @using System.Threading
 @using System.Threading.Tasks
+
+@typeparam TItem
 
 <CascadingValue Value="this">
     @if (this.IsSearchable)
@@ -21,10 +22,10 @@
                 </tr>
             </thead>
             <tbody>
-                @for (int i = (this.CurrentPage * this.PageLength); i < Math.Min((this.CurrentPage * this.PageLength) + this.PageLength, this.Items.Count); i++)
+                @for (int i = (this.CurrentPage * this.PageLength); i < Math.Min((this.CurrentPage * this.PageLength) + this.PageLength, this.FilteredItems.Count); i++)
                 {
                     int number = i;
-                    @TableRow(this.Items[number])
+                    @TableRow(this.FilteredItems[number])
                 }
             </tbody>
         </table>
@@ -52,21 +53,34 @@
                         <span class="fe fe-arrow-left"></span>
                     </button>
                 }
-                @for (int i = 1; i <= TotalPages; i++)
+                @{
+                    int Left = Math.Max(1, this.CurrentPage - 3);
+                    int Right = Math.Min(this.TotalPages, this.CurrentPage + 5);
+                    if (Left == 1)
+                    {
+                        Right = Math.Min(this.TotalPages, this.CurrentPage + 5 - (this.CurrentPage - 3));
+                    }
+                    else if (Right == this.TotalPages)
+                    {
+                        Left = Math.Max(1, this.CurrentPage - 3 - (this.CurrentPage + 5 - this.TotalPages));
+                    }
+                }
+                @for (int i = Left; i <= CurrentPage; i++)
                 {
                     int number = i;
-                    if ((number - 1) == this.CurrentPage)
-                    {
-                        <button class="btn btn-sm btn-primary text-white disabled">
-                            @number
-                        </button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
-                            @number
-                        </button>
-                    }
+                    <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
+                        @number
+                    </button>
+                }
+                <button class="btn btn-sm btn-primary text-white disabled">
+                    @(CurrentPage + 1)
+                </button>
+                @for (int i = CurrentPage + 2; i <= Right; i++)
+                {
+                    int number = i;
+                    <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
+                        @number
+                    </button>
                 }
                 @if (this.CurrentPage == (this.TotalPages - 1))
                 {
@@ -91,15 +105,24 @@
     }
 </CascadingValue>
 
-@functions {
+@code {
     [Parameter]
     public RenderFragment TableHeader { get; set; }
 
     [Parameter]
     public RenderFragment<TItem> TableRow { get; set; }
 
+    private List<TItem> _items;
     [Parameter]
-    public List<TItem> Items { get; set; }
+    public List<TItem> Items {
+        get { return _items; }
+        set
+        {
+            _items = value;
+            _ = SearchDebounced(_searchTerm);
+        }
+    }
+    public List<TItem> FilteredItems { get; set; }
 
     [Parameter]
     public EventCallback<List<TItem>> ItemsChanged { get; set; }
@@ -116,10 +139,14 @@
     [Parameter]
     public int PageLength { get; set; }
 
+    [Parameter]
+    public Func<TItem, string, bool> SearchRow { get; set; }
+
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> InputAttributes { get; set; }
 
     public event EventHandler OnSortHeader = delegate { };
+    public event EventHandler OnSearch = delegate { };
 
     CancellationTokenSource searchTokenSource;
     private string _searchTerm = "";
@@ -129,16 +156,7 @@
         set
         {
             _searchTerm = value;
-            if (!string.IsNullOrEmpty(_searchTerm))
-            {
-                searchTokenSource?.Cancel();
-                searchTokenSource = new CancellationTokenSource();
-                Task.Delay(700).Wait();
-                if (!searchTokenSource.Token.IsCancellationRequested)
-                {
-                    this.StateHasChanged();
-                }
-            }
+            _ = SearchDebounced(_searchTerm);
         }
     }
 
@@ -146,7 +164,7 @@
     {
         get
         {
-            return (int)Math.Ceiling(Math.Max(this.Items.Count(), 1) / (decimal)PageLength);
+            return (int)Math.Ceiling(Math.Max(this.FilteredItems.Count(), 1) / (decimal)PageLength);
         }
     }
 
@@ -154,9 +172,10 @@
 
     protected override void OnInitialized()
     {
+        this.FilteredItems = this.Items.ToList();
         if (!this.IsPaginated)
         {
-            this.PageLength = this.Items.Count();
+            this.PageLength = this.FilteredItems.Count();
         }
         this.CurrentPage = 0;
     }
@@ -192,6 +211,44 @@
         this.CurrentPage = page;
     }
 
+    public async Task SearchDebounced(string query)
+    {
+        if (this.IsSearchable)
+        {
+            searchTokenSource?.Cancel();
+            searchTokenSource = new CancellationTokenSource();
+            var cancellationToken = searchTokenSource.Token;
+            await Task.Delay(500);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (!string.IsNullOrEmpty(_searchTerm))
+                {
+                    List<TItem> results = this.Items
+                        .Where(I => this.SearchRow.Invoke(I, _searchTerm))
+                        .ToList();
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        this.FilteredItems = results;
+                        this.CurrentPage = 0;
+                        searchTokenSource = null;
+                        this.StateHasChanged();
+                    }
+                }
+                else if (_searchTerm == string.Empty)
+                {
+                    this.FilteredItems = this.Items.ToList();
+                    this.CurrentPage = 0;
+                    this.StateHasChanged();
+                }
+            }
+        }
+        else
+        {
+            this.FilteredItems = this.Items.ToList();
+            this.StateHasChanged();
+        }
+    }
+
     public async Task OnSort<T>(Func<TItem, T> GetSortableProperty, bool Direction)
     {
         if (this.IsSortable)
@@ -199,10 +256,12 @@
             if (Direction)
             {
                 this.Items = this.Items.OrderBy(GetSortableProperty).ToList();
+                this.FilteredItems = this.FilteredItems.OrderBy(GetSortableProperty).ToList();
             }
             else
             {
                 this.Items = this.Items.OrderByDescending(GetSortableProperty).ToList();
+                this.FilteredItems = this.FilteredItems.OrderByDescending(GetSortableProperty).ToList();
             }
             this.OnSortHeader(this, new EventArgs { });
             this.StateHasChanged();

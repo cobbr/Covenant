@@ -3,7 +3,8 @@
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="TargetIndicators.ToList()" class="table table-hover">
+<CovenantTable TItem="TargetIndicator" Items="TargetIndicators.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="TargetIndicator" TItem2="string" GetSortableProperty="(indicator) => indicator.ComputerName">
             <HeaderContent>ComputerName</HeaderContent>
@@ -13,12 +14,10 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="indicator">
-        <FilterableTableRow Item="indicator" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>@indicator.ComputerName</td>
-                <td>@indicator.UserName</td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>@indicator.ComputerName</td>
+            <td>@indicator.UserName</td>
+        </tr>
     </TableRow>
 </CovenantTable>
 

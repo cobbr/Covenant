@@ -62,11 +62,11 @@ namespace Covenant.Controllers
         // Get Covenant's current DateTime
         // </summary>
         [HttpGet("time", Name = "GetEventTime")]
-        public ActionResult<long> GetEventTime()
+        public async Task<ActionResult<long>> GetEventTime()
         {
             try
             {
-                return _service.GetEventTime();
+                return await _service.GetEventTime();
             }
             catch (ControllerNotFoundException e)
             {

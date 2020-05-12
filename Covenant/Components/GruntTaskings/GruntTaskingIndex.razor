@@ -1,15 +1,15 @@
 ﻿@page "/grunttasking"
 @page "/grunttasking/index"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
-@inherits CovenantServiceComponentBase
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">GruntTaskings</h1>
 </div>
 
-<GruntTaskingTable GruntTaskings="GruntTaskings" />
+<GruntTaskingTable GruntTaskings="GruntTaskings" IsPaginated="true" PageLength="10" IsSearchable="true" IsSortable="true" />
 
 @code {
     [Parameter]
@@ -17,6 +17,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTaskings = this.GruntTaskings ?? (await ICovenantService.GetGruntTaskings()).ToList();
+        this.GruntTaskings = this.GruntTaskings ?? (await Service.GetGruntTaskings()).ToList();
     }
 }

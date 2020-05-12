@@ -3,7 +3,8 @@
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="NetworkIndicators.ToList()" class="table table-hover">
+<CovenantTable TItem="NetworkIndicator" Items="NetworkIndicators.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="NetworkIndicator" TItem2="string" GetSortableProperty="(indicator) => indicator.Protocol">
             <HeaderContent>Protocol</HeaderContent>
@@ -22,15 +23,13 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="indicator">
-        <FilterableTableRow Item="indicator" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>@indicator.Protocol</td>
-                <td>@indicator.Domain</td>
-                <td>@indicator.IPAddress</td>
-                <td>@indicator.Port</td>
-                <td>@indicator.URI</td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>@indicator.Protocol</td>
+            <td>@indicator.Domain</td>
+            <td>@indicator.IPAddress</td>
+            <td>@indicator.Port</td>
+            <td>@indicator.URI</td>
+        </tr>
     </TableRow>
 </CovenantTable>
 

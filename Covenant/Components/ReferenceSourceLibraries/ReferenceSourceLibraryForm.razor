@@ -1,24 +1,29 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 
-<form>
+<EditForm Model="ReferenceSourceLibrary" OnValidSubmit="Submit">
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Name">Name</label>
             <input id="Name" name="Name" @bind="ReferenceSourceLibrary.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.Name" /></div>
         </div>
         <div class="form-group col-md-8">
             <label for="Description">Description</label>
             <input id="Description" name="Description" @bind="ReferenceSourceLibrary.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.Description" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="Location">Location</label>
             <input id="Location" name="Location" @bind="ReferenceSourceLibrary.Location" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.Location" /></div>
         </div>
     </div>
     <div class="form-row">
@@ -37,6 +42,7 @@
                     }
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.Language" /></div>
         </div>
         @if (this.ReferenceSourceLibrary.Language == ImplantLanguage.CSharp)
         {
@@ -55,6 +61,7 @@
                         }
                     }
                 </select>
+                <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.CompatibleDotNetVersions" /></div>
             </div>
         }
     </div>
@@ -74,6 +81,7 @@
                     }
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.EmbeddedResources" /></div>
         </div>
         <div class="form-group col-md-6">
             <label for="ReferenceAssemblies">ReferenceAssemblies</label><br />
@@ -90,18 +98,20 @@
                     }
                 }
             </select>
+            <div class="text-danger"><ValidationMessage For="() => ReferenceSourceLibrary.ReferenceAssemblies" /></div>
         </div>
     </div>
 
-    <button type="button" @onclick="Submit" class="btn btn-primary">
+    <button type="submit" class="btn btn-primary">
         <span class="fe fe-@SubmitIcon"></span>@SubmitLabel
     </button>
-</form>
+</EditForm>
 
 @code {
     private ReferenceSourceLibrary _ReferenceSourceLibrary;
     [Parameter]
-    public ReferenceSourceLibrary ReferenceSourceLibrary {
+    public ReferenceSourceLibrary ReferenceSourceLibrary
+    {
         get
         {
             return _ReferenceSourceLibrary;
@@ -110,9 +120,7 @@
         {
             if (value.Id > 0)
             {
-                Task<ReferenceSourceLibrary> t = ICovenantService.GetReferenceSourceLibrary(value.Id);
-                t.Wait();
-                _ReferenceSourceLibrary = t.Result;
+                _ReferenceSourceLibrary = Service.GetReferenceSourceLibrary(value.Id).WaitResult();
             }
             else
             {
@@ -143,16 +151,14 @@
 
     private IEnumerable<ReferenceAssembly> GetReferenceAssemblies()
     {
-        Task<IEnumerable<ReferenceAssembly>> t = ICovenantService.GetReferenceAssemblies();
+        Task<IEnumerable<ReferenceAssembly>> t = Service.GetReferenceAssemblies();
         t.Wait();
         return t.Result;
     }
 
     private IEnumerable<EmbeddedResource> GetEmbeddedResources()
     {
-        Task<IEnumerable<EmbeddedResource>> t = ICovenantService.GetEmbeddedResources();
-        t.Wait();
-        return t.Result;
+        return Service.GetEmbeddedResources().WaitResult();
     }
 
     private async Task OnChangeReferenceAssemblies()
@@ -163,7 +169,7 @@
         IEnumerable<int> removes = this.ReferenceSourceLibrary.ReferenceAssemblies.Select(RA => RA.Id).Where(id => !ids.Contains(id));
         foreach (int id in adds)
         {
-            this.ReferenceSourceLibrary.Add(await ICovenantService.GetReferenceAssembly(id));
+            this.ReferenceSourceLibrary.Add(await Service.GetReferenceAssembly(id));
         }
         foreach (int id in removes)
         {
@@ -179,7 +185,7 @@
         IEnumerable<int> removes = this.ReferenceSourceLibrary.EmbeddedResources.Select(ER => ER.Id).Where(id => !ids.Contains(id));
         foreach (int id in adds)
         {
-            this.ReferenceSourceLibrary.Add(await ICovenantService.GetEmbeddedResource(id));
+            this.ReferenceSourceLibrary.Add(await Service.GetEmbeddedResource(id));
         }
         foreach (int id in removes)
         {

@@ -3,7 +3,8 @@
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="EmbeddedResources.ToList()" class="table table-hover">
+<CovenantTable TItem="EmbeddedResource" Items="EmbeddedResources.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="EmbeddedResource" TItem2="string" GetSortableProperty="(resource) => resource.Name">
             <HeaderContent>Name</HeaderContent>
@@ -13,16 +14,14 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="resource">
-        <FilterableTableRow Item="resource" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>
-                    <a href="/embeddedresource/edit/@resource.Id">
-                        @resource.Name
-                    </a>
-                </td>
-                <td>@resource.Location</td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>
+                <a href="/embeddedresource/edit/@resource.Id">
+                    @resource.Name
+                </a>
+            </td>
+            <td>@resource.Location</td>
+        </tr>
     </TableRow>
 </CovenantTable>
 

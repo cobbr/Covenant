@@ -1,9 +1,11 @@
-﻿@using Covenant.Core
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
 @using Covenant.Models.Launchers
 @using Covenant.Components.Shared
-@inherits CovenantServiceComponentBase
 
-<CovenantTable IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" Items="Launchers.ToList()" class="table table-hover">
+<CovenantTable TItem="Launcher" Items="Launchers.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="Launcher" TItem2="string" GetSortableProperty="(launcher) => launcher.Name">
             <HeaderContent>Name</HeaderContent>
@@ -13,16 +15,14 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="launcher">
-        <FilterableTableRow Item="launcher" IsDisplayed="IsRowDisplayed">
-            <RowContent>
-                <td>
-                    <a href="/launcher/create/@launcher.Id">
-                        @launcher.Name
-                    </a>
-                </td>
-                <td>@launcher.Description</td>
-            </RowContent>
-        </FilterableTableRow>
+        <tr>
+            <td>
+                <a href="/launcher/create/@launcher.Id">
+                    @launcher.Name
+                </a>
+            </td>
+            <td>@launcher.Description</td>
+        </tr>
     </TableRow>
 </CovenantTable>
 
@@ -44,7 +44,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.Launchers = this.Launchers ?? await ICovenantService.GetLaunchers();
+        this.Launchers = this.Launchers ?? await Service.GetLaunchers();
     }
 
     private bool IsRowDisplayed(Launcher launcher, string SearchTerm)

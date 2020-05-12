@@ -1,5 +1,6 @@
 ﻿@using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Models.Listeners
@@ -7,70 +8,76 @@
 @inject IJSRuntime IJSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<form action="@Action" method="POST">
-    <input id="Id" name="Id" value="@Profile.Id" type="hidden">
+<EditForm Model="Profile" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Profile))">
+    <DataAnnotationsValidator />
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Name">Name</label>
             <input id="Name" name="Name" value="@Profile.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Profile.Name" /></div>
         </div>
         <div class="form-group">
             <label for="Type">Type</label><br />
             <EnumSelect id="Type" name="Type" @bind-Value="Profile.Type" disabled="true" />
+            <div class="text-danger"><ValidationMessage For="() => Profile.Type" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="Description">Description</label>
             <input id="Description" name="Description" value="@Profile.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Profile.Description" /></div>
         </div>
     </div>
     <EditFormList FormList=@Profile.HttpUrls InputName="HttpUrls"></EditFormList>
-    <div class="form-row">
-        <div class="form-group col-md-12">
-            <label for="MessageTransform">MessageTransform</label>
-            @if (IsAdmin())
-            {
+    <div class="text-danger"><ValidationMessage For="() => Profile.HttpUrls" /></div>
+    @if (IsAdmin())
+    {
+        <div class="form-row">
+            <div class="form-group col-md-12">
+                <label for="MessageTransform">MessageTransform</label>
                 <textarea @ref="CodeMirrorElements[0]" id="MessageTransform" name="MessageTransform" value="@Profile.MessageTransform" rows="10" class="form-control code-mirror-csharp"></textarea>
-            }
-            else
-            {
-                <textarea @ref="CodeMirrorElements[0]" id="MessageTransform" name="MessageTransform" value="@Profile.MessageTransform" rows="10" class="form-control code-mirror-csharp" hidden></textarea>
-            }
+                <div class="text-danger"><ValidationMessage For="() => Profile.MessageTransform" /></div>
+            </div>
         </div>
-    </div>
+    }
     <EditFormKeyValueList FormList=@ToKeyValueList(Profile.HttpRequestHeaders) InputName="HttpRequestHeaders"></EditFormKeyValueList>
+    <div class="text-danger"><ValidationMessage For="() => Profile.HttpRequestHeaders" /></div>
     <EditFormKeyValueList FormList=@ToKeyValueList(Profile.HttpResponseHeaders) InputName="HttpResponseHeaders"></EditFormKeyValueList>
+    <div class="text-danger"><ValidationMessage For="() => Profile.HttpResponseHeaders" /></div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="HttpPostRequest">HttpPostRequest</label>
             <textarea @ref="CodeMirrorElements[1]" id="HttpPostRequest" name="HttpPostRequest" value="@Profile.HttpPostRequest" rows="20" class="form-control code-mirror-html"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => Profile.HttpPostRequest" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="HttpGetResponse">HttpGetResponse</label>
             <textarea @ref="CodeMirrorElements[2]" id="HttpGetResponse" name="HttpGetResponse" value="@Profile.HttpGetResponse" rows="20" class="form-control code-mirror-html"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => Profile.HttpGetResponse" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="HttpPostResponse">HttpPostResponse</label>
             <textarea @ref="CodeMirrorElements[3]" id="HttpPostResponse" name="HttpPostResponse" value="@Profile.HttpPostResponse" rows="20" class="form-control code-mirror-html"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => Profile.HttpPostResponse" /></div>
         </div>
     </div>
 
     <button type="submit" class="btn btn-primary">
         <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
     </button>
-</form>
+</EditForm>
 
 @code {
     [Parameter]
     public HttpProfile Profile { get; set; }
 
     [Parameter]
-    public string Action { get; set; } = "/profile/edithttp";
+    public EventCallback<HttpProfile> OnSubmit { get; set; }
 
     [Parameter]
     public string SubmitIcon { get; set; } = "edit";
@@ -91,7 +98,7 @@
     private static IList<ElementReference> GetElementReferenceList(int size)
     {
         IList<ElementReference> references = new List<ElementReference>();
-        for(int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++)
         {
             references.Add(new ElementReference());
         }

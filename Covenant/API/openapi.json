@@ -4044,7 +4044,7 @@
         "tags": [
           "ListenerApi"
         ],
-        "operationId": "GetActiveHttpListener",
+        "operationId": "GetHttpListener",
         "produces": [
           "text/plain",
           "application/json",
@@ -4134,6 +4134,106 @@
             "description": "Success",
             "schema": {
               "$ref": "#/definitions/HttpListener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/bridge/{id}": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetBridgeListener",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/bridge": {
+      "post": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "CreateBridgeListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "EditBridgeListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
             }
           }
         }
@@ -5577,14 +5677,42 @@
         "modelAsString": false
       }
     },
+    "GruntTaskAuthor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "handle": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "gruntTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GruntTask"
+          }
+        }
+      }
+    },
     "GruntTaskingType": {
       "enum": [
         "assembly",
-        "setOption",
+        "setDelay",
+        "setJitter",
+        "setConnectAttempts",
+        "setKillDate",
         "exit",
         "connect",
         "disconnect",
-        "jobs"
+        "tasks",
+        "taskKill"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5682,6 +5810,9 @@
         "displayInCommand": {
           "type": "boolean"
         },
+        "fileOption": {
+          "type": "boolean"
+        },
         "gruntTaskId": {
           "format": "int32",
           "type": "integer"
@@ -5697,6 +5828,13 @@
         "id": {
           "format": "int32",
           "type": "integer"
+        },
+        "authorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "author": {
+          "$ref": "#/definitions/GruntTaskAuthor"
         },
         "name": {
           "type": "string"
@@ -6984,6 +7122,96 @@
           "items": {
             "type": "string"
           }
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 0,
+          "type": "string"
+        },
+        "guid": {
+          "maxLength": 100,
+          "minLength": 0,
+          "pattern": "^[a-zA-Z0-9]*$",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "bindAddress": {
+          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+          "type": "string"
+        },
+        "bindPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "connectAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "profileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "profile": {
+          "$ref": "#/definitions/Profile"
+        },
+        "listenerTypeId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerType": {
+          "$ref": "#/definitions/ListenerType"
+        },
+        "status": {
+          "$ref": "#/definitions/ListenerStatus"
+        },
+        "covenantToken": {
+          "type": "string"
+        },
+        "startTime": {
+          "format": "date-time",
+          "type": "string"
+        }
+      }
+    },
+    "BridgeListener": {
+      "required": [
+        "bindAddress",
+        "bindPort",
+        "connectAddresses",
+        "connectPort",
+        "description",
+        "guid",
+        "listenerTypeId",
+        "name",
+        "profileId",
+        "status"
+      ],
+      "type": "object",
+      "properties": {
+        "isBridgeConnected": {
+          "type": "boolean"
+        },
+        "implantReadCode": {
+          "type": "string"
+        },
+        "implantWriteCode": {
+          "type": "string"
         },
         "id": {
           "format": "int32",

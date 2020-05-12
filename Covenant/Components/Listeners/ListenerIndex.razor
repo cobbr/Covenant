@@ -1,5 +1,6 @@
 ﻿@page "/listener"
 @page "/listener/index"
+@inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components
@@ -9,7 +10,6 @@
 @using Covenant.Models.Listeners
 @using Covenant.Components.Profiles
 @inject IJSRuntime IJSRuntime
-@inherits CovenantServiceComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
@@ -60,8 +60,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.Listeners = this.Listeners ?? await ICovenantService.GetListeners();
-        this.Profiles = this.Profiles ?? await ICovenantService.GetProfiles();
+        this.Listeners = this.Listeners ?? await Service.GetListeners();
+        this.Profiles = this.Profiles ?? await Service.GetProfiles();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -74,8 +74,9 @@
 
     private bool IsAdmin()
     {
-        Task<AuthenticationState> t = AuthenticationStateProvider.GetAuthenticationStateAsync();
-        t.Wait();
-        return t.Result.User.IsInRole("Administrator");
+        return AuthenticationStateProvider
+            .GetAuthenticationStateAsync()
+            .WaitResult().User
+            .IsInRole("Administrator");
     }
 }
