@@ -29,7 +29,6 @@ window.ScrollToBottom = (selector) => {
     }, 1000, function () { });
 };
 
-window.HasTypedAhead = false;
 window.InitializeTypeahead = (typeaheadselector, suggestions) => {
     var substringMatcher = function (strs) {
         return function findMatches(q, cb) {
@@ -53,19 +52,16 @@ window.InitializeTypeahead = (typeaheadselector, suggestions) => {
         };
     };
 
-    if (!window.HasTypedAhead) {
-        $(typeaheadselector).typeahead({
-            hint: true,
-            highlight: true,
-            minLength: 1
-        },
-            {
-                name: 'suggestions',
-                limit: 20,
-                source: substringMatcher(suggestions)
-            });
-        window.HasTypedAhead = true;
-    }
+    $(typeaheadselector).typeahead({
+        hint: true,
+        highlight: true,
+        minLength: 1
+    },
+        {
+            name: 'suggestions',
+            limit: 20,
+            source: substringMatcher(suggestions)
+        });
 }
 
 window.SetTypeaheadVal = (typeaheadselector, val) => {

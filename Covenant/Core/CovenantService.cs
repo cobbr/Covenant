@@ -522,7 +522,11 @@ namespace Covenant.Core
 
         public async Task<CovenantUser> EditUser(CovenantUser currentUser, CovenantUserLogin user)
         {
-            CovenantUser matching_user = await this.GetUserByUsername(user.UserName);
+            CovenantUser matching_user = await _userManager.Users.FirstOrDefaultAsync(U => U.UserName == user.UserName);
+            if (matching_user == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - CovenantUser with username: {user.UserName}");
+            }
             var admins = from users in _context.Users
                          join userroles in _context.UserRoles on users.Id equals userroles.UserId
                          join roles in _context.Roles on userroles.RoleId equals roles.Id
@@ -538,8 +542,7 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Could not set new password for CovenantUser with username: {user.UserName}");
             }
-            _context.Users.Update(matching_user);
-            await _context.SaveChangesAsync();
+            // await _context.SaveChangesAsync();
             // _notifier.OnEditCovenantUser(this, matching_user);
             return matching_user;
         }
@@ -629,6 +632,10 @@ namespace Covenant.Core
         public async Task<IdentityUserRole<string>> CreateUserRole(string userId, string roleId)
         {
             CovenantUser user = await _userManager.Users.FirstOrDefaultAsync(U => U.Id == userId);
+            if (user == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - CovenantUser with id: {userId}");
+            }
             IdentityRole role = await this.GetRole(roleId);
             IdentityUserRole<string> userRole = new IdentityUserRole<string>
             {
