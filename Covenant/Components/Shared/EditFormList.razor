@@ -10,7 +10,7 @@
     int number = i;
     <div class="form-row form-group">
         <div class="col-md-6">
-            <input id=@(InputName + "_" + number + "_") name=@(InputName + "[" + number + "]") value="@FormList[i]" class="form-control">
+            <input id=@(InputName + "_" + number + "_") name=@(InputName + "[" + number + "]") value="@FormList[number]" @oninput="e => OnFormListItemChanged(number, e)" class="form-control">
         </div>
         <div class="col-auto align-self-center">
             <button type="button" @onclick="(e => RemoveRow(number))" class="btn btn-outline-danger btn-sm xbutton">
@@ -25,18 +25,29 @@
 
 @code {
     [Parameter]
-    public IList<string> FormList { get; set; }
+    public List<string> FormList { get; set; }
+
+    [Parameter]
+    public EventCallback<List<string>> FormListChanged { get; set; }
 
     [Parameter]
     public string InputName { get; set; }
 
-    private void AddRow()
+    private async Task AddRow()
     {
         FormList.Add("");
+        await this.FormListChanged.InvokeAsync(this.FormList);
     }
 
-    private void RemoveRow(int row)
+    private async Task RemoveRow(int row)
     {
         FormList.RemoveAt(row);
+        await this.FormListChanged.InvokeAsync(this.FormList);
+    }
+
+    private async Task OnFormListItemChanged(int index, ChangeEventArgs e)
+    {
+        this.FormList[index] = e.Value.ToString();
+        await this.FormListChanged.InvokeAsync(this.FormList);
     }
 }

@@ -50,8 +50,9 @@
     {
         try
         {
-            AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             await Service.CreateHttpProfile(profile, await UserManager.GetUserAsync(state.User));
+            NavigationManager.NavigateTo($"/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
@@ -64,8 +65,9 @@
     {
         try
         {
-            AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             await Service.CreateBridgeProfile(profile, await UserManager.GetUserAsync(state.User));
+            NavigationManager.NavigateTo($"/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

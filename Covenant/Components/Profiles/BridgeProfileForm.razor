@@ -32,7 +32,7 @@
         <div class="form-row">
             <div class="form-group col-md-12">
                 <label for="MessageTransform">MessageTransform</label>
-                <textarea @ref="CodeMirrorElements[0]" id="MessageTransform" name="MessageTransform" value="@Profile.MessageTransform" rows="10" class="form-control code-mirror-csharp"></textarea>
+                <textarea @ref="CodeMirrorElements[0]" id="MessageTransform" name="MessageTransform" @bind="Profile.MessageTransform" rows="10" class="form-control code-mirror-csharp"></textarea>
                 <div class="text-danger"><ValidationMessage For="() => Profile.MessageTransform" /></div>
             </div>
         </div>
@@ -40,21 +40,21 @@
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="ReadFormat">ReadFormat</label>
-            <textarea @ref="CodeMirrorElements[1]" id="ReadFormat" name="ReadFormat" value="@Profile.ReadFormat" rows="20" class="form-control code-mirror-csharp"></textarea>
+            <textarea @ref="CodeMirrorElements[1]" id="ReadFormat" name="ReadFormat" @bind="Profile.ReadFormat" rows="20" class="form-control code-mirror-csharp"></textarea>
             <div class="text-danger"><ValidationMessage For="() => Profile.ReadFormat" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="WriteFormat">WriteFormat</label>
-            <textarea @ref="CodeMirrorElements[2]" id="WriteFormat" name="WriteFormat" value="@Profile.WriteFormat" rows="20" class="form-control code-mirror-csharp"></textarea>
+            <textarea @ref="CodeMirrorElements[2]" id="WriteFormat" name="WriteFormat" @bind="Profile.WriteFormat" rows="20" class="form-control code-mirror-csharp"></textarea>
             <div class="text-danger"><ValidationMessage For="() => Profile.WriteFormat" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="BridgeMessengerCode">BridgeMessengerCode</label>
-            <textarea @ref="CodeMirrorElements[3]" id="BridgeMessengerCode" name="BridgeMessengerCode" value="@Profile.BridgeMessengerCode" rows="20" class="form-control code-mirror-csharp"></textarea>
+            <textarea @ref="CodeMirrorElements[3]" id="BridgeMessengerCode" name="BridgeMessengerCode" @bind="Profile.BridgeMessengerCode" rows="20" class="form-control code-mirror-csharp"></textarea>
             <div class="text-danger"><ValidationMessage For="() => Profile.BridgeMessengerCode" /></div>
         </div>
     </div>
