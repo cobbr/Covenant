@@ -1,0 +1,62 @@
+﻿@using System.IO
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Listeners
+@using BlazorInputFile
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="HostedFile" OnValidSubmit="OnFormSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Path">Path</label>
+            <input id="Path" name="Path" @bind="HostedFile.Path" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => HostedFile.Path" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Content">Content</label>
+            <InputFile id="Content" name="Content" class="form-control-file" OnChange="FileUpload" />
+        </div>
+    </div>
+    <button type="button" class="btn btn-primary" @onclick="(e => OnSubmit.InvokeAsync(HostedFile))">
+        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+    </button>
+    @ChildContent
+</EditForm>
+
+@code {
+    [Parameter]
+    public HostedFile HostedFile { get; set; }
+
+    [Parameter]
+    public EventCallback<HostedFile> OnSubmit { get; set; }
+
+    [Parameter]
+    public string SubmitIcon { get; set; }
+
+    [Parameter]
+    public string SubmitLabel { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    private async Task FileUpload(IFileListEntry[] files)
+    {
+        IFileListEntry file = files.FirstOrDefault();
+        if (file != null)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await file.Data.CopyToAsync(ms);
+                HostedFile.Content = Convert.ToBase64String(ms.ToArray());
+            }
+        }
+    }
+
+    private async Task OnFormSubmit()
+    {
+        await this.OnSubmit.InvokeAsync(this.HostedFile);
+    }
+}

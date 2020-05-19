@@ -1,8 +1,12 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
+
+@using System.IO
+@using System.Linq
 @using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Grunts
+@using Covenant.Models.Covenant
 @inject INotificationService INotificationService
 @inject IJSRuntime IJSRuntime
 
@@ -41,6 +45,11 @@
                 if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
                 {
                     <img style="max-width: 100%" src="data:image/png;base64, @GruntCommand.CommandOutput.Output" />
+                }
+                else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Download")
+                {
+                    DownloadEvent downloadEvent = GetDownloadEvent(GruntCommand).WaitResult();
+                    <p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if(downloadEvent != null){<button type="button" class="btn btn-link text-white task-text-body" @onclick="(e => OnDownload(downloadEvent))">@downloadEvent.FileName</button>}</p>
                 }
                 else
                 {
@@ -117,5 +126,30 @@
             Service.DisposeContext();
         }
         this.IsMinimized = !IsMinimized;
+    }
+
+    private async Task<DownloadEvent> GetDownloadEvent(GruntCommand command)
+    {
+        if (GruntCommand.GruntTasking != null && GruntCommand.CommandOutput != null)
+        {
+            IEnumerable<DownloadEvent> downloadEvents = await Service.GetDownloadEvents();
+            return downloadEvents
+                .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.FileContents == command.CommandOutput.Output);
+        }
+        return null;
+    }
+
+    private async Task OnDownload(DownloadEvent downloadEvent)
+    {
+        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(downloadEvent.FileName), out string contentType))
+        {
+            contentType = Common.DefaultContentTypeMapping;
+        }
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            Path.GetFileName(downloadEvent.FileName),
+            contentType,
+            downloadEvent.FileContents
+        );
     }
 }

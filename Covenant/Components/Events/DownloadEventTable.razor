@@ -1,5 +1,7 @@
 ﻿@using System
+@using System.IO
 @using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Covenant
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -26,10 +28,10 @@
                 @Convert.FromBase64String(download.FileContents).Length
             </td>
             <td>
-                <a class="btn btn-primary" href="/data/download/@download.Id">
+                <button type="button" class="btn btn-primary" @onclick="e => OnDownload(download)">
                     <span class="fe fe-download"></span>
                     Download
-                </a>
+                </button>
             </td>
         </tr>
     </TableRow>
@@ -50,6 +52,20 @@
 
     [Parameter]
     public int PageLength { get; set; } = 25;
+
+    private async Task OnDownload(DownloadEvent ev)
+    {
+        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(ev.FileName), out string contentType))
+        {
+            contentType = Common.DefaultContentTypeMapping;
+        }
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            Path.GetFileName(ev.FileName),
+            contentType,
+            ev.FileContents
+        );
+    }
 
     private bool IsRowDisplayed(DownloadEvent download, string SearchTerm)
     {

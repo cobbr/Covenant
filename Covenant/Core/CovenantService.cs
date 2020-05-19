@@ -471,6 +471,7 @@ namespace Covenant.Core
                 throw new ControllerBadRequestException($"BadRequest - Password does not match ConfirmPassword.");
             }
             CovenantUser created = await CreateUser(new CovenantUserLogin { UserName = register.UserName, Password = register.Password });
+            await _userManager.AddToRoleAsync(created, "User");
             if (!_userManager.Users.Any())
             {
                 await _signInManager.PasswordSignInAsync(register.UserName, register.Password, true, lockoutOnFailure: false);
@@ -493,7 +494,7 @@ namespace Covenant.Core
                 }
                 throw new ControllerBadRequestException(ErrorMessage);
             }
-            await _userManager.AddToRoleAsync(user, "User");
+            
             if (!_userManager.Users.Any())
             {
                 await _userManager.AddToRoleAsync(user, "Administrator");
@@ -2977,7 +2978,7 @@ public static class Task
                         Level = EventLevel.Highlight,
                         Context = grunt.Name,
                         FileName = FileName,
-                        FileContents = tasking.GruntCommand.CommandOutput.Output,
+                        FileContents = updatingGruntTasking.GruntCommand.CommandOutput.Output,
                         Progress = DownloadEvent.DownloadProgress.Complete
                     };
                     downloadEvent.WriteToDisk();
@@ -3003,7 +3004,7 @@ public static class Task
                         Level = EventLevel.Highlight,
                         Context = grunt.Name,
                         FileName = FileName,
-                        FileContents = tasking.GruntCommand.CommandOutput.Output,
+                        FileContents = updatingGruntTasking.GruntCommand.CommandOutput.Output,
                         Progress = DownloadEvent.DownloadProgress.Complete
                     };
                     screenshotEvent.WriteToDisk();

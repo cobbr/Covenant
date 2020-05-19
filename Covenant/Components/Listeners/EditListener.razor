@@ -1,19 +1,14 @@
 ﻿@page "/listener/edit/{ListenerId:int}"
 @inherits OwningComponentBase<ICovenantService>
 
-@using System.Threading
-@using System.Collections.Concurrent;
-
 @using Microsoft.JSInterop
-@using Microsoft.AspNetCore.SignalR;
 @using Microsoft.AspNetCore.Identity;
 @using Microsoft.Extensions.Configuration;
 
 @using Covenant.Core
-@using Covenant.Hubs;
-@using Covenant.Models;
 @using Covenant.Models.Covenant;
 @using Covenant.Models.Listeners;
+@using Covenant.Components.HostedFiles
 
 @inject IJSRuntime IJSRuntime
 @inject UserManager<CovenantUser> UserManager
@@ -68,7 +63,7 @@
             </div>
         </div>
         <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
-            @*<HostedFiles/>*@
+            <HostedFileIndex ListenerId="ListenerId" HostedFiles="GetHostedFiles()" />
         </div>
     </div>
 }
@@ -208,5 +203,10 @@ else if (Listener.ListenerType.Name == "Bridge")
             // ModelState.AddModelError(string.Empty, e.Message);
             // return RedirectToAction(nameof(Index));
         }
+    }
+
+    private IEnumerable<HostedFile> GetHostedFiles()
+    {
+        return Service.GetHostedFilesForListener(Listener.Id).WaitResult();
     }
 }

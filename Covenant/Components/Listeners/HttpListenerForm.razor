@@ -158,9 +158,11 @@
         IFileListEntry file = files.FirstOrDefault();
         if (file != null)
         {
-            MemoryStream ms = new MemoryStream();
-            await file.Data.CopyToAsync(ms);
-            Listener.SSLCertificate = Convert.ToBase64String(ms.ToArray());
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await file.Data.CopyToAsync(ms);
+                Listener.SSLCertificate = Convert.ToBase64String(ms.ToArray());
+            }
         }
     }
 
