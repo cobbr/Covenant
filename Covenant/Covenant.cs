@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -231,11 +232,10 @@ namespace Covenant
 
         private static bool IsElevated()
         {
-
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-                var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
                 return principal.IsInRole("Administrators");
             }
             return Environment.UserName.Equals("root", StringComparison.CurrentCultureIgnoreCase);
