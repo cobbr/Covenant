@@ -1,6 +1,6 @@
-﻿using System;
-using System.Text;
+using System;
 using System.Linq;
+using System.Text;
 using System.Collections.Generic;
 
 using SharpSploit.Enumeration;
@@ -12,14 +12,14 @@ public static class Task
         try
         {
             List<string> computerList = ComputerNames.Replace(", ",",").Split(',').ToList();
-            List<IGrouping<string, Net.LocalGroup>> groupedGroups = Net.GetNetLocalGroups(computerList).GroupBy(grouping => grouping.ComputerName).ToList();
+            List<IGrouping<string, Net.ShareInfo>> groupedShares = Net.GetNetShares(computerList).GroupBy(grouping => grouping.ComputerName).ToList();
             
             StringBuilder results = new StringBuilder();
-            foreach (IGrouping<string, Net.LocalGroup> group in groupedGroups)
+            foreach(IGrouping<string, Net.ShareInfo> group in groupedShares)
             {
-                results.AppendLine("LocalGroups for " + group.Key + ":");
+                results.AppendLine("Shares on " + group.Key + ":");
                 results.AppendLine("---------------------------");
-                group.ToList().ForEach(g => results.AppendLine(g.ToString()));
+                group.ToList().ForEach(s => results.AppendLine(s.ToString()));
                 results.AppendLine();
             }
             return results.ToString();

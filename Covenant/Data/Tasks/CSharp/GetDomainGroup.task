@@ -14,7 +14,7 @@ public static class Task
             List<Domain.DomainObject> domainGroups = new List<Domain.DomainObject>();
             if (Identities.Trim() != "")
             {
-                List<string> identityList = Identities.Split(',').ToList();
+                List<string> identityList = Identities.Replace(", ",",").Split(',').ToList();
                 domainGroups = new Domain.DomainSearcher().GetDomainGroups(identityList);
             }
             else

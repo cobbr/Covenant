@@ -445,11 +445,13 @@ namespace Covenant.Models.Listeners
 								APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
 								if (connectTasking == null)
 								{
-									this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
-									return guid;
+								    egressGrunt = null;
 								}
-								APIModels.Grunt taskedGrunt = await _client.GetGruntAsync(connectTasking.GruntId);
-								egressGrunt = await _client.GetOutboundGruntAsync(taskedGrunt.Id ?? default);
+								else
+								{
+								    APIModels.Grunt taskedGrunt = await _client.GetGruntAsync(connectTasking.GruntId);
+								    egressGrunt = await _client.GetOutboundGruntAsync(taskedGrunt.Id ?? default);
+								}
 							}
 						}
 						await this.PostStage0(egressGrunt, targetGrunt, message, message.GUID.Substring(10), guid);
