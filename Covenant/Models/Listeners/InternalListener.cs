@@ -267,7 +267,6 @@ namespace Covenant.Models.Listeners
                     if (this.CacheTaskHashCodes.Add(GetCacheEntryHashCode(cacheEntry)))
                     {
                         cacheQueue.Enqueue(cacheEntry);
-                        Console.WriteLine("Enqueue: " + guid + " Length: " + cacheQueue.Count);
                         this.OnNewMessage(this, new NewMessageArgs(guid));
                     }
                 }
@@ -280,7 +279,6 @@ namespace Covenant.Models.Listeners
                     if (this.CacheTaskHashCodes.Add(GetCacheEntryHashCode(cacheEntry)))
                     {
                         cacheQueue.Enqueue(cacheEntry);
-                        Console.WriteLine("Enqueue: " + guid + " Length: " + cacheQueue.Count);
                     }
                 }
                 this.GruntMessageCache[guid] = cacheQueue;
@@ -337,7 +335,6 @@ namespace Covenant.Models.Listeners
             {
                 if (cache.TryDequeue(out GruntMessageCacheInfo cacheEntry))
                 {
-                    Console.WriteLine("Dequeue: " + guid + " Length: " + cache.Count);
                     switch (cacheEntry.Status)
                     {
                         case GruntMessageCacheStatus.NotFound:
