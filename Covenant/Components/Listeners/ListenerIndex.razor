@@ -1,6 +1,7 @@
 ﻿@page "/listener"
 @page "/listener/index"
 @inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
 
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components
@@ -10,6 +11,7 @@
 @using Covenant.Models.Listeners
 @using Covenant.Components.Profiles
 @inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
@@ -33,7 +35,7 @@
 
 <div class="tab-content" id="listeners-tab-content">
     <div class="tab-pane fade" id="listeners" role="tabpanel" aria-labelledby="listeners-tab">
-        <ListenerTable Listeners="Listeners" />
+        <ListenerTable @bind-Listeners="Listeners" />
         <a href="/listener/create" class="btn btn-primary">
             <span class="fe fe-plus"></span>
             Create
@@ -53,15 +55,17 @@
 
 @code {
     [Parameter]
-    public IEnumerable<Listener> Listeners { get; set; }
+    public List<Listener> Listeners { get; set; }
 
     [Parameter]
     public IEnumerable<Profile> Profiles { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        this.Listeners = this.Listeners ?? await Service.GetListeners();
+        this.Listeners = this.Listeners ?? (await Service.GetListeners()).ToList();
         this.Profiles = this.Profiles ?? await Service.GetProfiles();
+        this.INotificationService.OnCreateListener += OnCreateListener;
+        this.INotificationService.OnEditListener += OnEditListener;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -69,6 +73,27 @@
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "#listeners-tab");
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateListener -= OnCreateListener;
+        this.INotificationService.OnEditListener -= OnEditListener;
+    }
+
+    private void OnCreateListener(object sender, Listener listener)
+    {
+        this.Listeners.Add(listener);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnEditListener(object sender, Listener listener)
+    {
+        if (this.Listeners.Any(L => L.Id == listener.Id))
+        {
+            this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = listener;
+            this.InvokeAsync(() => this.StateHasChanged());
         }
     }
 

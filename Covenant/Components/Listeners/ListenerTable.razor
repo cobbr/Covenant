@@ -42,7 +42,10 @@
 
 @code {
     [Parameter]
-    public IEnumerable<Listener> Listeners { get; set; }
+    public List<Listener> Listeners { get; set; }
+
+    [Parameter]
+    public EventCallback<List<Listener>> ListenersChanged { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -59,6 +62,12 @@
     private string ToString(List<string> list)
     {
         return string.Join(",", list);
+    }
+
+    private void OnListenersChanged(List<Listener> Listeners)
+    {
+        this.Listeners = Listeners;
+        this.ListenersChanged.InvokeAsync(Listeners);
     }
 
     private bool IsRowDisplayed(Listener listener, string SearchTerm)

@@ -3714,7 +3714,7 @@ public static class Task
             }
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditListener(this, matchingListener);
+            await _notifier.NotifyEditListener(this, matchingListener);
             return await this.GetListener(matchingListener.Id);
         }
 
@@ -3727,6 +3727,7 @@ public static class Task
                 CancellationTokenSource listenerCancellationToken = listener.Start();
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyEditListener(this, listener);
                 _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
             }
             catch (ListenerStartException e)
@@ -3906,16 +3907,17 @@ public static class Task
                 listener.Status = ListenerStatus.Uninitialized;
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyCreateListener(this, listener);
                 listener = await this.StartInitialHttpListener(listener);
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
-                // _notifier.OnEditListener(this, listener);
+                await _notifier.NotifyEditListener(this, listener);
             }
             else
             {
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
-                // _notifier.OnCreateListener(this, listener);
+                await _notifier.NotifyCreateListener(this, listener);
             }
             return await this.GetHttpListener(listener.Id);
         }
@@ -3942,18 +3944,18 @@ public static class Task
                 listener.Status = ListenerStatus.Uninitialized;
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
-                // _notifier.OnCreateListener(this, listener);
+                await _notifier.NotifyCreateListener(this, listener);
                 listener.Status = ListenerStatus.Active;
                 listener = await this.StartInitialBridgeListener(listener);
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
-                // _notifier.OnEditListener(this, listener);
+                await _notifier.NotifyEditListener(this, listener);
             }
             else
             {
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
-                // _notifier.OnCreateListener(this, listener);
+                await _notifier.NotifyCreateListener(this, listener);
             }
             return await this.GetBridgeListener(listener.Id);
         }
@@ -3962,6 +3964,10 @@ public static class Task
         {
             await _context.Listeners.AddRangeAsync(listeners);
             await _context.SaveChangesAsync();
+            foreach (Listener l in listeners)
+            {
+                await _notifier.NotifyCreateListener(this, l);
+            }
             return listeners;
         }
 
@@ -4003,7 +4009,7 @@ public static class Task
 
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditListener(this, matchingListener);
+            await _notifier.NotifyEditListener(this, matchingListener);
             return await this.GetHttpListener(matchingListener.Id);
         }
 
@@ -4042,7 +4048,7 @@ public static class Task
 
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditListener(this, matchingListener);
+            await _notifier.NotifyEditListener(this, matchingListener);
             return await this.GetBridgeListener(matchingListener.Id);
         }
         #endregion

@@ -99,7 +99,7 @@
         try
         {
             listener.Status = ListenerStatus.Active;
-            await this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener));
+            _ = this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener));
             NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
@@ -114,7 +114,7 @@
         try
         {
             listener.Status = ListenerStatus.Active;
-            await this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener));
+            _ = this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener));
             NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

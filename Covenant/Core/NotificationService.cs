@@ -150,6 +150,8 @@ namespace Covenant.Core
         event EventHandler<int> OnDeleteListener;
         event EventHandler<Grunt> OnNotifyListener;
         Task NotifyNotifyListener(object sender, Grunt grunt);
+        Task NotifyCreateListener(object sender, Listener listener);
+        Task NotifyEditListener(object sender, Listener listener);
     }
 
     public interface IProfileNotificationService
@@ -278,5 +280,8 @@ namespace Covenant.Core
         public async Task NotifyEditGruntTasking(object sender, GruntTasking tasking) { await Task.Run(() => this.OnEditGruntTasking(sender, tasking)); }
 
         public async Task NotifyNotifyListener(object sender, Grunt grunt) { await Task.Run(() => this.OnNotifyListener(sender, grunt)); }
+
+        public async Task NotifyCreateListener(object sender, Listener listener) { await Task.Run(() => this.OnCreateListener(sender, listener)); }
+        public async Task NotifyEditListener(object sender, Listener listener) { await Task.Run(() => this.OnEditListener(sender, listener)); }
     }
 }

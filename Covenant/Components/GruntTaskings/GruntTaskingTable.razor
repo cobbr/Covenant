@@ -67,6 +67,9 @@
     public List<GruntTasking> GruntTaskings { get; set; }
 
     [Parameter]
+    public EventCallback<List<GruntTasking>> GruntTaskingsChanged { get; set; }
+
+    [Parameter]
     public bool IsSearchable { get; set; } = true;
 
     [Parameter]
@@ -77,6 +80,12 @@
 
     [Parameter]
     public int PageLength { get; set; } = 50;
+
+    private void OnGruntTaskingsChanged(List<GruntTasking> GruntTaskings)
+    {
+        this.GruntTaskings = GruntTaskings;
+        this.GruntTaskingsChanged.InvokeAsync(GruntTaskings);
+    }
 
     private bool IsRowDisplayed(GruntTasking tasking, string SearchTerm)
     {
