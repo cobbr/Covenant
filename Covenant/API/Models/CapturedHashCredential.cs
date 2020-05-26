@@ -22,10 +22,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CapturedHashCredential class.
         /// </summary>
-        /// <param name="hashCredentialType">Possible values include: 'ntlm',
-        /// 'lm', 'shA1'</param>
-        /// <param name="type">Possible values include: 'password', 'hash',
-        /// 'ticket'</param>
+        /// <param name="hashCredentialType">Possible values include: 'NTLM',
+        /// 'LM', 'SHA1'</param>
+        /// <param name="type">Possible values include: 'Password', 'Hash',
+        /// 'Ticket'</param>
         public CapturedHashCredential(HashType? hashCredentialType = default(HashType?), string hash = default(string), int? id = default(int?), CredentialType? type = default(CredentialType?), string domain = default(string), string username = default(string))
         {
             HashCredentialType = hashCredentialType;
@@ -43,7 +43,7 @@ namespace Covenant.API.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets or sets possible values include: 'ntlm', 'lm', 'shA1'
+        /// Gets or sets possible values include: 'NTLM', 'LM', 'SHA1'
         /// </summary>
         [JsonProperty(PropertyName = "hashCredentialType")]
         public HashType? HashCredentialType { get; set; }
@@ -59,7 +59,7 @@ namespace Covenant.API.Models
         public int? Id { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'password', 'hash', 'ticket'
+        /// Gets or sets possible values include: 'Password', 'Hash', 'Ticket'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public CredentialType? Type { get; set; }

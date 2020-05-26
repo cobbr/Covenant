@@ -25,8 +25,8 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the BridgeListener class.
         /// </summary>
-        /// <param name="status">Possible values include: 'uninitialized',
-        /// 'active', 'stopped'</param>
+        /// <param name="status">Possible values include: 'Uninitialized',
+        /// 'Active', 'Stopped'</param>
         public BridgeListener(string name, string guid, string description, string bindAddress, int bindPort, IList<string> connectAddresses, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, bool? isBridgeConnected = default(bool?), string implantReadCode = default(string), string implantWriteCode = default(string), int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             IsBridgeConnected = isBridgeConnected;
@@ -131,8 +131,8 @@ namespace Covenant.API.Models
         public ListenerType ListenerType { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'uninitialized', 'active',
-        /// 'stopped'
+        /// Gets or sets possible values include: 'Uninitialized', 'Active',
+        /// 'Stopped'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public ListenerStatus Status { get; set; }

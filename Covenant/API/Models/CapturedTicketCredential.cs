@@ -22,10 +22,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CapturedTicketCredential class.
         /// </summary>
-        /// <param name="ticketCredentialType">Possible values include: 'rC4',
-        /// 'aes'</param>
-        /// <param name="type">Possible values include: 'password', 'hash',
-        /// 'ticket'</param>
+        /// <param name="ticketCredentialType">Possible values include: 'RC4',
+        /// 'AES'</param>
+        /// <param name="type">Possible values include: 'Password', 'Hash',
+        /// 'Ticket'</param>
         public CapturedTicketCredential(TicketType? ticketCredentialType = default(TicketType?), string serviceName = default(string), string ticket = default(string), int? id = default(int?), CredentialType? type = default(CredentialType?), string domain = default(string), string username = default(string))
         {
             TicketCredentialType = ticketCredentialType;
@@ -44,7 +44,7 @@ namespace Covenant.API.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets or sets possible values include: 'rC4', 'aes'
+        /// Gets or sets possible values include: 'RC4', 'AES'
         /// </summary>
         [JsonProperty(PropertyName = "ticketCredentialType")]
         public TicketType? TicketCredentialType { get; set; }
@@ -65,7 +65,7 @@ namespace Covenant.API.Models
         public int? Id { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'password', 'hash', 'ticket'
+        /// Gets or sets possible values include: 'Password', 'Hash', 'Ticket'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public CredentialType? Type { get; set; }

@@ -17,25 +17,25 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum GruntTaskingType
     {
-        [EnumMember(Value = "assembly")]
+        [EnumMember(Value = "Assembly")]
         Assembly,
-        [EnumMember(Value = "setDelay")]
+        [EnumMember(Value = "SetDelay")]
         SetDelay,
-        [EnumMember(Value = "setJitter")]
+        [EnumMember(Value = "SetJitter")]
         SetJitter,
-        [EnumMember(Value = "setConnectAttempts")]
+        [EnumMember(Value = "SetConnectAttempts")]
         SetConnectAttempts,
-        [EnumMember(Value = "setKillDate")]
+        [EnumMember(Value = "SetKillDate")]
         SetKillDate,
-        [EnumMember(Value = "exit")]
+        [EnumMember(Value = "Exit")]
         Exit,
-        [EnumMember(Value = "connect")]
+        [EnumMember(Value = "Connect")]
         Connect,
-        [EnumMember(Value = "disconnect")]
+        [EnumMember(Value = "Disconnect")]
         Disconnect,
-        [EnumMember(Value = "tasks")]
+        [EnumMember(Value = "Tasks")]
         Tasks,
-        [EnumMember(Value = "taskKill")]
+        [EnumMember(Value = "TaskKill")]
         TaskKill
     }
     internal static class GruntTaskingTypeEnumExtension
@@ -50,25 +50,25 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case GruntTaskingType.Assembly:
-                    return "assembly";
+                    return "Assembly";
                 case GruntTaskingType.SetDelay:
-                    return "setDelay";
+                    return "SetDelay";
                 case GruntTaskingType.SetJitter:
-                    return "setJitter";
+                    return "SetJitter";
                 case GruntTaskingType.SetConnectAttempts:
-                    return "setConnectAttempts";
+                    return "SetConnectAttempts";
                 case GruntTaskingType.SetKillDate:
-                    return "setKillDate";
+                    return "SetKillDate";
                 case GruntTaskingType.Exit:
-                    return "exit";
+                    return "Exit";
                 case GruntTaskingType.Connect:
-                    return "connect";
+                    return "Connect";
                 case GruntTaskingType.Disconnect:
-                    return "disconnect";
+                    return "Disconnect";
                 case GruntTaskingType.Tasks:
-                    return "tasks";
+                    return "Tasks";
                 case GruntTaskingType.TaskKill:
-                    return "taskKill";
+                    return "TaskKill";
             }
             return null;
         }
@@ -77,25 +77,25 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "assembly":
+                case "Assembly":
                     return GruntTaskingType.Assembly;
-                case "setDelay":
+                case "SetDelay":
                     return GruntTaskingType.SetDelay;
-                case "setJitter":
+                case "SetJitter":
                     return GruntTaskingType.SetJitter;
-                case "setConnectAttempts":
+                case "SetConnectAttempts":
                     return GruntTaskingType.SetConnectAttempts;
-                case "setKillDate":
+                case "SetKillDate":
                     return GruntTaskingType.SetKillDate;
-                case "exit":
+                case "Exit":
                     return GruntTaskingType.Exit;
-                case "connect":
+                case "Connect":
                     return GruntTaskingType.Connect;
-                case "disconnect":
+                case "Disconnect":
                     return GruntTaskingType.Disconnect;
-                case "tasks":
+                case "Tasks":
                     return GruntTaskingType.Tasks;
-                case "taskKill":
+                case "TaskKill":
                     return GruntTaskingType.TaskKill;
             }
             return null;

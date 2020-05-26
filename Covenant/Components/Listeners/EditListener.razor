@@ -117,6 +117,8 @@ else if (Listener.ListenerType.Name == "Bridge")
     [Parameter]
     public Listener Listener { get; set; }
 
+    private bool IsDeleted { get; set; } = false;
+
     protected override async Task OnInitializedAsync()
     {
         this.Listener = this.Listener ?? await Service.GetListener(this.ListenerId);
@@ -195,6 +197,7 @@ else if (Listener.ListenerType.Name == "Bridge")
     {
         try
         {
+            this.IsDeleted = true;
             await Service.DeleteListener(Listener.Id);
             NavigationManager.NavigateTo("/listener");
         }
@@ -207,6 +210,6 @@ else if (Listener.ListenerType.Name == "Bridge")
 
     private IEnumerable<HostedFile> GetHostedFiles()
     {
-        return Service.GetHostedFilesForListener(Listener.Id).WaitResult();
+        return this.IsDeleted ? new List<HostedFile>() : Service.GetHostedFilesForListener(Listener.Id).WaitResult();
     }
 }

@@ -17,10 +17,10 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ScriptingLanguage
     {
-        [EnumMember(Value = "jScript")]
+        [EnumMember(Value = "JScript")]
         JScript,
-        [EnumMember(Value = "vbScript")]
-        VbScript
+        [EnumMember(Value = "VBScript")]
+        VBScript
     }
     internal static class ScriptingLanguageEnumExtension
     {
@@ -34,9 +34,9 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case ScriptingLanguage.JScript:
-                    return "jScript";
-                case ScriptingLanguage.VbScript:
-                    return "vbScript";
+                    return "JScript";
+                case ScriptingLanguage.VBScript:
+                    return "VBScript";
             }
             return null;
         }
@@ -45,10 +45,10 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "jScript":
+                case "JScript":
                     return ScriptingLanguage.JScript;
-                case "vbScript":
-                    return ScriptingLanguage.VbScript;
+                case "VBScript":
+                    return ScriptingLanguage.VBScript;
             }
             return null;
         }

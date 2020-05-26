@@ -22,24 +22,25 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the MshtaLauncher class.
         /// </summary>
-        /// <param name="scriptLanguage">Possible values include: 'jScript',
-        /// 'vbScript'</param>
-        /// <param name="type">Possible values include: 'wmic', 'regsvr32',
-        /// 'mshta', 'cscript', 'wscript', 'powerShell', 'binary', 'msBuild',
-        /// 'installUtil'</param>
-        /// <param name="dotNetVersion">Possible values include: 'net35',
-        /// 'net40', 'netCore21', 'netCore30'</param>
+        /// <param name="scriptLanguage">Possible values include: 'JScript',
+        /// 'VBScript'</param>
+        /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
+        /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
+        /// 'InstallUtil'</param>
+        /// <param name="dotNetVersion">Possible values include: 'Net35',
+        /// 'Net40', 'NetCore21', 'NetCore30'</param>
         /// <param name="runtimeIdentifier">Possible values include: 'win_x64',
         /// 'win_x86', 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86',
         /// 'win81_x64', 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86',
         /// 'win10_arm', 'win10_arm64', 'linux_x64', 'linux_musl_x64',
-        /// 'linux_arm', 'rhel_x64', 'rhel_6_x64', 'tizen', 'tizen_4_0_0',
-        /// 'tizen_5_0_0', 'osx_x64', 'osx_10_10_x64', 'osx_10_11_x64',
-        /// 'osx_10_12_x64', 'osx_10_13_x64', 'osx_10_14_x64'</param>
+        /// 'linux_arm', 'linux_arm64', 'rhel_x64', 'rhel_6_x64', 'tizen',
+        /// 'tizen_4_0_0', 'tizen_5_0_0', 'osx_x64', 'osx_10_10_x64',
+        /// 'osx_10_11_x64', 'osx_10_12_x64', 'osx_10_13_x64', 'osx_10_14_x64',
+        /// 'osx_10_15_x64'</param>
         /// <param name="outputKind">Possible values include:
-        /// 'consoleApplication', 'windowsApplication',
-        /// 'dynamicallyLinkedLibrary', 'netModule', 'windowsRuntimeMetadata',
-        /// 'windowsRuntimeApplication'</param>
+        /// 'ConsoleApplication', 'WindowsApplication',
+        /// 'DynamicallyLinkedLibrary', 'NetModule', 'WindowsRuntimeMetadata',
+        /// 'WindowsRuntimeApplication'</param>
         public MshtaLauncher(ScriptingLanguage? scriptLanguage = default(ScriptingLanguage?), string progId = default(string), string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), int? implantTemplateId = default(int?), string name = default(string), string description = default(string), LauncherType? type = default(LauncherType?), DotNetVersion? dotNetVersion = default(DotNetVersion?), RuntimeIdentifier? runtimeIdentifier = default(RuntimeIdentifier?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), OutputKind? outputKind = default(OutputKind?), bool? compressStager = default(bool?))
         {
             ScriptLanguage = scriptLanguage;
@@ -73,7 +74,7 @@ namespace Covenant.API.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets or sets possible values include: 'jScript', 'vbScript'
+        /// Gets or sets possible values include: 'JScript', 'VBScript'
         /// </summary>
         [JsonProperty(PropertyName = "scriptLanguage")]
         public ScriptingLanguage? ScriptLanguage { get; set; }
@@ -114,16 +115,16 @@ namespace Covenant.API.Models
         public string Description { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'wmic', 'regsvr32', 'mshta',
-        /// 'cscript', 'wscript', 'powerShell', 'binary', 'msBuild',
-        /// 'installUtil'
+        /// Gets or sets possible values include: 'Wmic', 'Regsvr32', 'Mshta',
+        /// 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
+        /// 'InstallUtil'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public LauncherType? Type { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'net35', 'net40',
-        /// 'netCore21', 'netCore30'
+        /// Gets or sets possible values include: 'Net35', 'Net40',
+        /// 'NetCore21', 'NetCore30'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion? DotNetVersion { get; set; }
@@ -133,9 +134,9 @@ namespace Covenant.API.Models
         /// 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86', 'win81_x64',
         /// 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86', 'win10_arm',
         /// 'win10_arm64', 'linux_x64', 'linux_musl_x64', 'linux_arm',
-        /// 'rhel_x64', 'rhel_6_x64', 'tizen', 'tizen_4_0_0', 'tizen_5_0_0',
-        /// 'osx_x64', 'osx_10_10_x64', 'osx_10_11_x64', 'osx_10_12_x64',
-        /// 'osx_10_13_x64', 'osx_10_14_x64'
+        /// 'linux_arm64', 'rhel_x64', 'rhel_6_x64', 'tizen', 'tizen_4_0_0',
+        /// 'tizen_5_0_0', 'osx_x64', 'osx_10_10_x64', 'osx_10_11_x64',
+        /// 'osx_10_12_x64', 'osx_10_13_x64', 'osx_10_14_x64', 'osx_10_15_x64'
         /// </summary>
         [JsonProperty(PropertyName = "runtimeIdentifier")]
         public RuntimeIdentifier? RuntimeIdentifier { get; set; }
@@ -186,9 +187,9 @@ namespace Covenant.API.Models
         public string StagerCode { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'consoleApplication',
-        /// 'windowsApplication', 'dynamicallyLinkedLibrary', 'netModule',
-        /// 'windowsRuntimeMetadata', 'windowsRuntimeApplication'
+        /// Gets or sets possible values include: 'ConsoleApplication',
+        /// 'WindowsApplication', 'DynamicallyLinkedLibrary', 'NetModule',
+        /// 'WindowsRuntimeMetadata', 'WindowsRuntimeApplication'
         /// </summary>
         [JsonProperty(PropertyName = "outputKind")]
         public OutputKind? OutputKind { get; set; }

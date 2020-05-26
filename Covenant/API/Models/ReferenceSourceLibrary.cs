@@ -24,7 +24,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ReferenceSourceLibrary class.
         /// </summary>
-        /// <param name="language">Possible values include: 'cSharp'</param>
+        /// <param name="language">Possible values include: 'CSharp'</param>
         public ReferenceSourceLibrary(int? id = default(int?), string name = default(string), string description = default(string), string location = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>))
         {
             Id = id;
@@ -64,7 +64,7 @@ namespace Covenant.API.Models
         public string Location { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'cSharp'
+        /// Gets or sets possible values include: 'CSharp'
         /// </summary>
         [JsonProperty(PropertyName = "language")]
         public ImplantLanguage? Language { get; set; }

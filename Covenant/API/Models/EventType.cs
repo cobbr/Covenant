@@ -17,11 +17,11 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum EventType
     {
-        [EnumMember(Value = "normal")]
+        [EnumMember(Value = "Normal")]
         Normal,
-        [EnumMember(Value = "download")]
+        [EnumMember(Value = "Download")]
         Download,
-        [EnumMember(Value = "screenshot")]
+        [EnumMember(Value = "Screenshot")]
         Screenshot
     }
     internal static class EventTypeEnumExtension
@@ -36,11 +36,11 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case EventType.Normal:
-                    return "normal";
+                    return "Normal";
                 case EventType.Download:
-                    return "download";
+                    return "Download";
                 case EventType.Screenshot:
-                    return "screenshot";
+                    return "Screenshot";
             }
             return null;
         }
@@ -49,11 +49,11 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "normal":
+                case "Normal":
                     return EventType.Normal;
-                case "download":
+                case "Download":
                     return EventType.Download;
-                case "screenshot":
+                case "Screenshot":
                     return EventType.Screenshot;
             }
             return null;

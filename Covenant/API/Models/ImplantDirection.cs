@@ -17,9 +17,9 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ImplantDirection
     {
-        [EnumMember(Value = "push")]
+        [EnumMember(Value = "Push")]
         Push,
-        [EnumMember(Value = "pull")]
+        [EnumMember(Value = "Pull")]
         Pull
     }
     internal static class ImplantDirectionEnumExtension
@@ -34,9 +34,9 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case ImplantDirection.Push:
-                    return "push";
+                    return "Push";
                 case ImplantDirection.Pull:
-                    return "pull";
+                    return "Pull";
             }
             return null;
         }
@@ -45,9 +45,9 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "push":
+                case "Push":
                     return ImplantDirection.Push;
-                case "pull":
+                case "Pull":
                     return ImplantDirection.Pull;
             }
             return null;

@@ -184,6 +184,11 @@ namespace Covenant
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
 
+            services.AddControllers().AddJsonOptions(opts =>
+            {
+                opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
+
             services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
             services.AddSingleton<INotificationService, NotificationService>();
             services.AddSingleton<CovenantAPIService, CovenantAPIService>();

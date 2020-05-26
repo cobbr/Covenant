@@ -17,12 +17,12 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum HashType
     {
-        [EnumMember(Value = "ntlm")]
-        Ntlm,
-        [EnumMember(Value = "lm")]
-        Lm,
-        [EnumMember(Value = "shA1")]
-        ShA1
+        [EnumMember(Value = "NTLM")]
+        NTLM,
+        [EnumMember(Value = "LM")]
+        LM,
+        [EnumMember(Value = "SHA1")]
+        SHA1
     }
     internal static class HashTypeEnumExtension
     {
@@ -35,12 +35,12 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case HashType.Ntlm:
-                    return "ntlm";
-                case HashType.Lm:
-                    return "lm";
-                case HashType.ShA1:
-                    return "shA1";
+                case HashType.NTLM:
+                    return "NTLM";
+                case HashType.LM:
+                    return "LM";
+                case HashType.SHA1:
+                    return "SHA1";
             }
             return null;
         }
@@ -49,12 +49,12 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "ntlm":
-                    return HashType.Ntlm;
-                case "lm":
-                    return HashType.Lm;
-                case "shA1":
-                    return HashType.ShA1;
+                case "NTLM":
+                    return HashType.NTLM;
+                case "LM":
+                    return HashType.LM;
+                case "SHA1":
+                    return HashType.SHA1;
             }
             return null;
         }

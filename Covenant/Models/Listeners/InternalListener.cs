@@ -71,6 +71,22 @@ namespace Covenant.Models.Listeners
             _ = Configure(profile, ListenerGuid, CovenantToken);
         }
 
+        public class AlwaysRetryPolicy : IRetryPolicy
+        {
+            public TimeSpan? NextRetryDelay(RetryContext context)
+            {
+                if (context.PreviousRetryCount == 0)
+                {
+                    return TimeSpan.Zero;
+                }
+                if (context.PreviousRetryCount < 5)
+                {
+                    return TimeSpan.FromSeconds(5);
+                }
+                return TimeSpan.FromSeconds(10);
+            }
+        }
+
         public async Task Configure(APIModels.Profile profile, string ListenerGuid, string CovenantToken)
         {
             _transform = new ProfileTransformAssembly
@@ -109,16 +125,12 @@ namespace Covenant.Models.Listeners
                         return HttpClientHandler;
                     };
                 })
+                .WithAutomaticReconnect(new AlwaysRetryPolicy())
                 .Build();
-            _connection.Closed += async (error) =>
-            {
-                await Task.Delay(new Random().Next(0, 5) * 1000);
-                await _connection.StartAsync();
-            };
             _connection.HandshakeTimeout = TimeSpan.FromSeconds(20);
             try
             {
-                await Task.Delay(10000);
+                await Task.Delay(5000);
                 await _connection.StartAsync();
                 await _connection.InvokeAsync("JoinGroup", ListenerGuid);
                 _connection.On<string>("NotifyListener", (guid) =>
@@ -255,6 +267,7 @@ namespace Covenant.Models.Listeners
                     if (this.CacheTaskHashCodes.Add(GetCacheEntryHashCode(cacheEntry)))
                     {
                         cacheQueue.Enqueue(cacheEntry);
+                        Console.WriteLine("Enqueue: " + guid + " Length: " + cacheQueue.Count);
                         this.OnNewMessage(this, new NewMessageArgs(guid));
                     }
                 }
@@ -267,6 +280,7 @@ namespace Covenant.Models.Listeners
                     if (this.CacheTaskHashCodes.Add(GetCacheEntryHashCode(cacheEntry)))
                     {
                         cacheQueue.Enqueue(cacheEntry);
+                        Console.WriteLine("Enqueue: " + guid + " Length: " + cacheQueue.Count);
                     }
                 }
                 this.GruntMessageCache[guid] = cacheQueue;
@@ -323,6 +337,7 @@ namespace Covenant.Models.Listeners
             {
                 if (cache.TryDequeue(out GruntMessageCacheInfo cacheEntry))
                 {
+                    Console.WriteLine("Dequeue: " + guid + " Length: " + cache.Count);
                     switch (cacheEntry.Status)
                     {
                         case GruntMessageCacheStatus.NotFound:
@@ -437,7 +452,7 @@ namespace Covenant.Models.Listeners
 						if (targetGrunt != null)
 						{
 							var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
-							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.Smb)
+							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.SMB)
 							{
 								// Get connecting Grunt as egress
 								List<APIModels.GruntTasking> taskings = (await _client.GetAllGruntTaskingsAsync()).ToList();
@@ -461,14 +476,16 @@ namespace Covenant.Models.Listeners
                         return guid;
                     }
                 }
+                /*
 				if (targetGrunt != null)
 				{
 					var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
-					if (it.CommType == APIModels.CommunicationType.Smb)
+					if (it.CommType == APIModels.CommunicationType.SMB)
 					{
 						egressGrunt = await _client.GetOutboundGruntAsync(targetGrunt.Id ?? default);
 					}
 				}
+                */
 				switch (targetGrunt.Status)
 				{
 					case APIModels.GruntStatus.Uninitialized:

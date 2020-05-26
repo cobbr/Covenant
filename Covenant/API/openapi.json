@@ -5140,9 +5140,9 @@
     },
     "CredentialType": {
       "enum": [
-        "password",
-        "hash",
-        "ticket"
+        "Password",
+        "Hash",
+        "Ticket"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5191,9 +5191,9 @@
     },
     "HashType": {
       "enum": [
-        "ntlm",
-        "lm",
-        "shA1"
+        "NTLM",
+        "LM",
+        "SHA1"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5227,8 +5227,8 @@
     },
     "TicketType": {
       "enum": [
-        "rC4",
-        "aes"
+        "RC4",
+        "AES"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5280,11 +5280,11 @@
     },
     "EventLevel": {
       "enum": [
-        "silent",
-        "info",
-        "warning",
-        "highlight",
-        "error"
+        "Silent",
+        "Info",
+        "Warning",
+        "Highlight",
+        "Error"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5294,9 +5294,9 @@
     },
     "EventType": {
       "enum": [
-        "normal",
-        "download",
-        "screenshot"
+        "Normal",
+        "Download",
+        "Screenshot"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5334,8 +5334,8 @@
     },
     "DownloadProgress": {
       "enum": [
-        "portion",
-        "complete"
+        "Portion",
+        "Complete"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5382,7 +5382,7 @@
     },
     "ImplantLanguage": {
       "enum": [
-        "cSharp"
+        "CSharp"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5392,9 +5392,9 @@
     },
     "CommunicationType": {
       "enum": [
-        "http",
-        "smb",
-        "bridge"
+        "HTTP",
+        "SMB",
+        "Bridge"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5404,8 +5404,8 @@
     },
     "ImplantDirection": {
       "enum": [
-        "push",
-        "pull"
+        "Push",
+        "Pull"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5430,10 +5430,10 @@
     },
     "DotNetVersion": {
       "enum": [
-        "net35",
-        "net40",
-        "netCore21",
-        "netCore30"
+        "Net35",
+        "Net40",
+        "NetCore21",
+        "NetCore30"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5486,8 +5486,8 @@
     },
     "ProfileType": {
       "enum": [
-        "http",
-        "bridge"
+        "HTTP",
+        "Bridge"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5518,9 +5518,9 @@
     },
     "ListenerStatus": {
       "enum": [
-        "uninitialized",
-        "active",
-        "stopped"
+        "Uninitialized",
+        "Active",
+        "Stopped"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5627,6 +5627,7 @@
         "linux_x64",
         "linux_musl_x64",
         "linux_arm",
+        "linux_arm64",
         "rhel_x64",
         "rhel_6_x64",
         "tizen",
@@ -5637,7 +5638,8 @@
         "osx_10_11_x64",
         "osx_10_12_x64",
         "osx_10_13_x64",
-        "osx_10_14_x64"
+        "osx_10_14_x64",
+        "osx_10_15_x64"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5647,15 +5649,15 @@
     },
     "GruntStatus": {
       "enum": [
-        "uninitialized",
-        "stage0",
-        "stage1",
-        "stage2",
-        "active",
-        "lost",
-        "exited",
-        "disconnected",
-        "hidden"
+        "Uninitialized",
+        "Stage0",
+        "Stage1",
+        "Stage2",
+        "Active",
+        "Lost",
+        "Exited",
+        "Disconnected",
+        "Hidden"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5665,11 +5667,11 @@
     },
     "IntegrityLevel": {
       "enum": [
-        "untrusted",
-        "low",
-        "medium",
-        "high",
-        "system"
+        "Untrusted",
+        "Low",
+        "Medium",
+        "High",
+        "System"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5703,16 +5705,16 @@
     },
     "GruntTaskingType": {
       "enum": [
-        "assembly",
-        "setDelay",
-        "setJitter",
-        "setConnectAttempts",
-        "setKillDate",
-        "exit",
-        "connect",
-        "disconnect",
-        "tasks",
-        "taskKill"
+        "Assembly",
+        "SetDelay",
+        "SetJitter",
+        "SetConnectAttempts",
+        "SetKillDate",
+        "Exit",
+        "Connect",
+        "Disconnect",
+        "Tasks",
+        "TaskKill"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -5906,11 +5908,11 @@
     },
     "GruntTaskingStatus": {
       "enum": [
-        "uninitialized",
-        "tasked",
-        "progressed",
-        "completed",
-        "aborted"
+        "Uninitialized",
+        "Tasked",
+        "Progressed",
+        "Completed",
+        "Aborted"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6168,9 +6170,9 @@
     },
     "IndicatorType": {
       "enum": [
-        "fileIndicator",
-        "networkIndicator",
-        "targetIndicator"
+        "FileIndicator",
+        "NetworkIndicator",
+        "TargetIndicator"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6265,15 +6267,15 @@
     },
     "LauncherType": {
       "enum": [
-        "wmic",
-        "regsvr32",
-        "mshta",
-        "cscript",
-        "wscript",
-        "powerShell",
-        "binary",
-        "msBuild",
-        "installUtil"
+        "Wmic",
+        "Regsvr32",
+        "Mshta",
+        "Cscript",
+        "Wscript",
+        "PowerShell",
+        "Binary",
+        "MSBuild",
+        "InstallUtil"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6283,12 +6285,12 @@
     },
     "OutputKind": {
       "enum": [
-        "consoleApplication",
-        "windowsApplication",
-        "dynamicallyLinkedLibrary",
-        "netModule",
-        "windowsRuntimeMetadata",
-        "windowsRuntimeApplication"
+        "ConsoleApplication",
+        "WindowsApplication",
+        "DynamicallyLinkedLibrary",
+        "NetModule",
+        "WindowsRuntimeMetadata",
+        "WindowsRuntimeApplication"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6683,8 +6685,8 @@
     },
     "ScriptingLanguage": {
       "enum": [
-        "jScript",
-        "vbScript"
+        "JScript",
+        "VBScript"
       ],
       "type": "string",
       "x-ms-enum": {

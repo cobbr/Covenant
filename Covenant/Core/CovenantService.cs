@@ -3074,7 +3074,17 @@ public static class Task
 
         private async Task<Grunt> GetParentGrunt(Grunt child)
         {
-            var parent = child.ImplantTemplate.CommType != CommunicationType.SMB ? child : await _context.Grunts.Include(G => G.ImplantTemplate).FirstOrDefaultAsync(G => G.Children.Contains(child.GUID));
+            // var parent = child.ImplantTemplate.CommType != CommunicationType.SMB ? child : await _context.Grunts.Include(G => G.ImplantTemplate).FirstOrDefaultAsync(G => G.Children.Contains(child.GUID));
+            Grunt parent;
+            if (child.ImplantTemplate.CommType != CommunicationType.SMB)
+            {
+                parent = child;
+            }
+            else
+            {
+                List<Grunt> grunts = await _context.Grunts.Include(G => G.ImplantTemplate).ToListAsync();
+                parent = grunts.FirstOrDefault(G => G.Children.Contains(child.GUID));
+            }
             if (parent != null && parent.ImplantTemplate.CommType == CommunicationType.SMB)
             {
                 return await GetParentGrunt(parent);

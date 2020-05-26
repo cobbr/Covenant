@@ -49,6 +49,8 @@ namespace Covenant.API.Models
         LinuxMuslX64,
         [EnumMember(Value = "linux_arm")]
         LinuxArm,
+        [EnumMember(Value = "linux_arm64")]
+        LinuxArm64,
         [EnumMember(Value = "rhel_x64")]
         RhelX64,
         [EnumMember(Value = "rhel_6_x64")]
@@ -70,7 +72,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "osx_10_13_x64")]
         Osx1013X64,
         [EnumMember(Value = "osx_10_14_x64")]
-        Osx1014X64
+        Osx1014X64,
+        [EnumMember(Value = "osx_10_15_x64")]
+        Osx1015X64
     }
     internal static class RuntimeIdentifierEnumExtension
     {
@@ -115,6 +119,8 @@ namespace Covenant.API.Models
                     return "linux_musl_x64";
                 case RuntimeIdentifier.LinuxArm:
                     return "linux_arm";
+                case RuntimeIdentifier.LinuxArm64:
+                    return "linux_arm64";
                 case RuntimeIdentifier.RhelX64:
                     return "rhel_x64";
                 case RuntimeIdentifier.Rhel6X64:
@@ -137,6 +143,8 @@ namespace Covenant.API.Models
                     return "osx_10_13_x64";
                 case RuntimeIdentifier.Osx1014X64:
                     return "osx_10_14_x64";
+                case RuntimeIdentifier.Osx1015X64:
+                    return "osx_10_15_x64";
             }
             return null;
         }
@@ -177,6 +185,8 @@ namespace Covenant.API.Models
                     return RuntimeIdentifier.LinuxMuslX64;
                 case "linux_arm":
                     return RuntimeIdentifier.LinuxArm;
+                case "linux_arm64":
+                    return RuntimeIdentifier.LinuxArm64;
                 case "rhel_x64":
                     return RuntimeIdentifier.RhelX64;
                 case "rhel_6_x64":
@@ -199,6 +209,8 @@ namespace Covenant.API.Models
                     return RuntimeIdentifier.Osx1013X64;
                 case "osx_10_14_x64":
                     return RuntimeIdentifier.Osx1014X64;
+                case "osx_10_15_x64":
+                    return RuntimeIdentifier.Osx1015X64;
             }
             return null;
         }

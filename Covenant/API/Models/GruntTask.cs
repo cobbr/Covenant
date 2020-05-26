@@ -25,10 +25,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTask class.
         /// </summary>
-        /// <param name="language">Possible values include: 'cSharp'</param>
-        /// <param name="taskingType">Possible values include: 'assembly',
-        /// 'setDelay', 'setJitter', 'setConnectAttempts', 'setKillDate',
-        /// 'exit', 'connect', 'disconnect', 'tasks', 'taskKill'</param>
+        /// <param name="language">Possible values include: 'CSharp'</param>
+        /// <param name="taskingType">Possible values include: 'Assembly',
+        /// 'SetDelay', 'SetJitter', 'SetConnectAttempts', 'SetKillDate',
+        /// 'Exit', 'Connect', 'Disconnect', 'Tasks', 'TaskKill'</param>
         public GruntTask(string name, int? id = default(int?), int? authorId = default(int?), GruntTaskAuthor author = default(GruntTaskAuthor), IList<string> aliases = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), string code = default(string), bool? compiled = default(bool?), GruntTaskingType? taskingType = default(GruntTaskingType?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
@@ -93,7 +93,7 @@ namespace Covenant.API.Models
         public string Help { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'cSharp'
+        /// Gets or sets possible values include: 'CSharp'
         /// </summary>
         [JsonProperty(PropertyName = "language")]
         public ImplantLanguage? Language { get; set; }
@@ -114,9 +114,9 @@ namespace Covenant.API.Models
         public bool? Compiled { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'assembly', 'setDelay',
-        /// 'setJitter', 'setConnectAttempts', 'setKillDate', 'exit',
-        /// 'connect', 'disconnect', 'tasks', 'taskKill'
+        /// Gets or sets possible values include: 'Assembly', 'SetDelay',
+        /// 'SetJitter', 'SetConnectAttempts', 'SetKillDate', 'Exit',
+        /// 'Connect', 'Disconnect', 'Tasks', 'TaskKill'
         /// </summary>
         [JsonProperty(PropertyName = "taskingType")]
         public GruntTaskingType? TaskingType { get; set; }

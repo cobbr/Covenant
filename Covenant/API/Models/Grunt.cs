@@ -25,20 +25,21 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the Grunt class.
         /// </summary>
-        /// <param name="dotNetVersion">Possible values include: 'net35',
-        /// 'net40', 'netCore21', 'netCore30'</param>
+        /// <param name="dotNetVersion">Possible values include: 'Net35',
+        /// 'Net40', 'NetCore21', 'NetCore30'</param>
         /// <param name="runtimeIdentifier">Possible values include: 'win_x64',
         /// 'win_x86', 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86',
         /// 'win81_x64', 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86',
         /// 'win10_arm', 'win10_arm64', 'linux_x64', 'linux_musl_x64',
-        /// 'linux_arm', 'rhel_x64', 'rhel_6_x64', 'tizen', 'tizen_4_0_0',
-        /// 'tizen_5_0_0', 'osx_x64', 'osx_10_10_x64', 'osx_10_11_x64',
-        /// 'osx_10_12_x64', 'osx_10_13_x64', 'osx_10_14_x64'</param>
-        /// <param name="status">Possible values include: 'uninitialized',
-        /// 'stage0', 'stage1', 'stage2', 'active', 'lost', 'exited',
-        /// 'disconnected', 'hidden'</param>
-        /// <param name="integrity">Possible values include: 'untrusted',
-        /// 'low', 'medium', 'high', 'system'</param>
+        /// 'linux_arm', 'linux_arm64', 'rhel_x64', 'rhel_6_x64', 'tizen',
+        /// 'tizen_4_0_0', 'tizen_5_0_0', 'osx_x64', 'osx_10_10_x64',
+        /// 'osx_10_11_x64', 'osx_10_12_x64', 'osx_10_13_x64', 'osx_10_14_x64',
+        /// 'osx_10_15_x64'</param>
+        /// <param name="status">Possible values include: 'Uninitialized',
+        /// 'Stage0', 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited',
+        /// 'Disconnected', 'Hidden'</param>
+        /// <param name="integrity">Possible values include: 'Untrusted',
+        /// 'Low', 'Medium', 'High', 'System'</param>
         public Grunt(string name, string originalServerGuid, int implantTemplateId, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetVersion, RuntimeIdentifier runtimeIdentifier, GruntStatus status, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), ImplantTemplate implantTemplate = default(ImplantTemplate), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>))
         {
             Id = id;
@@ -170,8 +171,8 @@ namespace Covenant.API.Models
         public System.DateTime KillDate { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'net35', 'net40',
-        /// 'netCore21', 'netCore30'
+        /// Gets or sets possible values include: 'Net35', 'Net40',
+        /// 'NetCore21', 'NetCore30'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion DotNetVersion { get; set; }
@@ -181,24 +182,24 @@ namespace Covenant.API.Models
         /// 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86', 'win81_x64',
         /// 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86', 'win10_arm',
         /// 'win10_arm64', 'linux_x64', 'linux_musl_x64', 'linux_arm',
-        /// 'rhel_x64', 'rhel_6_x64', 'tizen', 'tizen_4_0_0', 'tizen_5_0_0',
-        /// 'osx_x64', 'osx_10_10_x64', 'osx_10_11_x64', 'osx_10_12_x64',
-        /// 'osx_10_13_x64', 'osx_10_14_x64'
+        /// 'linux_arm64', 'rhel_x64', 'rhel_6_x64', 'tizen', 'tizen_4_0_0',
+        /// 'tizen_5_0_0', 'osx_x64', 'osx_10_10_x64', 'osx_10_11_x64',
+        /// 'osx_10_12_x64', 'osx_10_13_x64', 'osx_10_14_x64', 'osx_10_15_x64'
         /// </summary>
         [JsonProperty(PropertyName = "runtimeIdentifier")]
         public RuntimeIdentifier RuntimeIdentifier { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'uninitialized', 'stage0',
-        /// 'stage1', 'stage2', 'active', 'lost', 'exited', 'disconnected',
-        /// 'hidden'
+        /// Gets or sets possible values include: 'Uninitialized', 'Stage0',
+        /// 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited', 'Disconnected',
+        /// 'Hidden'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public GruntStatus Status { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'untrusted', 'low', 'medium',
-        /// 'high', 'system'
+        /// Gets or sets possible values include: 'Untrusted', 'Low', 'Medium',
+        /// 'High', 'System'
         /// </summary>
         [JsonProperty(PropertyName = "integrity")]
         public IntegrityLevel Integrity { get; set; }

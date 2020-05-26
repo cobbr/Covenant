@@ -359,7 +359,7 @@ namespace GruntExecutor
                 if (relay != null)
                 {
                     // TODO: why does this need to be PostResponse?
-                    relay.Write(this.Profile.FormatWriteFormat(wrappedMessage));
+                    relay.Write(this.Profile.FormatReadFormat(wrappedMessage));
                 }
                 return null;
             }

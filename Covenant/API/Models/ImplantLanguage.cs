@@ -17,7 +17,7 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ImplantLanguage
     {
-        [EnumMember(Value = "cSharp")]
+        [EnumMember(Value = "CSharp")]
         CSharp
     }
     internal static class ImplantLanguageEnumExtension
@@ -32,7 +32,7 @@ namespace Covenant.API.Models
             switch( value )
             {
                 case ImplantLanguage.CSharp:
-                    return "cSharp";
+                    return "CSharp";
             }
             return null;
         }
@@ -41,7 +41,7 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "cSharp":
+                case "CSharp":
                     return ImplantLanguage.CSharp;
             }
             return null;

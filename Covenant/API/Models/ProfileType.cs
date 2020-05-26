@@ -17,9 +17,9 @@ namespace Covenant.API.Models
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ProfileType
     {
-        [EnumMember(Value = "http")]
-        Http,
-        [EnumMember(Value = "bridge")]
+        [EnumMember(Value = "HTTP")]
+        HTTP,
+        [EnumMember(Value = "Bridge")]
         Bridge
     }
     internal static class ProfileTypeEnumExtension
@@ -33,10 +33,10 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case ProfileType.Http:
-                    return "http";
+                case ProfileType.HTTP:
+                    return "HTTP";
                 case ProfileType.Bridge:
-                    return "bridge";
+                    return "Bridge";
             }
             return null;
         }
@@ -45,9 +45,9 @@ namespace Covenant.API.Models
         {
             switch( value )
             {
-                case "http":
-                    return ProfileType.Http;
-                case "bridge":
+                case "HTTP":
+                    return ProfileType.HTTP;
+                case "Bridge":
                     return ProfileType.Bridge;
             }
             return null;

@@ -24,11 +24,11 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ImplantTemplate class.
         /// </summary>
-        /// <param name="language">Possible values include: 'cSharp'</param>
-        /// <param name="commType">Possible values include: 'http', 'smb',
-        /// 'bridge'</param>
-        /// <param name="implantDirection">Possible values include: 'push',
-        /// 'pull'</param>
+        /// <param name="language">Possible values include: 'CSharp'</param>
+        /// <param name="commType">Possible values include: 'HTTP', 'SMB',
+        /// 'Bridge'</param>
+        /// <param name="implantDirection">Possible values include: 'Push',
+        /// 'Pull'</param>
         public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), ImplantDirection? implantDirection = default(ImplantDirection?), IList<ListenerType> compatibleListenerTypes = default(IList<ListenerType>), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), string stagerCode = default(string), string executorCode = default(string))
         {
             Id = id;
@@ -65,19 +65,19 @@ namespace Covenant.API.Models
         public string Description { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'cSharp'
+        /// Gets or sets possible values include: 'CSharp'
         /// </summary>
         [JsonProperty(PropertyName = "language")]
         public ImplantLanguage? Language { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'http', 'smb', 'bridge'
+        /// Gets or sets possible values include: 'HTTP', 'SMB', 'Bridge'
         /// </summary>
         [JsonProperty(PropertyName = "commType")]
         public CommunicationType? CommType { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'push', 'pull'
+        /// Gets or sets possible values include: 'Push', 'Pull'
         /// </summary>
         [JsonProperty(PropertyName = "implantDirection")]
         public ImplantDirection? ImplantDirection { get; set; }
