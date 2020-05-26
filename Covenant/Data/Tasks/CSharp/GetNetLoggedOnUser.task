@@ -7,18 +7,20 @@ using SharpSploit.Enumeration;
 
 public static class Task
 {
-    public static string Execute(string ComputerNames = "")
+    public static string Execute(string ComputerNames = "localhost")
     {
         try
         {
-            List<string> computerList = ComputerNames.Split(',').ToList();
-            List<Net.LoggedOnUser> loggedOnUsers = Net.GetNetLoggedOnUsers(computerList);
+            List<string> computerList = ComputerNames.Replace(", ",",").Split(',').ToList();
+            List<IGrouping<string, Net.LoggedOnUser>> groupedLogons = Net.GetNetLoggedOnUsers(computerList).GroupBy(grouping => grouping.ComputerName).ToList();
             
             StringBuilder results = new StringBuilder();
-            foreach (Net.LoggedOnUser loggedOnUser in loggedOnUsers)
+            foreach (IGrouping<string, Net.LoggedOnUser> group in groupedLogons)
             {
-                results.Append(loggedOnUser.ToString());
-                results.AppendLine("------");
+                results.AppendLine("LoggedOnUsers for " + group.Key + ":");
+                results.AppendLine("---------------------------");
+                group.ToList().ForEach(l => results.AppendLine(l.ToString()));
+                results.AppendLine();
             }
             return results.ToString();
         }

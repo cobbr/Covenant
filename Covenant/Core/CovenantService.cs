@@ -2813,7 +2813,7 @@ public static class Task
             tasking.GruntCommand.GruntTaskingId = tasking.Id;
             tasking.GruntCommand.GruntTasking = tasking;
             await this.EditGruntCommand(tasking.GruntCommand);
-            Grunt parent = await this.GetParentGrunt(tasking.Grunt);
+            Grunt parent = (await this.GetParentGrunt(tasking.Grunt)) ?? tasking.Grunt;
             parent.Listener = await this.GetListener(parent.ListenerId);
             await _notifier.NotifyCreateGruntTasking(this, tasking);
             await _notifier.NotifyNotifyListener(this, parent);

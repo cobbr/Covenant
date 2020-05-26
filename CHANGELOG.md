@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Added GetNetShare task
+- Added Keylogger task
+
+### Changed
+- Improved ComputerName parsing and output for Domain tasks
+
+### Fixed
+- Fixed missing http profiles on Ubuntu w/ workaround due to corefx issue
+
+## [v0.4] - 2019-10-30
+### Added
 - Added ShellRunAs and ShellCmdRunAs tasks
 - Added GetCurrentDirectory task
 - Added DCSync task
@@ -172,3 +183,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.3]: https://github.com/cobbr/Covenant/compare/v0.2...v0.3
 [v0.3.1]: https://github.com/cobbr/Covenant/compare/v0.3...v0.3.1
 [v0.3.2]: https://github.com/cobbr/Covenant/compare/v0.3.1...v0.3.2
+[v0.4]: https://github.com/cobbr/Covenant/compare/v0.3.2...v0.4

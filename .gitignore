@@ -1,6 +1,8 @@
 # Sqlite DB
 covenant.db
 covenant.db-journal
+covenant.db-wal
+covenant.db-shm
 
 # Build results
 [Dd]ebug/
