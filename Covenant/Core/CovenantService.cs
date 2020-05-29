@@ -500,7 +500,7 @@ namespace Covenant.Core
                 await _userManager.AddToRoleAsync(user, "Administrator");
             }
 
-            CovenantUser savedUser = await _context.Users.FirstOrDefaultAsync(U => U.UserName == user.UserName);
+            CovenantUser savedUser = await _userManager.Users.FirstOrDefaultAsync(U => U.UserName == user.UserName);
             if (savedUser == null)
             {
                 throw new ControllerNotFoundException($"NotFound - Could not find CovenantUser with username: {user.UserName}");
@@ -1424,7 +1424,7 @@ namespace Covenant.Core
         private byte[] CompileGruntCode(string CodeTemplate, ImplantTemplate template, Grunt grunt, Listener listener, Profile profile, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false, Compiler.RuntimeIdentifier runtimeIdentifier = Compiler.RuntimeIdentifier.win_x64)
         {
             byte[] ILBytes = null;
-            if (grunt.DotNetVersion == Common.DotNetVersion.Net35 || grunt.DotNetVersion == Common.DotNetVersion.Net40 || grunt.DotNetVersion == Common.DotNetVersion.NetCore21)
+            if (grunt.DotNetVersion == Common.DotNetVersion.Net35 || grunt.DotNetVersion == Common.DotNetVersion.Net40)
             {
                 List<Compiler.Reference> references = null;
                 switch (grunt.DotNetVersion)
@@ -1434,12 +1434,6 @@ namespace Covenant.Core
                         break;
                     case Common.DotNetVersion.Net40:
                         references = Common.DefaultNet40References;
-                        break;
-                    case Common.DotNetVersion.NetCore21:
-                        references = Common.DefaultReferencesCore21;
-                        break;
-                    case Common.DotNetVersion.NetCore30:
-                        references = Common.DefaultReferencesCore21;
                         break;
                 }
                 ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
@@ -1451,12 +1445,12 @@ namespace Covenant.Core
                     References = references
                 });
             }
-            else if (grunt.DotNetVersion == Common.DotNetVersion.NetCore30)
+            else if (grunt.DotNetVersion == Common.DotNetVersion.NetCore31)
             {
                 string src = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile);
                 string sanitizedName = Utilities.GetSanitizedFilename(template.Name);
                 string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + sanitizedName + Path.DirectorySeparatorChar;
-                string ResultName = "";
+                string ResultName;
                 if (template.StagerCode == CodeTemplate)
                 {
                     ResultName = sanitizedName + "Stager";
@@ -1478,7 +1472,8 @@ namespace Covenant.Core
                     TargetDotNetVersion = grunt.DotNetVersion,
                     SourceDirectory = dir,
                     OutputKind = outputKind,
-                    RuntimeIdentifier = runtimeIdentifier
+                    RuntimeIdentifier = runtimeIdentifier,
+                    UseSubprocess = true
                 });
             }
             if (ILBytes == null || ILBytes.Length == 0)
@@ -2037,9 +2032,11 @@ namespace Covenant.Core
 
         public async Task<GruntTask> GetGruntTaskByName(string name, Common.DotNetVersion version = Common.DotNetVersion.Net35)
         {
+            string word = name.ToLower();
+
             GruntTask task = _context.GruntTasks
-                .Where(T => T.Name.ToLower() == name.ToLower())
-                // .Where(T => T.SupportedDotNetVersions.Contains(version))
+                .Where(T => T.Name.ToLower() == word)
+                // .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
                 .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
@@ -2062,7 +2059,7 @@ namespace Covenant.Core
                     .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
                     .Include("GruntTaskEmbeddedResources.EmbeddedResource")
                     .AsEnumerable()
-                    .Where(T => T.Aliases.Contains(name.ToLower()))
+                    .Where(T => T.Aliases.Contains(word))
                     .Where(T => T.CompatibleDotNetVersions.Contains(version))
                     .FirstOrDefault();
                 if (task == null)
@@ -2070,7 +2067,7 @@ namespace Covenant.Core
                     throw new ControllerNotFoundException($"NotFound - GruntTask with Name: {name}");
                 }
             }
-            return task;
+            return await Task.FromResult(task);
         }
 
         private async Task<string> GetUsageForGruntTask(int id)
@@ -2853,7 +2850,7 @@ public static class Task
                     grunt.Status = GruntStatus.Exited;
                 }
                 else if ((tasking.Type == GruntTaskingType.SetDelay || tasking.Type == GruntTaskingType.SetJitter ||
-                    tasking.Type == GruntTaskingType.SetConnectAttempts) && tasking.Parameters.Count >= 2 && int.TryParse(tasking.Parameters[1], out int n))
+                    tasking.Type == GruntTaskingType.SetConnectAttempts) && tasking.Parameters.Count >= 1 && int.TryParse(tasking.Parameters[0], out int n))
                 {
                     if (tasking.Type == GruntTaskingType.SetDelay)
                     {
@@ -2870,7 +2867,7 @@ public static class Task
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
                 }
-                else if (tasking.Type == GruntTaskingType.SetKillDate && tasking.Parameters.Count >= 2 && DateTime.TryParse(tasking.Parameters[1], out DateTime date))
+                else if (tasking.Type == GruntTaskingType.SetKillDate && tasking.Parameters.Count >= 1 && DateTime.TryParse(tasking.Parameters[0], out DateTime date))
                 {
                     grunt.KillDate = date;
                     _context.Grunts.Update(grunt);

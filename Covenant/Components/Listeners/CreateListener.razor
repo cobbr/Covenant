@@ -1,4 +1,5 @@
 ﻿@page "/listener/create"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using System.Threading
@@ -94,7 +95,7 @@
         return type;
     }
 
-    private async Task OnSubmitHttpListener(HttpListener listener)
+    private void OnSubmitHttpListener(HttpListener listener)
     {
         try
         {
@@ -109,7 +110,7 @@
         }
     }
 
-    private async Task OnSubmitBridgeListener(BridgeListener listener)
+    private void OnSubmitBridgeListener(BridgeListener listener)
     {
         try
         {

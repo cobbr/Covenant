@@ -28,7 +28,7 @@ namespace Covenant.Models.Grunts
 
         [Required]
         public string Name { get; set; } = "GenericTask";
-        public IList<string> Aliases { get; set; } = new List<string>();
+        public List<string> Aliases { get; set; } = new List<string>();
         public string Description { get; set; } = "A generic GruntTask.";
         public string Help { get; set; }
         public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
@@ -199,7 +199,7 @@ namespace Covenant.Models.Grunts
         {
             if (!this.Compiled)
             {
-                foreach (Common.DotNetVersion version in this.CompatibleDotNetVersions)
+                foreach (Common.DotNetVersion version in template.CompatibleDotNetVersions.Intersect(this.CompatibleDotNetVersions))
                 {
                     if (version == Common.DotNetVersion.Net35)
                     {
@@ -209,9 +209,9 @@ namespace Covenant.Models.Grunts
                     {
                         this.CompileDotNet40();
                     }
-                    else if (version == Common.DotNetVersion.NetCore30)
+                    else if (version == Common.DotNetVersion.NetCore31)
                     {
-                        // this.CompileDotNetCore30(template, runtimeIdentifier);
+                        this.CompileDotNetCore(template, runtimeIdentifier);
                     }
                 }
             }
@@ -348,14 +348,14 @@ namespace Covenant.Models.Grunts
             );
         }
 
-        private void CompileDotNetCore30(ImplantTemplate template, Compiler.RuntimeIdentifier runtimeIdentifier)
+        private void CompileDotNetCore(ImplantTemplate template, Compiler.RuntimeIdentifier runtimeIdentifier)
         {
             string cspprojformat =
 @"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
@@ -386,10 +386,11 @@ namespace Covenant.Models.Grunts
                 {
                     ResultName = "Task",
                     Language = this.Language,
-                    TargetDotNetVersion = Common.DotNetVersion.NetCore30,
+                    TargetDotNetVersion = Common.DotNetVersion.NetCore31,
                     SourceDirectory = dir,
                     OutputKind = OutputKind.DynamicallyLinkedLibrary,
-                    RuntimeIdentifier = runtimeIdentifier
+                    RuntimeIdentifier = runtimeIdentifier,
+                    UseSubprocess = true
                 }))
             );
         }
@@ -398,7 +399,7 @@ namespace Covenant.Models.Grunts
     internal class SerializedGruntTask
     {
         public string Name { get; set; } = "";
-        public IList<string> Aliases { get; set; } = new List<string>();
+        public List<string> Aliases { get; set; } = new List<string>();
         public SerializedGruntTaskAuthor Author { get; set; }
         public string Description { get; set; } = "";
         public string Help { get; set; } = "";

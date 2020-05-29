@@ -1,4 +1,5 @@
 ﻿@page "/listener/edit/{ListenerId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop
@@ -104,9 +105,11 @@ else if (Listener.ListenerType.Name == "Bridge")
                 </button>
             </div>
         </div>
+        @*
         <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
-            @*<HostedFiles/>*@
+            <HostedFileIndex />
         </div>
+        *@
     </div>
 }
 

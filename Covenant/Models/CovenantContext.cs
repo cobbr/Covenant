@@ -5,25 +5,16 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Security.Claims;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.CodeAnalysis;
 
-using Covenant.Hubs;
 using Covenant.Core;
-using Encrypt = Covenant.Core.Encryption;
 using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 using Covenant.Models.Launchers;
@@ -64,7 +55,8 @@ namespace Covenant.Models
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseSqlite("Data Source=" + Common.CovenantDatabaseFile);
+            => optionsBuilder
+                .UseSqlite("Data Source=" + Common.CovenantDatabaseFile);
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -171,70 +163,97 @@ namespace Covenant.Models
                 .HasOne(gtrsl => gtrsl.ReferenceSourceLibrary)
                 .WithMany("GruntTaskReferenceSourceLibraries");
 
+            ValueComparer<List<string>> stringListComparer = new ValueComparer<List<string>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()
+            );
+            ValueComparer<IList<string>> stringIListComparer = new ValueComparer<IList<string>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c
+            );
+            ValueComparer<List<Common.DotNetVersion>> dotnetversionListComparer = new ValueComparer<List<Common.DotNetVersion>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c
+            );
+            ValueComparer<IList<Common.DotNetVersion>> dotnetversionIListComparer = new ValueComparer<IList<Common.DotNetVersion>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c
+            );
+            ValueComparer<List<HttpProfileHeader>> httpProfileHeaderListComparer = new ValueComparer<List<HttpProfileHeader>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c
+            );
+
             builder.Entity<Listener>().Property(L => L.ConnectAddresses).HasConversion(
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
             builder.Entity<HttpListener>().Property(L => L.Urls).HasConversion(
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
 
             builder.Entity<ImplantTemplate>().Property(IT => IT.CompatibleDotNetVersions).HasConversion(
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<Common.DotNetVersion>() : JsonConvert.DeserializeObject<List<Common.DotNetVersion>>(v)
-            );
+            ).Metadata.SetValueComparer(dotnetversionListComparer);
 
             builder.Entity<Grunt>().Property(G => G.Children).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
 
             builder.Entity<GruntTask>().Property(GT => GT.Aliases).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
+
             builder.Entity<GruntTask>().Property(GT => GT.CompatibleDotNetVersions).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<Common.DotNetVersion>() : JsonConvert.DeserializeObject<List<Common.DotNetVersion>>(v)
-            );
+            ).Metadata.SetValueComparer(dotnetversionIListComparer);
 
             builder.Entity<GruntTaskOption>().Property(GTO => GTO.SuggestedValues).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
 
             builder.Entity<GruntTasking>().Property(GT => GT.Parameters).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
 
             builder.Entity<ReferenceSourceLibrary>().Property(RSL => RSL.CompatibleDotNetVersions).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<Common.DotNetVersion>() : JsonConvert.DeserializeObject<List<Common.DotNetVersion>>(v)
-            );
+            ).Metadata.SetValueComparer(dotnetversionListComparer);
 
             builder.Entity<HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringListComparer);
             builder.Entity<HttpProfile>().Property(HP => HP.HttpRequestHeaders).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<HttpProfileHeader>() : JsonConvert.DeserializeObject<List<HttpProfileHeader>>(v)
-            );
+            ).Metadata.SetValueComparer(httpProfileHeaderListComparer);
             builder.Entity<HttpProfile>().Property(HP => HP.HttpResponseHeaders).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<HttpProfileHeader>() : JsonConvert.DeserializeObject<List<HttpProfileHeader>>(v)
-            );
+            ).Metadata.SetValueComparer(httpProfileHeaderListComparer);
             base.OnModelCreating(builder);
         }
     }

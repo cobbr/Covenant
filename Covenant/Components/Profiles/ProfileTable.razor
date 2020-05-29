@@ -1,8 +1,12 @@
 ﻿@using System.Collections.Generic
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core 
 @using Covenant.Models.Listeners
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <CovenantTable TItem="Profile" Items="Profiles.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -20,9 +24,16 @@
     <TableRow Context="profile">
         <tr>
             <td>
-                <a href="/profile/edit/@profile.Id">
+                @if (IsAdmin())
+                {
+                    <a href="/profile/edit/@profile.Id">
+                        @profile.Name
+                    </a>
+                }
+                else
+                {
                     @profile.Name
-                </a>
+                }
             </td>
             <td>@profile.Description</td>
             <td>@profile.Type</td>
@@ -49,6 +60,14 @@
     private string ToString(List<string> list)
     {
         return string.Join(",", list);
+    }
+
+    private bool IsAdmin()
+    {
+        return AuthenticationStateProvider
+            .GetAuthenticationStateAsync()
+            .WaitResult().User
+            .IsInRole("Administrator");
     }
 
     private bool IsRowDisplayed(Profile profile, string SearchTerm)

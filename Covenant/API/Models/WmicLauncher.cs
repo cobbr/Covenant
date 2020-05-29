@@ -28,7 +28,7 @@ namespace Covenant.API.Models
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil'</param>
         /// <param name="dotNetVersion">Possible values include: 'Net35',
-        /// 'Net40', 'NetCore21', 'NetCore30'</param>
+        /// 'Net40', 'NetCore31'</param>
         /// <param name="runtimeIdentifier">Possible values include: 'win_x64',
         /// 'win_x86', 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86',
         /// 'win81_x64', 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86',
@@ -123,8 +123,7 @@ namespace Covenant.API.Models
         public LauncherType? Type { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Net35', 'Net40',
-        /// 'NetCore21', 'NetCore30'
+        /// Gets or sets possible values include: 'Net35', 'Net40', 'NetCore31'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion? DotNetVersion { get; set; }

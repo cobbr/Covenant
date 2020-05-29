@@ -2,21 +2,14 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
 
 using Covenant.Core;
-using Covenant.Hubs;
-using Covenant.Models;
 using Covenant.Models.Grunts;
-using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {

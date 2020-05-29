@@ -2,8 +2,6 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -11,14 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Grunts;
 
 namespace Covenant.Controllers.ApiControllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/referenceassemblies")]
+    [ApiController, Route("api/referenceassemblies"), Authorize(Policy = "RequireJwtBearer")]
     public class ReferenceAssemblyApiController : Controller
     {
         private readonly ICovenantService _service;

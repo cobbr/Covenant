@@ -35,6 +35,7 @@ namespace Covenant.Core
             public bool Optimize { get; set; } = true;
             public bool Confuse { get; set; } = false;
             public bool UnsafeCompile { get; set; } = false;
+            public bool UseSubprocess { get; set; } = false;
 
             public string AssemblyName { get; set; } = null;
             public List<Reference> References { get; set; } = new List<Reference>();
@@ -117,17 +118,17 @@ namespace Covenant.Core
 
         private static byte[] CompileCSharp(CsharpCompilationRequest request)
         {
-            if (request.TargetDotNetVersion == Common.DotNetVersion.NetCore30)
+            if (request.TargetDotNetVersion == Common.DotNetVersion.NetCore31 && request.UseSubprocess)
             {
-                return CompileCSharpCore((CsharpCoreCompilationRequest)request);
+                return CompileCSharpCoreSubProcess((CsharpCoreCompilationRequest)request);
             }
             else
             {
-                return CompileCSharpFramework((CsharpFrameworkCompilationRequest)request);
+                return CompileCSharpRoslyn((CsharpFrameworkCompilationRequest)request);
             }
         }
 
-        private static byte[] CompileCSharpCore(CsharpCoreCompilationRequest request)
+        private static byte[] CompileCSharpCoreSubProcess(CsharpCoreCompilationRequest request)
         {
             System.Diagnostics.Process p = new System.Diagnostics.Process();
             p.StartInfo.WorkingDirectory = request.SourceDirectory;
@@ -139,7 +140,7 @@ namespace Covenant.Core
             p.WaitForExit();
             try
             {
-                string dir = Path.Combine(request.SourceDirectory, "bin", "release", "netcoreapp3.0", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
+                string dir = Path.Combine(request.SourceDirectory, "bin", "release", "netcoreapp3.1", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
                 IEnumerable<string> files = Directory.EnumerateFiles(dir);
                 string file = files
                     .Select(F => new FileInfo(F))
@@ -155,11 +156,14 @@ namespace Covenant.Core
                 }
                 return bytes;
             }
-            catch (Exception e) { Console.Error.WriteLine("Exception: " + e.Message + Environment.NewLine + e.StackTrace); }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Exception: " + e.Message + Environment.NewLine + e.StackTrace);
+            }
             return null;
         }
 
-        private static byte[] CompileCSharpFramework(CsharpFrameworkCompilationRequest request)
+        private static byte[] CompileCSharpRoslyn(CsharpFrameworkCompilationRequest request)
         {
             // Gather SyntaxTrees for compilation
             List<SourceSyntaxTree> sourceSyntaxTrees = new List<SourceSyntaxTree>();
@@ -224,17 +228,7 @@ namespace Covenant.Core
                     compilationTrees,
                     request.References.Where(R => R.Framework == request.TargetDotNetVersion).Where(R => R.Enabled).Select(R =>
                     {
-                        switch (request.TargetDotNetVersion)
-                        {
-                            case Common.DotNetVersion.Net35:
-                                return MetadataReference.CreateFromFile(R.File);
-                            case Common.DotNetVersion.Net40:
-                                return MetadataReference.CreateFromFile(R.File);
-                            case Common.DotNetVersion.NetCore21:
-                                return MetadataReference.CreateFromFile(R.File);
-                            default:
-                                return null;
-                        }
+                        return MetadataReference.CreateFromFile(R.File);
                     }).ToList(),
                     options
                 );

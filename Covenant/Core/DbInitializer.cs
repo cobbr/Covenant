@@ -69,11 +69,11 @@ namespace Covenant.Core
                     new ImplantTemplate
                     {
                         Name = "Brute",
-                        Description = "A cross-platform implant built on .NET Core 3.0.",
+                        Description = "A cross-platform implant built on .NET Core 3.1.",
                         Language = ImplantLanguage.CSharp,
                         CommType = CommunicationType.HTTP,
                         ImplantDirection = ImplantDirection.Pull,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore30 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore31 }
                     }
                 };
                 templates.ToList().ForEach(t => t.ReadFromDisk());

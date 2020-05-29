@@ -13,7 +13,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
@@ -286,21 +286,32 @@ namespace Covenant.Models.Listeners
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            ValueComparer<IList<string>> stringIListComparer = new ValueComparer<IList<string>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c
+            );
+            ValueComparer<IList<APIModels.HttpProfileHeader>> httpProfileHeaderIListComparer = new ValueComparer<IList<APIModels.HttpProfileHeader>>(
+                (c1, c2) => c1.SequenceEqual(c1),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c
+            );
+
             builder.Entity<APIModels.HttpProfile>().Property(HP => HP.HttpUrls).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(v)
-            );
+            ).Metadata.SetValueComparer(stringIListComparer);
             builder.Entity<APIModels.HttpProfile>().Property(HP => HP.HttpRequestHeaders).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<APIModels.HttpProfileHeader>() : JsonConvert.DeserializeObject<List<APIModels.HttpProfileHeader>>(v)
-            );
+            ).Metadata.SetValueComparer(httpProfileHeaderIListComparer);
             builder.Entity<APIModels.HttpProfile>().Property(HP => HP.HttpResponseHeaders).HasConversion
             (
                 v => JsonConvert.SerializeObject(v),
                 v => v == null ? new List<APIModels.HttpProfileHeader>() : JsonConvert.DeserializeObject<List<APIModels.HttpProfileHeader>>(v)
-            );
+            ).Metadata.SetValueComparer(httpProfileHeaderIListComparer);
             base.OnModelCreating(builder);
         }
 

@@ -38,24 +38,22 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="grunt">
-        @if (grunt.Status != GruntStatus.Uninitialized && grunt.Status != GruntStatus.Hidden)
-        {
-            <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
-                <td @attributes="InputAttributes">
-                    <a href="/grunt/interact/@grunt.Id">
-                        @grunt.Name
-                    </a>
-                </td>
-                <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
-                <td @attributes="InputAttributes">@grunt.Hostname</td>
-                <td @attributes="InputAttributes">@grunt.UserName</td>
-                <td @attributes="InputAttributes">@grunt.Status</td>
-                <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
-                <td @attributes="InputAttributes">@grunt.Integrity</td>
-                <td @attributes="InputAttributes">@grunt.Note</td>
-            </tr>
-        }
+        <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
+            <td @attributes="InputAttributes">
+                <a href="/grunt/interact/@grunt.Id">
+                    @grunt.Name
+                </a>
+            </td>
+            <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
+            <td @attributes="InputAttributes">@grunt.Hostname</td>
+            <td @attributes="InputAttributes">@grunt.UserName</td>
+            <td @attributes="InputAttributes">@grunt.Status</td>
+            <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
+            <td @attributes="InputAttributes">@grunt.Integrity</td>
+            <td @attributes="InputAttributes">@grunt.Note</td>
+        </tr>
     </TableRow>
+    <ButtonTray>@ButtonTray</ButtonTray>
 </CovenantTable>
 
 @code {
@@ -76,6 +74,9 @@
 
     [Parameter]
     public int PageLength { get; set; } = 50;
+
+    [Parameter]
+    public RenderFragment ButtonTray { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object> InputAttributes { get; set; }

@@ -9,7 +9,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
     using System.IO;
@@ -291,7 +291,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
     using System.IO;
@@ -628,7 +628,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
     using System.Text;
@@ -778,7 +778,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
     using System.Text;
@@ -901,7 +901,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
 
@@ -934,7 +934,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
     using System.IO;
@@ -977,7 +977,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore30
+  - NetCore31
   Code: >
     using System;
     using System.Linq;

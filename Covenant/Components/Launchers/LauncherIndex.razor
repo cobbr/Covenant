@@ -1,5 +1,6 @@
 ﻿@page "/launcher"
 @page "/launcher/index"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core

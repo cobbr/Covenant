@@ -100,6 +100,7 @@
                         <span class="fe fe-arrow-right-circle"></span>
                     </button>
                 }
+                @ButtonTray
             </div>
         </div>
     }
@@ -111,6 +112,9 @@
 
     [Parameter]
     public RenderFragment<TItem> TableRow { get; set; }
+
+    [Parameter]
+    public RenderFragment ButtonTray { get; set; }
 
     private List<TItem> _items;
     [Parameter]

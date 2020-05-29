@@ -95,8 +95,9 @@ namespace Covenant.Models.Listeners
                 {
                     Language = Grunts.ImplantLanguage.CSharp,
                     Source = profile.MessageTransform,
-                    TargetDotNetVersion = Common.DotNetVersion.NetCore21,
-                    References = Common.DefaultReferencesCore21
+                    TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                    References = Common.DefaultReferencesNetCore,
+                    UseSubprocess = false
                 })
             };
 
@@ -217,13 +218,13 @@ namespace Covenant.Models.Listeners
                         Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
                     }
                 }
-                else if (version == APIModels.DotNetVersion.NetCore30)
+                else if (version == APIModels.DotNetVersion.NetCore31)
                 {
-                        Message = Convert.ToBase64String(this.GetCompressedILAssembly30(tasking.GruntTask.Name));
-                        if (tasking.Parameters.Any())
-                        {
-                            Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
-                        }
+                    Message = Convert.ToBase64String(this.GetCompressedILAssembly30(tasking.GruntTask.Name));
+                    if (tasking.Parameters.Any())
+                    {
+                        Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
+                    }
                 }
             }
             else
@@ -613,6 +614,7 @@ namespace Covenant.Models.Listeners
 					KillDate = targetGrunt.KillDate,
 					ConnectAttempts = targetGrunt.ConnectAttempts,
 					DotNetVersion = targetGrunt.DotNetVersion,
+                    RuntimeIdentifier = targetGrunt.RuntimeIdentifier,
 					LastCheckIn = DateTime.UtcNow
 				};
 				targetGrunt = await _client.CreateGruntAsync(tempModel);

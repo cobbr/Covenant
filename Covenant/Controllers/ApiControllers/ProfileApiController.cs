@@ -2,7 +2,6 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -10,15 +9,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/profiles")]
+    [ApiController, Route("api/profiles"), Authorize(Policy = "RequireJwtBearer")]
     public class ProfileApiController : Controller
     {
         private readonly ICovenantService _service;

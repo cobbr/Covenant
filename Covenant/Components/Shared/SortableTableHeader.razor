@@ -62,7 +62,7 @@
         this.StateHasChanged();
     }
 
-    private async Task OnSortHeader()
+    private void OnSortHeader()
     {
         _ = this.CovenantTable.OnSort(GetSortableProperty, this.Ascending);
         this.Ascending = !this.Ascending;

@@ -1,4 +1,5 @@
 ﻿@page "/referencesourcelibrary/edit/{ReferenceSourceLibraryId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core

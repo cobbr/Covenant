@@ -1,4 +1,5 @@
 ﻿@page "/grunt/interact/{GruntId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 

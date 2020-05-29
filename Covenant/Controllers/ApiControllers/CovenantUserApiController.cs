@@ -5,21 +5,16 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
-using Microsoft.Extensions.Configuration;
-
 using Covenant.Core;
-using Covenant.Hubs;
-using Covenant.Models;
 using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-	[Authorize(Policy = "RequireJwtBearer"), ApiController, Route("api")]
+    [ApiController, Route("api"), Authorize(Policy = "RequireJwtBearer")]
     public class CovenantUserApiController : Controller
     {
 		private readonly ICovenantService _service;

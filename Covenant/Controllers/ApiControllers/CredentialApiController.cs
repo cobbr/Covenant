@@ -15,9 +15,7 @@ using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/credentials")]
+    [ApiController, Route("api/credentials"), Authorize(Policy = "RequireJwtBearer")]
     public class CredentialApiController : Controller
     {
         private readonly ICovenantService _service;

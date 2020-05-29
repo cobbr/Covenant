@@ -2,21 +2,17 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Grunts;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/grunttasks")]
+    [ApiController, Route("api/grunttasks"), Authorize(Policy = "RequireJwtBearer")]
     public class GruntTaskApiController : Controller
     {
         private readonly ICovenantService _service;

@@ -16,9 +16,7 @@ using Covenant.Models.Grunts;
 
 namespace Covenant.Controllers.ApiControllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/embeddedresources")]
+    [ApiController, Route("api/embeddedresources"), Authorize(Policy = "RequireJwtBearer")]
     public class EmbeddedResourceApiController : Controller
     {
         private readonly ICovenantService _service;

@@ -13,9 +13,7 @@ using Covenant.Models.Grunts;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/implanttemplates")]
+    [ApiController, Route("api/implanttemplates"), Authorize(Policy = "RequireJwtBearer")]
     public class ImplantTemplateApiController : Controller
     {
         private readonly ICovenantService _service;

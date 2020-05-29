@@ -1,12 +1,15 @@
 ﻿@page "/grunttask"
 @page "/grunttask/index"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 
 @using System.IO
 @using Microsoft.JSInterop
+
 @using BlazorInputFile
 @using YamlDotNet.Serialization
+
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
@@ -191,7 +194,7 @@
         }
         catch (Exception)
         {
-            // 
+            //
         }
     }
 }

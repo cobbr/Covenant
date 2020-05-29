@@ -1,4 +1,5 @@
 ﻿@page "/listener/{ListenerId:int}/hostedfile/edit/{HostedFileId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Covenant.Core
@@ -9,7 +10,7 @@
     <h1 class="h2">Edit HostedFile</h1>
 </div>
 
-<HostedFileForm HostedFile="HostedFile" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit" >
+<HostedFileForm HostedFile="HostedFile" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit">
     <button type="button" class="btn btn-danger" @onclick="(e => OnDelete(HostedFile))">
         <span class="fe fe-x"></span> Delete
     </button>

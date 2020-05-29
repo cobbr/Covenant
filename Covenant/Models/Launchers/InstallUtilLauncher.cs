@@ -47,7 +47,7 @@ namespace Covenant.Models.Launchers
                 References = references
             }));
 
-            this.LauncherString = "InstallUtil.exe" + " " + "/U" + " " + "file.dll";
+            this.LauncherString = "InstallUtil.exe" + " " + "/U" + " " + template.Name + ".dll";
             return this.LauncherString;
         }
 

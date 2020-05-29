@@ -1,5 +1,6 @@
 ﻿@page "/data"
 @page "/data/index"
+@attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop

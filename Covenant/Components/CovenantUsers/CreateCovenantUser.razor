@@ -1,4 +1,5 @@
 ﻿@page "/covenantuser/create"
+@attribute [Authorize(Roles = "Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.AspNetCore.Components.Authorization

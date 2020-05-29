@@ -9,14 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/events")]
+    [ApiController, Route("api/events"), Authorize(Policy = "RequireJwtBearer")]
     public class EventApiController : Controller
     {
         private readonly ICovenantService _service;

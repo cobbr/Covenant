@@ -13,9 +13,7 @@ using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/listeners")]
+    [ApiController, Route("api/listeners"), Authorize(Policy = "RequireJwtBearer")]
     public class ListenerApiController : Controller
     {
         private readonly ICovenantService _service;
@@ -260,7 +258,6 @@ namespace Covenant.Controllers
         // <summary>
         // Get HostedFiles
         // </summary>
-        [Authorize]
         [HttpGet("{id}/hostedfiles", Name = "GetHostedFiles")]
         public async Task<ActionResult<IEnumerable<HostedFile>>> GetHostedFiles(int id)
         {

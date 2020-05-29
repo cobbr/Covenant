@@ -1,4 +1,5 @@
 ﻿@page "/profile/edit/{ProfileId:int}"
+@attribute [Authorize(Roles = "Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop

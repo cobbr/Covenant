@@ -82,21 +82,12 @@ namespace Covenant.Core
             new Compiler.Reference { File = CovenantAssemblyReferenceNet40Directory + "System.Core.dll", Framework = DotNetVersion.Net40, Enabled = true }
         };
 
-        public static List<Compiler.Reference> DefaultReferencesCore21 { get; set; } = new List<Compiler.Reference>
+        public static List<Compiler.Reference> DefaultReferencesNetCore { get; set; } = new List<Compiler.Reference>
         {
             new Compiler.Reference
             {
                 File = String.Join(Path.DirectorySeparatorChar, typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Take(typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Count() - 1))
-                + Path.DirectorySeparatorChar + "System.Private.CoreLib.dll", Framework = DotNetVersion.NetCore21, Enabled = true
-            }
-        };
-
-        public static List<Compiler.Reference> DefaultReferencesCore30 { get; set; } = new List<Compiler.Reference>
-        {
-            new Compiler.Reference
-            {
-                File = String.Join(Path.DirectorySeparatorChar, typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Take(typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Count() - 1))
-                + Path.DirectorySeparatorChar + "System.Private.CoreLib.dll", Framework = DotNetVersion.NetCore21, Enabled = true
+                + Path.DirectorySeparatorChar + "System.Private.CoreLib.dll", Framework = DotNetVersion.NetCore31, Enabled = true
             }
         };
 
@@ -104,8 +95,7 @@ namespace Covenant.Core
         {
             Net35,
             Net40,
-            NetCore21,
-            NetCore30
+            NetCore31
         }
 
         // Credit - https://github.com/samuelneff/MimeTypeMap

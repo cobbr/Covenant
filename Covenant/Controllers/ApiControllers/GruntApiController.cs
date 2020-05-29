@@ -14,9 +14,7 @@ using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/grunts")]
+    [ApiController, Route("api/grunts"), Authorize(Policy = "RequireJwtBearer")]
     public class GruntApiController : Controller
     {
         private readonly ICovenantService _service;
