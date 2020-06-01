@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @using Covenant.Core
 @using Covenant.Models.Covenant
+@using Covenant.Components.Events
 @using Covenant.Components.CovenantUsers
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Routing
@@ -41,18 +42,7 @@
                     }
                 </ul>
             </nav>
-            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" style="position: absolute; top: 60px; right: 10px; z-index: 1;" data-delay="15000">
-                <div class="toast-header">
-                    <strong class="mr-auto">Event</strong>
-                    <small>Now</small>
-                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="toast-body">
-                    Message
-                </div>
-            </div>
+            <EventNotifier />
             <div id="covenant-container" class="container-fluid">
                 <div class="d-flex flex-row">
                     <nav class="col-sm-2 bg-light sidebar">

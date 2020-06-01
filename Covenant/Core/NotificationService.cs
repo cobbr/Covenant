@@ -41,6 +41,7 @@ namespace Covenant.Core
         event EventHandler<Event> OnCreateEvent;
         event EventHandler<Event> OnEditEvent;
         event EventHandler<int> OnDeleteEvent;
+        Task NotifyCreateEvent(object sender, Event anEvent);
     }
 
     public interface IImplantTemplateNotificationService
@@ -266,6 +267,8 @@ namespace Covenant.Core
         public event EventHandler<Launcher> OnEditLauncher = delegate { };
         public event EventHandler<int> OnDeleteLauncher = delegate { };
         public async Task NotifyCreateCovenantUser(object sender, CovenantUser user) { await Task.Run(() => this.OnCreateCovenantUser(sender, user)); }
+
+        public async Task NotifyCreateEvent(object sender, Event anEvent) { await Task.Run(() => this.OnCreateEvent(sender, anEvent)); }
 
         public async Task NotifyCreateGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnCreateGrunt(sender, grunt)); }
         public async Task NotifyEditGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnEditGrunt(sender, grunt)); }

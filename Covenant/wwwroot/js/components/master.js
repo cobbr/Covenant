@@ -14,6 +14,10 @@ window.RedirectToUrl = (url) => {
     window.location.href = url;
 }
 
+window.Toast = (selector, command) => {
+    $(selector).toast(command);
+}
+
 window.DownloadFile = (filename, mediatype, base64) => {
     var link = document.createElement('a');
     link.download = filename;

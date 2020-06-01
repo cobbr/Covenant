@@ -91,25 +91,5 @@
         <script src="/js/inputfile.js"></script>
         <script src="/js/components/master.js"></script>
     </environment>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            var displayEvent = function (event) {
-                var msg = event.messageHeader.substring(event.messageHeader.indexOf("UTC] ") + 5, event.messageHeader.length)
-                $(".toast-body").text(msg);
-                $(".toast").toast('show');
-            }
-
-            var connection = new signalR.HubConnectionBuilder().withUrl("/eventHub").build();
-
-            connection.on("ReceiveEvent", displayEvent);
-
-            connection.start()
-                .then(function () {
-                    connection.invoke("JoinGroup", "*").catch(function (err) {
-                        return console.error(err.toString());
-                    });
-                });
-        });
-    </script>
 </body>
 </html>

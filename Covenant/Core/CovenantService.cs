@@ -512,12 +512,12 @@ namespace Covenant.Core
             {
                 Time = eventTime,
                 MessageHeader = "[" + eventTime + " UTC] User: " + savedUser.UserName + " with roles: " + savedRoles + " has been created!",
-                Level = EventLevel.Highlight,
+                Level = EventLevel.Info,
                 Context = "Users"
             };
             await _context.Events.AddAsync(userEvent);
             // _notifier.OnCreateCovenantUser(this, savedUser);
-            // _notifier.OnCreateEvent(this, userEvent);
+            await _notifier.NotifyCreateEvent(this, userEvent);
             return savedUser;
         }
 
@@ -722,7 +722,7 @@ namespace Covenant.Core
             anEvent.Time = DateTime.UtcNow;
             await _context.Events.AddAsync(anEvent);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateEvent(this, anEvent);
+            await _notifier.NotifyCreateEvent(this, anEvent);
             return await this.GetEvent(anEvent.Id);
         }
 
@@ -772,7 +772,7 @@ namespace Covenant.Core
             downloadEvent.WriteToDisk();
             await _context.Events.AddAsync(downloadEvent);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateEvent(this, downloadEvent);
+            await _notifier.NotifyCreateEvent(this, downloadEvent);
             return await this.GetDownloadEvent(downloadEvent.Id);
         }
 
@@ -815,7 +815,7 @@ namespace Covenant.Core
             screenshotEvent.WriteToDisk();
             await _context.Events.AddAsync(screenshotEvent);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateEvent(this, screenshotEvent);
+            await _notifier.NotifyCreateEvent(this, screenshotEvent);
             return await this.GetScreenshotEvent(screenshotEvent.Id);
         }
         #endregion
@@ -1179,7 +1179,7 @@ namespace Covenant.Core
                     Context = "*"
                 };
                 await _context.Events.AddAsync(gruntEvent);
-                // _notifier.OnCreateEvent(this, gruntEvent);
+                await _notifier.NotifyCreateEvent(this, gruntEvent);
             }
             matching_grunt.Name = grunt.Name;
             matching_grunt.GUID = grunt.GUID;
@@ -2301,13 +2301,13 @@ namespace Covenant.Core
                 Time = command.CommandTime,
                 MessageHeader = "[" + command.CommandTime + " UTC] Command assigned",
                 MessageBody = "(" + command.User.UserName + ") > " + command.Command,
-                Level = EventLevel.Highlight,
+                Level = EventLevel.Info,
                 Context = command.Grunt.Name
             };
             await _context.Events.AddAsync(ev);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGruntCommand(this, command);
-            // _notifier.OnCreateEvent(this, ev);
+            await _notifier.NotifyCreateEvent(this, ev);
             return command;
         }
 
@@ -2653,7 +2653,7 @@ namespace Covenant.Core
                     Time = tasking.GruntCommand.CommandTime,
                     MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command completed",
                     MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
-                    Level = EventLevel.Highlight,
+                    Level = EventLevel.Info,
                     Context = tasking.Grunt.Name
                 };
                 await _context.Events.AddAsync(ev);
@@ -2661,7 +2661,7 @@ namespace Covenant.Core
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditGrunt(this, tasking.Grunt);
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                // _notifier.OnCreateEvent(this, ev);
+                await _notifier.NotifyCreateEvent(this, ev);
                 tasking.Status = GruntTaskingStatus.Completed;
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
@@ -2796,14 +2796,14 @@ public static class Task
                     Time = tasking.GruntCommand.CommandTime,
                     MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command aborted",
                     MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
-                    Level = EventLevel.Highlight,
+                    Level = EventLevel.Info,
                     Context = tasking.Grunt.Name
                 };
                 await _context.Events.AddAsync(ev);
                 _context.GruntCommands.Update(tasking.GruntCommand);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                // _notifier.OnCreateEvent(this, ev);
+                await _notifier.NotifyCreateEvent(this, ev);
             }
             await _context.GruntTaskings.AddAsync(tasking);
             await _context.SaveChangesAsync();
@@ -2962,17 +2962,17 @@ public static class Task
                     {
                         Time = updatingGruntTasking.CompletionTime,
                         MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
-                        Level = EventLevel.Highlight,
+                        Level = EventLevel.Info,
                         Context = grunt.Name
                     };
                     await _context.Events.AddAsync(ev);
-                    // _notifier.OnCreateEvent(this, ev);
+                    await _notifier.NotifyCreateEvent(this, ev);
                     string FileName = tasking.Parameters[0];
                     DownloadEvent downloadEvent = new DownloadEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,
                         MessageHeader = "Downloaded: " + FileName,
-                        Level = EventLevel.Highlight,
+                        Level = EventLevel.Info,
                         Context = grunt.Name,
                         FileName = FileName,
                         FileContents = updatingGruntTasking.GruntCommand.CommandOutput.Output,
@@ -2980,7 +2980,7 @@ public static class Task
                     };
                     downloadEvent.WriteToDisk();
                     await _context.Events.AddAsync(downloadEvent);
-                    // _notifier.OnCreateEvent(this, downloadEvent);
+                    await _notifier.NotifyCreateEvent(this, downloadEvent);
                 }
                 else if (ScreenshotTask != null && tasking.GruntTaskId == ScreenshotTask.Id)
                 {
@@ -2988,17 +2988,17 @@ public static class Task
                     {
                         Time = updatingGruntTasking.CompletionTime,
                         MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
-                        Level = EventLevel.Highlight,
+                        Level = EventLevel.Info,
                         Context = grunt.Name
                     };
                     await _context.Events.AddAsync(ev);
-                    // _notifier.OnCreateEvent(this, ev);
+                    await _notifier.NotifyCreateEvent(this, ev);
                     string FileName = tasking.Name + ".png";
                     ScreenshotEvent screenshotEvent = new ScreenshotEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,
                         MessageHeader = "Downloaded: " + FileName,
-                        Level = EventLevel.Highlight,
+                        Level = EventLevel.Info,
                         Context = grunt.Name,
                         FileName = FileName,
                         FileContents = updatingGruntTasking.GruntCommand.CommandOutput.Output,
@@ -3006,7 +3006,7 @@ public static class Task
                     };
                     screenshotEvent.WriteToDisk();
                     await _context.Events.AddAsync(screenshotEvent);
-                    // _notifier.OnCreateEvent(this, screenshotEvent);
+                    await _notifier.NotifyCreateEvent(this, screenshotEvent);
                 }
                 else if (tasking.GruntCommand != null && tasking.GruntCommand.CommandOutput != null)
                 {
@@ -3029,11 +3029,11 @@ public static class Task
                         Time = tasking.CompletionTime,
                         MessageHeader = "[" + tasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
                         MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput.Output,
-                        Level = EventLevel.Highlight,
+                        Level = EventLevel.Info,
                         Context = grunt.Name
                     };
                     await _context.Events.AddAsync(ev);
-                    // _notifier.OnCreateEvent(this, ev);
+                    await _notifier.NotifyCreateEvent(this, ev);
                 }
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;

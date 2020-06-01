@@ -1,0 +1,42 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Covenant.Core
+@using Covenant.Models.Covenant 
+@inject INotificationService INotificationService
+
+<div style="position: absolute; top: 60px; right: 10px; z-index: 1;">
+    @foreach (Event ev in Events)
+    {
+        <EventNotification Event="ev" OnEventFinished="OnEventFinished" />
+    }
+</div>
+
+@code {
+    private List<Event> Events { get; set; } = new List<Event>();
+
+    protected override void OnInitialized()
+    {
+        this.INotificationService.OnCreateEvent += OnCreateEvent;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateEvent -= OnCreateEvent;
+    }
+
+    private void OnCreateEvent(object sender, Event anEvent)
+    {
+        if (anEvent.Level == EventLevel.Highlight)
+        {
+            this.Events.Add(anEvent);
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnEventFinished(Event anEvent)
+    {
+        this.Events.Remove(anEvent);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+}
