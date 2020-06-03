@@ -56,9 +56,7 @@
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("\\r\
-    [!] Unhandled Rubeus exception:\\r\
-    ");
+                    Console.WriteLine("\r\n[!] Unhandled Rubeus exception:\r\n");
                     Console.WriteLine(e);
                 }
                 
@@ -319,16 +317,12 @@
     
                 var watch = System.Diagnostics.Stopwatch.StartNew();
     
-                Console.WriteLine("\\r\
-    === SharpUp: Running Privilege Escalation Checks ===");
+                Console.WriteLine("\r\n=== SharpUp: Running Privilege Escalation Checks ===");
     
                 Program.PrivescChecks(auditMode);
     
                 watch.Stop();
-                Console.WriteLine(String.Format("\\r\
-    \\r\
-    [*] Completed Privesc Checks in {0} seconds\\r\
-    ", watch.ElapsedMilliseconds / 1000));
+                Console.WriteLine(String.Format("\r\n\r\n[*] Completed Privesc Checks in {0} seconds\r\n", watch.ElapsedMilliseconds / 1000));
                 
                 Console.Out.Flush();
                 Console.Error.Flush();
@@ -438,12 +432,10 @@
                 string[] args = ProcessID.Split(' ');
     
                 string systemRoot = Environment.GetEnvironmentVariable("SystemRoot");
-                string dumpDir = String.Format("{0}\\\\Temp\\\\", systemRoot);
+                string dumpDir = String.Format("{0}\\Temp\\", systemRoot);
                 if (!Directory.Exists(dumpDir))
                 {
-                    Console.WriteLine(String.Format("\
-    [X] Dump directory \\"{0}\\" doesn't exist!\
-    ", dumpDir));
+                    Console.WriteLine(String.Format("\n[X] Dump directory \"{0}\" doesn't exist!\n", dumpDir));
                 }
                 else
                 {
@@ -462,16 +454,12 @@
                         }
                         else
                         {
-                            Console.WriteLine("\
-    Please use \\"SharpDump.exe [pid]\\" format\
-    ");
+                            Console.WriteLine("\nPlease use \"SharpDump.exe [pid]\" format\n");
                         }
                     }
                     else if (args.Length == 2)
                     {
-                        Console.WriteLine("\
-    Please use \\"SharpDump.exe [pid]\\" format\
-    ");
+                        Console.WriteLine("\nPlease use \"SharpDump.exe [pid]\" format\n");
                     }
                 }
                 
@@ -700,6 +688,18 @@
       DotNetVersion: Net35
     - Name: System.XML.dll
       Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    - Name: System.Data.dll
+      Location: net35\System.Data.dll
+      DotNetVersion: Net35
+    - Name: System.Data.dll
+      Location: net40\System.Data.dll
+      DotNetVersion: Net40
+    - Name: System.Data.DataSetExtensions.dll
+      Location: net35\System.Data.DataSetExtensions.dll
+      DotNetVersion: Net35
+    - Name: System.Data.DataSetExtensions.dll
+      Location: net40\System.Data.DataSetExtensions.dll
       DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []

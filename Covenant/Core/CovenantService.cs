@@ -3828,7 +3828,7 @@ public static class Task
             Event listenerEvent = await this.CreateEvent(new Event
             {
                 Time = listener.StartTime,
-                MessageHeader = "[" + listener.StartTime + " UTC] Started Listener: " + listener.Name + " at: " + listener.Urls,
+                MessageHeader = "[" + listener.StartTime + " UTC] Started Listener: " + listener.Name,
                 Level = EventLevel.Highlight,
                 Context = "*"
             });
@@ -3874,7 +3874,7 @@ public static class Task
             Event listenerEvent = await this.CreateEvent(new Event
             {
                 Time = listener.StartTime,
-                MessageHeader = "[" + listener.StartTime + " UTC] Started Listener: " + listener.Name + " at: " + listener.ConnectAddresses,
+                MessageHeader = "[" + listener.StartTime + " UTC] Started Listener: " + listener.Name,
                 Level = EventLevel.Highlight,
                 Context = "*"
             });
