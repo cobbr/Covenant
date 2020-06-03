@@ -14,7 +14,7 @@
 
 @code {
     [Parameter]
-    public Indicator Indicator { get; set; }
+    public Indicator Indicator { get; set; } = new FileIndicator();
 
     private async Task OnCreate(Indicator indicator)
     {
