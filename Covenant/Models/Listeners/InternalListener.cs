@@ -293,14 +293,10 @@ namespace Covenant.Models.Listeners
             {
                 if (!string.IsNullOrEmpty(guid))
                 {
-                    var _result = await _client.GetGruntByGUIDWithHttpMessagesAsync(guid, null, default(System.Threading.CancellationToken)).ConfigureAwait(false);
-                    return _result.Body;
+                    return await _client.GetGruntByGUIDAsync(guid);
                 }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Exception: {e.Message}{System.Environment.NewLine}{e.StackTrace}");
-            }
+            catch (Exception) { }
             return null;
         }
 
