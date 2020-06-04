@@ -1,0 +1,76 @@
+﻿@using System
+@using System.IO
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="DownloadEvent" Items="DownloadEvents.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="DownloadEvent" TItem2="string" GetSortableProperty="(download) => download.FileName">
+            <HeaderContent>FileName</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="DownloadEvent" TItem2="int" GetSortableProperty="(download) => Convert.FromBase64String(download.FileContents).Length">
+            <HeaderContent>Size</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="DownloadEvent" TItem2="string" GetSortableProperty="(download) => string.Empty">
+            <HeaderContent>Download</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="download">
+        <tr>
+            <td>
+                @download.FileName
+            </td>
+            <td>
+                @Convert.FromBase64String(download.FileContents).Length
+            </td>
+            <td>
+                <button type="button" class="btn btn-primary" @onclick="e => OnDownload(download)">
+                    <span class="fe fe-download"></span>
+                    Download
+                </button>
+            </td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<DownloadEvent> DownloadEvents { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private async Task OnDownload(DownloadEvent ev)
+    {
+        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(ev.FileName), out string contentType))
+        {
+            contentType = Common.DefaultContentTypeMapping;
+        }
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            Path.GetFileName(ev.FileName),
+            contentType,
+            ev.FileContents
+        );
+    }
+
+    private bool IsRowDisplayed(DownloadEvent download, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            download.FileName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            Convert.FromBase64String(download.FileContents).Length.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

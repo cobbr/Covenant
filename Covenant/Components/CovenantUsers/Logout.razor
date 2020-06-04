@@ -1,0 +1,12 @@
+﻿@using Covenant.Models.Covenant
+@using Microsoft.AspNetCore.Identity
+@inject NavigationManager NavigationManager
+@inject SignInManager<CovenantUser> SignInManager
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        NavigationManager.NavigateTo("/covenantuser/login");
+    }
+}

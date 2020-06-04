@@ -1,0 +1,118 @@
+﻿@page "/"
+@page "/home"
+@page "/home/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
+@using Covenant.Components.Listeners
+@using Covenant.Components.Grunts
+@using Covenant.Components.GruntTaskings
+@inject INotificationService INotificationService
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Grunts</h4>
+</div>
+<GruntTable @bind-Grunts="Grunts" IsPaginated="true" PageLength="10" IsSearchable="false" />
+<br />
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Listeners</h4>
+</div>
+<ListenerTable @bind-Listeners="Listeners" IsPaginated="true" PageLength="5" IsSearchable="false" />
+<br />
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Taskings</h4>
+</div>
+<GruntTaskingTable @bind-GruntTaskings="GruntTaskings" IsPaginated="true" PageLength="10" IsSearchable="false" />
+<br />
+
+@code {
+    [Parameter]
+    public List<Grunt> Grunts { get; set; }
+
+    [Parameter]
+    public List<Listener> Listeners { get; set; }
+
+    [Parameter]
+    public List<GruntTasking> GruntTaskings { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Grunts = this.Grunts ?? (await Service.GetGrunts())
+            .Where(G => G.Status != GruntStatus.Hidden && G.Status != GruntStatus.Uninitialized)
+            .OrderByDescending(G => G.LastCheckIn)
+            .ToList();
+        this.Listeners = this.Listeners ?? (await Service.GetListeners()).ToList();
+        this.GruntTaskings = this.GruntTaskings ?? (await Service.GetGruntTaskings()).ToList();
+        this.INotificationService.OnCreateGrunt += OnCreateGrunt;
+        this.INotificationService.OnEditGrunt += OnEditGrunt;
+        this.INotificationService.OnCreateListener += OnCreateListener;
+        this.INotificationService.OnEditListener += OnEditListener;
+        this.INotificationService.OnCreateGruntTasking += OnCreateGruntTasking;
+        this.INotificationService.OnEditGruntTasking += OnEditGruntTasking;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateGrunt -= OnCreateGrunt;
+        this.INotificationService.OnEditGrunt -= OnEditGrunt;
+        this.INotificationService.OnCreateListener -= OnCreateListener;
+        this.INotificationService.OnEditListener -= OnEditListener;
+        this.INotificationService.OnCreateGruntTasking -= OnCreateGruntTasking;
+        this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
+    }
+
+    private void OnCreateGrunt(object sender, Grunt grunt)
+    {
+        this.Grunts.Add(grunt);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnEditGrunt(object sender, Grunt grunt)
+    {
+        if (this.Grunts.Any(G => G.Id == grunt.Id))
+        {
+            this.Grunts[this.Grunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnCreateListener(object sender, Listener listener)
+    {
+        this.Listeners.Add(listener);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnEditListener(object sender, Listener listener)
+    {
+        if (this.Listeners.Any(L => L.Id == listener.Id))
+        {
+            this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = listener;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnCreateGruntTasking(object sender, GruntTasking tasking)
+    {
+        this.GruntTaskings.Add(tasking);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnEditGruntTasking(object sender, GruntTasking tasking)
+    {
+        if (this.GruntTaskings.Any(T => T.Id == tasking.Id))
+        {
+            this.GruntTaskings[this.GruntTaskings.FindIndex(T => T.Id == tasking.Id)] = tasking;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+}

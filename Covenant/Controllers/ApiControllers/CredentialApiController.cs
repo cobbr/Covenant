@@ -15,16 +15,14 @@ using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/credentials")]
+    [ApiController, Route("api/credentials"), Authorize(Policy = "RequireJwtBearer")]
     public class CredentialApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public CredentialApiController(CovenantContext context)
+        public CredentialApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/credentials
@@ -34,7 +32,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetCredentials")]
         public async Task<ActionResult<IEnumerable<CapturedCredential>>> GetCredentials()
         {
-            return Ok(await _context.GetCredentials());
+            return Ok(await _service.GetCredentials());
         }
 
         // GET: api/credentials/passwords
@@ -44,7 +42,7 @@ namespace Covenant.Controllers
         [HttpGet("passwords", Name = "GetPasswordCredentials")]
         public async Task<ActionResult<IEnumerable<CapturedPasswordCredential>>> GetPasswordCredentials()
         {
-            return Ok(await _context.GetPasswordCredentials());
+            return Ok(await _service.GetPasswordCredentials());
         }
 
         // GET: api/credentials/hashes
@@ -54,7 +52,7 @@ namespace Covenant.Controllers
         [HttpGet("hashes", Name = "GetHashCredentials")]
         public async Task<ActionResult<IEnumerable<CapturedHashCredential>>> GetHashCredentials()
         {
-            return Ok(await _context.GetHashCredentials());
+            return Ok(await _service.GetHashCredentials());
         }
 
         // GET: api/credentials/tickets
@@ -64,7 +62,7 @@ namespace Covenant.Controllers
         [HttpGet("tickets", Name = "GetTicketCredentials")]
         public async Task<ActionResult<IEnumerable<CapturedTicketCredential>>> GetTicketCredentials()
         {
-            return Ok(await _context.GetTicketCredentials());
+            return Ok(await _service.GetTicketCredentials());
         }
 
         // GET api/credentials/{id}
@@ -76,7 +74,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetCredential(id);
+                return await _service.GetCredential(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -101,7 +99,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetPasswordCredential(id);
+                return await _service.GetPasswordCredential(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -126,7 +124,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetHashCredential(id);
+                return await _service.GetHashCredential(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -151,7 +149,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetTicketCredential(id);
+                return await _service.GetTicketCredential(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -177,7 +175,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                CapturedPasswordCredential addedCredential = await _context.CreatePasswordCredential(credential);
+                CapturedPasswordCredential addedCredential = await _service.CreatePasswordCredential(credential);
                 return CreatedAtRoute(nameof(GetPasswordCredential), new { id = addedCredential.Id }, addedCredential);
             }
             catch (ControllerNotFoundException e)
@@ -204,7 +202,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                CapturedHashCredential addedCredential = await _context.CreateHashCredential(credential);
+                CapturedHashCredential addedCredential = await _service.CreateHashCredential(credential);
                 return CreatedAtRoute(nameof(GetHashCredential), new { id = addedCredential.Id }, addedCredential);
             }
             catch (ControllerNotFoundException e)
@@ -231,7 +229,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                CapturedTicketCredential addedCredential = await _context.CreateTicketCredential(credential);
+                CapturedTicketCredential addedCredential = await _service.CreateTicketCredential(credential);
                 return CreatedAtRoute(nameof(GetHashCredential), new { id = addedCredential.Id }, addedCredential);
             }
             catch (ControllerNotFoundException e)
@@ -257,7 +255,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditPasswordCredential(credential);
+                return await _service.EditPasswordCredential(credential);
             }
             catch (ControllerNotFoundException e)
             {
@@ -282,7 +280,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHashCredential(credential);
+                return await _service.EditHashCredential(credential);
             }
             catch (ControllerNotFoundException e)
             {
@@ -307,7 +305,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditTicketCredential(credential);
+                return await _service.EditTicketCredential(credential);
             }
             catch (ControllerNotFoundException e)
             {
@@ -333,7 +331,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteCredential(id);
+                await _service.DeleteCredential(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)

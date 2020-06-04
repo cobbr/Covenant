@@ -1,0 +1,45 @@
+﻿@page "/listener/{ListenerId:int}/hostedfile/edit/{HostedFileId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Listeners
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Edit HostedFile</h1>
+</div>
+
+<HostedFileForm HostedFile="HostedFile" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit">
+    <button type="button" class="btn btn-danger" @onclick="(e => OnDelete(HostedFile))">
+        <span class="fe fe-x"></span> Delete
+    </button>
+</HostedFileForm>
+
+@code {
+    [Parameter]
+    public int HostedFileId { get; set; }
+
+    [Parameter]
+    public HostedFile HostedFile { get; set; }
+
+    [Parameter]
+    public int ListenerId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.HostedFile = this.HostedFile ?? await Service.GetHostedFileForListener(this.ListenerId, this.HostedFileId);
+    }
+
+    private async Task OnEdit(HostedFile file)
+    {
+        await Service.EditHostedFile(this.ListenerId, file);
+        NavigationManager.NavigateTo($"/listener/edit/{this.ListenerId}");
+    }
+
+    private async Task OnDelete(HostedFile file)
+    {
+        await Service.DeleteHostedFile(this.ListenerId, file.Id);
+        NavigationManager.NavigateTo($"/listener/edit/{this.ListenerId}");
+    }
+}

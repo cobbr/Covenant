@@ -1,0 +1,80 @@
+﻿@using System.Collections.Generic
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core 
+@using Covenant.Models.Listeners
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<CovenantTable TItem="Profile" Items="Profiles.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="Profile" TItem2="string" GetSortableProperty="(profile) => profile.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Profile" TItem2="string" GetSortableProperty="(profile) => profile.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Profile" TItem2="ProfileType" GetSortableProperty="(profile) => profile.Type">
+            <HeaderContent>Type</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="profile">
+        <tr>
+            <td>
+                @if (IsAdmin())
+                {
+                    <a href="/profile/edit/@profile.Id">
+                        @profile.Name
+                    </a>
+                }
+                else
+                {
+                    @profile.Name
+                }
+            </td>
+            <td>@profile.Description</td>
+            <td>@profile.Type</td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<Profile> Profiles { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private string ToString(List<string> list)
+    {
+        return string.Join(",", list);
+    }
+
+    private bool IsAdmin()
+    {
+        return AuthenticationStateProvider
+            .GetAuthenticationStateAsync()
+            .WaitResult().User
+            .IsInRole("Administrator");
+    }
+
+    private bool IsRowDisplayed(Profile profile, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            profile.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            profile.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            profile.Type.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

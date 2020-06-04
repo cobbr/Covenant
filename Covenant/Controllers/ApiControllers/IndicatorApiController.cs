@@ -2,7 +2,6 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -10,21 +9,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Indicators;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/indicators")]
+    [ApiController, Route("api/indicators"), Authorize(Policy = "RequireJwtBearer")]
     public class IndicatorApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public IndicatorApiController(CovenantContext context)
+        public IndicatorApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/indicators/report
@@ -45,7 +41,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetIndicators")]
         public async Task<ActionResult<IEnumerable<Indicator>>> GetIndicators()
         {
-            return Ok(await _context.GetIndicators());
+            return Ok(await _service.GetIndicators());
         }
 
         // GET: api/indicators/files
@@ -55,7 +51,7 @@ namespace Covenant.Controllers
         [HttpGet("files", Name = "GetFileIndicators")]
         public async Task<ActionResult<IEnumerable<FileIndicator>>> GetFileIndicators()
         {
-            return Ok(await _context.GetFileIndicators());
+            return Ok(await _service.GetFileIndicators());
         }
 
         // GET: api/indicators/networks
@@ -65,7 +61,7 @@ namespace Covenant.Controllers
         [HttpGet("networks", Name = "GetNetworkIndicators")]
         public async Task<ActionResult<IEnumerable<NetworkIndicator>>> GetNetworkIndicators()
         {
-            return Ok(await _context.GetNetworkIndicators());
+            return Ok(await _service.GetNetworkIndicators());
         }
 
         // GET: api/indicators/targets
@@ -75,7 +71,7 @@ namespace Covenant.Controllers
         [HttpGet("targets", Name = "GetTargetIndicators")]
         public async Task<ActionResult<IEnumerable<TargetIndicator>>> GetTargetIndicators()
         {
-            return Ok(await _context.GetTargetIndicators());
+            return Ok(await _service.GetTargetIndicators());
         }
 
         // GET api/indicators/{id}
@@ -87,7 +83,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetIndicator(id);
+                return await _service.GetIndicator(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -108,7 +104,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetFileIndicator(id);
+                return await _service.GetFileIndicator(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -129,7 +125,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetNetworkIndicator(id);
+                return await _service.GetNetworkIndicator(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -150,7 +146,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetTargetIndicator(id);
+                return await _service.GetTargetIndicator(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -172,7 +168,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                Indicator createdIndicator = await _context.CreateIndicator(indicator);
+                Indicator createdIndicator = await _service.CreateIndicator(indicator);
                 return CreatedAtRoute(nameof(GetIndicator), new { id = createdIndicator.Id }, createdIndicator);
             }
             catch (ControllerNotFoundException e)
@@ -194,7 +190,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditIndicator(indicator);
+                return await _service.EditIndicator(indicator);
             }
             catch (ControllerNotFoundException e)
             {
@@ -216,7 +212,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteIndicator(id);
+                await _service.DeleteIndicator(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)

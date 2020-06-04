@@ -78,7 +78,9 @@ namespace Covenant.Models.Grunts
 
         // Attributes of the remote Grunt
         [Required]
-        public Common.DotNetVersion DotNetFrameworkVersion { get; set; } = Common.DotNetVersion.Net35;
+        public Common.DotNetVersion DotNetVersion { get; set; } = Common.DotNetVersion.Net35;
+        [Required]
+        public Compiler.RuntimeIdentifier RuntimeIdentifier { get; set; } = Compiler.RuntimeIdentifier.win_x64;
         [Required]
         public GruntStatus Status { get; set; } = GruntStatus.Uninitialized;
         [Required]

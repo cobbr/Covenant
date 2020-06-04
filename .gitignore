@@ -1,6 +1,8 @@
 # Sqlite DB
 covenant.db
 covenant.db-journal
+covenant.db-wal
+covenant.db-shm
 
 # Build results
 [Dd]ebug/
@@ -12,6 +14,9 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
+dotnetwarp_temp/
+Optimize/
+_/
 
 # Covenant Logs
 [Ll]og/
@@ -20,6 +25,7 @@ bld/
 # Visual Studio cache/options
 .vs/
 .vscode/
+*.user
 *.userprefs
 
 # Mac files

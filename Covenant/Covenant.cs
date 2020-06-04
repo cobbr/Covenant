@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -17,14 +18,15 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
-using McMaster.Extensions.CommandLineUtils;
 using NLog.Web;
 using NLog.Config;
 using NLog.Targets;
+using McMaster.Extensions.CommandLineUtils;
 
 using Covenant.Models;
 using Covenant.Core;
@@ -91,35 +93,48 @@ namespace Covenant
                 }
                 IPEndPoint CovenantEndpoint = new IPEndPoint(address, Common.CovenantHTTPSPort);
                 string CovenantUri = (CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + Common.CovenantHTTPSPort : "https://" + CovenantEndpoint);
-                var host = BuildWebHost(CovenantEndpoint, CovenantUri);
+                var host = BuildHost(CovenantEndpoint, CovenantUri);
                 using (var scope = host.Services.CreateScope())
                 {
                     var services = scope.ServiceProvider;
                     var context = services.GetRequiredService<CovenantContext>();
+                    var service = services.GetRequiredService<ICovenantService>();
                     var userManager = services.GetRequiredService<UserManager<CovenantUser>>();
                     var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
-                    DbInitializer.Initialize(context, roleManager, listenerTokenSources).Wait();
-                    if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                    DbInitializer.Initialize(service, context, roleManager, listenerTokenSources).Wait();
+                    CovenantUser serviceUser = new CovenantUser { UserName = "ServiceUser" };
+                    if (!context.Users.Any())
                     {
-                        CovenantUser user = new CovenantUser { UserName = username };
-                        Task<IdentityResult> task = userManager.CreateAsync(user, password);
-                        task.Wait();
-                        IdentityResult userResult = task.Result;
-                        if (userResult.Succeeded)
+                        string serviceUserPassword = Utilities.CreateSecretPassword() + "A";
+                        userManager.CreateAsync(serviceUser, serviceUserPassword).Wait();
+                        userManager.AddToRoleAsync(serviceUser, "ServiceUser").Wait();
+                        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                         {
-                            userManager.AddToRoleAsync(user, "User").Wait();
-                            userManager.AddToRoleAsync(user, "Administrator").Wait();
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine($"Error creating user: {user.UserName}");
-                            return -1;
+                            CovenantUser user = new CovenantUser { UserName = username };
+                            Task<IdentityResult> task = userManager.CreateAsync(user, password);
+                            task.Wait();
+                            IdentityResult userResult = task.Result;
+                            if (userResult.Succeeded)
+                            {
+                                userManager.AddToRoleAsync(user, "User").Wait();
+                                userManager.AddToRoleAsync(user, "Administrator").Wait();
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine($"Error creating user: {user.UserName}");
+                                return -1;
+                            }
                         }
                     }
+                    configuration["ServiceUserToken"] = Utilities.GenerateJwtToken(
+                        serviceUser.UserName, serviceUser.Id, new string[] { "ServiceUser" },
+                        configuration["JwtKey"], configuration["JwtIssuer"],
+                        configuration["JwtAudience"], configuration["JwtExpireDays"]
+                    );
                 }
                 
                 LoggingConfiguration loggingConfig = new LoggingConfiguration();
@@ -157,9 +172,11 @@ namespace Covenant
             app.Execute(args);
         }
 
-        public static IWebHost BuildWebHost(IPEndPoint CovenantEndpoint, string CovenantUri) =>
-            new WebHostBuilder()
-                .UseKestrel(options =>
+        public static IHost BuildHost(IPEndPoint CovenantEndpoint, string CovenantUri) =>
+            new HostBuilder()
+            .ConfigureWebHost(weboptions =>
+            {
+                weboptions.UseKestrel(options =>
                 {
                     options.Listen(CovenantEndpoint, listenOptions =>
                     {
@@ -209,15 +226,16 @@ namespace Covenant
                 })
                 .UseStartup<Startup>()
                 .UseSetting("CovenantUri", CovenantUri)
-                .Build();
+                .UseSetting(WebHostDefaults.DetailedErrorsKey, "true");
+            })
+            .Build();
 
         private static bool IsElevated()
         {
-
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-                var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
                 return principal.IsInRole("Administrators");
             }
             return Environment.UserName.Equals("root", StringComparison.CurrentCultureIgnoreCase);

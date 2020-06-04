@@ -1,0 +1,23 @@
+﻿@page "/grunttasking"
+@page "/grunttasking/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">GruntTaskings</h1>
+</div>
+
+<GruntTaskingTable GruntTaskings="GruntTaskings" IsPaginated="true" PageLength="10" IsSearchable="true" IsSortable="true" />
+
+@code {
+    [Parameter]
+    public List<GruntTasking> GruntTaskings { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTaskings = this.GruntTaskings ?? (await Service.GetGruntTaskings()).ToList();
+    }
+}

@@ -1,0 +1,224 @@
+﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="Grunt" OnValidSubmit="OnFormSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Status">Status</label>
+            <select id="Status" name="Status" class="form-control" disabled>
+                <option selected value="@Grunt.Status">@Grunt.Status.ToString()</option>
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="Children">Children</label><br />
+            <select id="Children" name="Children" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-selected-text-format="count > 4" disabled>
+                @foreach (string g in Grunt.Children)
+                {
+                    <option selected value="@g">@g</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="ImplantTemplate.CommType">CommType</label>
+            <select id="ImplantTemplate.CommType" name="ImplantTemplate.CommType" class="form-control" disabled>
+                <option selected value="@Grunt.ImplantTemplate.CommType">@Grunt.ImplantTemplate.CommType.ToString()</option>
+            </select>
+        </div>
+        @if (this.Grunt.ImplantTemplate.CommType == CommunicationType.HTTP)
+        {
+            <div class="form-group col-md-4">
+                <label for="ValidateCert">ValidateCert</label>
+                <select id="ValidateCert" name="ValidateCert" class="form-control" disabled>
+                    @if (this.Grunt.ValidateCert)
+                    {
+                        <option selected>True</option>
+                        <option>False</option>
+                    }
+                    else
+                    {
+                        <option>True</option>
+                        <option selected>False</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="UseCertPinning">UseCertPinning</label>
+                <select id="UseCertPinning" name="UseCertPinning" class="form-control" disabled>
+                    @if (this.Grunt.UseCertPinning)
+                    {
+                        <option selected>True</option>
+                        <option>False</option>
+                    }
+                    else
+                    {
+                        <option>True</option>
+                        <option selected>False</option>
+                    }
+                </select>
+            </div>
+        }
+        @if (this.Grunt.ImplantTemplate.CommType == CommunicationType.SMB)
+        {
+            <div class="form-group col-md-4">
+                <label for="SMBPipeName">SMBPipeName</label>
+                <input id="SMBPipeName" name="SMBPipeName" value="@Grunt.SMBPipeName" class="form-control" readonly>
+            </div>
+        }
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="DotNetVersion">DotNetVersion</label>
+            <select id="DotNetVersion" name="DotNetVersion" class="form-control" disabled>
+                <option selected value="@Grunt.DotNetVersion">@Grunt.DotNetVersion</option>
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="Integrity">Integrity</label>
+            <select id="Integrity" name="Integrity" class="form-control" disabled>
+                <option selected value="@Grunt.Integrity">@Grunt.Integrity</option>
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="Process">Process</label>
+            <input id="Process" name="Process" value="@Grunt.Process" class="form-control" readonly>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="UserDomainName">UserDomainName</label>
+            <input id="UserDomainName" name="UserDomainName" value="@Grunt.UserDomainName" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="UserName">UserName</label>
+            <input id="UserName" name="UserName" value="@Grunt.UserName" class="form-control" readonly>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="IPAddress">IPAddress</label>
+            <input id="IPAddress" name="IPAddress" value="@Grunt.IPAddress" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="Hostname">Hostname</label>
+            <input id="Hostname" name="Hostname" value="@Grunt.Hostname" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="OperatingSystem"></label>
+            <input id="OperatingSystem" name="OperatingSystem" value="@Grunt.OperatingSystem" class="form-control" readonly>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for="ActivationTime">ActivationTime</label>
+            <input id="ActivationTime" name="ActivationTime" value="@Grunt.ActivationTime" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="LastCheckIn">LastCheckIn</label>
+            <input id="LastCheckIn" name="LastCheckIn" value="@Grunt.LastCheckIn" class="form-control" readonly>
+        </div>
+    </div>
+    <hr />
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="Grunt.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.Name" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-8">
+            <label for="Note">Note</label>
+            <input id="Note" name="Note" @bind="Grunt.Note" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.Note" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Delay">Delay</label>
+            <input id="Delay" name="Delay" @bind="Grunt.Delay" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.Delay" /></div>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="JitterPercent">JitterPercent</label>
+            <select id="JitterPercent" name="JitterPercent" @bind="Grunt.JitterPercent" class="form-control">
+                @for (int i = 0; i < 100; i++)
+                {
+                    @if (this.Grunt.JitterPercent == i)
+                    {
+                        <option selected value="@i">@i</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@i</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Grunt.JitterPercent" /></div>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="ConnectAttempts">ConnectAttempts</label>
+            <input id="ConnectAttempts" name="ConnectAttempts" @bind="Grunt.ConnectAttempts" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Grunt.ConnectAttempts" /></div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="KillDate">KillDate</label>
+        <input id="KillDate" name="KillDate" @bind="Grunt.KillDate" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Grunt.KillDate" /></div>
+    </div>
+    <div class="btn-group" role="group">
+        <button type="submit" class="btn btn-primary">
+            <span class="fe fe-edit"></span> Edit
+        </button>
+        @if (this.Grunt.Status == GruntStatus.Hidden)
+        {
+            <button type="button" @onclick="OnUnhide" class="btn btn-success ml-2">
+                <span class="fe fe-eye"></span> Unhide
+            </button>
+        }
+        else
+        {
+            <button type="button" @onclick="OnHide" class="btn btn-warning ml-2">
+                <span class="fe fe-eye-off"></span> Hide
+            </button>
+        }
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Grunt Grunt { get; set; }
+
+    [Parameter]
+    public EventCallback<Grunt> OnSubmit { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeDateTimePicker", "#KillDate");
+    }
+
+    private async Task OnHide()
+    {
+        this.Grunt.Status = GruntStatus.Hidden;
+        await this.OnSubmit.InvokeAsync(this.Grunt);
+    }
+
+    private async Task OnUnhide()
+    {
+        if (this.Grunt.Status == GruntStatus.Hidden)
+        {
+            this.Grunt.Status = GruntStatus.Active;
+        }
+        await this.OnSubmit.InvokeAsync(this.Grunt);
+    }
+
+    private async Task OnFormSubmit()
+    {
+        await this.OnSubmit.InvokeAsync(this.Grunt);
+    }
+}

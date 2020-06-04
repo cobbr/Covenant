@@ -7,8 +7,6 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
 
     public partial class ListenerType
@@ -24,12 +22,11 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ListenerType class.
         /// </summary>
-        public ListenerType(int? id = default(int?), string name = default(string), string description = default(string), IList<ImplantTemplate> compatibleImplantTemplates = default(IList<ImplantTemplate>))
+        public ListenerType(int? id = default(int?), string name = default(string), string description = default(string))
         {
             Id = id;
             Name = name;
             Description = description;
-            CompatibleImplantTemplates = compatibleImplantTemplates;
             CustomInit();
         }
 
@@ -52,11 +49,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "description")]
         public string Description { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "compatibleImplantTemplates")]
-        public IList<ImplantTemplate> CompatibleImplantTemplates { get; private set; }
 
     }
 }

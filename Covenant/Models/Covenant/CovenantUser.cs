@@ -10,7 +10,7 @@ namespace Covenant.Models.Covenant
 {
     public class CovenantUser : IdentityUser
     {
-        
+
     }
 
     public class CovenantUserLogin

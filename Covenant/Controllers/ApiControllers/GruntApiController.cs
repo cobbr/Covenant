@@ -2,41 +2,26 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
 
-using Covenant.Hubs;
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Grunts;
 using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/grunts")]
+    [ApiController, Route("api/grunts"), Authorize(Policy = "RequireJwtBearer")]
     public class GruntApiController : Controller
     {
-        private readonly CovenantContext _context;
-        private readonly UserManager<CovenantUser> _userManager;
-        private readonly IHubContext<GruntHub> _grunthub;
-        private readonly IHubContext<EventHub> _eventhub;
-        private readonly Interaction interact;
+        private readonly ICovenantService _service;
 
-        public GruntApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
+        public GruntApiController(ICovenantService service)
         {
-            _context = context;
-            _userManager = userManager;
-            _grunthub = grunthub;
-            _eventhub = eventhub;
-            interact = new Interaction(_context, grunthub, eventhub);
+            _service = service;
         }
 
         // GET: api/grunts
@@ -44,9 +29,9 @@ namespace Covenant.Controllers
         // Get a list of Grunts
         // </summary>
         [HttpGet(Name = "GetGrunts")]
-        public ActionResult<IEnumerable<Grunt>> GetGrunts()
+        public async Task<ActionResult<IEnumerable<Grunt>>> GetGrunts()
         {
-            return _context.Grunts;
+            return Ok(await _service.GetGrunts());
         }
 
         // GET api/grunts/{id}
@@ -58,7 +43,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGrunt(id);
+                return await _service.GetGrunt(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -79,7 +64,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntByName(name);
+                return await _service.GetGruntByName(name);
             }
             catch (ControllerNotFoundException e)
             {
@@ -100,7 +85,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntByGUID(guid);
+                return await _service.GetGruntByGUID(guid);
             }
             catch (ControllerNotFoundException e)
             {
@@ -121,7 +106,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntByOriginalServerGUID(serverguid);
+                return await _service.GetGruntByOriginalServerGUID(serverguid);
             }
             catch (ControllerNotFoundException e)
             {
@@ -142,7 +127,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetPathToChildGrunt(id, cid);
+                return await _service.GetPathToChildGrunt(id, cid);
             }
             catch (ControllerNotFoundException e)
             {
@@ -163,7 +148,7 @@ namespace Covenant.Controllers
 		{
 			try
 			{
-				return await _context.GetOutboundGrunt(id);
+				return await _service.GetOutboundGrunt(id);
 			}
 			catch (ControllerNotFoundException e)
 			{
@@ -186,7 +171,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                Grunt createdGrunt = await _context.CreateGrunt(grunt);
+                Grunt createdGrunt = await _service.CreateGrunt(grunt);
                 return CreatedAtRoute(nameof(GetGrunt), new { id = createdGrunt.Id }, createdGrunt);
             }
             catch (ControllerNotFoundException e)
@@ -208,7 +193,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditGrunt(grunt, _userManager, HttpContext.User, _grunthub, _eventhub);
+                return await _service.EditGrunt(grunt, await _service.GetCurrentUser(HttpContext.User));
             }
             catch (ControllerNotFoundException e)
             {
@@ -230,7 +215,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteGrunt(id);
+                await _service.DeleteGrunt(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)
@@ -253,9 +238,8 @@ namespace Covenant.Controllers
         {
             try
             {
-                Grunt grunt = await _context.GetGrunt(id);
-                CovenantUser user = await _context.GetCurrentUser(_userManager, this.HttpContext.User);
-                GruntCommand gruntCommand = await interact.Input(user, grunt, command);
+                CovenantUser user = await _service.GetCurrentUser(this.HttpContext.User);
+                GruntCommand gruntCommand = await _service.InteractGrunt(id, user.Id, command);
                 return CreatedAtRoute("GetGruntCommand", new { id = gruntCommand.Id }, gruntCommand);
             }
             catch (ControllerNotFoundException e)
@@ -277,7 +261,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.CompileGruntExecutorCode(id, Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary, false);
+                return await _service.CompileGruntExecutorCode(id, Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary, false);
             }
             catch (ControllerNotFoundException e)
             {

@@ -24,11 +24,7 @@ namespace Covenant.Models.Listeners
         public string Name { get; set; }
         public string Description { get; set; }
 
-        private List<ListenerTypeImplantTemplate> ListenerTypeImplantTemplates { get; set; } = new List<ListenerTypeImplantTemplate>();
-        [NotMapped]
-        public List<ImplantTemplate> CompatibleImplantTemplates => ListenerTypeImplantTemplates.Select(l => l.ImplantTemplate).ToList();
-
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<Listener> Listeners { get; set; }
     }
 
@@ -54,7 +50,7 @@ namespace Covenant.Models.Listeners
         [Required, Range(1, 65535)]
         public int BindPort { get; set; } = 80;
         [Required]
-        public List<string> ConnectAddresses { get; set; }
+        public List<string> ConnectAddresses { get; set; } = new List<string>();
         [Required, Range(1, 65535)]
         public int ConnectPort { get; set; } = 80;
         [Required]

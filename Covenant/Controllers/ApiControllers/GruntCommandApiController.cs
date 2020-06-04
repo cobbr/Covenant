@@ -2,38 +2,25 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
 
 using Covenant.Core;
-using Covenant.Hubs;
-using Covenant.Models;
 using Covenant.Models.Grunts;
-using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
     [ApiController, Route("api/commands"), Authorize(Policy = "RequireJwtBearer")]
     public class GruntCommandApiController : Controller
     {
-        private readonly CovenantContext _context;
-        private readonly UserManager<CovenantUser> _userManager;
-        private readonly IHubContext<GruntHub> _grunthub;
-        private readonly IHubContext<EventHub> _eventhub;
+        private readonly ICovenantService _service;
 
-        public GruntCommandApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
+        public GruntCommandApiController(ICovenantService service)
         {
-            _context = context;
-            _userManager = userManager;
-            _grunthub = grunthub;
-            _eventhub = eventhub;
+            _service = service;
         }
 
         // GET: api/commands
@@ -43,7 +30,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetGruntCommands")]
         public async Task<ActionResult<IEnumerable<GruntCommand>>> GetGruntCommands()
         {
-            return Ok(await _context.GetGruntCommands());
+            return Ok(await _service.GetGruntCommands());
         }
 
         // GET: api/commands/{id}
@@ -55,7 +42,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntCommand(id);
+                return await _service.GetGruntCommand(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -76,8 +63,8 @@ namespace Covenant.Controllers
         {
             try
             {
-                gruntCommand.Grunt = await _context.GetGrunt(gruntCommand.GruntId);
-                GruntCommand createdCommand = await _context.CreateGruntCommand(gruntCommand, _grunthub, _eventhub);
+                gruntCommand.Grunt = await _service.GetGrunt(gruntCommand.GruntId);
+                GruntCommand createdCommand = await _service.CreateGruntCommand(gruntCommand);
                 return CreatedAtRoute(nameof(GetGruntCommand), new { id = createdCommand.Id }, createdCommand);
             }
             catch (ControllerNotFoundException e)
@@ -99,7 +86,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditGruntCommand(gruntCommand, _grunthub, _eventhub);
+                return await _service.EditGruntCommand(gruntCommand);
             }
             catch (ControllerNotFoundException e)
             {
@@ -121,7 +108,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteGruntCommand(id);
+                await _service.DeleteGruntCommand(id);
             }
             catch (ControllerNotFoundException e)
             {

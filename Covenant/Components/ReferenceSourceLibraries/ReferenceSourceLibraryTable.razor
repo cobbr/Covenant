@@ -1,0 +1,69 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="ReferenceSourceLibrary" Items="ReferenceSourceLibraries.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => library.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => GetSuportedDotNetVersions(library)">
+            <HeaderContent>SupportedDotNetVersions</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ReferenceSourceLibrary" TItem2="string" GetSortableProperty="(library) => library.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="library">
+        <tr>
+            <td>
+                <a href="/referencesourcelibrary/edit/@library.Id">
+                    @library.Name
+                </a>
+            </td>
+            <td>@GetSuportedDotNetVersions(library)</td>
+            <td>@library.Description</td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = false;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ReferenceSourceLibraries = await Service.GetReferenceSourceLibraries();
+    }
+
+    private string GetSuportedDotNetVersions(ReferenceSourceLibrary library)
+    {
+        return string.Join(",", library.CompatibleDotNetVersions.Select(DNV => DNV.ToString()));
+    }
+
+    private bool IsRowDisplayed(ReferenceSourceLibrary library, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            library.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            library.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            library.Location.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetSuportedDotNetVersions(library).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

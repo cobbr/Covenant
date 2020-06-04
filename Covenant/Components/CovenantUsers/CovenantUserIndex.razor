@@ -1,0 +1,38 @@
+﻿@page "/covenantuser"
+@page "/covenantuser/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Users</h1>
+</div>
+
+<CovenantUserTable CovenantUsers="CovenantUsers" />
+
+@if (IsAdmin())
+{
+    <a class="btn btn-primary" href="/covenantuser/create" role="button">
+        <span class="fe fe-plus"></span> Create
+    </a>
+}
+
+@code {
+    [Parameter]
+    public IEnumerable<CovenantUser> CovenantUsers { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CovenantUsers = this.CovenantUsers ?? await Service.GetUsers();
+    }
+
+    private bool IsAdmin()
+    {
+        AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
+        return state.User.IsInRole("Administrator");
+    }
+}

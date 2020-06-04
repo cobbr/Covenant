@@ -1,0 +1,20 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Launchers
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="ParameterString">ParameterString</label>
+        <input id="ParameterString" name="ParameterString" value="@Launcher.ParameterString" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Launcher.ParameterString" /></div>
+    </div>
+    <div class="form-group col-md-6">
+        <label for="DllName">DllName</label>
+        <input id="DllName" name="DllName" value="@Launcher.DllName" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Launcher.DllName" /></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Regsvr32Launcher Launcher { get; set; }
+}

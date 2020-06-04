@@ -1,0 +1,41 @@
+﻿@using System.Linq
+@using Microsoft.JSInterop
+@inject IJSRuntime IJSRuntime
+@typeparam EnumType
+
+@if (typeof(EnumType).IsEnum)
+{
+    <select @ref="SelectElement" @attributes="Attributes" value="@Value" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+        @foreach (KeyValuePair<string, string> kvp in GetEnumNamesAndValues())
+        {
+            <option value="@kvp.Key">@kvp.Value</option>
+        }
+    </select>
+}
+
+@code {
+    [Parameter]
+    public EnumType Value { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object> Attributes { get; set; }
+
+    private ElementReference SelectElement { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", new object[] { ".selectpicker", SelectElement,  ((int)Enum.Parse(typeof(EnumType), Value.ToString())).ToString() });
+    }
+
+    private static IEnumerable<KeyValuePair<string, string>> GetEnumNamesAndValues()
+    {
+        List<KeyValuePair<int, string>> EnumPairs = new List<KeyValuePair<int, string>>();
+        if (typeof(EnumType).IsEnum)
+        {
+            return Enum.GetNames(typeof(EnumType))
+                .Select(name => typeof(EnumType).GetField(name))
+                .Select(field => new KeyValuePair<string, string>(((Enum)field.GetValue(obj: null)).ToString("d"), field.Name));
+        }
+        return null;
+    }
+}

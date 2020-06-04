@@ -27,24 +27,28 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="language">Possible values include: 'CSharp'</param>
         /// <param name="taskingType">Possible values include: 'Assembly',
-        /// 'SetOption', 'Exit', 'Connect', 'Disconnect', 'Jobs'</param>
-        public GruntTask(string name, int? id = default(int?), IList<string> alternateNames = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), string code = default(string), GruntTaskingType? taskingType = default(GruntTaskingType?), bool? compiled = default(bool?), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>))
+        /// 'SetDelay', 'SetJitter', 'SetConnectAttempts', 'SetKillDate',
+        /// 'Exit', 'Connect', 'Disconnect', 'Tasks', 'TaskKill'</param>
+        public GruntTask(string name, int? id = default(int?), int? authorId = default(int?), GruntTaskAuthor author = default(GruntTaskAuthor), IList<string> aliases = default(IList<string>), string description = default(string), string help = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), string code = default(string), bool? compiled = default(bool?), GruntTaskingType? taskingType = default(GruntTaskingType?), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), bool? unsafeCompile = default(bool?), bool? tokenTask = default(bool?), IList<GruntTaskOption> options = default(IList<GruntTaskOption>))
         {
             Id = id;
+            AuthorId = authorId;
+            Author = author;
             Name = name;
-            AlternateNames = alternateNames;
+            Aliases = aliases;
             Description = description;
             Help = help;
             Language = language;
+            CompatibleDotNetVersions = compatibleDotNetVersions;
             Code = code;
-            TaskingType = taskingType;
             Compiled = compiled;
-            UnsafeCompile = unsafeCompile;
-            TokenTask = tokenTask;
-            Options = options;
+            TaskingType = taskingType;
             ReferenceSourceLibraries = referenceSourceLibraries;
             ReferenceAssemblies = referenceAssemblies;
             EmbeddedResources = embeddedResources;
+            UnsafeCompile = unsafeCompile;
+            TokenTask = tokenTask;
+            Options = options;
             CustomInit();
         }
 
@@ -60,13 +64,23 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
+        [JsonProperty(PropertyName = "authorId")]
+        public int? AuthorId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "author")]
+        public GruntTaskAuthor Author { get; set; }
+
+        /// <summary>
+        /// </summary>
         [JsonProperty(PropertyName = "name")]
         public string Name { get; set; }
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "alternateNames")]
-        public IList<string> AlternateNames { get; set; }
+        [JsonProperty(PropertyName = "aliases")]
+        public IList<string> Aliases { get; set; }
 
         /// <summary>
         /// </summary>
@@ -86,15 +100,13 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "code")]
-        public string Code { get; set; }
+        [JsonProperty(PropertyName = "compatibleDotNetVersions")]
+        public IList<DotNetVersion?> CompatibleDotNetVersions { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Assembly', 'SetOption',
-        /// 'Exit', 'Connect', 'Disconnect', 'Jobs'
         /// </summary>
-        [JsonProperty(PropertyName = "taskingType")]
-        public GruntTaskingType? TaskingType { get; set; }
+        [JsonProperty(PropertyName = "code")]
+        public string Code { get; set; }
 
         /// <summary>
         /// </summary>
@@ -102,19 +114,12 @@ namespace Covenant.API.Models
         public bool? Compiled { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'Assembly', 'SetDelay',
+        /// 'SetJitter', 'SetConnectAttempts', 'SetKillDate', 'Exit',
+        /// 'Connect', 'Disconnect', 'Tasks', 'TaskKill'
         /// </summary>
-        [JsonProperty(PropertyName = "unsafeCompile")]
-        public bool? UnsafeCompile { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "tokenTask")]
-        public bool? TokenTask { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "options")]
-        public IList<GruntTaskOption> Options { get; set; }
+        [JsonProperty(PropertyName = "taskingType")]
+        public GruntTaskingType? TaskingType { get; set; }
 
         /// <summary>
         /// </summary>
@@ -132,6 +137,21 @@ namespace Covenant.API.Models
         public IList<EmbeddedResource> EmbeddedResources { get; private set; }
 
         /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "unsafeCompile")]
+        public bool? UnsafeCompile { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "tokenTask")]
+        public bool? TokenTask { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "options")]
+        public IList<GruntTaskOption> Options { get; set; }
+
+        /// <summary>
         /// Validate the object.
         /// </summary>
         /// <exception cref="ValidationException">
@@ -142,16 +162,6 @@ namespace Covenant.API.Models
             if (Name == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "Name");
-            }
-            if (Options != null)
-            {
-                foreach (var element in Options)
-                {
-                    if (element != null)
-                    {
-                        element.Validate();
-                    }
-                }
             }
         }
     }

@@ -1,0 +1,76 @@
+﻿@using System
+@using System.IO
+@using System.Collections.Generic
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Listeners
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="HostedFile" Items="HostedFiles.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="HostedFile" TItem2="string" GetSortableProperty="(file) => file.Path">
+            <HeaderContent>Path</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="HostedFile" TItem2="int" GetSortableProperty="(file) => Convert.FromBase64String(file.Content).Length">
+            <HeaderContent>Size</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="HostedFile" TItem2="string" GetSortableProperty="(file) => string.Empty">
+            <HeaderContent>Download</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="file">
+        <tr>
+            <td>
+                <a href="/listener/@file.ListenerId/hostedfile/edit/@file.Id">@file.Path</a>
+            </td>
+            <td>
+                @Convert.FromBase64String(file.Content).Length
+            </td>
+            <td>
+                <button type="button" class="btn btn-primary" @onclick="e => OnDownload(file)">
+                    <span class="fe fe-download"></span>
+                    Download
+                </button>
+            </td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<HostedFile> HostedFiles { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private async Task OnDownload(HostedFile file)
+    {
+        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(file.Path), out string contentType))
+        {
+            contentType = Common.DefaultContentTypeMapping;
+        }
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            Path.GetFileName(file.Path),
+            contentType,
+            file.Content
+        );
+    }
+
+    private bool IsRowDisplayed(HostedFile file, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            file.Path.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

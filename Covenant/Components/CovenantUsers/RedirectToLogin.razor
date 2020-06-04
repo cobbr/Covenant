@@ -1,0 +1,19 @@
+﻿@using Microsoft.JSInterop
+@inject NavigationManager NavigationManager
+@inject IJSRuntime IJSRuntime
+
+@code {
+    protected override void OnInitialized()
+    {
+        try
+        {
+            NavigationManager.NavigateTo("/covenantuser/login");
+        }
+        catch (NavigationException) { }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("RedirectToUrl", "/covenantuser/login");
+    }
+}

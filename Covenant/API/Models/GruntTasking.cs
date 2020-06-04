@@ -25,11 +25,12 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the GruntTasking class.
         /// </summary>
-        /// <param name="type">Possible values include: 'Assembly',
-        /// 'SetOption', 'Exit', 'Connect', 'Disconnect', 'Jobs'</param>
+        /// <param name="type">Possible values include: 'Assembly', 'SetDelay',
+        /// 'SetJitter', 'SetConnectAttempts', 'SetKillDate', 'Exit',
+        /// 'Connect', 'Disconnect', 'Tasks', 'TaskKill'</param>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Tasked', 'Progressed', 'Completed', 'Aborted'</param>
-        public GruntTasking(string name, int gruntId, int gruntCommandId, int? id = default(int?), Grunt grunt = default(Grunt), int? gruntTaskId = default(int?), GruntTask gruntTask = default(GruntTask), GruntTaskingType? type = default(GruntTaskingType?), IList<string> parameters = default(IList<string>), GruntCommand gruntCommand = default(GruntCommand), GruntTaskingStatus? status = default(GruntTaskingStatus?), System.DateTime? taskingTime = default(System.DateTime?), System.DateTime? completionTime = default(System.DateTime?))
+        public GruntTasking(string name, int gruntId, int gruntTaskId, int? id = default(int?), Grunt grunt = default(Grunt), GruntTask gruntTask = default(GruntTask), GruntTaskingType? type = default(GruntTaskingType?), IList<string> parameters = default(IList<string>), GruntTaskingStatus? status = default(GruntTaskingStatus?), System.DateTime? taskingTime = default(System.DateTime?), System.DateTime? completionTime = default(System.DateTime?), int? gruntCommandId = default(int?))
         {
             Id = id;
             Name = name;
@@ -39,11 +40,10 @@ namespace Covenant.API.Models
             GruntTask = gruntTask;
             Type = type;
             Parameters = parameters;
-            GruntCommandId = gruntCommandId;
-            GruntCommand = gruntCommand;
             Status = status;
             TaskingTime = taskingTime;
             CompletionTime = completionTime;
+            GruntCommandId = gruntCommandId;
             CustomInit();
         }
 
@@ -75,7 +75,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "gruntTaskId")]
-        public int? GruntTaskId { get; set; }
+        public int GruntTaskId { get; set; }
 
         /// <summary>
         /// </summary>
@@ -83,8 +83,9 @@ namespace Covenant.API.Models
         public GruntTask GruntTask { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Assembly', 'SetOption',
-        /// 'Exit', 'Connect', 'Disconnect', 'Jobs'
+        /// Gets or sets possible values include: 'Assembly', 'SetDelay',
+        /// 'SetJitter', 'SetConnectAttempts', 'SetKillDate', 'Exit',
+        /// 'Connect', 'Disconnect', 'Tasks', 'TaskKill'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public GruntTaskingType? Type { get; set; }
@@ -93,16 +94,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "parameters")]
         public IList<string> Parameters { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "gruntCommandId")]
-        public int GruntCommandId { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "gruntCommand")]
-        public GruntCommand GruntCommand { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'Uninitialized', 'Tasked',
@@ -120,6 +111,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "completionTime")]
         public System.DateTime? CompletionTime { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "gruntCommandId")]
+        public int? GruntCommandId { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -140,10 +136,6 @@ namespace Covenant.API.Models
             if (GruntTask != null)
             {
                 GruntTask.Validate();
-            }
-            if (GruntCommand != null)
-            {
-                GruntCommand.Validate();
             }
         }
     }

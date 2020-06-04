@@ -33,7 +33,7 @@ namespace Covenant.Models.Launchers
             this.DiskCode = DiskCode.Replace("{{TARGET_NAME}}", this.TargetName);
             this.DiskCode = DiskCode.Replace("{{TASK_NAME}}", this.TaskName);
 
-            string launcher = "msbuild.exe" + " " + "file.xml";
+            string launcher = "msbuild.exe" + " " + template.Name + ".xml";
             this.LauncherString = launcher;
             return this.LauncherString;
         }

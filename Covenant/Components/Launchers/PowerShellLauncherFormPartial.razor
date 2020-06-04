@@ -1,0 +1,15 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Launchers
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="ParameterString">ParameterString</label>
+        <input id="ParameterString" name="ParameterString" value="@Launcher.ParameterString" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Launcher.ParameterString" /></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public PowerShellLauncher Launcher { get; set; }
+}

@@ -1,0 +1,30 @@
+﻿@using Covenant.Models.Indicators
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Target Indicators</h4>
+</div>
+
+<TargetIndicatorTable TargetIndicators="TargetIndicators" />
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">Network Indicators</h4>
+</div>
+
+<NetworkIndicatorTable NetworkIndicators="NetworkIndicators" />
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+    <h4 class="h5">File Indicators</h4>
+</div>
+
+<FileIndicatorTable FileIndicators="FileIndicators" />
+
+@code {
+    [Parameter]
+    public IEnumerable<TargetIndicator> TargetIndicators { get; set; }
+
+    [Parameter]
+    public IEnumerable<NetworkIndicator> NetworkIndicators { get; set; }
+
+    [Parameter]
+    public IEnumerable<FileIndicator> FileIndicators { get; set; }
+}

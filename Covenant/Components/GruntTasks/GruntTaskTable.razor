@@ -1,0 +1,78 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="GruntTask" Items="GruntTasks.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetCompatibleDotNetVersions(task)">
+            <HeaderContent>CompatibleDotNetVersions</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetReferenceSourceLibraries(task)">
+            <HeaderContent>ReferenceSourceLibraries</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="task">
+        <tr>
+            <td>
+                <a href="/grunttask/edit/@task.Id">
+                    @task.Name
+                </a>
+            </td>
+            <td>@GetCompatibleDotNetVersions(task)</td>
+            <td>@GetReferenceSourceLibraries(task)</td>
+            <td>@task.Description</td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<GruntTask> GruntTasks { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = true;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTasks = await Service.GetGruntTasks();
+    }
+
+    private string GetCompatibleDotNetVersions(GruntTask task)
+    {
+        return string.Join(", ", task.CompatibleDotNetVersions.Select(DN => DN.ToString()));
+    }
+
+    private string GetReferenceSourceLibraries(GruntTask task)
+    {
+        return string.Join(",", task.ReferenceSourceLibraries.Select(RSL => RSL.Name));
+    }
+
+    private bool IsRowDisplayed(GruntTask task, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            task.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            task.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetCompatibleDotNetVersions(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetReferenceSourceLibraries(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

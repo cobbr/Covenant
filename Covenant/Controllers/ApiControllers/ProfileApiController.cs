@@ -2,7 +2,6 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -10,23 +9,20 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/profiles")]
+    [ApiController, Route("api/profiles"), Authorize(Policy = "RequireJwtBearer")]
     public class ProfileApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
         private readonly UserManager<CovenantUser> _userManager;
 
-        public ProfileApiController(CovenantContext context, UserManager<CovenantUser> userManager)
+        public ProfileApiController(ICovenantService service, UserManager<CovenantUser> userManager)
         {
-            _context = context;
+            _service = service;
             _userManager = userManager;
         }
 
@@ -37,7 +33,7 @@ namespace Covenant.Controllers
         [HttpGet(Name = "GetProfiles")]
         public async Task<ActionResult<IEnumerable<Profile>>> GetProfiles()
         {
-            return Ok(await _context.GetProfiles());
+            return Ok(await _service.GetProfiles());
         }
 
         // GET api/profiles/{id}
@@ -49,7 +45,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetProfile(id);
+                return await _service.GetProfile(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -75,7 +71,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                Profile createdProfile = await _context.CreateProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
+                Profile createdProfile = await _service.CreateProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return CreatedAtRoute(nameof(GetProfile), new { id = createdProfile.Id }, createdProfile);
             }
             catch (ControllerNotFoundException e)
@@ -101,7 +97,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
+                return await _service.EditProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
             }
             catch (ControllerNotFoundException e)
             {
@@ -127,7 +123,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteProfile(id);
+                await _service.DeleteProfile(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)
@@ -151,7 +147,7 @@ namespace Covenant.Controllers
         [HttpGet("http", Name = "GetHttpProfiles")]
         public async Task<ActionResult<IEnumerable<HttpProfile>>> GetHttpProfiles()
         {
-            return Ok(await _context.GetHttpProfiles());
+            return Ok(await _service.GetHttpProfiles());
         }
 
         // GET api/profiles/http/{id}
@@ -163,7 +159,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetHttpProfile(id);
+                return await _service.GetHttpProfile(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -189,7 +185,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                HttpProfile createdProfile = await _context.CreateHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
+                HttpProfile createdProfile = await _service.CreateHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
                 return CreatedAtRoute(nameof(GetHttpProfile), new { id = createdProfile.Id }, createdProfile);
             }
             catch (ControllerNotFoundException e)
@@ -215,7 +211,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
+                return await _service.EditHttpProfile(profile, await _userManager.GetUserAsync(HttpContext.User));
             }
             catch (ControllerNotFoundException e)
             {
@@ -241,7 +237,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteProfile(id);
+                await _service.DeleteProfile(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)

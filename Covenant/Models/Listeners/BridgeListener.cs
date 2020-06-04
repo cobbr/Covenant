@@ -17,7 +17,7 @@ namespace Covenant.Models.Listeners
 {
     public class BridgeListener : Listener
     {
-        public bool IsBridgeConnected { get; set; }
+        public bool IsBridgeConnected { get; set; } = false;
 
         public string ImplantReadCode { get; set; }
         public string ImplantWriteCode { get; set; }
@@ -28,25 +28,30 @@ namespace Covenant.Models.Listeners
         public BridgeListener()
         {
             this.Description = "A Bridge for custom listeners.";
-            this.BindPort = 7444;
-            this.ConnectPort = 7445;
-            this.IsBridgeConnected = false;
-            try
-            {
-				this.ConnectAddresses = new List<string>
-				{
-					Dns.GetHostAddresses(Dns.GetHostName())
-						.FirstOrDefault(A => A.AddressFamily == AddressFamily.InterNetwork)
-						.ToString()
-				};
-            }
-            catch (SocketException) { }
         }
 
         public BridgeListener(int ListenerTypeId, int ProfileId) : this()
         {
             this.ListenerTypeId = ListenerTypeId;
             this.ProfileId = ProfileId;
+            this.BindPort = 7444;
+            this.ConnectPort = 7445;
+            try
+            {
+                this.ConnectAddresses = new List<string>
+                {
+                    Dns.GetHostAddresses(Dns.GetHostName())
+                        .FirstOrDefault(A => A.AddressFamily == AddressFamily.InterNetwork)
+                        .ToString()
+                };
+            }
+            catch (SocketException) { }
+        }
+
+        public BridgeListener(ListenerType type, Profile profile) : this(type.Id, profile.Id)
+        {
+            this.ListenerType = type;
+            this.Profile = profile;
         }
 
         public override CancellationTokenSource Start()

@@ -26,7 +26,7 @@ namespace Covenant.Models.Launchers
         {
             this.StagerCode = StagerCode;
             this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
-            this.LauncherString = this.Base64ILByteString;
+            this.LauncherString = template.Name + ".exe";
             return this.LauncherString;
         }
 
