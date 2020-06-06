@@ -2763,6 +2763,8 @@ using SharpSploit.Enumeration;
 using SharpSploit.Execution;
 using SharpSploit.Generic;
 using SharpSploit.Misc;
+using SharpSploit.LateralMovement;
+
 public static class Task
 {{
     public static string Execute()
