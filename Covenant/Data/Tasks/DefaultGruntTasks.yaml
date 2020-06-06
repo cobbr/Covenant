@@ -808,6 +808,68 @@
     Location: net35\System.dll
     DotNetVersion: Net35
   EmbeddedResources: []
+- Name: CreateDirectory
+  Aliases:
+  - mkdir
+  Description: Creates all directories and subdirectories in the specified path unless they already exist.
+  Author:
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help:
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                var directory = Directory.CreateDirectory(Path);
+                return directory.FullName + " created.";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: The directory to create.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
 - Name: Delete
   Aliases:
   - rm
