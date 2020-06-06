@@ -140,7 +140,7 @@ namespace Covenant.Core
             p.WaitForExit();
             try
             {
-                string dir = Path.Combine(request.SourceDirectory, "bin", "release", "netcoreapp3.1", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
+                string dir = Path.Combine(request.SourceDirectory, "bin", "Release", "netcoreapp3.1", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
                 IEnumerable<string> files = Directory.EnumerateFiles(dir);
                 string file = files
                     .Select(F => new FileInfo(F))
