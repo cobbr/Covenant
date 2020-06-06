@@ -477,14 +477,6 @@
   UnsafeCompile: false
   TokenTask: false
   Options:
-  - Name: FilePath
-    Value: ''
-    DefaultValue: ''
-    Description: Remote file path to write to.
-    SuggestedValues: []
-    Optional: false
-    DisplayInCommand: true
-    FileOption: false
   - Name: FileContents
     Value: ''
     DefaultValue: ''
@@ -493,6 +485,14 @@
     Optional: false
     DisplayInCommand: false
     FileOption: true
+  - Name: FilePath
+    Value: ''
+    DefaultValue: ''
+    Description: Remote file path to write to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
   ReferenceSourceLibraries: []
   ReferenceAssemblies:
   - Name: System.dll
