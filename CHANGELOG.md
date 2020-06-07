@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed order of Upload parameters
+- Fixed Brute compilation path for case-sensitive file systems
 
 ## [v0.5] - 2020-06-04
 ### Added
