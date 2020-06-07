@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Brute compilation path for case-sensitive file systems
 - Fixed HttpPost issue on Linux servers
 - Fixed Listeners stop issue
+- Fixed Seatbelt command group suggestions
 
 ## [v0.5] - 2020-06-04
 ### Added

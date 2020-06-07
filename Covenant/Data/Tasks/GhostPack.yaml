@@ -574,13 +574,13 @@
     DefaultValue: ''
     Description: Seatbelt command to execute.
     SuggestedValues:
-    - All
-    - User
-    - System
-    - Slack
-    - Chrome
-    - Remote
-    - Misc
+    - -group=all
+    - -group=user
+    - -group=system
+    - -group=slack
+    - -group=chrome
+    - -group=remote
+    - -group=misc
     - AMSIProviders
     - AntiVirus
     - AppLocker
