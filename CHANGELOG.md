@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
 - Updated PowerShellRemoting tasks to show output
+- Update implants to use WellKnownSidType enum rather than string for non-english systems
 
 ### Fixed
 - Fixed order of Upload parameters
