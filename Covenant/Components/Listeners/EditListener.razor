@@ -125,6 +125,7 @@ else if (Listener.ListenerType.Name == "Bridge")
     protected override async Task OnInitializedAsync()
     {
         this.Listener = this.Listener ?? await Service.GetListener(this.ListenerId);
+        Service.DisposeContext();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
