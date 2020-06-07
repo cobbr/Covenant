@@ -53,7 +53,6 @@
             int number = i;
             <div class="form-group col-md-2 pr-1">
                 <input id="@("Aliases_" + number + "_")" name="@("Aliases[" + number + "_")" @bind="GruntTask.Aliases[number]" class="form-control form-control-sm" />
-                <div class="text-danger"><ValidationMessage For="() => GruntTask.Aliases[number]" /></div>
             </div>
         }
         <div class="input-group-append ml-1 mb-3">
