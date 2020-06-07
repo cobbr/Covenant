@@ -2175,6 +2175,7 @@ namespace Covenant.Core
             updatingTask.Name = task.Name;
             updatingTask.Description = task.Description;
             updatingTask.Help = task.Help;
+            updatingTask.Aliases = task.Aliases;
             if (updatingTask.Code != task.Code)
             {
                 updatingTask.Code = task.Code;
