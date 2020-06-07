@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed HttpPost issue on Linux servers
 - Fixed Listeners stop issue
 - Fixed Seatbelt command group suggestions
+- Fixed EditGruntTask for task with aliases, validationmessage issue
+- Fixed Task aliases to be able to be edited
 
 ## [v0.5] - 2020-06-04
 ### Added
