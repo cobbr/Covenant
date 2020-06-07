@@ -291,7 +291,7 @@
             case LauncherType.InstallUtil:
                 fileext = ".dll";
                 mediatype = MediaTypeNames.Application.Octet;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((InstallUtilLauncher)this.Launcher).DiskCode));
+                content = Convert.ToBase64String(Convert.FromBase64String(((InstallUtilLauncher)this.Launcher).DiskCode));
                 break;
             case LauncherType.MSBuild:
                 fileext = ".xml";
