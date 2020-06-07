@@ -64,6 +64,7 @@
     {
         this.Listeners = this.Listeners ?? (await Service.GetListeners()).ToList();
         this.Profiles = this.Profiles ?? await Service.GetProfiles();
+        Service.DisposeContext();
         this.INotificationService.OnCreateListener += OnCreateListener;
         this.INotificationService.OnEditListener += OnEditListener;
     }
@@ -84,7 +85,8 @@
 
     private void OnCreateListener(object sender, Listener listener)
     {
-        this.Listeners.Add(listener);
+        this.Listeners.Add(Service.GetListener(listener.Id).WaitResult());
+        Service.DisposeContext();
         this.InvokeAsync(() => this.StateHasChanged());
     }
 
@@ -92,7 +94,8 @@
     {
         if (this.Listeners.Any(L => L.Id == listener.Id))
         {
-            this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = listener;
+            this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = Service.GetListener(listener.Id).WaitResult();
+            Service.DisposeContext();
             this.InvokeAsync(() => this.StateHasChanged());
         }
     }

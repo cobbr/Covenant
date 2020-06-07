@@ -4286,7 +4286,7 @@ public static class Task
             PowerShellLauncher launcher = await this.GetPowerShellLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4369,7 +4369,7 @@ public static class Task
             MSBuildLauncher launcher = await this.GetMSBuildLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4452,7 +4452,7 @@ public static class Task
             InstallUtilLauncher launcher = await this.GetInstallUtilLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4537,7 +4537,7 @@ public static class Task
             WmicLauncher launcher = await this.GetWmicLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4623,7 +4623,7 @@ public static class Task
             Regsvr32Launcher launcher = await this.GetRegsvr32Launcher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4711,7 +4711,7 @@ public static class Task
             MshtaLauncher launcher = await this.GetMshtaLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4797,7 +4797,7 @@ public static class Task
             CscriptLauncher launcher = await this.GetCscriptLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,
@@ -4883,7 +4883,7 @@ public static class Task
             WscriptLauncher launcher = await this.GetWscriptLauncher();
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            HttpProfile profile = await this.GetHttpProfile(listener.ProfileId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
             Grunt grunt = new Grunt
             {
                 ListenerId = listener.Id,

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add SharpSploit.LateralMovement namespace to SharpShell command
 - Updated PowerShellRemoting tasks to show output
 - Update implants to use WellKnownSidType enum rather than string for non-english systems
+- Update all launchers to support non-http profiles
 
 ### Fixed
 - Fixed order of Upload parameters
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Task aliases to be able to be edited
 - Fixed InstallUtil launcher
 - Fixed PowerShellLauncher maxlength too short
+- Fixed BridgeListener null exception on creation
 
 ## [v0.5] - 2020-06-04
 ### Added
