@@ -373,8 +373,7 @@ namespace Covenant.Models.Listeners
                 foreach (string route in JsonConvert.DeserializeObject<List<string>>(Configuration["ProfileUrls"]))
                 {
                     string urlOnly = route.Split("?").First();
-                    endpoints.MapControllerRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Get" });
-                    endpoints.MapControllerRoute(urlOnly + "Post", urlOnly, new { controller = "HttpListener", action = "Post" });
+                    endpoints.MapControllerRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Route" });
                 }
             });
 
