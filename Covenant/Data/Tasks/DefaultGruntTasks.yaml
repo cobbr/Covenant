@@ -477,14 +477,6 @@
   UnsafeCompile: false
   TokenTask: false
   Options:
-  - Name: FileContents
-    Value: ''
-    DefaultValue: ''
-    Description: Base64 contents of the file to be written.
-    SuggestedValues: []
-    Optional: false
-    DisplayInCommand: false
-    FileOption: true
   - Name: FilePath
     Value: ''
     DefaultValue: ''
@@ -493,6 +485,14 @@
     Optional: false
     DisplayInCommand: true
     FileOption: false
+  - Name: FileContents
+    Value: ''
+    DefaultValue: ''
+    Description: Base64 contents of the file to be written.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
   ReferenceSourceLibraries: []
   ReferenceAssemblies:
   - Name: System.dll

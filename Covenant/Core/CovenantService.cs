@@ -2123,6 +2123,7 @@ namespace Covenant.Core
             {
                 option.GruntTaskId = task.Id;
                 await _context.AddAsync(option);
+                await _context.SaveChangesAsync();
             }
             foreach (EmbeddedResource resource in resources)
             {
