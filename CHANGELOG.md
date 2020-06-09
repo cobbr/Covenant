@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed InstallUtil launcher
 - Fixed PowerShellLauncher maxlength too short
 - Fixed BridgeListener null exception on creation
+- Fixed Dockerfile to use sdk for runtime
 
 ## [v0.5] - 2020-06-04
 ### Added
