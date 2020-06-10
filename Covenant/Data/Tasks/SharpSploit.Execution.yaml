@@ -891,3 +891,226 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
+- Name: ExecuteCmd
+  Aliases:
+  - cmd
+  Author:
+    Name: ''
+    Handle: kltdwd
+    Link: https://twitter.com/kltdwd
+  Description: Execute a command using "cmd.exe /c".
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >
+    using System;
+
+    using SharpSploit.Execution;
+
+    public static class Task {
+        public static string Execute(string ShellCommand)
+        {
+            try
+            {
+               return Shell.Execute("cmd /c" + ShellCommand, false);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ShellCommand
+    Value: ''
+    DefaultValue: ''
+    Description: The ShellCommand to execute.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ExecuteCmdRunAs
+  Aliases:
+  - runas
+  Author:
+    Name: ''
+    Handle: kltdwd
+    Link: https://twitter.com/kltdwd
+  Description: Execute a command using "cmd.exe /c" as a specified user.
+  Help: ''
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >
+    using System;
+
+    using SharpSploit.Execution;
+
+    public static class Task {
+        public static string Execute(string Username, string Password, string Domain, string ShellCommand)
+        {
+            try
+            {
+               return Shell.Execute("cmd /c" + ShellCommand, Environment.SystemDirectory, false, Username, Domain, Password);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Username
+    Value: ''
+    DefaultValue: ''
+    Description: The username to execute as.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Password
+    Value: ''
+    DefaultValue: ''
+    Description: The password to execute as.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Domain
+    Value: ''
+    Description: The domain to execute as.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ShellCommand
+    Value: ''
+    DefaultValue: ''
+    Description: The ShellCommand to execute.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
