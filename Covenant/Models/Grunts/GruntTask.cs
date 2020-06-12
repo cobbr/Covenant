@@ -278,7 +278,8 @@ namespace Covenant.Models.Grunts
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDPAPI") &&
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDump") &&
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpUp") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI")
+                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI") &&
+                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpSC")
                 }))
             );
         }
