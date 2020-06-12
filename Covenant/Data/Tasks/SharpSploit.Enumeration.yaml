@@ -10,7 +10,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -116,7 +116,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -220,7 +220,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -332,7 +332,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -436,7 +436,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -547,7 +547,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -658,7 +658,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -769,7 +769,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Linq;
@@ -890,7 +890,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Linq;
     using System.Collections.Generic;
@@ -1020,7 +1020,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Enumeration;
@@ -1113,7 +1113,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Enumeration;
@@ -1197,7 +1197,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Enumeration;
@@ -1304,7 +1304,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Enumeration;
@@ -1396,7 +1396,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Enumeration;
@@ -1511,7 +1511,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Enumeration;

@@ -10,7 +10,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Linq;
@@ -292,7 +292,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Linq;
@@ -300,7 +300,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using Reflect = System.Reflection;
-    
+
     public static class Task
     {
         public static string Execute(string Assembly, string AssemblyName, string Parameters = "")
@@ -308,7 +308,7 @@
             string output = "";
             try
             {
-                string[] args = Parameters.Split(' ').ToArray();
+                string[] args = SplitCommandLine(Parameters).ToArray();
                 
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
@@ -317,7 +317,7 @@
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
-                SharpSploit.Execution.Assembly.AssemblyExecute(Assembly, new Object[] { args });
+                Assem.AssemblyExecute(Assembly, new Object[] { args });
                 
                 Console.Out.Flush();
                 Console.Error.Flush();
@@ -330,12 +330,53 @@
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
         }
+
+        // Credit: https://stackoverflow.com/a/298990
+        private static IEnumerable<string> SplitCommandLine(string commandLine)
+        {
+            bool inQuotes = false;
+
+            return commandLine.Split(c =>
+            {
+                if (c == '\"' || c == '\'')
+                    inQuotes = !inQuotes;
+
+                return !inQuotes && c == ' ';
+            })
+                .Select(arg => arg.Trim().TrimMatchingQuotes('\"').TrimMatchingQuotes('\''))
+                .Where(arg => !string.IsNullOrEmpty(arg));
+        }
+
+        private static IEnumerable<string> Split(this string str, Func<char, bool> controller)
+        {
+            int nextPiece = 0;
+
+            for (int c = 0; c < str.Length; c++)
+            {
+                if (controller(str[c]))
+                {
+                    yield return str.Substring(nextPiece, c - nextPiece);
+                    nextPiece = c + 1;
+                }
+            }
+
+            yield return str.Substring(nextPiece);
+        }
+
+        private static string TrimMatchingQuotes(this string input, char quote)
+        {
+            if ((input.Length >= 2) && 
+                (input[0] == quote) && (input[input.Length - 1] == quote))
+                return input.Substring(1, input.Length - 2);
+
+            return input;
+        }
     }
-    
+
     /// <summary>
     /// Assembly is a library for loading .NET assemblies and executing methods contained within them.
     /// </summary>
-    public class Assembly
+    public class Assem
     {
         /// <summary>
         /// Loads a specified .NET assembly byte array and executes the EntryPoint.
@@ -351,7 +392,7 @@
             Reflect.Assembly assembly = Load(AssemblyBytes);
             assembly.EntryPoint.Invoke(null, Args);
         }
-    
+
         /// <summary>
         /// Loads a specified .NET assembly byte array and executes a specified method within a
         /// specified type with specified parameters.
@@ -369,7 +410,7 @@
             var results = method.Invoke(null, Parameters);
             return new GenericObjectResult(results);
         }
-    
+
         /// <summary>
         /// Loads a specified base64-encoded .NET assembly and executes a specified method within a
         /// specified type with specified parameters.
@@ -383,7 +424,7 @@
         {
             return AssemblyExecute(Convert.FromBase64String(EncodedAssembly), TypeName, MethodName, Parameters);
         }
-    
+
         /// <summary>
         /// Loads a specified base64-encoded .NET assembly and executes the EntryPoint.
         /// </summary>
@@ -393,7 +434,7 @@
         {
             AssemblyExecute(Convert.FromBase64String(EncodedAssembly), Args);
         }
-    
+
         /// <summary>
         /// Loads a specified .NET assembly byte array.
         /// </summary>
@@ -403,7 +444,7 @@
         {
             return Reflect.Assembly.Load(AssemblyBytes);
         }
-    
+
         /// <summary>
         /// Loads a specified .NET assembly byte array.
         /// </summary>
@@ -414,7 +455,6 @@
             return Reflect.Assembly.Load(Convert.FromBase64String(EncodedAssembly));
         }
     }
-    
     /// <summary>
     /// GenericObjectResult for listing objects whose type is unknown at compile time.
     /// </summary>
@@ -435,28 +475,27 @@
                     };
             }
         }
-    
+
         public GenericObjectResult(object Result)
         {
             this.Result = Result;
         }
     }
-    
+
     /// <summary>
-    /// SharpSploitResultList extends the IList interface for SharpSploitResults to easily
-    /// format a list of results from various SharpSploit functions.
+    /// SharpSploitResultList extends the IList interface for SharpSploitResults to easily /// format a list of results from various SharpSploit functions.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class SharpSploitResultList<T> : IList<T> where T : SharpSploitResult
     {
         private List<T> Results { get; } = new List<T>();
-    
+
         public int Count => Results.Count;
         public bool IsReadOnly => ((IList<T>)Results).IsReadOnly;
-    
-    
+
+
         private const int PROPERTY_SPACE = 3;
-    
+
         /// <summary>
         /// Formats a SharpSploitResultList to a string similar to PowerShell's Format-List function.
         /// </summary>
@@ -465,7 +504,7 @@
         {
             return this.ToString();
         }
-    
+
         private string FormatTable()
         {
             // TODO
@@ -512,65 +551,65 @@
             }
             return "";
         }
-    
+
         public T this[int index] { get => Results[index]; set => Results[index] = value; }
-    
+
         public IEnumerator<T> GetEnumerator()
         {
             return Results.Cast<T>().GetEnumerator();
         }
-    
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return Results.Cast<T>().GetEnumerator();
         }
-    
+
         public int IndexOf(T item)
         {
             return Results.IndexOf(item);
         }
-    
+
         public void Add(T t)
         {
             Results.Add(t);
         }
-    
+
         public void AddRange(IEnumerable<T> range)
         {
             Results.AddRange(range);
         }
-    
+
         public void Insert(int index, T item)
         {
             Results.Insert(index, item);
         }
-    
+
         public void RemoveAt(int index)
         {
             Results.RemoveAt(index);
         }
-    
+
         public void Clear()
         {
             Results.Clear();
         }
-    
+
         public bool Contains(T item)
         {
             return Results.Contains(item);
         }
-    
+
         public void CopyTo(T[] array, int arrayIndex)
         {
             Results.CopyTo(array, arrayIndex);
         }
-    
+
         public bool Remove(T item)
         {
             return Results.Remove(item);
         }
     }
-    
+
     /// <summary>
     /// Abstract class that represents a result from a SharpSploit function.
     /// </summary>
@@ -578,7 +617,7 @@
     {
         protected internal abstract IList<SharpSploitResultProperty> ResultProperties { get; }
     }
-    
+
     /// <summary>
     /// SharpSploitResultProperty represents a property that is a member of a SharpSploitResult's ResultProperties.
     /// </summary>
@@ -629,7 +668,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Diagnostics;
@@ -779,7 +818,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
     using System.Text;
     using System.Diagnostics;
@@ -902,7 +941,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
 
     public static class Task
@@ -935,7 +974,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -978,7 +1017,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - NetCore31
-  Code: >
+  Code: |
     using System;
     using System.Linq;
     using System.Text;

@@ -10,7 +10,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     
@@ -163,7 +163,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     
@@ -291,7 +291,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Linq;
@@ -409,7 +409,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     
@@ -529,7 +529,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Reflection;
@@ -759,7 +759,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Reflection;
