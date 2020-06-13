@@ -230,5 +230,18 @@ namespace Covenant.Core
                 return true;
             }
         }
+
+        public static string TrimOne(this string str, char c)
+        {
+            if (str.Length > 1 && str.StartsWith(c))
+            {
+                str = str.Substring(1, str.Length - 1);
+            }
+            if (str.Length > 1 && str.EndsWith(c))
+            {
+                str = str.Substring(0, str.Length - 1);
+            }
+            return str;
+        }
     }
 }

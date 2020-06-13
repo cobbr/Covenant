@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ordering of deserialized GruntTask Options
 - Fixed Assembly tasks to do command-line style parsing
 - Updated YAML task file code options to use literal strings, may have been causing some problems
+- Fixed parameter parsing bug when multiple trailing double-quotes
 
 ## [v0.5] - 2020-06-04
 ### Added
