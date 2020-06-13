@@ -1604,6 +1604,13 @@ namespace Covenant.Core
                 commandTask = await this.GetGruntTaskByName(commandName, grunt.DotNetVersion);
                 if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
                 {
+                    string val = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1);
+                    if (val.StartsWith("/", StringComparison.Ordinal) && val.IndexOf(":", StringComparison.Ordinal) != -1)
+                    {
+                        int labelIndex = val.IndexOf(":", StringComparison.Ordinal);
+                        string label = val.Substring(1, labelIndex - 1);
+                        val = val.Substring(labelIndex + 1, val.Length - labelIndex - 1);
+                    }
                     parameters = new List<ParsedParameter>
                     {
                         new ParsedParameter
@@ -1612,7 +1619,7 @@ namespace Covenant.Core
                         },
                         new ParsedParameter
                         {
-                            Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).TrimOnceSymmetric('"'),
+                            Value = val.TrimOnceSymmetric('"').Replace("\\\"", "\""),
                             Label = "", IsLabeled = false, Position = 0
                         }
                     };
@@ -2383,8 +2390,11 @@ namespace Covenant.Core
                 if (parameters[i].IsLabeled)
                 {
                     var option = task.Options.FirstOrDefault(O => O.Name.Equals(parameters[i].Label, StringComparison.OrdinalIgnoreCase));
-                    option.Value = parameters[i].Value;
-                    OptionAssignments[task.Options.IndexOf(option)] = true;
+                    if (option != null)
+                    {
+                        option.Value = parameters[i].Value;
+                        OptionAssignments[task.Options.IndexOf(option)] = true;
+                    }
                 }
                 else
                 {

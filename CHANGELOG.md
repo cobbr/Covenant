@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated YAML task file code options to use literal strings, may have been causing some problems
 - Fixed parameter parsing bug when multiple trailing double-quotes
 - Fixed command parameter parsing bug when multiple trailing double-quotes
+- Fixed command parameter parsing bug when labeled parameter
 
 ## [v0.5] - 2020-06-04
 ### Added
