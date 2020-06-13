@@ -45,16 +45,12 @@ namespace Covenant.Models
                     int labelIndex = matches[i].IndexOf(":", StringComparison.Ordinal);
                     string label = matches[i].Substring(1, labelIndex - 1);
                     string val = matches[i].Substring(labelIndex + 1, matches[i].Length - labelIndex - 1);
-                    if (val.StartsWith("\"", StringComparison.Ordinal) && val.EndsWith("\"", StringComparison.Ordinal))
-                    {
-                        val = val.TrimOne('"').Replace("\\\"", "\"");
-                    }
                     ParsedParameters.Add(new ParsedParameter
                     {
                         Position = i,
                         IsLabeled = true,
                         Label = label,
-                        Value = val
+                        Value = val.TrimOnceSymmetric('"').Replace("\\\"", "\"")
                     });
                 }
                 else

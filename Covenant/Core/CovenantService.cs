@@ -1612,7 +1612,7 @@ namespace Covenant.Core
                         },
                         new ParsedParameter
                         {
-                            Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).Trim('"'),
+                            Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).TrimOnceSymmetric('"'),
                             Label = "", IsLabeled = false, Position = 0
                         }
                     };
