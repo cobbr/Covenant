@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CreateDirectory task
 - Add SharpSC submodule, ReferenceSourceLibrary, and GruntTask
 - Added CreateProcessWithToken task
+- Added aliases for Shell tasks
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
 - Updated PowerShellRemoting tasks to show output
 - Update implants to use WellKnownSidType enum rather than string for non-english systems
 - Update all launchers to support non-http profiles
+- Changed Shell tasks to use CreateProcess to get output
 
 ### Fixed
 - Fixed order of Upload parameters
