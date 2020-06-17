@@ -1,6 +1,7 @@
 - Name: Shell
-  Aliases: []
-  Description: Execute a Shell command.
+  Aliases:
+  - CreateProcess
+  Description: Execute a Shell command using CreateProcess.
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -21,7 +22,7 @@
         {
             try
             {
-                return Shell.ShellExecute(ShellCommand);
+                return Shell.CreateProcess(ShellCommand);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -93,8 +94,10 @@
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: ShellCmd
-  Aliases: []
-  Description: Execute a Shell command using "cmd.exe /c"
+  Aliases:
+  - CreateCmdProcess
+  - cmd
+  Description: Execute a Shell command using CreateProcess with "cmd.exe /c"
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -115,7 +118,7 @@
         {
             try
             {
-                return Shell.ShellCmdExecute(ShellCommand);
+                return Shell.CreateCmdProcess(ShellCommand);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -185,8 +188,10 @@
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: ShellRunAs
-  Aliases: []
-  Description: Execute a Shell command as a specified user.
+  Aliases:
+  - CreateProcessAsUser
+  - runas
+  Description: Execute a Shell command using CreateProcess as a specified user.
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -207,7 +212,7 @@
         {
             try
             {
-                return Shell.ShellExecute(ShellCommand, Username, Domain, Password);
+                return Shell.CreateProcess(ShellCommand, Username, Domain, Password);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -301,8 +306,10 @@
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: ShellCmdRunAs
-  Aliases: []
-  Description: Execute a Shell command using "cmd.exe /c" as a specified user.
+  Aliases:
+  - CreateCmdProcessAsUser
+  - runascmd
+  Description: Execute a Shell command using CreateProcess with "cmd.exe /c" as a specified user.
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -323,7 +330,7 @@
         {
             try
             {
-                return Shell.ShellCmdExecute(ShellCommand, Username, Domain, Password);
+                return Shell.CreateCmdProcess(ShellCommand, Username, Domain, Password);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
