@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added CreateDirectory task
 - Add SharpSC submodule, ReferenceSourceLibrary, and GruntTask
+- Added CreateProcessWithToken task
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
