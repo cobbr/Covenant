@@ -2039,10 +2039,10 @@ namespace Covenant.Core
 
         public async Task<GruntTask> GetGruntTaskByName(string name, Common.DotNetVersion version = Common.DotNetVersion.Net35)
         {
-            string word = name.ToLower();
+            string lower = name.ToLower();
 
             GruntTask task = _context.GruntTasks
-                .Where(T => T.Name.ToLower() == word)
+                .Where(T => T.Name.ToLower() == lower)
                 // .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
@@ -2066,7 +2066,7 @@ namespace Covenant.Core
                     .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
                     .Include("GruntTaskEmbeddedResources.EmbeddedResource")
                     .AsEnumerable()
-                    .Where(T => T.Aliases.Contains(word))
+                    .Where(T => T.Aliases.Any(A => A.Equals(lower, StringComparison.CurrentCultureIgnoreCase)))
                     .Where(T => T.CompatibleDotNetVersions.Contains(version))
                     .FirstOrDefault();
                 if (task == null)
