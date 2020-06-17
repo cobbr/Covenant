@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed command parameter parsing bug when labeled parameter
 - Fixed CovenantUser default properties set to null, not following OpenApi spec
 - Fixed task aliases use incorrect case comparisons
+- Fixed LauncherForm exception when no active listeners
 
 ## [v0.5] - 2020-06-04
 ### Added
