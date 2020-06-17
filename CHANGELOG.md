@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update implants to use WellKnownSidType enum rather than string for non-english systems
 - Update all launchers to support non-http profiles
 - Changed Shell tasks to use CreateProcess to get output
+- Updated SharpSploit, Rubeus, Seatbelt ReferenceSourceLibaries to latest versions
+- Simplified compilation optimization to use HashSet
+- Limited compilation optimization for SharpSC
 
 ### Fixed
 - Fixed order of Upload parameters
@@ -39,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed CovenantUser default properties set to null, not following OpenApi spec
 - Fixed task aliases use incorrect case comparisons
 - Fixed LauncherForm exception when no active listeners
+- Fixed missing ReferenceAssemblies for SharpSploit
 
 ## [v0.5] - 2020-06-04
 ### Added

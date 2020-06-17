@@ -260,7 +260,7 @@ namespace Covenant.Models.Grunts
                     return new Compiler.Reference { File = Common.CovenantAssemblyReferenceDirectory + RA.Location, Framework = Common.DotNetVersion.Net35, Enabled = true };
                 })
             );
-
+            
             File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet35Directory + this.Name + ".compiled",
                 Utilities.Compress(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
                 {
@@ -279,7 +279,8 @@ namespace Covenant.Models.Grunts
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDump") &&
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpUp") &&
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpSC")
+                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpSC") &&
+                           !this.Name.Contains("inject", StringComparison.CurrentCultureIgnoreCase)
                 }))
             );
         }
@@ -344,7 +345,9 @@ namespace Covenant.Models.Grunts
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDPAPI") &&
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDump") &&
                            !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpUp") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI")
+                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI") &&
+                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpSC") &&
+                           !this.Name.Contains("inject", StringComparison.CurrentCultureIgnoreCase)
                 }))
             );
         }

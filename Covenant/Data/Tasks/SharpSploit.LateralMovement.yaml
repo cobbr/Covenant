@@ -72,7 +72,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: &o0
     - Net35
@@ -197,7 +197,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -321,7 +321,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -445,7 +445,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -566,7 +566,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -703,7 +703,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
