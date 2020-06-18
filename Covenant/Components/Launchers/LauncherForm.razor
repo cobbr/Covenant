@@ -135,6 +135,8 @@
     {
         case "Binary":
             break;
+        case "ShellCode":
+            break;
         case "Cscript":
             <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
             break;
@@ -299,6 +301,11 @@
                 fileext = ".exe";
                 mediatype = MediaTypeNames.Application.Octet;
                 content = ((BinaryLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.ShellCode:
+                fileext = ".bin";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = ((ShellCodeLauncher)this.Launcher).Base64ILByteString;
                 break;
             case LauncherType.Cscript:
                 fileext = ".js";

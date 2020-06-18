@@ -149,6 +149,11 @@
                     binaryLauncher = await Service.EditBinaryLauncher(binaryLauncher);
                     Launcher = await Service.GenerateBinaryLauncher();
                     break;
+                case "ShellCode":
+                    ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)aLauncher;
+                    shellcodeLauncher = await Service.EditShellCodeLauncher(shellcodeLauncher);
+                    Launcher = await Service.GenerateShellCodeLauncher();
+                    break;
                 case "Cscript":
                     CscriptLauncher cscriptLauncher = (CscriptLauncher)aLauncher;
                     cscriptLauncher = await Service.EditCscriptLauncher(cscriptLauncher);
@@ -216,6 +221,12 @@
                     file = await Service.CreateHostedFile(file);
                     Launcher = await Service.GenerateBinaryHostedLauncher(file);
                     break;
+                case "ShellCode":
+                    ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)Launcher;
+                    shellcodeLauncher = await Service.GenerateShellCodeLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateShellCodeHostedLauncher(file);
+                    break;
                 case "Cscript":
                     CscriptLauncher cscriptLauncher = (CscriptLauncher)Launcher;
                     cscriptLauncher = await Service.GenerateCscriptLauncher();
@@ -276,7 +287,7 @@
     private string GetContent()
     {
         string content = "";
-        if (Launcher.Name == "Binary")
+        if (Launcher.Name == "Binary" || Launcher.Name == "ShellCode")
         {
             content = Launcher.Base64ILByteString;
         }

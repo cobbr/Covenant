@@ -118,6 +118,90 @@ namespace Covenant.Controllers
             }
         }
 
+        // GET api/launchers/shellcode
+        // <summary>
+        // Get ShellCodeLauncher
+        // </summary>
+        [HttpGet("shellcode", Name = "GetShellCodeLauncher")]
+        public async Task<ActionResult<ShellCodeLauncher>> GetShellCodeLauncher()
+        {
+            try
+            {
+                return await _service.GetShellCodeLauncher();
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // POST api/launchers/shellcode
+        // <summary>
+        // Generate ShellCodeLauncher
+        // </summary>
+        [HttpPost("shellcode", Name = "GenerateShellCodeLauncher")]
+        public async Task<ActionResult<ShellCodeLauncher>> GenerateShellCodeLauncher()
+        {
+            try
+            {
+                return await _service.GenerateShellCodeLauncher();
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // POST api/launchers/shellcode/hosted
+        // <summary>
+        // Generate a ShellCodeLauncher that points to a hosted binary file
+        // </summary>
+        [HttpPost("shellcode/hosted", Name = "GenerateShellCodeHostedLauncher")]
+        public async Task<ActionResult<ShellCodeLauncher>> GenerateShellCodeHostedLauncher(HostedFile file)
+        {
+            try
+            {
+                return await _service.GenerateShellCodeHostedLauncher(file);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // PUT api/launchers/shellcode
+        // <summary>
+        // Edit ShellCodeLauncher
+        // </summary>
+        [HttpPut("shellcode", Name = "EditShellCodeLauncher")]
+        public async Task<ActionResult<ShellCodeLauncher>> EditShellCodeLauncher([FromBody] ShellCodeLauncher launcher)
+        {
+            try
+            {
+                return await _service.EditShellCodeLauncher(launcher);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         // GET api/launchers/powershell
         // <summary>
         // Get PowerShellLauncher

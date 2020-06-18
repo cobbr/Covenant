@@ -9,21 +9,19 @@ namespace Covenant.API.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    public partial class WmicLauncher
+    public partial class ShellCodeLauncher
     {
         /// <summary>
-        /// Initializes a new instance of the WmicLauncher class.
+        /// Initializes a new instance of the ShellCodeLauncher class.
         /// </summary>
-        public WmicLauncher()
+        public ShellCodeLauncher()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the WmicLauncher class.
+        /// Initializes a new instance of the ShellCodeLauncher class.
         /// </summary>
-        /// <param name="scriptLanguage">Possible values include: 'JScript',
-        /// 'VBScript'</param>
         /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
         /// 'InstallUtil', 'ShellCode'</param>
@@ -41,11 +39,8 @@ namespace Covenant.API.Models
         /// 'ConsoleApplication', 'WindowsApplication',
         /// 'DynamicallyLinkedLibrary', 'NetModule', 'WindowsRuntimeMetadata',
         /// 'WindowsRuntimeApplication'</param>
-        public WmicLauncher(ScriptingLanguage? scriptLanguage = default(ScriptingLanguage?), string progId = default(string), string diskCode = default(string), int? id = default(int?), int? listenerId = default(int?), int? implantTemplateId = default(int?), string name = default(string), string description = default(string), LauncherType? type = default(LauncherType?), DotNetVersion? dotNetVersion = default(DotNetVersion?), RuntimeIdentifier? runtimeIdentifier = default(RuntimeIdentifier?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), OutputKind? outputKind = default(OutputKind?), bool? compressStager = default(bool?))
+        public ShellCodeLauncher(int? id = default(int?), int? listenerId = default(int?), int? implantTemplateId = default(int?), string name = default(string), string description = default(string), LauncherType? type = default(LauncherType?), DotNetVersion? dotNetVersion = default(DotNetVersion?), RuntimeIdentifier? runtimeIdentifier = default(RuntimeIdentifier?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), OutputKind? outputKind = default(OutputKind?), bool? compressStager = default(bool?))
         {
-            ScriptLanguage = scriptLanguage;
-            ProgId = progId;
-            DiskCode = diskCode;
             Id = id;
             ListenerId = listenerId;
             ImplantTemplateId = implantTemplateId;
@@ -72,22 +67,6 @@ namespace Covenant.API.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
-
-        /// <summary>
-        /// Gets or sets possible values include: 'JScript', 'VBScript'
-        /// </summary>
-        [JsonProperty(PropertyName = "scriptLanguage")]
-        public ScriptingLanguage? ScriptLanguage { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "progId")]
-        public string ProgId { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "diskCode")]
-        public string DiskCode { get; set; }
 
         /// <summary>
         /// </summary>

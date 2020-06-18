@@ -2997,6 +2997,116 @@
         }
       }
     },
+    "/api/launchers/shellcode": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetShellCodeLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateShellCodeLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditShellCodeLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/shellcode/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateShellCodeHostedLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      }
+    },
     "/api/launchers/powershell": {
       "get": {
         "tags": [
@@ -6274,7 +6384,8 @@
         "PowerShell",
         "Binary",
         "MSBuild",
-        "InstallUtil"
+        "InstallUtil",
+        "ShellCode"
       ],
       "type": "string",
       "x-ms-enum": {
@@ -6451,6 +6562,75 @@
         },
         "content": {
           "type": "string"
+        }
+      }
+    },
+    "ShellCodeLauncher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
         }
       }
     },
