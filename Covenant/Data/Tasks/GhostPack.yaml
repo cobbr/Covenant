@@ -699,6 +699,9 @@
     - Name: System.DirectoryServices.dll
       Location: net40\System.DirectoryServices.dll
       DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
     - Name: System.Core.dll
       Location: net40\System.Core.dll
       DotNetVersion: Net40
@@ -725,6 +728,9 @@
       DotNetVersion: Net35
     - Name: System.DirectoryServices.dll
       Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
       DotNetVersion: Net35
     - Name: System.dll
       Location: net35\System.dll
