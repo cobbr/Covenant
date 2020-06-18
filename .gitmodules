@@ -26,3 +26,7 @@
 	path = Covenant/Data/ReferenceSourceLibraries/SharpWMI
 	url = https://github.com/GhostPack/SharpWMI
 	ignore = dirty
+[submodule "Covenant/Data/ReferenceSourceLibraries/SharpSC"]
+	path = Covenant/Data/ReferenceSourceLibraries/SharpSC
+	url = https://github.com/djhohnstein/SharpSC
+        ignore = dirty

@@ -230,5 +230,22 @@ namespace Covenant.Core
                 return true;
             }
         }
+
+        public static string TrimOnceSymmetric(this string str, char c)
+        {
+            string ch = c.ToString();
+            if (str.StartsWith(ch, StringComparison.Ordinal) && str.EndsWith(ch, StringComparison.Ordinal))
+            {
+                if (str.Length > 1)
+                {
+                    str = str.Substring(1, str.Length - 1);
+                }
+                if (str.Length > 1)
+                {
+                    str = str.Substring(0, str.Length - 1);
+                }
+            }
+            return str;
+        }
     }
 }

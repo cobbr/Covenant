@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added CreateDirectory task
+- Add SharpSC submodule, ReferenceSourceLibrary, and GruntTask
+- Added CreateProcessWithToken task
+- Added aliases for Shell tasks
+- Added ShellCodeLauncher using Donut
+- Added Copy command
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
 - Updated PowerShellRemoting tasks to show output
 - Update implants to use WellKnownSidType enum rather than string for non-english systems
 - Update all launchers to support non-http profiles
+- Changed Shell tasks to use CreateProcess to get output
+- Updated SharpSploit, Rubeus, Seatbelt ReferenceSourceLibaries to latest versions
+- Simplified compilation optimization to use HashSet
+- Limited compilation optimization for SharpSC
 
 ### Fixed
 - Fixed order of Upload parameters
@@ -27,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed BridgeListener null exception on creation
 - Fixed Dockerfile to use sdk for runtime
 - Fixed ordering of deserialized GruntTask Options
+- Fixed Assembly tasks to do command-line style parsing
+- Updated YAML task file code options to use literal strings, may have been causing some problems
+- Fixed parameter parsing bug when multiple trailing double-quotes
+- Fixed command parameter parsing bug when multiple trailing double-quotes
+- Fixed command parameter parsing bug when labeled parameter
+- Fixed CovenantUser default properties set to null, not following OpenApi spec
+- Fixed task aliases use incorrect case comparisons
+- Fixed LauncherForm exception when no active listeners
+- Fixed missing ReferenceAssemblies for SharpSploit
 
 ## [v0.5] - 2020-06-04
 ### Added

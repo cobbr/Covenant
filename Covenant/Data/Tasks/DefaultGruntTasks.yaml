@@ -319,7 +319,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Text;
@@ -397,7 +397,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -457,7 +457,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -526,7 +526,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Security.Principal;
 
@@ -545,59 +545,26 @@
   UnsafeCompile: false
   TokenTask: false
   Options: []
-  ReferenceSourceLibraries:
-  - Name: SharpSploit
-    Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
-    Language: CSharp
-    CompatibleDotNetVersions: &o0
-    - Net35
-    - Net40
-    ReferenceAssemblies:
-    - Name: System.Management.Automation.dll
-      Location: net35\System.Management.Automation.dll
-      DotNetVersion: Net35
-    - Name: System.Management.dll
-      Location: net40\System.Management.dll
-      DotNetVersion: Net40
-    - Name: System.Management.Automation.dll
-      Location: net40\System.Management.Automation.dll
-      DotNetVersion: Net40
-    - Name: System.IdentityModel.dll
-      Location: net40\System.IdentityModel.dll
-      DotNetVersion: Net40
-    - Name: System.dll
-      Location: net40\System.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.dll
-      Location: net40\System.DirectoryServices.dll
-      DotNetVersion: Net40
-    - Name: System.Core.dll
-      Location: net40\System.Core.dll
-      DotNetVersion: Net40
-    - Name: mscorlib.dll
-      Location: net40\mscorlib.dll
-      DotNetVersion: Net40
-    - Name: System.Management.dll
-      Location: net35\System.Management.dll
-      DotNetVersion: Net35
-    - Name: mscorlib.dll
-      Location: net35\mscorlib.dll
-      DotNetVersion: Net35
-    - Name: System.Core.dll
-      Location: net35\System.Core.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.dll
-      Location: net35\System.DirectoryServices.dll
-      DotNetVersion: Net35
-    - Name: System.dll
-      Location: net35\System.dll
-      DotNetVersion: Net35
-    - Name: System.IdentityModel.dll
-      Location: net35\System.IdentityModel.dll
-      DotNetVersion: Net35
-    EmbeddedResources: []
-  ReferenceAssemblies: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
   EmbeddedResources: []
 - Name: GetCurrentDirectory
   Aliases:
@@ -612,7 +579,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -665,7 +632,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -698,9 +665,11 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
-    CompatibleDotNetVersions: *o0
+    CompatibleDotNetVersions: &o0
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
       Location: net35\System.Management.Automation.dll
@@ -760,7 +729,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -821,7 +790,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -884,7 +853,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
 
@@ -945,6 +914,76 @@
     Location: net35\System.dll
     DotNetVersion: Net35
   EmbeddedResources: []
+- Name: Copy
+  Aliases:
+  - cp
+  Description: Copy a file from one location to another.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Source, string Destination)
+        {
+            try
+            {
+                File.Copy(Source, Destination);
+                return "Successfully copied file from: " + Source + " to: " + Destination;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Source
+    Value: ''
+    DefaultValue: ''
+    Description: Source file to copy
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Destination
+    Value: .
+    DefaultValue: ''
+    Description: Destination to copy file to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
 - Name: Kill
   Aliases: []
   Description: Kills the process of a given Process ID.
@@ -957,7 +996,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.Diagnostics;
 
@@ -1046,7 +1085,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:

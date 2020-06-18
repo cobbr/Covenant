@@ -34,7 +34,9 @@ namespace Covenant.API.Models
         [EnumMember(Value = "MSBuild")]
         MSBuild,
         [EnumMember(Value = "InstallUtil")]
-        InstallUtil
+        InstallUtil,
+        [EnumMember(Value = "ShellCode")]
+        ShellCode
     }
     internal static class LauncherTypeEnumExtension
     {
@@ -65,6 +67,8 @@ namespace Covenant.API.Models
                     return "MSBuild";
                 case LauncherType.InstallUtil:
                     return "InstallUtil";
+                case LauncherType.ShellCode:
+                    return "ShellCode";
             }
             return null;
         }
@@ -91,6 +95,8 @@ namespace Covenant.API.Models
                     return LauncherType.MSBuild;
                 case "InstallUtil":
                     return LauncherType.InstallUtil;
+                case "ShellCode":
+                    return LauncherType.ShellCode;
             }
             return null;
         }

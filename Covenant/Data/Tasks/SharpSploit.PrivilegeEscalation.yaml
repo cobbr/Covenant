@@ -10,7 +10,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
       
     using SharpSploit.PrivilegeEscalation;
@@ -58,7 +58,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: &o0
     - Net35
@@ -107,11 +107,5 @@
       Location: net35\System.IdentityModel.dll
       DotNetVersion: Net35
     EmbeddedResources: []
-  ReferenceAssemblies:
-  - Name: System.XML.dll
-    Location: net35\System.XML.dll
-    DotNetVersion: Net35
-  - Name: System.XML.dll
-    Location: net40\System.XML.dll
-    DotNetVersion: Net40
+  ReferenceAssemblies: []
   EmbeddedResources: []

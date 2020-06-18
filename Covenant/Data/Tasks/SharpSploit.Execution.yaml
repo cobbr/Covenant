@@ -1,6 +1,7 @@
 - Name: Shell
-  Aliases: []
-  Description: Execute a Shell command.
+  Aliases:
+  - CreateProcess
+  Description: Execute a Shell command using CreateProcess.
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -10,7 +11,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Execution;
@@ -21,7 +22,7 @@
         {
             try
             {
-                return Shell.ShellExecute(ShellCommand);
+                return Shell.CreateProcess(ShellCommand);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -41,7 +42,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: &o0
     - Net35
@@ -93,8 +94,10 @@
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: ShellCmd
-  Aliases: []
-  Description: Execute a Shell command using "cmd.exe /c"
+  Aliases:
+  - CreateCmdProcess
+  - cmd
+  Description: Execute a Shell command using CreateProcess with "cmd.exe /c"
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -104,7 +107,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Execution;
@@ -115,7 +118,7 @@
         {
             try
             {
-                return Shell.ShellCmdExecute(ShellCommand);
+                return Shell.CreateCmdProcess(ShellCommand);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -135,7 +138,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -185,8 +188,10 @@
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: ShellRunAs
-  Aliases: []
-  Description: Execute a Shell command as a specified user.
+  Aliases:
+  - CreateProcessAsUser
+  - runas
+  Description: Execute a Shell command using CreateProcess as a specified user.
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -196,7 +201,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Execution;
@@ -207,7 +212,7 @@
         {
             try
             {
-                return Shell.ShellExecute(ShellCommand, Username, Domain, Password);
+                return Shell.CreateProcess(ShellCommand, Username, Domain, Password);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -251,7 +256,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -301,8 +306,10 @@
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: ShellCmdRunAs
-  Aliases: []
-  Description: Execute a Shell command using "cmd.exe /c" as a specified user.
+  Aliases:
+  - CreateCmdProcessAsUser
+  - runascmd
+  Description: Execute a Shell command using CreateProcess with "cmd.exe /c" as a specified user.
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
@@ -312,7 +319,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Execution;
@@ -323,7 +330,7 @@
         {
             try
             {
-                return Shell.ShellCmdExecute(ShellCommand, Username, Domain, Password);
+                return Shell.CreateCmdProcess(ShellCommand, Username, Domain, Password);
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
@@ -367,9 +374,112 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: CreateProcessWithToken
+  Aliases: []
+  Description: Creates a process with the currently impersonated token.
+  Author: 
+      Name: Calvin Hedler
+      Handle: 001SPARTaN
+      Link: https://twitter.com/001SPARTaN
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Security.Principal;
+
+    using SharpSploit.Execution;
+
+    public static class Task
+    {
+        public static string Execute(string Command, string Path)
+        {
+            try
+            {
+                return Shell.CreateProcessWithToken(Command, Path, WindowsIdentity.GetCurrent().Token);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: calc.exe
+    DefaultValue: ''
+    Description: The process to create.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Path
+    Value: C:\Windows\System32
+    DefaultValue: C:\Windows\System32
+    Description: The working directory from which to create a new process.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: &o0
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
       Location: net35\System.Management.Automation.dll
@@ -428,7 +538,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Execution;
@@ -459,7 +569,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -520,10 +630,11 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Linq;
+    using System.Collections.Generic;
 
     using SharpSploit.Execution;
     
@@ -534,7 +645,7 @@
             string output = "";
             try
             {
-                string[] args = Parameters.Split(' ').ToArray();
+                string[] args = SplitCommandLine(Parameters).ToArray();
                 
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
@@ -555,6 +666,47 @@
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
+        }
+
+        // Credit: https://stackoverflow.com/a/298990
+        private static IEnumerable<string> SplitCommandLine(string commandLine)
+        {
+            bool inQuotes = false;
+
+            return commandLine.Split(c =>
+            {
+                if (c == '\"' || c == '\'')
+                    inQuotes = !inQuotes;
+
+                return !inQuotes && c == ' ';
+            })
+                .Select(arg => arg.Trim().TrimMatchingQuotes('\"').TrimMatchingQuotes('\''))
+                .Where(arg => !string.IsNullOrEmpty(arg));
+        }
+
+        private static IEnumerable<string> Split(this string str, Func<char, bool> controller)
+        {
+            int nextPiece = 0;
+
+            for (int c = 0; c < str.Length; c++)
+            {
+                if (controller(str[c]))
+                {
+                    yield return str.Substring(nextPiece, c - nextPiece);
+                    nextPiece = c + 1;
+                }
+            }
+
+            yield return str.Substring(nextPiece);
+        }
+
+        private static string TrimMatchingQuotes(this string input, char quote)
+        {
+            if ((input.Length >= 2) && 
+                (input[0] == quote) && (input[input.Length - 1] == quote))
+                return input.Substring(1, input.Length - 2);
+
+            return input;
         }
     }
   TaskingType: Assembly
@@ -588,7 +740,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -649,7 +801,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     using System.IO;
     using System.Linq;
@@ -737,7 +889,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -798,7 +950,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     
     using SharpSploit.Execution;
@@ -842,7 +994,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:

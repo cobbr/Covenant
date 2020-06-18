@@ -27,7 +27,8 @@ namespace Covenant.Models.Launchers
         PowerShell,
         Binary,
         MSBuild,
-        InstallUtil
+        InstallUtil,
+        ShellCode
     }
 
     public class Launcher

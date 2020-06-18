@@ -26,7 +26,7 @@ namespace Covenant.API.Models
         /// 'VBScript'</param>
         /// <param name="type">Possible values include: 'Wmic', 'Regsvr32',
         /// 'Mshta', 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
-        /// 'InstallUtil'</param>
+        /// 'InstallUtil', 'ShellCode'</param>
         /// <param name="dotNetVersion">Possible values include: 'Net35',
         /// 'Net40', 'NetCore31'</param>
         /// <param name="runtimeIdentifier">Possible values include: 'win_x64',
@@ -117,7 +117,7 @@ namespace Covenant.API.Models
         /// <summary>
         /// Gets or sets possible values include: 'Wmic', 'Regsvr32', 'Mshta',
         /// 'Cscript', 'Wscript', 'PowerShell', 'Binary', 'MSBuild',
-        /// 'InstallUtil'
+        /// 'InstallUtil', 'ShellCode'
         /// </summary>
         [JsonProperty(PropertyName = "type")]
         public LauncherType? Type { get; set; }

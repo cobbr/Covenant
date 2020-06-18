@@ -77,7 +77,7 @@
             </div>
         </div>
     }
-    @if (GetImplantTemplate().Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+    @if (this.CurrentImplantTemplate != null && this.CurrentImplantTemplate.Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
     {
         <div class="form-row">
             <div class="form-group col-md-3">
@@ -98,7 +98,7 @@
             </div>
         </div>
     }
-    @if (GetImplantTemplate().Name.Contains("SMB", StringComparison.CurrentCultureIgnoreCase))
+    @if (this.CurrentImplantTemplate != null && this.CurrentImplantTemplate.Name.Contains("SMB", StringComparison.CurrentCultureIgnoreCase))
     {
         <div class="form-group">
             <label for="SMBPipeName">SMBPipeName</label>
@@ -134,6 +134,8 @@
     @switch (Launcher.Name)
     {
         case "Binary":
+            break;
+        case "ShellCode":
             break;
         case "Cscript":
             <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
@@ -217,7 +219,10 @@
 
     protected override void OnInitialized()
     {
-        this.Launcher.DotNetVersion = GetImplantTemplate().CompatibleDotNetVersions.First();
+        if (this.CurrentImplantTemplate != null)
+        {
+            this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -234,13 +239,24 @@
 
     private IEnumerable<string> GetApplicableDotNetVersions()
     {
-        IEnumerable<string> names = GetImplantTemplate().CompatibleDotNetVersions.Select(CDN => CDN.ToString());
-        return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s));
+        if (this.CurrentImplantTemplate != null)
+        {
+            IEnumerable<string> names = this.CurrentImplantTemplate.CompatibleDotNetVersions.Select(CDN => CDN.ToString());
+            return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s));
+        }
+        return new List<string>();
     }
 
-    private ImplantTemplate GetImplantTemplate()
+    private ImplantTemplate CurrentImplantTemplate
     {
-        return ApplicableImplantTemplates.First(IT => IT.Id == this.Launcher.ImplantTemplateId);
+        get
+        {
+            if (ApplicableImplantTemplates.Any())
+            {
+                return ApplicableImplantTemplates.First(IT => IT.Id == this.Launcher.ImplantTemplateId);
+            }
+            return null;
+        }
     }
 
     private void OnImplantTemplateChanged(ChangeEventArgs e)
@@ -248,7 +264,10 @@
         if (int.TryParse((string)e.Value, out int id))
         {
             this.Launcher.ImplantTemplateId = id;
-            this.Launcher.DotNetVersion = GetImplantTemplate().CompatibleDotNetVersions.First();
+            if (this.CurrentImplantTemplate != null)
+            {
+                this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+            }
             this.RefreshNeeded = true;
         }
     }
@@ -282,6 +301,11 @@
                 fileext = ".exe";
                 mediatype = MediaTypeNames.Application.Octet;
                 content = ((BinaryLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.ShellCode:
+                fileext = ".bin";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = ((ShellCodeLauncher)this.Launcher).Base64ILByteString;
                 break;
             case LauncherType.Cscript:
                 fileext = ".js";

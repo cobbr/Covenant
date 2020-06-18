@@ -3,6 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+using Covenant.Core;
+
 namespace Covenant.Models
 {
     public interface IYamlSerializable<T>
@@ -48,7 +50,7 @@ namespace Covenant.Models
                         Position = i,
                         IsLabeled = true,
                         Label = label,
-                        Value = (val.StartsWith("\"", StringComparison.Ordinal) && val.EndsWith("\"", StringComparison.Ordinal)) ? val.Trim('"') : val
+                        Value = val.TrimOnceSymmetric('"').Replace("\\\"", "\"")
                     });
                 }
                 else

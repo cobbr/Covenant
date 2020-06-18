@@ -306,6 +306,10 @@ namespace Covenant.Core
         Task<BinaryLauncher> GenerateBinaryLauncher();
         Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file);
         Task<BinaryLauncher> EditBinaryLauncher(BinaryLauncher launcher);
+        Task<ShellCodeLauncher> GetShellCodeLauncher();
+        Task<ShellCodeLauncher> GenerateShellCodeLauncher();
+        Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file);
+        Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher);
         Task<PowerShellLauncher> GetPowerShellLauncher();
         Task<PowerShellLauncher> GeneratePowerShellLauncher();
         Task<PowerShellLauncher> GeneratePowerShellHostedLauncher(HostedFile file);
@@ -1604,6 +1608,13 @@ namespace Covenant.Core
                 commandTask = await this.GetGruntTaskByName(commandName, grunt.DotNetVersion);
                 if (commandTask.Options.Count == 1 && new List<string> { "Command", "ShellCommand", "PowerShellCommand", "Code" }.Contains(commandTask.Options[0].Name))
                 {
+                    string val = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1);
+                    if (val.StartsWith("/", StringComparison.Ordinal) && val.IndexOf(":", StringComparison.Ordinal) != -1)
+                    {
+                        int labelIndex = val.IndexOf(":", StringComparison.Ordinal);
+                        string label = val.Substring(1, labelIndex - 1);
+                        val = val.Substring(labelIndex + 1, val.Length - labelIndex - 1);
+                    }
                     parameters = new List<ParsedParameter>
                     {
                         new ParsedParameter
@@ -1612,7 +1623,7 @@ namespace Covenant.Core
                         },
                         new ParsedParameter
                         {
-                            Value = UserInput.Substring(UserInput.IndexOf(" ", StringComparison.Ordinal) + 1).Trim('"'),
+                            Value = val.TrimOnceSymmetric('"').Replace("\\\"", "\""),
                             Label = "", IsLabeled = false, Position = 0
                         }
                     };
@@ -2032,10 +2043,10 @@ namespace Covenant.Core
 
         public async Task<GruntTask> GetGruntTaskByName(string name, Common.DotNetVersion version = Common.DotNetVersion.Net35)
         {
-            string word = name.ToLower();
+            string lower = name.ToLower();
 
             GruntTask task = _context.GruntTasks
-                .Where(T => T.Name.ToLower() == word)
+                .Where(T => T.Name.ToLower() == lower)
                 // .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
@@ -2059,7 +2070,7 @@ namespace Covenant.Core
                     .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
                     .Include("GruntTaskEmbeddedResources.EmbeddedResource")
                     .AsEnumerable()
-                    .Where(T => T.Aliases.Contains(word))
+                    .Where(T => T.Aliases.Any(A => A.Equals(lower, StringComparison.CurrentCultureIgnoreCase)))
                     .Where(T => T.CompatibleDotNetVersions.Contains(version))
                     .FirstOrDefault();
                 if (task == null)
@@ -2383,8 +2394,11 @@ namespace Covenant.Core
                 if (parameters[i].IsLabeled)
                 {
                     var option = task.Options.FirstOrDefault(O => O.Name.Equals(parameters[i].Label, StringComparison.OrdinalIgnoreCase));
-                    option.Value = parameters[i].Value;
-                    OptionAssignments[task.Options.IndexOf(option)] = true;
+                    if (option != null)
+                    {
+                        option.Value = parameters[i].Value;
+                        OptionAssignments[task.Options.IndexOf(option)] = true;
+                    }
                 }
                 else
                 {
@@ -4270,6 +4284,95 @@ public static class Task
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
             return await this.GetBinaryLauncher();
+        }
+
+        public async Task<ShellCodeLauncher> GetShellCodeLauncher()
+        {
+            ShellCodeLauncher launcher = (ShellCodeLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.ShellCode);
+            if (launcher == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ShellCodeLauncher");
+            }
+            return launcher;
+        }
+
+        public async Task<ShellCodeLauncher> GenerateShellCodeLauncher()
+        {
+            ShellCodeLauncher launcher = await this.GetShellCodeLauncher();
+            Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
+
+            if (!template.CompatibleListenerTypes.Select(LT => LT.Id).Contains(listener.ListenerTypeId))
+            {
+                throw new ControllerBadRequestException($"BadRequest - ListenerType not compatible with chosen ImplantTemplate");
+            }
+
+            Grunt grunt = new Grunt
+            {
+                ListenerId = listener.Id,
+                Listener = listener,
+                ImplantTemplateId = template.Id,
+                ImplantTemplate = template,
+                SMBPipeName = launcher.SMBPipeName,
+                ValidateCert = launcher.ValidateCert,
+                UseCertPinning = launcher.UseCertPinning,
+                Delay = launcher.Delay,
+                JitterPercent = launcher.JitterPercent,
+                ConnectAttempts = launcher.ConnectAttempts,
+                KillDate = launcher.KillDate,
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
+            };
+
+            await _context.Grunts.AddAsync(grunt);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateGrunt(this, grunt);
+
+            launcher.GetLauncher(
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
+                grunt,
+                template
+            );
+            _context.Launchers.Update(launcher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, launcher);
+            return await this.GetShellCodeLauncher();
+        }
+
+        public async Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file)
+        {
+            ShellCodeLauncher launcher = await this.GetShellCodeLauncher();
+            Listener listener = await this.GetListener(launcher.ListenerId);
+            HostedFile savedFile = await this.GetHostedFile(file.Id);
+            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
+            _context.Launchers.Update(launcher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, launcher);
+            return await this.GetShellCodeLauncher();
+        }
+
+        public async Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher)
+        {
+            ShellCodeLauncher matchingLauncher = await this.GetShellCodeLauncher();
+            Listener listener = await this.GetListener(launcher.ListenerId);
+            matchingLauncher.ListenerId = listener.Id;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
+            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
+            matchingLauncher.ValidateCert = launcher.ValidateCert;
+            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
+            matchingLauncher.Delay = launcher.Delay;
+            matchingLauncher.JitterPercent = launcher.JitterPercent;
+            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
+            matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.LauncherString = launcher.LauncherString;
+            _context.Launchers.Update(matchingLauncher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, matchingLauncher);
+            return await this.GetShellCodeLauncher();
         }
 
         public async Task<PowerShellLauncher> GetPowerShellLauncher()

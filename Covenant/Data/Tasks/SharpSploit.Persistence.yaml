@@ -1,4 +1,3 @@
-
 - Name: PersistStartup
   Aliases: []
   Description: >
@@ -15,7 +14,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Persistence;
@@ -58,7 +57,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: &o0
     - Net35
@@ -121,7 +120,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
     
     using SharpSploit.Persistence;
@@ -160,7 +159,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -221,7 +220,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Persistence;
@@ -319,7 +318,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:
@@ -385,7 +384,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
 
     using SharpSploit.Persistence;
@@ -442,7 +441,7 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\
+    Location: SharpSploit\SharpSploit\
     Language: CSharp
     CompatibleDotNetVersions: *o0
     ReferenceAssemblies:

@@ -497,6 +497,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync<Regsvr32Launcher>("EditRegsvr32Launcher", launcher);
         }
 
+        public Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher)
+        {
+            return _connection.InvokeAsync<ShellCodeLauncher>("EditShellCodeLauncher", launcher);
+        }
+
         public Task<CapturedTicketCredential> EditTicketCredential(CapturedTicketCredential credential)
         {
             return _connection.InvokeAsync<CapturedTicketCredential>("EditTicketCredential", credential);
@@ -585,6 +590,16 @@ namespace Covenant.Core
         public Task<Regsvr32Launcher> GenerateRegsvr32Launcher()
         {
             return _connection.InvokeAsync<Regsvr32Launcher>("GenerateRegsvr32Launcher");
+        }
+
+        public Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file)
+        {
+            return _connection.InvokeAsync<ShellCodeLauncher>("GenerateShellCodeHostedLauncher", file);
+        }
+
+        public Task<ShellCodeLauncher> GenerateShellCodeLauncher()
+        {
+            return _connection.InvokeAsync<ShellCodeLauncher>("GenerateShellCodeLauncher");
         }
 
         public Task<WmicLauncher> GenerateWmicHostedLauncher(HostedFile file)
@@ -1060,6 +1075,11 @@ namespace Covenant.Core
         public Task<IEnumerable<ScreenshotEvent>> GetScreenshotEvents()
         {
             return _connection.InvokeAsync<IEnumerable<ScreenshotEvent>>("GetScreenshotEvents");
+        }
+
+        public Task<ShellCodeLauncher> GetShellCodeLauncher()
+        {
+            return _connection.InvokeAsync<ShellCodeLauncher>("GetShellCodeLauncher");
         }
 
         public Task<TargetIndicator> GetTargetIndicator(int indicatorId)

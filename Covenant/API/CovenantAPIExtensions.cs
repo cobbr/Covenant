@@ -2589,6 +2589,102 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            public static ShellCodeLauncher GetShellCodeLauncher(this ICovenantAPI operations)
+            {
+                return operations.GetShellCodeLauncherAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ShellCodeLauncher> GetShellCodeLauncherAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetShellCodeLauncherWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static ShellCodeLauncher GenerateShellCodeLauncher(this ICovenantAPI operations)
+            {
+                return operations.GenerateShellCodeLauncherAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ShellCodeLauncher> GenerateShellCodeLauncherAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GenerateShellCodeLauncherWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static ShellCodeLauncher EditShellCodeLauncher(this ICovenantAPI operations, ShellCodeLauncher body = default(ShellCodeLauncher))
+            {
+                return operations.EditShellCodeLauncherAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ShellCodeLauncher> EditShellCodeLauncherAsync(this ICovenantAPI operations, ShellCodeLauncher body = default(ShellCodeLauncher), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.EditShellCodeLauncherWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static ShellCodeLauncher GenerateShellCodeHostedLauncher(this ICovenantAPI operations, HostedFile body = default(HostedFile))
+            {
+                return operations.GenerateShellCodeHostedLauncherAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<ShellCodeLauncher> GenerateShellCodeHostedLauncherAsync(this ICovenantAPI operations, HostedFile body = default(HostedFile), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GenerateShellCodeHostedLauncherWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static PowerShellLauncher GetPowerShellLauncher(this ICovenantAPI operations)
             {
                 return operations.GetPowerShellLauncherAsync().GetAwaiter().GetResult();
