@@ -53,7 +53,7 @@
   - Name: Command
     Value: ''
     DefaultValue: ''
-    Description: Seatbelt command to execute.
+    Description: SharpSC command to execute.
     SuggestedValues:
     - action=query service=
     - action=start service=

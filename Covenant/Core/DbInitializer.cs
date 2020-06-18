@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 using YamlDotNet.Serialization;
 
