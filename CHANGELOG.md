@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SharpSploit, Rubeus, Seatbelt ReferenceSourceLibaries to latest versions
 - Simplified compilation optimization to use HashSet
 - Limited compilation optimization for SharpSC
+- Updated Seatbelt to latest version
 
 ### Fixed
 - Fixed order of Upload parameters
