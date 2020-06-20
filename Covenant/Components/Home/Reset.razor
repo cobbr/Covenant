@@ -1,0 +1,144 @@
+@page "/home/reset"
+@attribute [Authorize(Roles = "Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
+@using Covenant.Components.Listeners
+@using Covenant.Components.Grunts
+@using Covenant.Components.GruntTaskings
+@using Covenant.Models.Covenant
+@using Covenant.Models.Indicators
+@using Microsoft.AspNetCore.Identity
+@using System.Threading
+@using System.Collections.Concurrent
+@inject ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens
+@inject RoleManager<IdentityRole> RoleManager
+@inject CovenantContext CovenantContext
+@inject INotificationService INotificationService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<CovenantUser> UserManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Reset Covenant</h1>
+</div>
+
+<h4>Reset Covenant</h4>
+<div>
+    By clicking the button below, you will reset Covenant to a new configuration.
+    You will delete:
+    <ul>
+        <li>All users but you</li>
+        <li>All listeners</li>
+        <li>All templates</li>
+        <li>All grunts</li>
+        <li>All taskings</li>
+        <li>All indicators</li>
+        <li>All profiles</li>
+    </ul>
+</div>
+<button type="button" class="btn btn-primary" @onclick="ResetAll">Reset Covenant</button>
+
+@code {
+    
+    [Parameter]
+    public List<CovenantUser> CovenantUsers { get; set; }
+
+    [Parameter]
+    public List<Grunt> Grunts { get; set; }
+
+    [Parameter]
+    public List<Listener> Listeners { get; set; }
+
+    [Parameter]
+    public List<GruntTasking> GruntTaskings { get; set; }
+
+    [Parameter]
+    public List<ImplantTemplate> ImplantTemplates { get; set; }
+
+    [Parameter]
+    public List<Indicator> Indicators { get; set; }
+
+    [Parameter]
+    public List<Profile> Profiles { get; set; }
+        
+    protected override async Task OnInitializedAsync()
+    {
+        this.Grunts = this.Grunts ?? (await Service.GetGrunts()).ToList();
+        this.Listeners = this.Listeners ?? (await Service.GetListeners()).ToList();
+        this.GruntTaskings = this.GruntTaskings ?? (await Service.GetGruntTaskings()).ToList();
+        this.CovenantUsers = this.CovenantUsers ?? (await Service.GetUsers()).ToList();
+        this.ImplantTemplates = this.ImplantTemplates ?? (await Service.GetImplantTemplates()).ToList();
+        this.Indicators = this.Indicators ?? (await Service.GetIndicators()).ToList();
+        this.Profiles = this.Profiles ?? (await Service.GetProfiles()).ToList();
+    }
+
+    private CovenantUser GetUser()
+    {
+        Task<AuthenticationState> t1 = AuthenticationStateProvider.GetAuthenticationStateAsync();
+        t1.Wait();
+        Task<CovenantUser> t2 = UserManager.GetUserAsync(t1.Result.User);
+        t2.Wait();
+        return t2.Result;
+    }
+
+    private async Task ResetAll() {
+
+        foreach (Listener listener in this.Listeners)
+        {
+            Console.WriteLine("Deleting listener: " + listener.Name);
+            await Service.DeleteListener(listener.Id);
+        }
+
+        CovenantUser currentUser = GetUser();
+        Console.WriteLine("Current user: " + currentUser.UserName);
+        foreach (CovenantUser user in this.CovenantUsers.Where(U => currentUser.Id != U.Id && U.UserName != "ServiceUser"))
+        {
+            Console.WriteLine("Deleting user: " + user.UserName);
+            await Service.DeleteUser(user.Id);
+        }
+
+        foreach (Grunt grunt in this.Grunts)
+        {
+            Console.WriteLine("Deleting grunt: " + grunt.Name);
+            await Service.DeleteGrunt(grunt.Id);
+        }
+
+        foreach (GruntTasking tasking in this.GruntTaskings)
+        {
+            Console.WriteLine("Deleting tasking: " + tasking.Name);
+            await Service.DeleteGruntTasking(tasking.Id);
+        }
+        
+        foreach (ImplantTemplate template in this.ImplantTemplates)
+        {
+            Console.WriteLine("Deleting template: " + template.Name);
+            await Service.DeleteImplantTemplate(template.Id);
+        }
+        
+        foreach (Indicator indicator in this.Indicators)
+        {
+            Console.WriteLine("Deleting indicator: " + indicator.Id);
+            await Service.DeleteIndicator(indicator.Id);
+        }
+        
+        foreach (Profile profile in this.Profiles)
+        {
+            Console.WriteLine("Deleting profile: " + profile.Name);
+            await Service.DeleteProfile(profile.Id);
+        }
+
+        Console.WriteLine("Initializing the database from scratch");
+
+        await DbInitializer.InitializeImplantTemplates(Service, CovenantContext);
+        await DbInitializer.InitializeLaunchers(Service, CovenantContext);
+        await DbInitializer.InitializeTasks(Service, CovenantContext);
+        await DbInitializer.InitializeListeners(Service, CovenantContext, ListenerCancellationTokens);
+
+        NavigationManager.NavigateTo("/");
+    }
+}
