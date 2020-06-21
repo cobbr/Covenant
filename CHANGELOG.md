@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added aliases for Shell tasks
 - Added ShellCodeLauncher using Donut
 - Added Copy command
+- Added missing Keylogger task
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
@@ -46,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed task aliases use incorrect case comparisons
 - Fixed LauncherForm exception when no active listeners
 - Fixed missing ReferenceAssemblies for SharpSploit
+- Fixed WMICommand/WMIGrunt output format
 
 ## [v0.5] - 2020-06-04
 ### Added
