@@ -1620,7 +1620,7 @@
     public static class Task
 
     {
-        public static string Execute(string Seconds = 300)
+        public static string Execute(string Seconds)
         {
             try
             {
@@ -1635,7 +1635,7 @@
   Options:
   - Name: Seconds
     Value: 300
-    DefaultValue: ''
+    DefaultValue: '300'
     Description: Number of seconds the collection task should run for (Default 300)
     SuggestedValues:
     - 300
