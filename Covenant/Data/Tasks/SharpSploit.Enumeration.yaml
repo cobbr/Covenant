@@ -1599,7 +1599,7 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
-  - Name: ClipboardMonitor
+- Name: ClipboardMonitor
   Aliases: []
   Author:
     Name: Nick Muir
