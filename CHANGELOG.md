@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed LauncherForm exception when no active listeners
 - Fixed missing ReferenceAssemblies for SharpSploit
 - Fixed WMICommand/WMIGrunt output format
+- Fixed ConnectAttempts bug
 
 ## [v0.5] - 2020-06-04
 ### Added
