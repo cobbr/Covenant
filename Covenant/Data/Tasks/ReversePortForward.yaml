@@ -1,0 +1,46 @@
+- Name: rportfwd
+  Aliases: []
+  Author:
+    Name: 'Thiago Mayllart'
+    Handle: ''
+    Link: ''
+  Description: Reverse Port Forward for Covenant.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text;\nusing System.IO;\nusing System.Net;\nusing System.Threading;\nusing System.Net.Sockets;\n\n\npublic class Task\n{\n\n    public bool DummyPortFwd()\n    {\n        return true;\n    }\n    public String ExecuteAsync(String Command)\n    {\n\n        string output = \"\";\n        try\n        { \n\n            output += \"Should not be here\";\n            TextWriter realStdOut = Console.Out;\n            TextWriter realStdErr = Console.Error;\n            TextWriter stdOutWriter = new StringWriter();\n            TextWriter stdErrWriter = new StringWriter();\n            Console.SetOut(stdOutWriter);\n            Console.SetError(stdErrWriter);\n\n            Console.Out.Flush();\n            Console.Error.Flush();\n            Console.SetOut(realStdOut);\n            Console.SetError(realStdErr);\n\n            output += \"ending\";\n            output += stdOutWriter.ToString();\n            output += stdErrWriter.ToString();\n\n\n            return output;\n        }\n        catch (Exception e)\n        {\n            output += e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace; Console.WriteLine(e.Message);\n            return output;\n        }\n    }\n}"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: stop 445
+    DefaultValue: ''
+    Description: ''
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
