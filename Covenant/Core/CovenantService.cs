@@ -1,7 +1,9 @@
-﻿// Author: Ryan Cobb (@cobbr_io)
+// Author: Ryan Cobb (@cobbr_io)
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System.Net;
+using System.Net.Sockets;
 using System;
 using System.IO;
 using System.Linq;
@@ -25,6 +27,11 @@ using Covenant.Models.Listeners;
 using Covenant.Models.Launchers;
 using Covenant.Models.Grunts;
 using Covenant.Models.Indicators;
+
+using HttpListener = Covenant.Models.Listeners.HttpListener;
+using System.Net.Security;
+using System.Drawing;
+
 
 namespace Covenant.Core
 {
@@ -498,7 +505,7 @@ namespace Covenant.Core
                 }
                 throw new ControllerBadRequestException(ErrorMessage);
             }
-            
+
             if (!_userManager.Users.Any())
             {
                 await _userManager.AddToRoleAsync(user, "Administrator");
@@ -2371,7 +2378,7 @@ namespace Covenant.Core
                 {
                     if (!task.Options[i].DisplayInCommand && parameters.Count > (i + 1))
                     {
-                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i+1].Value}""", "");
+                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i + 1].Value}""", "");
                     }
                 }
             }
@@ -2634,6 +2641,501 @@ namespace Covenant.Core
             return tasking;
         }
 
+        //Port Forward by Thiago Mayllart
+
+
+        public static Dictionary<string, Socket> listeners_client = new Dictionary<string, Socket>();
+        public static Dictionary<string, Socket> listeners_grunt = new Dictionary<string, Socket>();
+        public static Dictionary<string, List<Socket>> sockets_client = new Dictionary<string, List<Socket>>();
+        public static Dictionary<string, List<Socket>> sockets_grunt = new Dictionary<string, List<Socket>>();
+        public static Dictionary<string, bool> states = new Dictionary<string, bool>();
+        public static Dictionary<string, Thread> portfwds = new Dictionary<string, Thread>();
+        public static Dictionary<string, List<string>> info_list = new Dictionary<string, List<string>>();
+
+        public static void FlushPortForward()
+        {
+            var keys = new List<string>(states.Keys);
+            foreach (string keya in keys)
+            {
+                states[keya] = false;
+            }
+
+            var keys2 = new List<string>(portfwds.Keys);
+            foreach (string keyb in keys2)
+            {
+                portfwds.Remove(keyb);
+            }
+
+            var keys3 = new List<string>(info_list.Keys);
+            foreach (string keyc in keys3)
+            {
+                info_list.Remove(keyc);
+            }
+
+            var keys4 = new List<string>(listeners_client.Keys);
+            foreach (string keyd in keys4)
+            {
+                try
+                {
+                    listeners_client[keyd].Shutdown(SocketShutdown.Both);
+                    listeners_client[keyd].Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+            var keys5 = new List<string>(listeners_client.Keys);
+            foreach (string keyf in keys5)
+            {
+                try
+                {
+                    listeners_grunt[keyf].Shutdown(SocketShutdown.Both);
+                    listeners_grunt[keyf].Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+            var keys6 = new List<string>(sockets_client.Keys);
+            foreach (string keyg in keys6)
+            {
+                try
+                {
+                    foreach (Socket sc in sockets_client[keyg])
+                    {
+                        sc.Shutdown(SocketShutdown.Both);
+                        sc.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+            var keys7 = new List<string>(sockets_grunt.Keys);
+            foreach (string keyh in keys7)
+            {
+                try
+                {
+                    foreach (Socket sc2 in sockets_grunt[keyh])
+                    {
+                        sc2.Shutdown(SocketShutdown.Both);
+                        sc2.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+        }
+        public static String AddPortForward(string bind_port, string target_ip, string target_port, string ipGrunt, int rand_port, string ip_allow)
+        {
+            try
+            {
+                if (states.ContainsKey(bind_port))
+                {
+                    if (states[bind_port] == true)
+                    {
+                        return "[+] Port is already being used.";
+                    }
+                }
+                List<Socket> lc = new List<Socket>();
+                List<Socket> lg = new List<Socket>();
+                sockets_client[bind_port] = lc;
+                sockets_grunt[bind_port] = lg;
+                var bindAddress = IPAddress.Parse("0.0.0.0");
+                var bindPort = Convert.ToInt32(bind_port);
+                Socket serverSocket = null;
+                Socket serverSocket_rand = null;
+                try
+                {
+
+                    serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+                    serverSocket.Bind(new IPEndPoint(bindAddress, bindPort));
+                    serverSocket.Listen(200);
+                    listeners_client[bind_port] = serverSocket;
+
+                    serverSocket_rand = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+                    serverSocket_rand.Bind(new IPEndPoint(bindAddress, rand_port));
+                    serverSocket_rand.Listen(200);
+                    listeners_grunt[bind_port] = serverSocket_rand;
+
+                    states[bind_port] = true;
+                    Thread ctThread = new Thread(() => handleData(bind_port, target_port, target_ip, ipGrunt, rand_port, serverSocket, serverSocket_rand, ip_allow));
+                    ctThread.Start();
+                    return "[+] Port Forward initialiazing...";
+                }
+                catch (Exception e)
+                {
+                    serverSocket_rand.Shutdown(SocketShutdown.Both);
+                    serverSocket_rand.Close();
+                    serverSocket.Shutdown(SocketShutdown.Both);
+                    serverSocket.Close();
+                    return e.Message + e.StackTrace;
+                }
+            }
+            catch (Exception e)
+            {
+                return e.Message + e.StackTrace;
+            }
+        }
+
+
+
+        public static void DelPortForward(string bind_port)
+        {
+            try
+            {
+                states[bind_port] = false;
+                listeners_client[bind_port].Shutdown(SocketShutdown.Both);
+                listeners_client[bind_port].Close();
+                listeners_grunt[bind_port].Shutdown(SocketShutdown.Both);
+                listeners_grunt[bind_port].Close();
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message + e.StackTrace);
+            }
+            Console.WriteLine("Killed Listeners");
+            foreach (Socket sc in sockets_client[bind_port])
+            {
+                try
+                {
+                    sc.Shutdown(SocketShutdown.Both);
+                    sc.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + e.StackTrace);
+                }
+            }
+            Console.WriteLine("Killed sockets client");
+            foreach (Socket sc2 in sockets_grunt[bind_port])
+            {
+                try
+                {
+                    sc2.Shutdown(SocketShutdown.Both);
+                    sc2.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + e.StackTrace);
+                }
+            }
+            Console.WriteLine("Killed sockets grunt");
+        }
+        public static void handleData(string bind_port, string target_port, string target_ip, string ipGrunt, int rand_port, Socket serverSocket, Socket serverSocket_rand, string ip_allow)
+        {
+
+            Socket clientSocket = null;
+            Socket clientSocket2 = null;
+            try
+            {
+                int counter = 0;
+
+
+                while (states[bind_port] == true)
+                {
+                    var data_temp = new byte[256];
+                    clientSocket = serverSocket_rand.Accept();
+                    clientSocket.Receive(data_temp);
+                    string code = Encoding.UTF8.GetString(data_temp);
+                    while (!code.Contains("testingcode") && states[bind_port] == true)
+                    {
+                        System.Threading.Thread.Sleep(1000);
+                        clientSocket.Shutdown(SocketShutdown.Both);
+                        clientSocket.Close();
+                        data_temp = new byte[256];
+                        clientSocket = serverSocket_rand.Accept();
+                        clientSocket.Receive(data_temp);
+                        code = Encoding.UTF8.GetString(data_temp);
+                    }
+                    sockets_grunt[bind_port].Add(clientSocket);
+
+                    if (code.Contains("testingcode") && states[bind_port] == true)
+                    {
+                        clientSocket2 = serverSocket.Accept();
+                        while (((IPEndPoint)clientSocket2.RemoteEndPoint).Address.ToString() != ip_allow)
+                        {
+                            if (states[bind_port] == true)
+                            {
+                                clientSocket2.Shutdown(SocketShutdown.Both);
+                                clientSocket2.Close();
+                                clientSocket2 = serverSocket.Accept();
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        if (states[bind_port] == true)
+                        {
+                            sockets_client[bind_port].Add(clientSocket2);
+                            clientSocket.Send(Encoding.UTF8.GetBytes("Confirmed"));
+                            handleClinet client = new handleClinet();
+                            client.startClient(clientSocket2, clientSocket, bind_port);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                clientSocket.Shutdown(SocketShutdown.Both);
+                                clientSocket.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
+                            try
+                            {
+                                clientSocket2.Shutdown(SocketShutdown.Both);
+                                clientSocket2.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
+                        }
+                    }
+
+
+
+                }
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+                clientSocket2.Shutdown(SocketShutdown.Both);
+                clientSocket2.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message + e.StackTrace);
+                states[bind_port] = false;
+                try
+                {
+                    clientSocket2.Shutdown(SocketShutdown.Both);
+                    clientSocket2.Close();
+                    clientSocket.Shutdown(SocketShutdown.Both);
+                    clientSocket.Close();
+                }
+                catch (Exception ef)
+                {
+                    Console.WriteLine(ef.Message + ef.StackTrace);
+                }
+            }
+        }
+
+        public class handleClinet
+        {
+            Socket clientSocketComming;
+            Socket clientSocketOutC2;
+            string bind_port;
+
+
+            public void startClient(Socket inClientSocket, Socket outClientSocket, string bind_port)
+            {
+                if (states.ContainsKey(bind_port))
+                {
+                    if (states[bind_port] == true)
+                    {
+                        this.clientSocketComming = inClientSocket;
+                        this.clientSocketOutC2 = outClientSocket;
+                        this.bind_port = bind_port;
+                        Thread ctThread = new Thread(() => doChat(bind_port, clientSocketComming, clientSocketOutC2));
+                        ctThread.Start();
+                    }
+                }
+            }
+
+            public List<Byte_Data> bytesFromClientR = new List<Byte_Data>();
+            bool bytesFromClientR_lock = false;
+            public List<byte[]> bytesFromGruntR = new List<byte[]>();
+
+
+
+            public class Byte_Data
+            {
+                public byte[] data_to_send;
+                public int size_of_data;
+                public Byte_Data(byte[] data, int size)
+                {
+                    this.data_to_send = data;
+                    this.size_of_data = size;
+                }
+            }
+            public void asyncRead(Socket socket, int id, string bind_port)
+            {
+                var data = new byte[8192];
+                while (states[bind_port] == true)
+                {
+                    try
+                    {
+                        if (id == 0)
+                        {
+                            if (bytesFromClientR.Count == 10)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                            else
+                            {
+                                String code = null;
+                                data = new byte[8192];
+                                int size_data = socket.Receive(data);
+                                bytesFromClientR.Add(new Byte_Data(data.Take(size_data).ToArray(), size_data));
+
+                            }
+                        }
+                        if (id == 1)
+                        {
+                            if (bytesFromGruntR.Count == 10)
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                            else
+                            {
+                                data = new byte[4];
+                                int i = socket.Receive(data, 4, SocketFlags.None);
+                                int length = BitConverter.ToInt32(data, 0);
+                                byte[] body = new byte[length];
+                                int offset = 0;
+                                while (length > 0)
+                                {
+                                    int ret = socket.Receive(body, offset, length, SocketFlags.None);
+                                    if (ret > 0)
+                                    {
+                                        offset += ret;
+                                        length -= ret;
+
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                bytesFromGruntR.Add(body);
+                            }
+
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        break;
+                    }
+                }
+                try
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + e.StackTrace);
+                }
+            }
+
+            public void asyncWrite(Socket socket, int id, string bind_port)
+            {
+
+
+                while (states[bind_port] == true)
+                {
+                    try
+                    {
+                        if (id == 0)
+                        {
+                            if (bytesFromClientR.ToList().Any())
+                            {
+                                socket.Send(BitConverter.GetBytes(bytesFromClientR[0].size_of_data));
+                                socket.Send(bytesFromClientR[0].data_to_send);
+                                bytesFromClientR.RemoveAt(0);
+
+                            }
+                            else
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                        }
+                        if (id == 1)
+                        {
+                            if (bytesFromGruntR.ToList().Any())
+                            {
+                                socket.Send(bytesFromGruntR[0]);
+                                bytesFromGruntR.RemoveAt(0);
+                            }
+                            else
+                            {
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        break;
+                    }
+                }
+                try
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + e.StackTrace);
+                }
+            }
+
+
+            private void doChat(string bind_port, Socket sock_cl, Socket sock_gr)
+            {
+                Thread keep_reading_from_Client = new Thread(() => asyncRead(sock_cl, 0, bind_port));
+                Thread keep_writing_to_Grunt = new Thread(() => asyncWrite(sock_gr, 0, bind_port));
+                Thread keep_reading_from_Grunt = new Thread(() => asyncRead(sock_gr, 1, bind_port));
+                Thread keep_writing_to_Client = new Thread(() => asyncWrite(sock_cl, 1, bind_port));
+                try
+                {
+                    keep_reading_from_Client.Start();
+                    keep_writing_to_Grunt.Start();
+                    keep_reading_from_Grunt.Start();
+                    keep_writing_to_Client.Start();
+
+                    while (states[bind_port] == true)
+                    {
+                        try
+                        {
+                            int result1 = sock_cl.Available;
+                        }
+                        catch
+                        {
+                            keep_reading_from_Client.Abort();
+                            keep_reading_from_Client = null;
+                            keep_writing_to_Grunt.Abort();
+                            keep_writing_to_Grunt = null;
+                            keep_reading_from_Grunt.Abort();
+                            keep_reading_from_Grunt = null;
+                            keep_writing_to_Client.Abort();
+                            keep_writing_to_Client = null;
+                            sock_gr.Close();
+                            break;
+                        }
+                        System.Threading.Thread.Sleep(2000);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Threads bug");
+                }
+            }
+        }
+
+
         public async Task<GruntTasking> CreateGruntTasking(GruntTasking tasking)
         {
             tasking.Grunt = await this.GetGrunt(tasking.GruntId);
@@ -2644,6 +3146,63 @@ namespace Covenant.Core
             if (tasking.GruntTask.Name.Equals("powershell", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(tasking.Grunt.PowerShellImport))
             {
                 parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
+            }
+            else if (tasking.GruntTask.Name.Equals("rportfwd", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    //implement rportfwd 
+                    String command_rportfwd = parameters[0];
+                    if (command_rportfwd.Contains("start"))
+                    {
+                        string[] parsed_command = parameters[0].Split(' ');
+                        if (parsed_command.Length == 5)
+                        {
+                            string[] new_params = new string[6];
+                            string externalip = new WebClient().DownloadString("http://icanhazip.com");
+                            String ip_aux = tasking.Grunt.IPAddress;
+                            string[] params_parsed = parameters[0].Split(' ');
+                            new_params[0] = params_parsed[0];
+                            new_params[1] = externalip.Trim();
+                            new_params[2] = params_parsed[1];
+                            new_params[3] = params_parsed[2];
+                            new_params[4] = params_parsed[3];
+                            Random rnd = new Random();
+                            int rand_port = rnd.Next(49152, 65535);
+                            new_params[5] = rand_port.ToString();
+                            parameters[0] = string.Join(" ", new_params);
+                            tasking.GruntCommand.CommandOutput.Output += AddPortForward(params_parsed[1], params_parsed[2], params_parsed[3], ip_aux, rand_port, params_parsed[4]);
+                        }
+                        else
+                        {
+                            parameters[0] = "help";
+                        }
+                    }
+                    else if (command_rportfwd.Contains("stop"))
+                    {
+                        string[] parsed_command = parameters[0].Split(' ');
+                        if (parsed_command.Length == 2)
+                        {
+                            DelPortForward(parsed_command[1]);
+                        }
+                        else
+                        {
+                            parameters[0] = "help";
+                        }
+                    }
+                    else
+                    {
+                        if (command_rportfwd.Contains("flush"))
+                        {
+                            FlushPortForward();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+
             }
             else if (tasking.GruntTask.Name.Equals("powershellimport", StringComparison.OrdinalIgnoreCase))
             {
