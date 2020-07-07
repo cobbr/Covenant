@@ -74,4 +74,12 @@
 
     [Parameter]
     public bool Disabled { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        if (!this.Listener.ConnectAddresses.Any())
+        {
+            this.Listener.ConnectAddresses.Add("");
+        }
+    }
 }
