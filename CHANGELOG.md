@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Limited compilation optimization for SharpSC
 - Updated Seatbelt to latest version
 - Updated SharpSploit to latest version, PowerShell task should include verbose/error output
+- Changed GruntTask export to exclude GruntTaskOption value property
 
 ### Fixed
 - Fixed order of Upload parameters
