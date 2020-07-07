@@ -143,6 +143,33 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static void AppendCommandOutput(this ICovenantAPI operations, int id, string body = default(string))
+            {
+                operations.AppendCommandOutputAsync(id, body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task AppendCommandOutputAsync(this ICovenantAPI operations, int id, string body = default(string), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.AppendCommandOutputWithHttpMessagesAsync(id, body, null, cancellationToken).ConfigureAwait(false)).Dispose();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static IList<CovenantUser> GetUsers(this ICovenantAPI operations)
             {
                 return operations.GetUsersAsync().GetAwaiter().GetResult();

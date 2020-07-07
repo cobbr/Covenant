@@ -97,6 +97,31 @@ namespace Covenant.Controllers
             }
         }
 
+        // PUT api/commandoutputs/append/{id}
+        // <summary>
+        // Append to a CommandOutput
+        // </summary>
+        [HttpPut("append/{id}", Name = "AppendCommandOutput")]
+        public async Task<ActionResult> AppendCommandOutput(int id, [FromBody] string append)
+        {
+            try
+            {
+                CommandOutput output = await _service.GetCommandOutput(id);
+                _service.DisposeContext();
+                output.Output += append;
+                await _service.EditCommandOutput(output);
+                return Ok();
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         // DELETE api/commandoutputs/{id}
         // <summary>
         // Delete a GruntTasking

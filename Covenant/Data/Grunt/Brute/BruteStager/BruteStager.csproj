@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <TrimmerRootAssembly Include="System.IO.Pipes" />
     <TrimmerRootAssembly Include="System.Threading" />
     <TrimmerRootAssembly Include="System.Threading.Thread" />
     <TrimmerRootAssembly Include="System.Diagnostics.Process" />

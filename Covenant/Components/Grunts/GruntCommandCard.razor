@@ -44,12 +44,17 @@
             {
                 if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
                 {
-                    <img style="max-width: 100%" src="data:image/png;base64, @GruntCommand.CommandOutput.Output" />
+                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                    {<p class="text-white task-text-body" style="white-space:pre-wrap">Downloading screenshot... @GruntCommand.CommandOutput.Output.Length bytes</p>}
+                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                    {<img style="max-width: 100%" src="data:image/png;base64, @GruntCommand.CommandOutput.Output" />}
                 }
                 else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Download")
                 {
-                    DownloadEvent downloadEvent = GetDownloadEvent(GruntCommand).WaitResult();
-                    <p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if(downloadEvent != null){<button type="button" class="btn btn-link text-white task-text-body" @onclick="(e => OnDownload(downloadEvent))">@downloadEvent.FileName</button>}</p>
+                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                    {<p class="text-white task-text-body" style="white-space:pre-wrap">Downloading... @GruntCommand.CommandOutput.Output.Length bytes</p>}
+                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                    {DownloadEvent downloadEvent = GetDownloadEvent(GruntCommand).WaitResult();<p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if (downloadEvent != null){<button type="button" class="btn btn-link text-white task-text-body" @onclick="(e => OnDownload(downloadEvent))">@downloadEvent.FileName</button>}</p>}
                 }
                 else
                 {
@@ -75,6 +80,7 @@
     protected override async Task OnInitializedAsync()
     {
         this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+        this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
         Service.DisposeContext();
         this.INotificationService.OnEditGruntCommand += OnEditGruntCommand;
         this.INotificationService.OnEditCommandOutput += OnEditCommandOutput;
@@ -93,6 +99,7 @@
         if (this.GruntCommand.CommandOutput != null && this.GruntCommand.CommandOutput.Id == commandOutput.Id)
         {
             this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
             Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
         }
@@ -103,6 +110,7 @@
         if (this.GruntCommandId == gruntCommand.Id)
         {
             this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
             Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
         }
@@ -113,6 +121,7 @@
         if (this.GruntCommand.GruntTasking != null && this.GruntCommand.GruntTasking.Id == gruntTasking.Id)
         {
             this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
             Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
         }
@@ -133,8 +142,9 @@
         if (GruntCommand.GruntTasking != null && GruntCommand.CommandOutput != null)
         {
             IEnumerable<DownloadEvent> downloadEvents = await Service.GetDownloadEvents();
+            Service.DisposeContext();
             return downloadEvents
-                .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.FileContents == command.CommandOutput.Output);
+            .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.FileContents == command.CommandOutput.Output);
         }
         return null;
     }

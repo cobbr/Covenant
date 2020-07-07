@@ -201,6 +201,7 @@ namespace Covenant
                             Console.WriteLine("Using Covenant certificate with hash: " + httpsOptions.ServerCertificate.GetCertHashString());
                         });
                     });
+                    // options.Limits.MaxRequestBodySize = int.MaxValue;
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureAppConfiguration((hostingContext, config) =>

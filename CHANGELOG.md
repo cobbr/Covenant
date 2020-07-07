@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ShellCodeLauncher using Donut
 - Added Copy command
 - Added missing Keylogger task
+- Added streaming task output
+- Added Download/Upload .NET Core Tasks
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command

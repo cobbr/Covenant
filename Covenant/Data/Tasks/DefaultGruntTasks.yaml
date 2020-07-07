@@ -400,14 +400,38 @@
   Code: |
     using System;
     using System.IO;
+    using System.Text;
+    using System.Linq;
+    using System.Collections.Generic;
 
     public static class Task
     {
+        public static Stream OutputStream { get; set; }
         public static string Execute(string FileName)
         {
             try
             {
-                return Convert.ToBase64String(File.ReadAllBytes(FileName));
+                using (FileStream fs = File.OpenRead(FileName))
+                {
+                    byte[] read = new byte[1048576];
+                    int count;
+                    while ((count = fs.Read(read, 0, read.Length)) > 0)
+                    {
+                        IEnumerable<byte> finalRead = read.Take(count).AsEnumerable();
+                        int b = 0;
+                        while (count % 3 != 0 && b != -1)
+                        {
+                            b = fs.ReadByte();
+                            finalRead = finalRead.Concat(new byte[] { (byte)b });
+                            count++;
+                        }
+                        byte[] base64 = Encoding.UTF8.GetBytes(Convert.ToBase64String(finalRead.ToArray()));
+                        OutputStream.Write(base64, 0, base64.Length);
+                        OutputStream.Flush();
+                    }
+                }
+                OutputStream.Close();
+                return "";
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
