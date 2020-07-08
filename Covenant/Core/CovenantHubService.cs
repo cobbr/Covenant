@@ -767,9 +767,9 @@ namespace Covenant.Core
             return _connection.InvokeAsync<Grunt>("GetGruntByGUID", guid);
         }
 
-        public Task<Grunt> GetGruntByName(string name, StringComparison compare = StringComparison.CurrentCulture)
+        public Task<Grunt> GetGruntByName(string name)
         {
-            return _connection.InvokeAsync<Grunt>("GetGruntByName", name, compare);
+            return _connection.InvokeAsync<Grunt>("GetGruntByName", name);
         }
 
         public Task<Grunt> GetGruntByOriginalServerGUID(string serverguid)

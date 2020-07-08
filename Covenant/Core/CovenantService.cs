@@ -91,7 +91,7 @@ namespace Covenant.Core
     {
         Task<IEnumerable<Grunt>> GetGrunts();
         Task<Grunt> GetGrunt(int gruntId);
-        Task<Grunt> GetGruntByName(string name, StringComparison compare = StringComparison.CurrentCulture);
+        Task<Grunt> GetGruntByName(string name);
         Task<Grunt> GetGruntByGUID(string guid);
         Task<Grunt> GetGruntByOriginalServerGUID(string serverguid);
         Task<bool> IsGruntLost(Grunt g);
@@ -991,11 +991,11 @@ namespace Covenant.Core
             return grunt;
         }
 
-        public async Task<Grunt> GetGruntByName(string name, StringComparison compare = StringComparison.CurrentCulture)
+        public async Task<Grunt> GetGruntByName(string name)
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
-                .FirstOrDefaultAsync(g => g.Name.Equals(name, compare));
+                .FirstOrDefaultAsync(g => g.Name == name);
             if (grunt == null)
             {
                 throw new ControllerNotFoundException($"NotFound - Grunt with name: {name}");
@@ -2799,6 +2799,11 @@ public static class Task
                 Grunt g = await this.GetGruntByName(parameters[0]);
                 parameters[0] = g.GUID;
             }
+            else if (tasking.GruntTask.Name.Equals("Connect", StringComparison.CurrentCultureIgnoreCase))
+            {
+                parameters[0] = parameters[0] == "localhost" ? tasking.Grunt.Hostname : parameters[0];
+                parameters[0] = parameters[0] == "127.0.0.1" ? tasking.Grunt.IPAddress : parameters[0];
+            }
             tasking.Parameters = parameters;
             try
             {
@@ -2900,14 +2905,14 @@ public static class Task
                         ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
                         G.SMBPipeName == pipename
                     );
-                    if (connectedGrunt == null && originalStatus == GruntTaskingStatus.Tasked)
+                    if ((connectedGrunt == null || connectedGrunt.GUID == null) && originalStatus == GruntTaskingStatus.Tasked)
                     {
                         // If not already connected, the Grunt is going to stage, set status to Progressed
                         newStatus = GruntTaskingStatus.Progressed;
                     }
                     else if (connectedGrunt != null)
                     {
-                        Grunt connectedGruntParent = await _context.Grunts.FirstOrDefaultAsync(G => G.Children.Contains(connectedGrunt.GUID));
+                        Grunt connectedGruntParent = _context.Grunts.AsEnumerable().FirstOrDefault(G => G.Children.Contains(connectedGrunt.GUID));
                         if (connectedGruntParent != null)
                         {
                             // If already connected, disconnect to avoid cycles
@@ -2926,6 +2931,11 @@ public static class Task
                         else
                         {
                             grunt.AddChild(connectedGrunt);
+                            if (connectedGrunt.Status == GruntStatus.Disconnected)
+                            {
+                                connectedGrunt.Status = GruntStatus.Active;
+                                _context.Grunts.Update(connectedGrunt);
+                            }
                         }
                     }
                     else
@@ -2940,6 +2950,8 @@ public static class Task
                     _context.Grunts.Update(disconnectFromGrunt);
                     await _notifier.NotifyEditGrunt(this, disconnectFromGrunt);
                     grunt.RemoveChild(disconnectFromGrunt);
+                    _context.Grunts.Update(grunt);
+                    await _notifier.NotifyEditGrunt(this, grunt);
                 }
             }
             Event ev = null;

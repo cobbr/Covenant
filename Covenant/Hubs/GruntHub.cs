@@ -104,7 +104,7 @@ namespace Covenant.Hubs
 
         public async Task GetSuggestions(string gruntName)
         {
-            Grunt grunt = await _service.GetGruntByName(gruntName, StringComparison.CurrentCultureIgnoreCase);
+            Grunt grunt = await _service.GetGruntByName(gruntName);
             List<string> suggestions = await _service.GetCommandSuggestionsForGrunt(grunt);
             await this.Clients.Caller.SendAsync("ReceiveSuggestions", suggestions);
         }

@@ -442,11 +442,12 @@ namespace Covenant.Models.Listeners
                     if (message.GUID.Length == 20)
                     {
                         string originalServerGuid = message.GUID.Substring(0, 10);
+                        guid = message.GUID.Substring(10, 10);
                         targetGrunt = await _client.GetGruntByOriginalServerGUIDAsync(originalServerGuid);
 						if (targetGrunt != null)
 						{
 							var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
-							if (it.CommType == APIModels.CommunicationType.SMB)
+							if (egressGrunt == null && it.CommType == APIModels.CommunicationType.SMB)
 							{
 								// Get connecting Grunt as egress
 								List<APIModels.GruntTasking> taskings = (await _client.GetAllGruntTaskingsAsync()).ToList();
