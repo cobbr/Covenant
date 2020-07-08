@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added missing Keylogger task
 - Added streaming task output
 - Added Download/Upload .NET Core Tasks
+- Added ReadTextFile,CreateDirectory,Delete .NET Core Tasks
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
