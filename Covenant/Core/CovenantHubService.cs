@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -9,8 +8,8 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.CodeAnalysis;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Configuration;
 
-using Covenant.Core;
 using Covenant.Models;
 using Covenant.Models.Covenant;
 using Covenant.Models.Grunts;
@@ -23,7 +22,7 @@ namespace Covenant.Core
     public class CovenantHubService : IRemoteCovenantService
     {
         private HubConnection _connection;
-        public CovenantHubService()
+        public CovenantHubService(IConfiguration configuration)
         {
             X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
             HttpClientHandler clientHandler = new HttpClientHandler
@@ -36,7 +35,7 @@ namespace Covenant.Core
             _connection = new HubConnectionBuilder()
                 .WithUrl("https://localhost:7443/covenantHub", options =>
                 {
-                    options.AccessTokenProvider = () => { return Task.FromResult("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjb2JiciIsImp0aSI6IjkyNWY3NGNhLWZjOGMtMjdjNi0yNGJlLTU2NmIxMWFiNjU4NSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWVpZGVudGlmaWVyIjoiNDUyMTRmNmYtNGUyOS00YWNjLWIwYjEtMjg0NjMwOTVkMTk2IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjpbIlVzZXIiLCJBZG1pbmlzdHJhdG9yIl0sImV4cCI6MTU5NjQ3NzYyMiwiaXNzIjoiQ292ZW5hbnQiLCJhdWQiOiJDb3ZlbmFudCJ9.qlrYSNeH9KN3a0As8vLWVhtdgvrv3BZOiwjPJqyP-7I"); };
+                    options.AccessTokenProvider = () => { return Task.FromResult(configuration["ServiceUserToken"]); };
                     options.HttpMessageHandlerFactory = inner =>
                     {
                         var HttpClientHandler = (HttpClientHandler)inner;
@@ -60,7 +59,6 @@ namespace Covenant.Core
                 Console.Error.WriteLine("InternalListener SignalRConnection Exception: " + e.Message + Environment.NewLine + e.StackTrace);
             }
         }
-
 
         public Task<byte[]> CompileGruntExecutorCode(int id, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, bool Compress = false)
         {
