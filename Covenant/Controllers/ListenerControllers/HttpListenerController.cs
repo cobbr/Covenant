@@ -46,25 +46,23 @@ namespace Covenant.Controllers
             {
                 this.SetHeaders();
                 guid = GetGuid(HttpContext);
-		if (HttpContext.Request.Method == "GET")
-	        {
+		        if (HttpContext.Request.Method == "GET")
+	            {
                     string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), await _internalListener.Read(guid), guid);
                     return Ok(response);
-		}
-		else if (HttpContext.Request.Method == "POST")
+		        }
+		        else if (HttpContext.Request.Method == "POST")
                 {
-                    using (StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8))
-                    {
-                        string body = await reader.ReadToEndAsync();
-                        string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")).FirstOrDefault();
-                        string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
-                        string postRead = await _internalListener.Read(guidToRead);
-                        string response = String.Format(_context.HttpProfiles.First().HttpPostResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), postRead, guid);
-                        return Ok(response);
-                    }
+                    using StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8);
+                    string body = await reader.ReadToEndAsync();
+                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")).FirstOrDefault();
+                    string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
+                    string postRead = await _internalListener.Read(guidToRead);
+                    string response = String.Format(_context.HttpProfiles.First().HttpPostResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), postRead, guid);
+                    return Ok(response);
                 }
-		else
-		{
+		        else
+		        {
                     return NotFound();
                 }
             }
