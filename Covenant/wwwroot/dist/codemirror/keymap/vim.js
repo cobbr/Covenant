@@ -164,7 +164,9 @@
     { keys: 'A', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'eol' }, context: 'normal' },
     { keys: 'A', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'endOfSelectedArea' }, context: 'visual' },
     { keys: 'i', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'inplace' }, context: 'normal' },
+    { keys: 'gi', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'lastEdit' }, context: 'normal' },
     { keys: 'I', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'firstNonBlank'}, context: 'normal' },
+    { keys: 'gI', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'bol'}, context: 'normal' },
     { keys: 'I', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'startOfSelectedArea' }, context: 'visual' },
     { keys: 'o', type: 'action', action: 'newLineAndEnterInsertMode', isEdit: true, interlaceInsertRepeat: true, actionArgs: { after: true }, context: 'normal' },
     { keys: 'O', type: 'action', action: 'newLineAndEnterInsertMode', isEdit: true, interlaceInsertRepeat: true, actionArgs: { after: false }, context: 'normal' },
@@ -174,13 +176,15 @@
     { keys: '<C-q>', type: 'action', action: 'toggleVisualMode', actionArgs: { blockwise: true }},
     { keys: 'gv', type: 'action', action: 'reselectLastSelection' },
     { keys: 'J', type: 'action', action: 'joinLines', isEdit: true },
+    { keys: 'gJ', type: 'action', action: 'joinLines', actionArgs: { keepSpaces: true }, isEdit: true },
     { keys: 'p', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: true, isEdit: true }},
     { keys: 'P', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: false, isEdit: true }},
     { keys: 'r<character>', type: 'action', action: 'replace', isEdit: true },
     { keys: '@<character>', type: 'action', action: 'replayMacro' },
     { keys: 'q<character>', type: 'action', action: 'enterMacroRecordMode' },
     // Handle Replace-mode as a special case of insert mode.
-    { keys: 'R', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { replace: true }},
+    { keys: 'R', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { replace: true }, context: 'normal'},
+    { keys: 'R', type: 'operator', operator: 'change', operatorArgs: { linewise: true, fullLine: true }, context: 'visual', exitVisualBlock: true},
     { keys: 'u', type: 'action', action: 'undo', context: 'normal' },
     { keys: 'u', type: 'operator', operator: 'changeCase', operatorArgs: {toLower: true}, context: 'visual', isEdit: true },
     { keys: 'U', type: 'operator', operator: 'changeCase', operatorArgs: {toLower: false}, context: 'visual', isEdit: true },
@@ -229,7 +233,6 @@
     { name: 'write', shortName: 'w' },
     { name: 'undo', shortName: 'u' },
     { name: 'redo', shortName: 'red' },
-    { name: 'set', shortName: 'se' },
     { name: 'set', shortName: 'se' },
     { name: 'setlocal', shortName: 'setl' },
     { name: 'setglobal', shortName: 'setg' },
@@ -291,16 +294,16 @@
       clearFatCursorMark(cm);
       var ranges = cm.listSelections(), result = []
       for (var i = 0; i < ranges.length; i++) {
-        var range = ranges[i]
+        var range = ranges[i];
         if (range.empty()) {
-          if (range.anchor.ch < cm.getLine(range.anchor.line).length) {
+          var lineLength = cm.getLine(range.anchor.line).length;
+          if (range.anchor.ch < lineLength) {
             result.push(cm.markText(range.anchor, Pos(range.anchor.line, range.anchor.ch + 1),
-                                    {className: "cm-fat-cursor-mark"}))
+                                    {className: "cm-fat-cursor-mark"}));
           } else {
-            var widget = document.createElement("span")
-            widget.textContent = "\u00a0"
-            widget.className = "cm-fat-cursor-mark"
-            result.push(cm.setBookmark(range.anchor, {widget: widget}))
+            result.push(cm.markText(Pos(range.anchor.line, lineLength - 1),
+                                    Pos(range.anchor.line, lineLength),
+                                    {className: "cm-fat-cursor-mark"}));
           }
         }
       }
@@ -594,9 +597,16 @@
         }
         return mark;
       }
+      function find(cm, offset) {
+        var oldPointer = pointer;
+        var mark = move(cm, offset);
+        pointer = oldPointer;
+        return mark && mark.find();
+      }
       return {
         cachedCursor: undefined, //used for # and * jumps
         add: add,
+        find: find,
         move: move
       };
     };
@@ -1293,6 +1303,10 @@
         }
         inputState.operator = command.operator;
         inputState.operatorArgs = copyArgs(command.operatorArgs);
+        if (command.exitVisualBlock) {
+            vim.visualBlock = false;
+            updateCmSelection(cm);
+        }
         if (vim.visualMode) {
           // Operating on a selection in visual mode. We don't need a motion.
           this.evalInput(cm, vim);
@@ -1588,10 +1602,10 @@
           }
           if (vim.visualMode) {
             if (!(vim.visualBlock && newHead.ch === Infinity)) {
-              newHead = clipCursorToContent(cm, newHead, vim.visualBlock);
+              newHead = clipCursorToContent(cm, newHead);
             }
             if (newAnchor) {
-              newAnchor = clipCursorToContent(cm, newAnchor, true);
+              newAnchor = clipCursorToContent(cm, newAnchor);
             }
             newAnchor = newAnchor || oldAnchor;
             sel.anchor = newAnchor;
@@ -1843,6 +1857,12 @@
         var line = motionArgs.forward ? cur.line + repeat : cur.line - repeat;
         var first = cm.firstLine();
         var last = cm.lastLine();
+        var posV = cm.findPosV(cur, (motionArgs.forward ? repeat : -repeat), 'line', vim.lastHSPos);
+        var hasMarkedText = motionArgs.forward ? posV.line > line : posV.line < line;
+        if (hasMarkedText) {
+          line = posV.line;
+          endCh = posV.ch;
+        }
         // Vim go to line begin or line end when cursor at first/last line and
         // move to previous/next line is triggered.
         if (line < first && cur.line == first){
@@ -2098,9 +2118,9 @@
       change: function(cm, args, ranges) {
         var finalHead, text;
         var vim = cm.state.vim;
+        var anchor = ranges[0].anchor,
+            head = ranges[0].head;
         if (!vim.visualMode) {
-          var anchor = ranges[0].anchor,
-              head = ranges[0].head;
           text = cm.getRange(anchor, head);
           var lastState = vim.lastEditInputState || {};
           if (lastState.motion == "moveByWords" && !isWhiteSpaceString(text)) {
@@ -2128,6 +2148,13 @@
             anchor.ch = Number.MAX_VALUE;
           }
           finalHead = anchor;
+        } else if (args.fullLine) {
+            head.ch = Number.MAX_VALUE;
+            head.line--;
+            cm.setSelection(anchor, head)
+            text = cm.getSelection();
+            cm.replaceSelection("");
+            finalHead = anchor;
         } else {
           text = cm.getSelection();
           var replacement = fillArray('', ranges.length);
@@ -2172,8 +2199,7 @@
         vimGlobalState.registerController.pushText(
             args.registerName, 'delete', text,
             args.linewise, vim.visualBlock);
-        var includeLineBreak = vim.insertMode
-        return clipCursorToContent(cm, finalHead, includeLineBreak);
+        return clipCursorToContent(cm, finalHead);
       },
       indent: function(cm, args, ranges) {
         var vim = cm.state.vim;
@@ -2355,6 +2381,8 @@
         var height = cm.listSelections().length;
         if (insertAt == 'eol') {
           head = Pos(head.line, lineLength(cm, head.line));
+        } else if (insertAt == 'bol') {
+          head = Pos(head.line, 0);
         } else if (insertAt == 'charAfter') {
           head = offsetCursor(head, 0, 1);
         } else if (insertAt == 'firstNonBlank') {
@@ -2393,6 +2421,8 @@
           if (vim.visualMode){
             return;
           }
+        } else if (insertAt == 'lastEdit') {
+          head = getLastEditPos(cm) || head;
         }
         cm.setOption('disableInput', false);
         if (actionArgs && actionArgs.replace) {
@@ -2428,8 +2458,7 @@
           vim.visualLine = !!actionArgs.linewise;
           vim.visualBlock = !!actionArgs.blockwise;
           head = clipCursorToContent(
-              cm, Pos(anchor.line, anchor.ch + repeat - 1),
-              true /** includeLineBreak */);
+              cm, Pos(anchor.line, anchor.ch + repeat - 1));
           vim.sel = {
             anchor: anchor,
             head: head
@@ -2501,7 +2530,9 @@
           var tmp = Pos(curStart.line + 1,
                         lineLength(cm, curStart.line + 1));
           var text = cm.getRange(curStart, tmp);
-          text = text.replace(/\n\s*/g, ' ');
+          text = actionArgs.keepSpaces
+            ? text.replace(/\n\r?/g, '')
+            : text.replace(/\n\s*/g, ' ');
           cm.replaceRange(text, curStart, tmp);
         }
         var curFinalPos = Pos(curStart.line, finalCh);
@@ -2803,10 +2834,11 @@
      * Clips cursor to ensure that line is within the buffer's range
      * If includeLineBreak is true, then allow cur.ch == lineLength.
      */
-    function clipCursorToContent(cm, cur, includeLineBreak) {
+    function clipCursorToContent(cm, cur) {
+      var vim = cm.state.vim;
+      var includeLineBreak = vim.insertMode || vim.visualMode;
       var line = Math.min(Math.max(cm.firstLine(), cur.line), cm.lastLine() );
-      var maxCh = lineLength(cm, line) - 1;
-      maxCh = (includeLineBreak) ? maxCh + 1 : maxCh;
+      var maxCh = lineLength(cm, line) - 1 + !!includeLineBreak;
       var ch = Math.min(Math.max(0, cur.ch), maxCh);
       return Pos(line, ch);
     }
@@ -3171,10 +3203,8 @@
       vim.visualMode = false;
       vim.visualLine = false;
       vim.visualBlock = false;
-      CodeMirror.signal(cm, "vim-mode-change", {mode: "normal"});
-      if (vim.fakeCursor) {
-        vim.fakeCursor.clear();
-      }
+      if (!vim.insertMode) CodeMirror.signal(cm, "vim-mode-change", {mode: "normal"});
+      clearFakeCursor(vim);
     }
 
     // Remove any trailing newlines from the selection. For
@@ -4152,7 +4182,8 @@
     }
     function makePrompt(prefix, desc) {
       var raw = '<span style="font-family: monospace; white-space: pre">' +
-          (prefix || "") + '<input type="text"></span>';
+          (prefix || "") + '<input type="text" autocorrect="off" ' +
+          'autocapitalize="off" spellcheck="false"></span>';
       if (desc)
         raw += ' <span style="color: #888">' + desc + '</span>';
       return raw;
@@ -4318,23 +4349,23 @@
     }
 
     function getMarkPos(cm, vim, markName) {
-      if (markName == '\'') {
-        var history = cm.doc.history.done;
-        var event = history[history.length - 2];
-        return event && event.ranges && event.ranges[0].head;
+      if (markName == '\'' || markName == '`') {
+        return vimGlobalState.jumpList.find(cm, -1) || Pos(0, 0);
       } else if (markName == '.') {
-        if (cm.doc.history.lastModTime == 0) {
-          return  // If no changes, bail out; don't bother to copy or reverse history array.
-        } else {
-          var changeHistory = cm.doc.history.done.filter(function(el){ if (el.changes !== undefined) { return el } });
-          changeHistory.reverse();
-          var lastEditPos = changeHistory[0].changes[0].to;
-        }
-        return lastEditPos;
+        return getLastEditPos(cm);
       }
 
       var mark = vim.marks[markName];
       return mark && mark.find();
+    }
+
+    function getLastEditPos(cm) {
+      var done = cm.doc.history.done;
+      for (var i = done.length; i--;) {
+        if (done[i].changes) {
+          return copyCursor(done[i].changes[0].to);
+        }
+      }
     }
 
     var ExCommandDispatcher = function() {
@@ -4425,7 +4456,7 @@
         }
 
         // Parse command name.
-        var commandMatch = inputStream.match(/^(\w+)/);
+        var commandMatch = inputStream.match(/^(\w+|!!|@@|[!#&*<=>@~])/);
         if (commandMatch) {
           result.commandName = commandMatch[1];
         } else {
@@ -5323,14 +5354,34 @@
         updateFakeCursor(cm);
       }
     }
+    /**
+     * Keeps track of a fake cursor to support visual mode cursor behavior.
+     */
     function updateFakeCursor(cm) {
+      var className = 'cm-animate-fat-cursor';
       var vim = cm.state.vim;
       var from = clipCursorToContent(cm, copyCursor(vim.sel.head));
       var to = offsetCursor(from, 0, 1);
+      clearFakeCursor(vim);
+      // In visual mode, the cursor may be positioned over EOL.
+      if (from.ch == cm.getLine(from.line).length) {
+        var widget = document.createElement("span");
+        widget.textContent = "\u00a0";
+        widget.className = className;
+        vim.fakeCursorBookmark = cm.setBookmark(from, {widget: widget});
+      } else {
+        vim.fakeCursor = cm.markText(from, to, {className: className});
+      }
+    }
+    function clearFakeCursor(vim) {
       if (vim.fakeCursor) {
         vim.fakeCursor.clear();
+        vim.fakeCursor = null;
       }
-      vim.fakeCursor = cm.markText(from, to, {className: 'cm-animate-fat-cursor'});
+      if (vim.fakeCursorBookmark) {
+        vim.fakeCursorBookmark.clear();
+        vim.fakeCursorBookmark = null;
+      }
     }
     function handleExternalSelection(cm, vim) {
       var anchor = cm.getCursor('anchor');

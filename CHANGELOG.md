@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added streaming task output
 - Added Download/Upload .NET Core Tasks
 - Added ReadTextFile,CreateDirectory,Delete .NET Core Tasks
+- Added UI Themes, new Heathen Mode theme
+- Added a TabbedTerminal view to GruntIndex component
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
@@ -29,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Seatbelt to latest version
 - Updated SharpSploit to latest version, PowerShell task should include verbose/error output
 - Changed GruntTask export to exclude GruntTaskOption value property
+- Updated codemirror, added night theme for codemirror
 
 ### Fixed
 - Fixed order of Upload parameters
@@ -56,6 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ConnectAttempts bug
 - Fixed BridgeListener ArgumentOutOfRangeException
 - Fix/tweak Connect/Disconnect tasks
+- Fixed ImplantTemplateForm options resetting issue
+- Fixed terminal typeahead issues
 
 ## [v0.5] - 2020-06-04
 ### Added

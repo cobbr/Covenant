@@ -4,8 +4,8 @@
 @using Covenant.Models.Covenant
 @inject IJSRuntime IJSRuntime
 
-<div id="@GuidId" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="@EventDisplayTime">
-    <div class="toast-header">
+<div id="@GuidId" class="toast border-1" role="alert" aria-live="assertive" aria-atomic="true" data-delay="@EventDisplayTime">
+    <div class="toast-header border-1">
         <strong class="mr-auto">@Event.MessageHeader</strong>
         <small>@string.Format("{0:hh\\:mm\\:ss}", Event.Time.TimeOfDay)</small>
         <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">

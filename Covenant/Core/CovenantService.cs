@@ -37,7 +37,8 @@ namespace Covenant.Core
         Task<CovenantUserLoginResult> Login(CovenantUserLogin login);
         Task<CovenantUser> CreateUserVerify(ClaimsPrincipal principal, CovenantUserRegister register);
         Task<CovenantUser> CreateUser(CovenantUserLogin login);
-        Task<CovenantUser> EditUser(CovenantUser currentUser, CovenantUserLogin user);
+        Task<CovenantUser> EditUser(CovenantUser currentUser);
+        Task<CovenantUser> EditUserPassword(CovenantUser currentUser, CovenantUserLogin user);
         Task DeleteUser(string userId);
     }
 
@@ -55,6 +56,15 @@ namespace Covenant.Core
         Task<IdentityUserRole<string>> GetUserRole(string userId, string roleId);
         Task<IdentityUserRole<string>> CreateUserRole(string userId, string roleId);
         Task DeleteUserRole(string userId, string roleId);
+    }
+
+    public interface IThemeService
+    {
+        Task<IEnumerable<Theme>> GetThemes();
+        Task<Theme> GetTheme(int id);
+        Task<Theme> CreateTheme(Theme theme);
+        Task<Theme> EditTheme(Theme theme);
+        Task DeleteTheme(int id);
     }
 
     public interface IEventService
@@ -344,7 +354,7 @@ namespace Covenant.Core
         Task<WscriptLauncher> EditWscriptLauncher(WscriptLauncher launcher);
     }
 
-    public interface ICovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService,
+    public interface ICovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
         IGruntCommandService, ICommandOutputService, IGruntTaskingService,
         ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService
@@ -353,7 +363,7 @@ namespace Covenant.Core
         void DisposeContext();
     }
 
-    public interface IRemoteCovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService,
+    public interface IRemoteCovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
         IGruntCommandService, ICommandOutputService, IGruntTaskingService,
         ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService
@@ -404,12 +414,16 @@ namespace Covenant.Core
         #region CovenantUser Actions
         public async Task<IEnumerable<CovenantUser>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users
+                .Include(U => U.Theme)
+                .ToListAsync();
         }
 
         public async Task<CovenantUser> GetUser(string userId)
         {
-            CovenantUser user = await _context.Users.FirstOrDefaultAsync(U => U.Id == userId);
+            CovenantUser user = await _context.Users
+                .Include(U => U.Theme)
+                .FirstOrDefaultAsync(U => U.Id == userId);
             if (user == null)
             {
                 throw new ControllerNotFoundException($"NotFound - CovenantUser with id: {userId}");
@@ -419,7 +433,9 @@ namespace Covenant.Core
 
         public async Task<CovenantUser> GetUserByUsername(string username)
         {
-            CovenantUser user = await _context.Users.FirstOrDefaultAsync(U => U.UserName == username);
+            CovenantUser user = await _context.Users
+                .Include(U => U.Theme)
+                .FirstOrDefaultAsync(U => U.UserName == username);
             if (user == null)
             {
                 throw new ControllerNotFoundException($"NotFound - CovenantUser with Username: {username}");
@@ -444,7 +460,9 @@ namespace Covenant.Core
             {
                 return new CovenantUserLoginResult { Success = false, CovenantToken = "" };
             }
-            CovenantUser user = await _context.Users.FirstOrDefaultAsync(U => U.UserName == login.UserName);
+            CovenantUser user = await _context.Users
+                .Include(U => U.Theme)
+                .FirstOrDefaultAsync(U => U.UserName == login.UserName);
             if (user == null)
             {
                 throw new ControllerNotFoundException($"NotFound - User with username: {login.UserName}");
@@ -515,7 +533,8 @@ namespace Covenant.Core
             Event userEvent = new Event
             {
                 Time = eventTime,
-                MessageHeader = "[" + eventTime + " UTC] User: " + savedUser.UserName + " with roles: " + savedRoles + " has been created!",
+                MessageHeader = "Created User",
+                MessageBody = "User: " + savedUser.UserName + " with roles: " + savedRoles + " has been created!",
                 Level = EventLevel.Info,
                 Context = "Users"
             };
@@ -525,7 +544,25 @@ namespace Covenant.Core
             return savedUser;
         }
 
-        public async Task<CovenantUser> EditUser(CovenantUser currentUser, CovenantUserLogin user)
+        public async Task<CovenantUser> EditUser(CovenantUser user)
+        {
+            CovenantUser matching_user = await _userManager.Users.FirstOrDefaultAsync(U => U.Id == user.Id);
+            if (matching_user == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - CovenantUser with id: {user.Id}");
+            }
+            matching_user.ThemeId = user.ThemeId;
+            IdentityResult result = await _userManager.UpdateAsync(matching_user);
+            if (!result.Succeeded)
+            {
+                throw new ControllerBadRequestException($"BadRequest - Could not edit CovenantUser with id: {user.Id}");
+            }
+            // await _context.SaveChangesAsync();
+            await _notifier.NotifyEditCovenantUser(this, matching_user);
+            return matching_user;
+        }
+
+        public async Task<CovenantUser> EditUserPassword(CovenantUser currentUser, CovenantUserLogin user)
         {
             CovenantUser matching_user = await _userManager.Users.FirstOrDefaultAsync(U => U.UserName == user.UserName);
             if (matching_user == null)
@@ -548,7 +585,7 @@ namespace Covenant.Core
                 throw new ControllerBadRequestException($"BadRequest - Could not set new password for CovenantUser with username: {user.UserName}");
             }
             // await _context.SaveChangesAsync();
-            // _notifier.OnEditCovenantUser(this, matching_user);
+            await _notifier.NotifyEditCovenantUser(this, matching_user);
             return matching_user;
         }
 
@@ -563,7 +600,7 @@ namespace Covenant.Core
             }
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteCovenantUser(this, user.Id);
+            await _notifier.NotifyDeleteCovenantUser(this, user.Id);
         }
 
         private IQueryable<CovenantUser> GetAdminUsers()
@@ -687,6 +724,78 @@ namespace Covenant.Core
         }
         #endregion
 
+        #region Theme Actions
+        public async Task<IEnumerable<Theme>> GetThemes()
+        {
+            return await _context.Themes.ToListAsync();
+        }
+
+        public async Task<Theme> GetTheme(int themeId)
+        {
+            Theme theme = await _context.Themes.FirstOrDefaultAsync(T => T.Id == themeId);
+            if (theme == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - Theme with id: {themeId}");
+            }
+            return theme;
+        }
+
+        public async Task<Theme> CreateTheme(Theme theme)
+        {
+            await _context.Themes.AddAsync(theme);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateTheme(this, theme);
+            return await this.GetTheme(theme.Id);
+        }
+
+        public async Task<Theme> EditTheme(Theme theme)
+        {
+            Theme matchingTheme = await this.GetTheme(theme.Id);
+            matchingTheme.Description = theme.Description;
+            matchingTheme.Name = theme.Name;
+
+            matchingTheme.BackgroundColor = theme.BackgroundColor;
+            matchingTheme.BackgroundTextColor = theme.BackgroundTextColor;
+
+            matchingTheme.PrimaryColor = theme.PrimaryColor;
+            matchingTheme.PrimaryTextColor = theme.PrimaryTextColor;
+            matchingTheme.PrimaryHighlightColor = theme.PrimaryHighlightColor;
+
+            matchingTheme.SecondaryColor = theme.SecondaryColor;
+            matchingTheme.SecondaryTextColor = theme.SecondaryTextColor;
+            matchingTheme.SecondaryHighlightColor = theme.SecondaryHighlightColor;
+
+            matchingTheme.TerminalColor = theme.TerminalColor;
+            matchingTheme.TerminalTextColor = theme.TerminalTextColor;
+            matchingTheme.TerminalHighlightColor = theme.TerminalHighlightColor;
+            matchingTheme.TerminalBorderColor = theme.TerminalBorderColor;
+
+            matchingTheme.NavbarColor = theme.NavbarColor;
+            matchingTheme.SidebarColor = theme.SidebarColor;
+
+            matchingTheme.InputColor = theme.InputColor;
+            matchingTheme.InputDisabledColor = theme.InputDisabledColor;
+            matchingTheme.InputTextColor = theme.InputTextColor;
+            matchingTheme.InputHighlightColor = theme.InputHighlightColor;
+
+            matchingTheme.TextLinksColor = theme.TextLinksColor;
+
+            matchingTheme.CodeMirrorTheme = theme.CodeMirrorTheme;
+            _context.Themes.Update(matchingTheme);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditTheme(this, matchingTheme);
+            return await this.GetTheme(theme.Id);
+        }
+
+        public async Task DeleteTheme(int id)
+        {
+            Theme theme = await this.GetTheme(id);
+            _context.Themes.Remove(theme);
+            await _notifier.NotifyDeleteTheme(this, id);
+            await _context.SaveChangesAsync();
+        }
+        #endregion
+
         #region Event Actions
         public async Task<IEnumerable<Event>> GetEvents()
         {
@@ -723,7 +832,6 @@ namespace Covenant.Core
 
         public async Task<Event> CreateEvent(Event anEvent)
         {
-            anEvent.Time = DateTime.UtcNow;
             await _context.Events.AddAsync(anEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, anEvent);
@@ -1160,11 +1268,9 @@ namespace Covenant.Core
 
         public async Task<IEnumerable<Grunt>> CreateGrunts(params Grunt[] grunts)
         {
-            await _context.Grunts.AddRangeAsync(grunts);
-            await _context.SaveChangesAsync();
             foreach (Grunt g in grunts)
             {
-                await _notifier.NotifyCreateGrunt(this, g);
+                await this.CreateGrunt(g);
             }
             return grunts;
         }
@@ -1177,8 +1283,9 @@ namespace Covenant.Core
                 grunt.ActivationTime = DateTime.UtcNow;
                 Event gruntEvent = new Event
                 {
-                    Time = DateTime.UtcNow,
-                    MessageHeader = "[" + grunt.ActivationTime + " UTC] Grunt: " + grunt.Name + " from: " + grunt.Hostname + " has been activated!",
+                    Time = grunt.ActivationTime,
+                    MessageHeader = "Grunt Activated",
+                    MessageBody = "Grunt: " + grunt.Name + " from: " + grunt.Hostname + " has been activated!",
                     Level = EventLevel.Highlight,
                     Context = "*"
                 };
@@ -2311,18 +2418,8 @@ namespace Covenant.Core
             await _context.SaveChangesAsync();
             command.Grunt = await this.GetGrunt(command.GruntId);
             command.User = await this.GetUser(command.UserId);
-            Event ev = new Event
-            {
-                Time = command.CommandTime,
-                MessageHeader = "[" + command.CommandTime + " UTC] Command assigned",
-                MessageBody = "(" + command.User.UserName + ") > " + command.Command,
-                Level = EventLevel.Info,
-                Context = command.Grunt.Name
-            };
-            await _context.Events.AddAsync(ev);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGruntCommand(this, command);
-            await _notifier.NotifyCreateEvent(this, ev);
             return command;
         }
 
@@ -2663,20 +2760,10 @@ namespace Covenant.Core
                 _context.Grunts.Update(tasking.Grunt);
                 tasking.GruntCommand.CommandOutput.Output = "PowerShell Imported";
 
-                Event ev = new Event
-                {
-                    Time = tasking.GruntCommand.CommandTime,
-                    MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command completed",
-                    MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
-                    Level = EventLevel.Info,
-                    Context = tasking.Grunt.Name
-                };
-                await _context.Events.AddAsync(ev);
                 _context.GruntCommands.Update(tasking.GruntCommand);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditGrunt(this, tasking.Grunt);
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                await _notifier.NotifyCreateEvent(this, ev);
                 tasking.Status = GruntTaskingStatus.Completed;
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
@@ -2813,19 +2900,9 @@ public static class Task
             {
                 tasking.GruntCommand.CommandOutput.Output = "CompilerException: " + e.Message;
                 tasking.Status = GruntTaskingStatus.Aborted;
-                Event ev = new Event
-                {
-                    Time = tasking.GruntCommand.CommandTime,
-                    MessageHeader = "[" + tasking.GruntCommand.CommandTime + " UTC] Command aborted",
-                    MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput,
-                    Level = EventLevel.Info,
-                    Context = tasking.Grunt.Name
-                };
-                await _context.Events.AddAsync(ev);
                 _context.GruntCommands.Update(tasking.GruntCommand);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                await _notifier.NotifyCreateEvent(this, ev);
             }
             await _context.GruntTaskings.AddAsync(tasking);
             await _context.SaveChangesAsync();
@@ -2973,20 +3050,12 @@ public static class Task
 
                 if (DownloadTask != null && tasking.GruntTaskId == DownloadTask.Id && newStatus == GruntTaskingStatus.Completed)
                 {
-                    ev = new Event
-                    {
-                        Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
-                        Level = EventLevel.Info,
-                        Context = grunt.Name
-                    };
-                    await _context.Events.AddAsync(ev);
-                    await _notifier.NotifyCreateEvent(this, ev);
                     string FileName = tasking.Parameters[0];
                     DownloadEvent downloadEvent = new DownloadEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "Downloaded: " + FileName,
+                        MessageHeader = "Download Completed",
+                        MessageBody = "Downloaded: " + FileName,
                         Level = EventLevel.Info,
                         Context = grunt.Name,
                         FileName = FileName,
@@ -2999,20 +3068,12 @@ public static class Task
                 }
                 else if (ScreenshotTask != null && tasking.GruntTaskId == ScreenshotTask.Id && newStatus == GruntTaskingStatus.Completed)
                 {
-                    ev = new Event
-                    {
-                        Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "[" + updatingGruntTasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
-                        Level = EventLevel.Info,
-                        Context = grunt.Name
-                    };
-                    await _context.Events.AddAsync(ev);
-                    await _notifier.NotifyCreateEvent(this, ev);
                     string FileName = tasking.Name + ".png";
                     ScreenshotEvent screenshotEvent = new ScreenshotEvent
                     {
                         Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "Downloaded: " + FileName,
+                        MessageHeader = "Download ScreenShot Completed",
+                        MessageBody = "Downloaded screenshot: " + FileName,
                         Level = EventLevel.Info,
                         Context = grunt.Name,
                         FileName = FileName,
@@ -3039,16 +3100,6 @@ public static class Task
                     _context.Entry(updatingGruntTasking.GruntCommand.CommandOutput).State = EntityState.Detached;
                     updatingGruntTasking.GruntCommand.CommandOutput.Output = tasking.GruntCommand.CommandOutput.Output;
                     await _notifier.NotifyEditCommandOutput(this, updatingGruntTasking.GruntCommand.CommandOutput);
-                    ev = new Event
-                    {
-                        Time = tasking.CompletionTime,
-                        MessageHeader = "[" + tasking.CompletionTime + " UTC] " + tasking.GruntTask.Name + " " + verb,
-                        MessageBody = "(" + tasking.GruntCommand.User.UserName + ") > " + tasking.GruntCommand.Command + Environment.NewLine + tasking.GruntCommand.CommandOutput.Output,
-                        Level = EventLevel.Info,
-                        Context = grunt.Name
-                    };
-                    await _context.Events.AddAsync(ev);
-                    await _notifier.NotifyCreateEvent(this, ev);
                 }
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
@@ -3692,14 +3743,15 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                DateTime eventTime = DateTime.UtcNow;
                 Event listenerEvent = await this.CreateEvent(new Event
                 {
-                    Time = eventTime,
-                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + matchingListener.Name,
+                    Time = DateTime.UtcNow,
+                    MessageHeader = "Stopped Listener",
+                    MessageBody = "Stopped Listener: " + matchingListener.Name,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
+                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
@@ -3719,10 +3771,12 @@ public static class Task
                 Event listenerEvent = await this.CreateEvent(new Event
                 {
                     Time = matchingListener.StartTime,
-                    MessageHeader = "[" + matchingListener.StartTime + " UTC] Started Listener: " + matchingListener.Name,
+                    MessageHeader = "Started Listener",
+                    MessageBody = "Started Listener: " + matchingListener.Name,
                     Level = EventLevel.Highlight,
                     Context = "*"
                 });
+                await _context.SaveChangesAsync();
             }
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
@@ -3843,10 +3897,12 @@ public static class Task
             Event listenerEvent = await this.CreateEvent(new Event
             {
                 Time = listener.StartTime,
-                MessageHeader = "[" + listener.StartTime + " UTC] Started Listener: " + listener.Name,
+                MessageHeader = "Started Listener",
+                MessageBody = "Started Listener: " + listener.Name,
                 Level = EventLevel.Highlight,
                 Context = "*"
             });
+            await _context.SaveChangesAsync();
             return listener;
         }
 
@@ -3889,10 +3945,12 @@ public static class Task
             Event listenerEvent = await this.CreateEvent(new Event
             {
                 Time = listener.StartTime,
-                MessageHeader = "[" + listener.StartTime + " UTC] Started Listener: " + listener.Name,
+                MessageHeader = "Started Listener",
+                MessageBody = "Started Listener: " + listener.Name,
                 Level = EventLevel.Highlight,
                 Context = "*"
             });
+            await _context.SaveChangesAsync();
             return listener;
         }
 
@@ -4008,10 +4066,12 @@ public static class Task
                 Event listenerEvent = await this.CreateEvent(new Event
                 {
                     Time = eventTime,
-                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.Urls,
+                    MessageHeader = "Stopped Listener",
+                    MessageBody = "Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.Urls,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
+                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
@@ -4047,10 +4107,12 @@ public static class Task
                 Event listenerEvent = await this.CreateEvent(new Event
                 {
                     Time = eventTime,
-                    MessageHeader = "[" + eventTime + " UTC] Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.ConnectAddresses,
+                    MessageHeader = "Stopped Listener",
+                    MessageBody = "Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.ConnectAddresses,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
+                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {

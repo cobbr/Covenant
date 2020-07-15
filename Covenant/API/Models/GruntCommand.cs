@@ -113,6 +113,10 @@ namespace Covenant.API.Models
             {
                 CommandOutput.Validate();
             }
+            if (User != null)
+            {
+                User.Validate();
+            }
             if (GruntTasking != null)
             {
                 GruntTasking.Validate();

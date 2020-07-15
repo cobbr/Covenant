@@ -1,0 +1,315 @@
+﻿@implements IDisposable
+
+@using Microsoft.JSInterop
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+
+<style>
+    :root {
+        --background-color: @Theme.BackgroundColor;
+        --background-text-color: @Theme.BackgroundTextColor;
+
+        --primary-color: @Theme.PrimaryColor;
+        --primary-text-color: @Theme.PrimaryTextColor;
+        --primary-highlight-color: @Theme.PrimaryHighlightColor;
+
+        --secondary-color: @Theme.SecondaryColor;
+        --secondary-text-color: @Theme.SecondaryTextColor;
+        --secondary-highlight-color: @Theme.SecondaryHighlightColor;
+
+        --terminal-color: @Theme.TerminalColor;
+        --terminal-text-color: @Theme.TerminalTextColor;
+        --terminal-highlight-color: @Theme.TerminalHighlightColor;
+        --terminal-border-color: @Theme.TerminalBorderColor;
+
+        --navbar-color: @Theme.NavbarColor;
+        --sidebar-color: @Theme.SidebarColor;
+
+        --input-color: @Theme.InputColor;
+        --input-disabled-color: @Theme.InputDisabledColor;
+        --input-text-color: @Theme.InputTextColor;
+        --input-highlight-color: @Theme.InputHighlightColor;
+
+        --text-links-color: @Theme.TextLinksColor;
+    }
+
+    body {
+        background-color: var(--background-color);
+        color: var(--background-text-color);
+    }
+
+    a {
+        color: var(--text-links-color);
+    }
+
+    nav.navbar {
+        background-color: var(--navbar-color);
+    }
+
+    .sidebar, .sidebar-sticky {
+        background-color: var(--sidebar-color);
+        color: var(--background-text-color); /*?*/
+    }
+
+    #nav-dashboard, #nav-listeners, #nav-launchers, #nav-grunts, #nav-templates,
+    #nav-tasks, #nav-taskings, #nav-graph, #nav-data, #nav-users {
+        color: var(--background-text-color);
+        opacity: 0.5;
+    }
+
+    #nav-dashboard.nav-link.active, #nav-listeners.nav-link.active, #nav-launchers.nav-link.active,
+    #nav-grunts.nav-link.active, #nav-templates.nav-link.active, #nav-tasks.nav-link.active,
+    #nav-taskings.nav-link.active, #nav-graph.nav-link.active, #nav-data.nav-link.active,
+    #nav-users.nav-link.active {
+        color: var(--primary-highlight-color);
+        opacity: 1.0;
+    }
+
+    .btn-primary {
+        color: var(--primary-text-color);
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        color: var(--primary-text-color);
+        background-color: var(--primary-highlight-color);
+        border-color: var(--primary-highlight-color);
+    }
+
+    .btn-secondary {
+        color: var(--secondary-text-color);
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+    }
+
+    .btn-secondary:hover {
+        color: var(--secondary-text-color);
+        background-color: var(--secondary-highlight-color);
+        border-color: var(--secondary-highlight-color);
+    }
+
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-outline-primary:hover {
+        color: var(--primary-text-color);
+        background-color: var(--primary-highlight-color);
+        border-color: var(--primary-highlight-color);
+    }
+
+    .btn-outline-secondary {
+        color: var(--secondary-color);
+        border-color: var(--secondary-color);
+    }
+
+    .btn-outline-secondary:hover {
+        color: var(--secondary-text-color);
+        background-color: var(--secondary-highlight-color);
+        border-color: var(--secondary-highlight-color);
+    }
+
+    .form-control-plaintext {
+        color: var(--background-text-color);
+    }
+
+    .form-control, .selectpicker,
+    bootstrap-select.dropdown.show,
+    button.btn.btn-light.dropdown-toggle,
+    .dropdown-menu.show,
+    .dropdown-item
+    {
+        background-color: var(--input-color);
+        color: var(--input-text-color);
+    }
+
+    .dropdown-item:hover {
+        background-color: var(--primary-color);
+    }
+
+    .form-control:focus {
+        background-color: var(--input-color);
+        color: var(--input-text-color);
+        border-color: var(--input-highlight-color);
+    }
+
+    .form-control:disabled, .form-control[readonly],
+    .selectpicker:disabled, .selectpicker[readonly] {
+        background-color: var(--input-disabled-color);
+    }
+
+    .card, .card-body {
+        background-color: var(--background-color);
+        color: var(--background-text-color);
+        border-color: var(--input-highlight-color);
+    }
+
+    .table, .table-hover tbody tr:hover {
+        color: var(--background-text-color);
+    }
+
+    .toast, .toast-body, .toast-header {
+        background-color: var(--secondary-color);
+        color: var(--secondary-text-color);
+        border-color: var(--secondary-highlight-color);
+        /*opacity: 0.85;*/
+    }
+
+    .nav-tabs .nav-link.active,
+    .nav-tabs .nav-item.show .nav-link {
+        background-color: var(--background-color);
+        color: var(--background-text-color);
+        border-color: #dee2e6 #dee2e6 var(--background-color);
+    }
+
+    .interact-style,
+    input.interact-style:focus {
+        background-color: var(--terminal-color);
+        color: var(--terminal-text-color);
+        box-shadow: none;
+    }
+
+    .interact-border {
+        border: 1px solid var(--terminal-border-color);
+    }
+
+    .interact-button-border {
+        border-left: 1px solid var(--terminal-border-color);
+        border-right: none;
+        border-top: none;
+        border-bottom: none;
+    }
+
+    input.interact-style:read-only {
+        color: var(--terminal-color);
+    }
+
+    .interact-highlight-style {
+        color: var(--terminal-highlight-color);
+    }
+
+    .terminal-text-color {
+        color: var(--terminal-text-color);
+    }
+
+    .terminal-highlight-color {
+        color: var(--terminal-highlight-color);
+    }
+
+    .grunt-interact::-webkit-scrollbar,
+    .grunt-interact::-webkit-scrollbar-track {
+        background-color: var(--terminal-color);
+    }
+
+    .grunt-interact::-webkit-scrollbar-thumb {
+        background-color: var(--terminal-text-color);
+    }
+
+    .grunt-interact::placeholder,
+    .grunt-interact::-ms-input-placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+        color: var(--terminal-text-color);
+        opacity: 0.8; /* Firefox */
+    }
+
+    .tt-hint {
+        color: var(--terminal-text-color);
+        border: 2px solid var(--terminal-border-color);
+    }
+
+    .tt-menu {
+        background-color: var(--terminal-color);
+        border: 1px solid var(--terminal-border-color);
+    }
+
+    .tt-suggestion.tt-cursor {
+        color: var(--terminal-text-color);
+        background-color: var(--terminal-highlight-color);
+    }
+
+    .graph-box svg {
+        background-color: var(--background-color);
+    }
+
+    .CodeMirror-hscrollbar::-webkit-scrollbar,
+    .CodeMirror-vscrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+        background-color: var(--background-color);
+    }
+
+    .CodeMirror-hscrollbar::-webkit-scrollbar-track,
+    .CodeMirror-vscrollbar::-webkit-scrollbar-track {
+        background-color: var(--background-color);
+    }
+
+    .CodeMirror-hscrollbar::-webkit-scrollbar-thumb,
+    .CodeMirror-vscrollbar::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        background-color: var(--background-text-color);
+    }
+
+    .border-primary {
+        border-color: var(--primary-highlight-color);
+    }
+
+    .border-secondary {
+        border-color: var(--secondary-highlight-color);
+    }
+
+    .primary-color, td .primary-color {
+        color: var(--primary-color);
+    }
+
+    .secondary-color, td .secondary-color {
+        color: var(--secondary-color);
+    }
+
+    .secondary-highlight-hover:hover, td .secondary-highlight-hover:hover {
+        color: var(--secondary-highlight-color);
+    }
+
+    .secondary-shadow:hover {
+        text-shadow: 0px 0px 2px var(--secondary-highlight-color);
+    }
+</style>
+
+@code {
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
+    [Parameter]
+    public CovenantUser CovenantUser { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.INotificationService.OnEditCovenantUser += OnEditCovenantUser;
+        // this.INotificationService.OnEditTheme += OnEditTheme;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditCovenantUser -= OnEditCovenantUser;
+        // this.INotificationService.OnEditTheme += OnEditTheme;
+    }
+
+    private void OnEditCovenantUser(object sender, CovenantUser user)
+    {
+        if (this.CovenantUser.Id == user.Id && this.CovenantUser.ThemeId != user.ThemeId)
+        {
+            this.InvokeAsync(() => IJSRuntime.InvokeAsync<string>("ReloadPage").WaitTask());
+        }
+    }
+
+    private void OnEditTheme(object sender, Theme theme)
+    {
+        if (this.Theme.Id == theme.Id)
+        {
+            this.InvokeAsync(() => IJSRuntime.InvokeAsync<string>("ReloadPage").WaitTask());
+        }
+    }
+}

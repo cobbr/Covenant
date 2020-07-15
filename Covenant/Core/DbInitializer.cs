@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using YamlDotNet.Serialization;
 
 using Covenant.Models;
+using Covenant.Models.Covenant;
 using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
@@ -30,6 +31,7 @@ namespace Covenant.Core
             await InitializeLaunchers(service, context);
             await InitializeTasks(service, context);
             await InitializeRoles(roleManager);
+            await InitializeThemes(context);
         }
 
         public async static Task InitializeImplantTemplates(ICovenantService service, CovenantContext context)
@@ -422,6 +424,85 @@ namespace Covenant.Core
                 {
                     IdentityResult roleResult = await roleManager.CreateAsync(new IdentityRole(role));
                 }
+            }
+        }
+
+        public async static Task InitializeThemes(CovenantContext context)
+        {
+            if (!context.Themes.Any())
+            {
+                var themes = new List<Theme>
+                {
+                    new Theme
+                    {
+                        Name = "Classic Theme",
+                        Description = "Covenant's standard, default theme.",
+
+                        BackgroundColor = "#ffffff",
+                        BackgroundTextColor = "#212529",
+
+                        PrimaryColor = "#007bff",
+                        PrimaryTextColor = "#ffffff",
+                        PrimaryHighlightColor = "#0069d9",
+
+                        SecondaryColor = "#6c757d",
+                        SecondaryTextColor = "#ffffff",
+                        SecondaryHighlightColor = "#545b62",
+
+                        TerminalColor = "#062549",
+                        TerminalTextColor = "#ffffff",
+                        TerminalHighlightColor = "#17a2b8",
+                        TerminalBorderColor = "#17a2b8",
+
+                        NavbarColor = "#343a40",
+                        SidebarColor = "#f8f9fa",
+
+                        InputColor = "#ffffff",
+                        InputDisabledColor = "#e9ecef",
+                        InputTextColor = "#212529",
+                        InputHighlightColor = "#0069d9",
+
+                        TextLinksColor = "#007bff",
+
+                        CodeMirrorTheme = CodeMirrorTheme.@default,
+                    },
+                    new Theme
+                    {
+                        Name = "Heathen Mode",
+                        Description = "A dark theme meant for lawless heathens.",
+
+                        BackgroundColor = "#191919",
+                        BackgroundTextColor = "#f5f5f5",
+
+                        PrimaryColor = "#0D56B6",
+                        PrimaryTextColor = "#ffffff",
+                        PrimaryHighlightColor = "#1D4272",
+
+                        SecondaryColor = "#343a40",
+                        SecondaryTextColor = "#ffffff",
+                        SecondaryHighlightColor = "#dae0e5",
+
+                        TerminalColor = "#191919",
+                        TerminalTextColor = "#ffffff",
+                        TerminalHighlightColor = "#3D86E5",
+                        TerminalBorderColor = "#ffffff",
+
+                        NavbarColor = "#1D4272",
+                        SidebarColor = "#232323",
+
+                        InputColor = "#373737",
+                        InputDisabledColor = "#212121",
+                        InputTextColor = "#ffffff",
+                        InputHighlightColor = "#ffffff",
+
+                        TextLinksColor = "#007bff",
+
+                        CodeMirrorTheme = CodeMirrorTheme.night,
+                    }
+                };
+
+                await context.Themes.AddRangeAsync(themes);
+                await context.SaveChangesAsync();
             }
         }
     }

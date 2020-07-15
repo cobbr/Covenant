@@ -24,7 +24,7 @@ namespace Covenant.Core
 
         public static string CovenantDirectory = Assembly.GetExecutingAssembly().Location.Split("bin")[0].Split("Covenant.dll")[0];
         public static string CovenantDataDirectory = CovenantDirectory + "Data" + Path.DirectorySeparatorChar;
-		public static string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
+        public static string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
         public static string CovenantTempDirectory = CovenantDataDirectory + "Temp" + Path.DirectorySeparatorChar;
 
         public static string CovenantProfileDirectory = CovenantDataDirectory + "Profiles" + Path.DirectorySeparatorChar;
@@ -627,7 +627,8 @@ namespace Covenant.Core
                 {".wdp", "image/vnd.ms-photo"},
                 {".webarchive", "application/x-safari-webarchive"},
                 {".webm", "video/webm"},
-                {".webp", "image/webp"}, /* https://en.wikipedia.org/wiki/WebP */                {".webtest", "application/xml"},
+                {".webp", "image/webp"},
+                {".webtest", "application/xml"},
                 {".wiq", "application/xml"},
                 {".wiz", "application/msword"},
                 {".wks", "application/vnd.ms-works"},
@@ -698,7 +699,6 @@ namespace Covenant.Core
                 {".xwd", "image/x-xwindowdump"},
                 {".z", "application/x-compress"},
                 {".zip", "application/zip"},
-
                 {"application/fsharp-script", ".fsx"},
                 {"application/msaccess", ".adp"},
                 {"application/msword", ".doc"},
@@ -715,7 +715,7 @@ namespace Covenant.Core
                 {"application/x-x509-ca-cert", ".cer"},
                 {"application/x-zip-compressed", ".zip"},
                 {"application/xhtml+xml", ".xhtml"},
-                {"application/xml", ".xml"},  // anomoly, .xml -> text/xml, but application/xml -> many thingss, but all are xml, so safest is .xml
+                {"application/xml", ".xml"},
                 {"audio/aac", ".AAC"},
                 {"audio/aiff", ".aiff"},
                 {"audio/basic", ".snd"},

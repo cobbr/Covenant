@@ -14,6 +14,10 @@ window.RedirectToUrl = (url) => {
     window.location.href = url;
 }
 
+window.ReloadPage = () => {
+    window.location.reload();
+}
+
 window.Toast = (selector, command) => {
     $(selector).toast(command);
 }
@@ -32,6 +36,8 @@ window.ScrollToBottom = (selector) => {
         scrollTop: $(selector)[0].scrollHeight
     }, 1000, function () { });
 };
+
+window.TypeAheadSelectedValue = {};
 
 window.InitializeTypeahead = (typeaheadselector, suggestions) => {
     var substringMatcher = function (strs) {
@@ -66,14 +72,38 @@ window.InitializeTypeahead = (typeaheadselector, suggestions) => {
             limit: 20,
             source: substringMatcher(suggestions)
         });
+
+    $(typeaheadselector).on('typeahead:selected', function (event, selection) {
+        window.TypeAheadSelectedValue[typeaheadselector] = selection;
+    });
+}
+
+window.ClearSelectedTypeaheadVal = (typeaheadselector) => {
+    window.TypeAheadSelectedValue[typeaheadselector] = "";
+}
+
+window.GetSelectedTypeaheadVal = (typeaheadselector) => {
+    var val = window.TypeAheadSelectedValue[typeaheadselector];
+    window.TypeAheadSelectedValue[typeaheadselector] = "";
+    return val;
+}
+
+window.TypeAheadHasSuggestions = (typeaheadselector) => {
+    if ($(typeaheadselector + " ~ .tt-menu").has(".tt-suggestion").length != 0) {
+        return true;
+    }
+    return false;
 }
 
 window.SetTypeaheadVal = (typeaheadselector, val) => {
     $(typeaheadselector).typeahead('val', val);
 }
 
-window.InitializeCodeMirror = (element, codereadonly) => {
+window.InitializeCodeMirror = (element, theme, codereadonly) => {
     var editor;
+    if (theme == undefined) {
+        theme = "default";
+    }
     if (codereadonly === undefined) {
         codereadonly = false;
     }
@@ -81,13 +111,15 @@ window.InitializeCodeMirror = (element, codereadonly) => {
         editor = CodeMirror.fromTextArea(element, {
             lineNumbers: true,
             mode: "text/x-csharp",
-            readOnly: codereadonly
+            readOnly: codereadonly,
+            theme: theme
         });
     }
     else if (element.classList.contains("code-mirror-html")) {
         editor = CodeMirror.fromTextArea(element, {
             lineNumbers: true,
-            mode: "htmlmixed"
+            mode: "htmlmixed",
+            theme: theme
         });
     }
     if (editor != undefined) {
@@ -115,8 +147,8 @@ window.RefreshSelectPicker = (selector) => {
     $(selector).selectpicker('refresh');
 }
 
-window.ShowTab = (id) => {
-    $(id).tab('show');
+window.ShowTab = (selector) => {
+    $(selector).tab('show');
 }
 
 window.ActivateModal = (selector) => {

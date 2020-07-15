@@ -12,45 +12,61 @@
 <CovenantTable TItem="Grunt" Items="Grunts" ItemsChanged="GruntsChanged" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
+        @if (this.OnSelectTerminal.HasDelegate)
+        {
+            <th class="pl-1 pr-1">
+                <div class="secondary-color">
+                    <span class="fe fe-terminal"></span>
+                </div>
+            </th>
+        }
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Name">
             <HeaderContent>Name</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate.Name">
-            <HeaderContent>ImplantTemplate</HeaderContent>
         </SortableTableHeader>
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Hostname">
             <HeaderContent>Hostname</HeaderContent>
         </SortableTableHeader>
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.UserName">
-            <HeaderContent>UserName</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="Grunt" TItem2="GruntStatus" GetSortableProperty="(grunt) => grunt.Status">
-            <HeaderContent>Status</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="Grunt" TItem2="DateTime" GetSortableProperty="(grunt) => grunt.LastCheckIn">
-            <HeaderContent>LastCheckIn</HeaderContent>
+            <HeaderContent>User</HeaderContent>
         </SortableTableHeader>
         <SortableTableHeader TItem="Grunt" TItem2="IntegrityLevel" GetSortableProperty="(grunt) => grunt.Integrity">
             <HeaderContent>Integrity</HeaderContent>
         </SortableTableHeader>
+        <SortableTableHeader TItem="Grunt" TItem2="DateTime" GetSortableProperty="(grunt) => grunt.LastCheckIn">
+            <HeaderContent>LastCheckIn</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Grunt" TItem2="GruntStatus" GetSortableProperty="(grunt) => grunt.Status">
+            <HeaderContent>Status</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Note">
             <HeaderContent>Note</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate.Name">
+            <HeaderContent>Template</HeaderContent>
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="grunt">
         <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
+            @if (this.OnSelectTerminal.HasDelegate)
+            {
+                <td @attributes="InputAttributes">
+                    <div class="secondary-color secondary-highlight-hover secondary-shadow" @onclick="e => OnSelectTerminal.InvokeAsync(grunt)">
+                        <span class="fe fe-terminal"></span>
+                    </div>
+                </td>
+            }
             <td @attributes="InputAttributes">
                 <a href="/grunt/interact/@grunt.Id">
                     @grunt.Name
                 </a>
             </td>
-            <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
             <td @attributes="InputAttributes">@grunt.Hostname</td>
             <td @attributes="InputAttributes">@grunt.UserName</td>
-            <td @attributes="InputAttributes">@grunt.Status</td>
-            <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
             <td @attributes="InputAttributes">@grunt.Integrity</td>
+            <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
+            <td @attributes="InputAttributes">@grunt.Status</td>
             <td @attributes="InputAttributes">@grunt.Note</td>
+            <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
         </tr>
     </TableRow>
     <ButtonTray>@ButtonTray</ButtonTray>
@@ -74,6 +90,9 @@
 
     [Parameter]
     public int PageLength { get; set; } = 50;
+
+    [Parameter]
+    public EventCallback<Grunt> OnSelectTerminal { get; set; }
 
     [Parameter]
     public RenderFragment ButtonTray { get; set; }

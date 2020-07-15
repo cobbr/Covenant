@@ -3,23 +3,41 @@
 @inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
 @using Covenant.Models.Covenant
 @inject UserManager<CovenantUser> UserManager
 @inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
-    <h1 class="h2">User: <span id="user-name" class="text-primary">@CovenantUser.UserName</span></h1>
+    <h1 class="h2">User: <span id="user-name" class="primary-color">@CovenantUser.UserName</span></h1>
 </div>
 
 <div class="row">
-    <div class="col-md border-right">
+    <div class="col-md-4 border-right">
         <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnSubmit="OnEditPassword" readonly>
             <span class="fe fe-edit"></span> Edit Password
         </CovenantUserRegisterForm>
     </div>
-    <div class="col-md">
-        <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnEditRoles" />
+    <div class="col-md-4">
+        <EditForm Model="CovenantUser" OnSubmit="OnChangeTheme">
+            <div class="form-group">
+                <label for="ThemeId">Theme</label>
+                <select id="ThemeId" name="ThemeId" @bind="CovenantUser.ThemeId" class="form-control">
+                    @foreach (Theme Theme in Themes)
+                    {
+                        <option value="@Theme.Id">@Theme.Name</option>
+                    }
+                </select>
+                <div class="text-danger"><ValidationMessage For="() => CovenantUser.ThemeId" /></div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-edit"></span> Edit Theme
+            </button>
+        </EditForm>
+    </div>
+    <div class="col-md-4">
+        <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnChangeTheme" />
     </div>
 </div>
 
@@ -34,9 +52,13 @@
     [Parameter]
     public CovenantUser CovenantUser { get; set; }
 
+    private IEnumerable<Theme> Themes { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         this.CovenantUser = this.CovenantUser ?? await Service.GetUser(this.CovenantUserId);
+        this.Themes = await Service.GetThemes();
+        Service.DisposeContext();
     }
 
     private async Task OnEditRoles(IEnumerable<IdentityRole> roles)
@@ -70,7 +92,7 @@
 
     private async Task OnEditPassword(CovenantUserRegister register)
     {
-        await Service.EditUser(this.CovenantUser, register);
+        await Service.EditUserPassword(this.CovenantUser, register);
         NavigationManager.NavigateTo("/covenantuser");
     }
 
@@ -86,5 +108,11 @@
             // ModelState.AddModelError(string.Empty, e.Message);
             // return RedirectToAction(nameof(Index));
         }
+    }
+
+    private async Task OnChangeTheme()
+    {
+        await Service.EditUser(this.CovenantUser);
+        Service.DisposeContext();
     }
 }
