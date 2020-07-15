@@ -4,7 +4,7 @@ const height = 600;
 const colors = d3.scaleOrdinal(d3.schemeCategory10);
 const arrowColor = '#999999';
 
-const svg = d3.select('#graph-box')
+const svg = d3.select('.graph-box')
   .append('svg')
   .on('contextmenu', () => { d3.event.preventDefault(); })
   .attr('width', width)

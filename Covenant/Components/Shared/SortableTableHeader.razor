@@ -2,10 +2,10 @@
 @typeparam TItem2
 @implements IDisposable
 
-<th @attributes="InputAttributes" @onclick="OnSortHeader">
+<th class="pl-1 pr-1" @attributes="InputAttributes" @onclick="OnSortHeader">
     <div class="d-flex flex-nowrap">
         @HeaderContent
-        <div class="ml-2 d-flex flex-nowrap" style="font-size: 16px;">
+        <div class="ml-3 d-flex flex-nowrap" style="font-size: 16px;">
             @if (this.Sorted && this.Ascending)
             {
                 <span>&uarr;</span>

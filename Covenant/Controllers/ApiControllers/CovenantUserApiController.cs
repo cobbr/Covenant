@@ -154,14 +154,37 @@ namespace Covenant.Controllers
 
         // PUT api/users
         // Edit a User's password
-        [HttpPut("users", Name = "EditUser")]
-		public async Task<ActionResult<CovenantUser>> EditUser([FromBody] CovenantUserLogin user)
+        [HttpPut("users/logon", Name = "EditUserPassword")]
+		public async Task<ActionResult<CovenantUser>> EditUserPassword([FromBody] CovenantUserLogin user)
         {
             try
             {
-                CovenantUser editedUser = await _service.EditUser(await _service.GetCurrentUser(HttpContext.User), user);
+                CovenantUser editedUser = await _service.EditUserPassword(await _service.GetCurrentUser(HttpContext.User), user);
                 editedUser.PasswordHash = "";
                 return editedUser;
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ControllerUnauthorizedException)
+            {
+                return new UnauthorizedResult();
+            }
+        }
+
+        // PUT api/users
+        // Edit a User
+        [HttpPut("users", Name = "EditUser")]
+        public async Task<ActionResult<CovenantUser>> EditUser([FromBody] CovenantUser user)
+        {
+            try
+            {
+                return await _service.EditUser(user);
             }
             catch (ControllerNotFoundException e)
             {

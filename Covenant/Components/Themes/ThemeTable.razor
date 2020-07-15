@@ -1,0 +1,81 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.Collections.Generic
+@using Microsoft.JSInterop
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+
+<CovenantTable TItem="Theme" Items="Themes.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="Theme" TItem2="string" GetSortableProperty="(theme) => theme.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Theme" TItem2="string" GetSortableProperty="(theme) => theme.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Theme" TItem2="string" GetSortableProperty="(theme) => string.Empty">
+            <HeaderContent>Color Palette</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="theme">
+        <tr>
+            <td>
+                <a href="/theme/edit/@theme.Id">@theme.Name</a>
+            </td>
+            <td>@theme.Description</td>
+            <td>
+                <div class="d-flex flex-row">
+                    <div class="border-left border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.BackgroundColor"></div>
+                    <div class="border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.PrimaryColor"></div>
+                    <div class="border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.SecondaryColor"></div>
+                    <div class="border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.TerminalColor"></div>
+                    <div class="border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.SidebarColor"></div>
+                    <div class="border-right border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.NavbarColor"></div>
+                </div>
+            </td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<Theme> Themes { get; set; }
+
+    [Parameter]
+    public EventCallback<IEnumerable<Theme>> ThemesChanged { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 10;
+
+    protected async override Task OnInitializedAsync()
+    {
+        this.Themes = this.Themes ?? (await Service.GetThemes()).ToList();
+    }
+
+    private void OnThemesChanged(List<Theme> Themes)
+    {
+        this.Themes = Themes;
+        this.ThemesChanged.InvokeAsync(Themes);
+    }
+
+    private bool IsRowDisplayed(Theme theme, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            theme.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            theme.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

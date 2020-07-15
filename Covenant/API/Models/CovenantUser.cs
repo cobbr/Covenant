@@ -22,8 +22,10 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the CovenantUser class.
         /// </summary>
-        public CovenantUser(string id = default(string), string userName = default(string), string normalizedUserName = default(string), string email = default(string), string normalizedEmail = default(string), bool? emailConfirmed = default(bool?), string passwordHash = default(string), string securityStamp = default(string), string concurrencyStamp = default(string), string phoneNumber = default(string), bool? phoneNumberConfirmed = default(bool?), bool? twoFactorEnabled = default(bool?), System.DateTime? lockoutEnd = default(System.DateTime?), bool? lockoutEnabled = default(bool?), int? accessFailedCount = default(int?))
+        public CovenantUser(int? themeId = default(int?), Theme theme = default(Theme), string id = default(string), string userName = default(string), string normalizedUserName = default(string), string email = default(string), string normalizedEmail = default(string), bool? emailConfirmed = default(bool?), string passwordHash = default(string), string securityStamp = default(string), string concurrencyStamp = default(string), string phoneNumber = default(string), bool? phoneNumberConfirmed = default(bool?), bool? twoFactorEnabled = default(bool?), System.DateTime? lockoutEnd = default(System.DateTime?), bool? lockoutEnabled = default(bool?), int? accessFailedCount = default(int?))
         {
+            ThemeId = themeId;
+            Theme = theme;
             Id = id;
             UserName = userName;
             NormalizedUserName = normalizedUserName;
@@ -46,6 +48,16 @@ namespace Covenant.API.Models
         /// An initialization method that performs custom operations like setting defaults
         /// </summary>
         partial void CustomInit();
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "themeId")]
+        public int? ThemeId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "theme")]
+        public Theme Theme { get; set; }
 
         /// <summary>
         /// </summary>
@@ -122,5 +134,18 @@ namespace Covenant.API.Models
         [JsonProperty(PropertyName = "accessFailedCount")]
         public int? AccessFailedCount { get; set; }
 
+        /// <summary>
+        /// Validate the object.
+        /// </summary>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown if validation fails
+        /// </exception>
+        public virtual void Validate()
+        {
+            if (Theme != null)
+            {
+                Theme.Validate();
+            }
+        }
     }
 }

@@ -37,19 +37,19 @@
             <div class="btn-group-sm" role="group">
                 @if (this.CurrentPage == 0)
                 {
-                    <button class="btn btn-sm btn-info-outline disabled" @onclick="OnNavigateToFront">
+                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToFront">
                         <span class="fe fe-arrow-left-circle"></span>
                     </button>
-                    <button class="btn btn-sm btn-secondary-outline disabled" @onclick="OnNavigateToLeft">
+                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToLeft">
                         <span class="fe fe-arrow-left"></span>
                     </button>
                 }
                 else
                 {
-                    <button class="btn btn-sm btn-info-outline" @onclick="OnNavigateToFront">
+                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToFront">
                         <span class="fe fe-arrow-left-circle"></span>
                     </button>
-                    <button class="btn btn-sm btn-secondary-outline" @onclick="OnNavigateToLeft">
+                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToLeft">
                         <span class="fe fe-arrow-left"></span>
                     </button>
                 }
@@ -78,25 +78,25 @@
                 @for (int i = CurrentPage + 2; i <= Right; i++)
                 {
                     int number = i;
-                    <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
+                    <button class="btn primary-color" @onclick="(e => OnNavigateToPage(number - 1))">
                         @number
                     </button>
                 }
                 @if (this.CurrentPage == (this.TotalPages - 1))
                 {
-                    <button class="btn btn-sm btn-secondary-outline disabled" @onclick="OnNavigateToRight">
+                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToRight">
                         <span class="fe fe-arrow-right"></span>
                     </button>
-                    <button class="btn btn-sm btn-info-outline disabled" @onclick="OnNavigateToBack">
+                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToBack">
                         <span class="fe fe-arrow-right-circle"></span>
                     </button>
                 }
                 else
                 {
-                    <button class="btn btn-sm btn-secondary-outline" @onclick="OnNavigateToRight">
+                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToRight">
                         <span class="fe fe-arrow-right"></span>
                     </button>
-                    <button class="btn btn-sm btn-info-outline" @onclick="OnNavigateToBack">
+                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToBack">
                         <span class="fe fe-arrow-right-circle"></span>
                     </button>
                 }

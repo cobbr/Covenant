@@ -9,7 +9,6 @@ using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -20,6 +19,7 @@ using Covenant.Models.Listeners;
 using Covenant.Models.Launchers;
 using Covenant.Models.Grunts;
 using Covenant.Models.Indicators;
+using System.Text;
 
 namespace Covenant.Models
 {
@@ -43,9 +43,9 @@ namespace Covenant.Models
         public DbSet<GruntTasking> GruntTaskings { get; set; }
 
         public DbSet<Event> Events { get; set; }
-
         public DbSet<CapturedCredential> Credentials { get; set; }
         public DbSet<Indicator> Indicators { get; set; }
+        public DbSet<Theme> Themes { get; set; }
 
         public CovenantContext(DbContextOptions<CovenantContext> options) : base(options)
         {
@@ -88,6 +88,8 @@ namespace Covenant.Models
             builder.Entity<FileIndicator>();
             builder.Entity<NetworkIndicator>();
             builder.Entity<TargetIndicator>();
+
+            builder.Entity<Theme>();
 
             builder.Entity<Grunt>()
                 .HasOne(G => G.ImplantTemplate)
