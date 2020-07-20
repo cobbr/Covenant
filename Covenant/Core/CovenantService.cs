@@ -480,7 +480,7 @@ namespace Covenant.Core
 
         public async Task<CovenantUser> CreateUserVerify(ClaimsPrincipal principal, CovenantUserRegister register)
         {
-            if (_userManager.Users.Any() && !_signInManager.IsSignedIn(principal))
+            if (_userManager.Users.Any() && !principal.Identity.IsAuthenticated)
             {
                 throw new ControllerUnauthorizedException($"Unauthorized - Must be signed in to register a new user.");
             }
