@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ReadTextFile,CreateDirectory,Delete .NET Core Tasks
 - Added UI Themes, new Heathen Mode theme
 - Added a TabbedTerminal view to GruntIndex component
+- Added message that Covenant has started
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
