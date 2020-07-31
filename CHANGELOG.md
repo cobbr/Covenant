@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed POST /api/users API endpoint authentication issue
 - Fixed profiles using Cookie header
 - Fixed profile using curly brace character
+- Fix create/edit for ReferenceSourceLibraries,ReferenceAssemblies,EmbeddedResources
 
 ## [v0.5] - 2020-06-04
 ### Added
