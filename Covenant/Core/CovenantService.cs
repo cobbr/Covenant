@@ -2768,7 +2768,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
@@ -2788,7 +2788,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
@@ -2812,7 +2812,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("powershellremotinggrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
@@ -2830,7 +2830,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
+                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[0].ToLower());
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[0]}");
@@ -4339,6 +4339,7 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
+            matchingLauncher.StagerCode = launcher.StagerCode;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -4428,6 +4429,7 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
+            matchingLauncher.StagerCode = launcher.StagerCode;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -4511,6 +4513,10 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
+            matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.ParameterString = launcher.ParameterString;
+            matchingLauncher.PowerShellCode = launcher.PowerShellCode;
+            matchingLauncher.EncodedLauncherString = launcher.EncodedLauncherString;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -4594,6 +4600,10 @@ public static class Task
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
+            matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.DiskCode = launcher.DiskCode;
+            matchingLauncher.TargetName = launcher.TargetName;
+            matchingLauncher.TaskName = launcher.TaskName;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -4763,8 +4773,10 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.DiskCode = launcher.DiskCode;
+            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
+            matchingLauncher.ProgId = launcher.ProgId;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -4851,8 +4863,12 @@ public static class Task
             matchingLauncher.DllName = launcher.DllName;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.DiskCode = launcher.DiskCode;
+            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
+            matchingLauncher.ProgId = launcher.ProgId;
+            matchingLauncher.ParameterString = launcher.ParameterString;
+            matchingLauncher.DllName = launcher.DllName;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -4937,8 +4953,10 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.DiskCode = launcher.DiskCode;
+            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
+            matchingLauncher.ProgId = launcher.ProgId;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -5023,8 +5041,10 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.DiskCode = launcher.DiskCode;
+            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
+            matchingLauncher.ProgId = launcher.ProgId;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
@@ -5109,8 +5129,10 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher.DiskCode = launcher.DiskCode;
+            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
+            matchingLauncher.ProgId = launcher.ProgId;
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
