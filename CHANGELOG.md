@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed profile using curly brace character
 - Fix create/edit for ReferenceSourceLibraries,ReferenceAssemblies,EmbeddedResources
 - Fix launcher commands (i.e. BypassUacGrunt, WMIGrunt, PowerShellRemotingGrunt)
+- Fix Launcher properties not being applied during generation
 
 ## [v0.5] - 2020-06-04
 ### Added
