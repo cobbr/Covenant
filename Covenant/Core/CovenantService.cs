@@ -2682,7 +2682,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                Launcher l = _context.Launchers.AsEnumerable().FirstOrDefault(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
@@ -2702,7 +2702,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                Launcher l = _context.Launchers.AsEnumerable().FirstOrDefault(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
@@ -2726,7 +2726,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("powershellremotinggrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
+                Launcher l = _context.Launchers.AsEnumerable().FirstOrDefault(L => L.Name.Equals(parameters[1], StringComparison.OrdinalIgnoreCase));
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
@@ -2744,7 +2744,7 @@ namespace Covenant.Core
             }
             else if (tasking.GruntTask.Name.Equals("bypassuacgrunt", StringComparison.OrdinalIgnoreCase))
             {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
+                Launcher l = _context.Launchers.AsEnumerable().FirstOrDefault(L => L.Name.Equals(parameters[0], StringComparison.OrdinalIgnoreCase));
                 if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
                 {
                     throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[0]}");
