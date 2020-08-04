@@ -199,7 +199,6 @@ namespace Covenant
                                 Console.Error.WriteLine("Error importing Covenant certificate.");
                             }
                             httpsOptions.SslProtocols = SslProtocols.Tls12;
-                            Console.WriteLine("Using Covenant certificate with hash: " + httpsOptions.ServerCertificate.GetCertHashString());
                         });
                     });
                     // options.Limits.MaxRequestBodySize = int.MaxValue;

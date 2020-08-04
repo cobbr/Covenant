@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SharpSploit to latest version, PowerShell task should include verbose/error output
 - Changed GruntTask export to exclude GruntTaskOption value property
 - Updated codemirror, added night theme for codemirror
+- Removed Covenant certificate hash message
 
 ### Fixed
 - Fixed order of Upload parameters
