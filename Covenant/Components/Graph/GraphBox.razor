@@ -35,7 +35,7 @@
                         </a>
                     </li>
                 }
-                @foreach (HttpListener l in this.Listeners)
+                @foreach (Listener l in this.Listeners)
                 {
                     <li class="nav-item">
                         <a class="nav-link" id="@l.GUID-tab" data-toggle="tab" href="#node-@l.GUID" role="tab" aria-controls="@l.GUID" aria-selected="false">
@@ -75,7 +75,7 @@
                         </div>
                     </div>
                 }
-                @foreach (HttpListener l in Listeners)
+                @foreach (Listener l in Listeners)
                 {
                     <div class="tab-pane fade" id="node-@l.GUID" role="tabpanel" aria-labelledby="@l.GUID-tab">
                         <h5 class="h5">Listener</h5>
@@ -87,11 +87,14 @@
                             <label for="Description">Description</label>
                             <input id="Description" name="Description" @bind="@l.Description" class="form-control" readonly disabled>
                         </div>
-                        <div class="form-group">
-                            <label for="Urls">Urls</label>
-                            @{ var urls = string.Join(",", l.Urls); }
-                            <input id="Urls" name="Urls" value="@urls" class="form-control" readonly disabled>
-                        </div>
+                        @if (l.ListenerType.Name == "HTTP")
+                        {
+                            <div class="form-group">
+                                <label for="Urls">Urls</label>
+                                @{ string urls = string.Join(",", ((HttpListener)l).Urls); }
+                                <input id="Urls" name="Urls" value="@urls" class="form-control" readonly disabled>
+                            </div>
+                         }
                     </div>
                 }
             </div>

@@ -71,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix create/edit for ReferenceSourceLibraries,ReferenceAssemblies,EmbeddedResources
 - Fix launcher commands (i.e. BypassUacGrunt, WMIGrunt, PowerShellRemotingGrunt)
 - Fix Launcher properties not being applied during generation
+- Fixed Graph with BridgeListener issue
 
 ## [v0.5] - 2020-06-04
 ### Added
