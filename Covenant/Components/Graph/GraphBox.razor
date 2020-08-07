@@ -7,7 +7,7 @@
 @inject IJSRuntime IJSRuntime
 
 <div class="d-flex flex-wrap">
-    <div id="graph-box" class="border m-1 p-1"></div>
+    <div class="graph-box border m-1 p-1"></div>
     <div class="flex-grow-1 border-left border-right border-bottom m-1 p-0">
         <div class="border-top m-0 p-0">
             <div class="m-2">
@@ -35,7 +35,7 @@
                         </a>
                     </li>
                 }
-                @foreach (HttpListener l in this.Listeners)
+                @foreach (Listener l in this.Listeners)
                 {
                     <li class="nav-item">
                         <a class="nav-link" id="@l.GUID-tab" data-toggle="tab" href="#node-@l.GUID" role="tab" aria-controls="@l.GUID" aria-selected="false">
@@ -54,7 +54,7 @@
                         <h5 class="h5">Grunt</h5>
                         <div class="form-group">
                             <label for="Name">Name</label>
-                            <a id="Name" name="Name" href="/grunt/interact/@g.Id" class="btn btn-secondary bg-light text-dark text-left w-100">@g.Name</a>
+                            <a id="Name" name="Name" href="/grunt/interact/@g.Id" class="btn btn-secondary text-left w-100">@g.Name</a>
                         </div>
                         <div class="form-group">
                             <label for="Note">Note</label>
@@ -75,23 +75,26 @@
                         </div>
                     </div>
                 }
-                @foreach (HttpListener l in Listeners)
+                @foreach (Listener l in Listeners)
                 {
                     <div class="tab-pane fade" id="node-@l.GUID" role="tabpanel" aria-labelledby="@l.GUID-tab">
                         <h5 class="h5">Listener</h5>
                         <div class="form-group">
                             <label for="Listener.Name">Name</label>
-                            <a href="/listener/edit/@l.Id" class="btn btn-secondary bg-light text-dark text-left w-100">@l.Name</a>
+                            <a href="/listener/edit/@l.Id" class="btn btn-secondary text-left w-100">@l.Name</a>
                         </div>
                         <div class="form-group">
                             <label for="Description">Description</label>
                             <input id="Description" name="Description" @bind="@l.Description" class="form-control" readonly disabled>
                         </div>
-                        <div class="form-group">
-                            <label for="Urls">Urls</label>
-                            @{ var urls = string.Join(",", l.Urls); }
-                            <input id="Urls" name="Urls" value="@urls" class="form-control" readonly disabled>
-                        </div>
+                        @if (l.ListenerType.Name == "HTTP")
+                        {
+                            <div class="form-group">
+                                <label for="Urls">Urls</label>
+                                @{ string urls = string.Join(",", ((HttpListener)l).Urls); }
+                                <input id="Urls" name="Urls" value="@urls" class="form-control" readonly disabled>
+                            </div>
+                         }
                     </div>
                 }
             </div>
@@ -115,7 +118,7 @@
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "start-tab");
-            await IJSRuntime.InvokeAsync<string>("InitializeGraph", "#graph-box");
+            await IJSRuntime.InvokeAsync<string>("InitializeGraph", ".graph-box");
             foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized))
             {
                 await IJSRuntime.InvokeAsync<string>("GraphDisplayGrunt", grunt.GUID, grunt.Name);

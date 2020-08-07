@@ -20,6 +20,8 @@ namespace Covenant.Core
         event EventHandler<CovenantUser> OnEditCovenantUser;
         event EventHandler<string> OnDeleteCovenantUser;
         Task NotifyCreateCovenantUser(object sender, CovenantUser user);
+        Task NotifyEditCovenantUser(object sender, CovenantUser user);
+        Task NotifyDeleteCovenantUser(object sender, string id);
     }
 
     public interface IIdentityRoleNotificationService
@@ -34,6 +36,16 @@ namespace Covenant.Core
         event EventHandler<IdentityUserRole<string>> OnCreateIdentityUserRole;
         event EventHandler<IdentityUserRole<string>> OnEditIdentityUserRole;
         event EventHandler<Tuple<string, string>> OnDeleteIdentityUserRole;
+    }
+
+    public interface IThemeNotificationService
+    {
+        event EventHandler<Theme> OnCreateTheme;
+        event EventHandler<Theme> OnEditTheme;
+        event EventHandler<int> OnDeleteTheme;
+        Task NotifyCreateTheme(object sender, Theme theme);
+        Task NotifyEditTheme(object sender, Theme theme);
+        Task NotifyDeleteTheme(object sender, int id);
     }
 
     public interface IEventNotificationService
@@ -176,7 +188,7 @@ namespace Covenant.Core
         event EventHandler<int> OnDeleteLauncher;
     }
 
-    public interface INotificationService : ICovenantUserNotificationService, IIdentityRoleNotificationService, IIdentityUserRoleNotificationService,
+    public interface INotificationService : ICovenantUserNotificationService, IIdentityRoleNotificationService, IIdentityUserRoleNotificationService, IThemeNotificationService,
         IEventNotificationService, IImplantTemplateNotificationService, IGruntNotificationService, IGruntTaskNotificationService,
         IGruntCommandNotificationService, ICommandOutputNotificationService, IGruntTaskingNotificationService,
         ICredentialNotificationService, IIndicatorNotificationService, IListenerNotificationService, IProfileNotificationService,
@@ -211,6 +223,10 @@ namespace Covenant.Core
         public event EventHandler<IdentityUserRole<string>> OnCreateIdentityUserRole = delegate { };
         public event EventHandler<IdentityUserRole<string>> OnEditIdentityUserRole = delegate { };
         public event EventHandler<Tuple<string, string>> OnDeleteIdentityUserRole = delegate { };
+        public event EventHandler<Theme> OnCreateTheme = delegate { };
+        public event EventHandler<Theme> OnEditTheme = delegate { };
+        public event EventHandler<int> OnDeleteTheme = delegate { };
+
         public event EventHandler<Event> OnCreateEvent = delegate { };
         public event EventHandler<Event> OnEditEvent = delegate { };
         public event EventHandler<int> OnDeleteEvent = delegate { };
@@ -267,6 +283,12 @@ namespace Covenant.Core
         public event EventHandler<Launcher> OnEditLauncher = delegate { };
         public event EventHandler<int> OnDeleteLauncher = delegate { };
         public async Task NotifyCreateCovenantUser(object sender, CovenantUser user) { await Task.Run(() => this.OnCreateCovenantUser(sender, user)); }
+        public async Task NotifyEditCovenantUser(object sender, CovenantUser user) { await Task.Run(() => this.OnEditCovenantUser(sender, user)); }
+        public async Task NotifyDeleteCovenantUser(object sender, string id) { await Task.Run(() => this.OnDeleteCovenantUser(sender, id)); }
+
+        public async Task NotifyCreateTheme(object sender, Theme theme) { await Task.Run(() => this.OnCreateTheme(sender, theme)); }
+        public async Task NotifyEditTheme(object sender, Theme theme) { await Task.Run(() => this.OnEditTheme(sender, theme)); }
+        public async Task NotifyDeleteTheme(object sender, int id) { await Task.Run(() => this.OnDeleteTheme(sender, id)); }
 
         public async Task NotifyCreateEvent(object sender, Event anEvent) { await Task.Run(() => this.OnCreateEvent(sender, anEvent)); }
 

@@ -17,11 +17,13 @@
     <Compile Remove="Data\Grunt\**" />
     <Compile Remove="Data\Tasks\**" />
     <Compile Remove="Data\ReferenceSourceLibraries\**" />
+    <Compile Remove="Data\Downloads\**" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Data\Grunt\**" />
     <None Remove="Data\Tasks\CSharp\**" />
+    <None Remove="Data\Downloads\**" />
     <None Remove="Data\Temp\**" />
   </ItemGroup>
 
@@ -53,9 +55,6 @@
     <PackageReference Include="DonutCore" Version="1.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Remove="Components\Events\EventNotifier.cshtml" />
-  </ItemGroup>
   <ItemGroup>
     <Content Update="nlog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

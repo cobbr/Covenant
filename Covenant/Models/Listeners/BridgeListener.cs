@@ -45,7 +45,10 @@ namespace Covenant.Models.Listeners
                         .ToString()
                 };
             }
-            catch (SocketException) { }
+            catch (SocketException)
+            {
+                this.ConnectAddresses = new List<string> { "" };
+            }
         }
 
         public BridgeListener(ListenerType type, Profile profile) : this(type.Id, profile.Id)

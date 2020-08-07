@@ -1,0 +1,36 @@
+﻿@page "/embeddedresource/create"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Create EmbeddedResource</h1>
+</div>
+
+<EmbeddedResourceForm EmbeddedResource="EmbeddedResource" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
+@code {
+    [Parameter]
+    public EmbeddedResource EmbeddedResource { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.EmbeddedResource = this.EmbeddedResource ?? new EmbeddedResource();
+    }
+
+    public async Task OnCreate(EmbeddedResource resource)
+    {
+        try
+        {
+            this.EmbeddedResource = await Service.CreateEmbeddedResource(resource);
+            NavigationManager.NavigateTo("/grunttask");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Edit), new { id = libraryModel.Id });
+        }
+    }
+}

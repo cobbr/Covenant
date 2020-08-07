@@ -3,6 +3,7 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
+@using Covenant.Models.Covenant
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
 
@@ -334,13 +335,16 @@
     [Parameter]
     public RenderFragment ChildContent { get; set; }
 
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
     private ElementReference CodeMirrorElement { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement);
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
         }
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Language.selectpicker", ((int)Enum.Parse(typeof(ImplantLanguage), this.GruntTask.Language.ToString())).ToString());
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#ReferenceSourceLibraries.selectpicker");

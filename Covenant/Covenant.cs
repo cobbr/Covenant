@@ -156,6 +156,7 @@ namespace Covenant
                     {
                         Console.Error.WriteLine("WARNING: Running Covenant non-elevated. You may not have permission to start Listeners on low-numbered ports. Consider running Covenant elevated.");
                     }
+                    Console.WriteLine($"Covenant has started! Navigate to {CovenantUri} in a browser");
                     host.Run();
                 }
                 catch (Exception ex)
@@ -198,9 +199,9 @@ namespace Covenant
                                 Console.Error.WriteLine("Error importing Covenant certificate.");
                             }
                             httpsOptions.SslProtocols = SslProtocols.Tls12;
-                            Console.WriteLine("Using Covenant certificate with hash: " + httpsOptions.ServerCertificate.GetCertHashString());
                         });
                     });
+                    // options.Limits.MaxRequestBodySize = int.MaxValue;
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureAppConfiguration((hostingContext, config) =>

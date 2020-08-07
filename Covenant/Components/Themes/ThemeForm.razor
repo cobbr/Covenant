@@ -1,0 +1,166 @@
+﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Covenant
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="Theme" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Theme))">
+    <DataAnnotationsValidator />
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="Theme.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.Name" /></div>
+        </div>
+        <div class="form-group col-md-8">
+            <label for="Description">Description</label>
+            <input id="Description" name="Description" @bind="Theme.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.Description" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="CodeMirrorTheme">CodeMirrorTheme</label><br />
+            <select id="CodeMirrorTheme" name="CodeMirrorTheme" @bind="Theme.CodeMirrorTheme" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+                @foreach (var n in Enum.GetNames(typeof(CodeMirrorTheme)))
+                {
+                    if (Enum.TryParse<CodeMirrorTheme>(n, out CodeMirrorTheme mirrorTheme) && this.Theme.CodeMirrorTheme == mirrorTheme)
+                    {
+                        <option selected value="@(((Enum)typeof(CodeMirrorTheme).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(CodeMirrorTheme).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Theme.CodeMirrorTheme" /></div>
+            @*<EnumSelect id="CodeMirrorTheme" Name="CodeMirrorTheme" @bind-Value="Theme.CodeMirrorTheme" />*@
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="BackgroundColor">BackgroundColor</label>
+            <input type="color" id="BackgroundColor" name="BackgroundColor" @bind="Theme.BackgroundColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.BackgroundColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="BackgroundTextColor">BackgroundTextColor</label>
+            <input type="color" id="BackgroundTextColor" name="BackgroundTextColor" @bind="Theme.BackgroundTextColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.BackgroundTextColor" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="NavbarColor">NavbarColor</label>
+            <input type="color" id="NavbarColor" name="NavbarColor" @bind="Theme.NavbarColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.NavbarColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="SidebarColor">SidebarColor</label>
+            <input type="color" id="SidebarColor" name="SidebarColor" @bind="Theme.SidebarColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.SidebarColor" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="PrimaryColor">PrimaryColor</label>
+            <input type="color" id="PrimaryColor" name="PrimaryColor" @bind="Theme.PrimaryColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.PrimaryColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="PrimaryTextColor">PrimaryTextColor</label>
+            <input type="color" id="PrimaryTextColor" name="PrimaryTextColor" @bind="Theme.PrimaryTextColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.PrimaryTextColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="PrimaryHighlightColor">PrimaryHighlightColor</label>
+            <input type="color" id="PrimaryHighlightColor" name="PrimaryHighlightColor" @bind="Theme.PrimaryHighlightColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.PrimaryHighlightColor" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="SecondaryColor">SecondaryColor</label>
+            <input type="color" id="SecondaryColor" name="SecondaryColor" @bind="Theme.SecondaryColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.SecondaryColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="SecondaryTextColor">SecondaryTextColor</label>
+            <input type="color" id="SecondaryTextColor" name="SecondaryTextColor" @bind="Theme.SecondaryTextColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.SecondaryTextColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="SecondaryHighlightColor">SecondaryHighlightColor</label>
+            <input type="color" id="SecondaryHighlightColor" name="BackgroundColor" @bind="Theme.SecondaryHighlightColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.SecondaryHighlightColor" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="TerminalColor">TerminalColor</label>
+            <input type="color" id="TerminalColor" name="TerminalColor" @bind="Theme.TerminalColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.TerminalColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="TerminalTextColor">TerminalTextColor</label>
+            <input type="color" id="TerminalTextColor" name="TerminalTextColor" @bind="Theme.TerminalTextColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.TerminalTextColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="TerminalHighlightColor">TerminalHighlightColor</label>
+            <input type="color" id="TerminalHighlightColor" name="TerminalHighlightColor" @bind="Theme.TerminalHighlightColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.TerminalHighlightColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="TerminalBorderColor">TerminalBorderColor</label>
+            <input type="color" id="TerminalBorderColor" name="TerminalBorderColor" @bind="Theme.TerminalBorderColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.TerminalBorderColor" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="InputColor">InputColor</label>
+            <input type="color" id="InputColor" name="InputColor" @bind="Theme.InputColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.InputColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="InputDisabledColor">InputDisabledColor</label>
+            <input type="color" id="InputDisabledColor" name="InputDisabledColor" @bind="Theme.InputDisabledColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.InputDisabledColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="InputTextColor">InputTextColor</label>
+            <input type="color" id="InputTextColor" name="InputTextColor" @bind="Theme.InputTextColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.InputTextColor" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="InputHighlightColor">InputHighlightColor</label>
+            <input type="color" id="InputHighlightColor" name="InputHighlightColor" @bind="Theme.InputHighlightColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.InputHighlightColor" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="TextLinksColor">TextLinksColor</label>
+            <input type="color" id="TextLinksColor" name="TextLinksColor" @bind="Theme.TextLinksColor" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Theme.TextLinksColor" /></div>
+        </div>
+    </div>
+    @ChildContent
+</EditForm>
+
+@code {
+    [Parameter]
+    public Theme Theme { get; set; }
+
+    [Parameter]
+    public EventCallback<Theme> OnSubmit { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#CodeMirrorTheme.selectpicker", ((int)Enum.Parse(typeof(CodeMirrorTheme), this.Theme.CodeMirrorTheme.ToString())).ToString());
+    }
+}

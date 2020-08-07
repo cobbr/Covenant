@@ -1,4 +1,4 @@
-﻿#graph-box svg {
+﻿.graph-box svg {
     background-color: #FFF;
     cursor: default;
     -webkit-user-select: none;
@@ -8,45 +8,45 @@
     user-select: none;
 }
 
-#graph-box path.link {
+.graph-box path.link {
     fill: none;
     stroke: #000;
     stroke-width: 4px;
     cursor: default;
 }
 
-#graph-box svg:not(.active):not(.ctrl) path.link {
+.graph-box svg:not(.active):not(.ctrl) path.link {
     cursor: pointer;
 }
 
-#graph-box path.link.selected {
+.graph-box path.link.selected {
     stroke-dasharray: 10,2;
 }
 
-#graph-box path.link.dragline {
+.graph-box path.link.dragline {
     pointer-events: none;
 }
 
-#graph-box path.link.hidden {
+.graph-box path.link.hidden {
     stroke-width: 0;
 }
 
-#graph-box circle.node {
+.graph-box circle.node {
     stroke-width: 1.5px;
     cursor: pointer;
 }
 
-#graph-box circle.node.reflexive {
+.graph-box circle.node.reflexive {
     stroke: #000 !important;
     stroke-width: 2.5px;
 }
 
-#graph-box text {
+.graph-box text {
     font: 12px sans-serif;
     pointer-events: none;
 }
 
-#graph-box text.id {
+.graph-box text.id {
     text-anchor: middle;
     font-weight: bold;
 }

@@ -18,15 +18,16 @@
     
     public static class Task
     {
-        public static string Execute(string Command = "")
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command)
         {
             string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StringWriter();
-                TextWriter stdErrWriter = new StringWriter();
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -65,8 +66,7 @@
                 Console.SetOut(realStdOut);
                 Console.SetError(realStdErr);
                 
-                output = stdOutWriter.ToString();
-                output += stdErrWriter.ToString();
+                OutputStream.Close();
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
@@ -171,6 +171,7 @@
     
     public static class Task
     {
+        public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
             string output = "";
@@ -178,8 +179,8 @@
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StringWriter();
-                TextWriter stdErrWriter = new StringWriter();
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -208,8 +209,7 @@
                 Console.SetOut(realStdOut);
                 Console.SetError(realStdErr);
                 
-                output += stdOutWriter.ToString();
-                output += stdErrWriter.ToString();
+                OutputStream.Close();
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
@@ -300,6 +300,7 @@
     
     public static class Task
     {
+        public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
             string output = "";
@@ -307,8 +308,8 @@
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StringWriter();
-                TextWriter stdErrWriter = new StringWriter();
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -329,8 +330,7 @@
                 Console.SetOut(realStdOut);
                 Console.SetError(realStdErr);
                 
-                output += stdOutWriter.ToString();
-                output += stdErrWriter.ToString();
+                OutputStream.Close();
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
@@ -417,6 +417,7 @@
     
     public static class Task
     {
+        public static Stream OutputStream { get; set; }
         public static string Execute(string ProcessID = "")
         {
             string output = "";
@@ -424,8 +425,8 @@
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StringWriter();
-                TextWriter stdErrWriter = new StringWriter();
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -468,8 +469,7 @@
                 Console.SetOut(realStdOut);
                 Console.SetError(realStdErr);
                 
-                output += stdOutWriter.ToString();
-                output += stdErrWriter.ToString();
+                OutputStream.Close();
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
@@ -538,6 +538,7 @@
     
     public static class Task
     {
+        public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
             string output = "";
@@ -545,8 +546,8 @@
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StringWriter();
-                TextWriter stdErrWriter = new StringWriter();
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -558,8 +559,7 @@
                 Console.SetOut(realStdOut);
                 Console.SetError(realStdErr);
                 
-                output += stdOutWriter.ToString();
-                output += stdErrWriter.ToString();
+                OutputStream.Close();
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;
@@ -774,6 +774,7 @@
     
     public static class Task
     {
+        public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
             string output = "";
@@ -781,8 +782,8 @@
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StringWriter();
-                TextWriter stdErrWriter = new StringWriter();
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -794,8 +795,7 @@
                 Console.SetOut(realStdOut);
                 Console.SetError(realStdErr);
                 
-                output += stdOutWriter.ToString();
-                output += stdErrWriter.ToString();
+                OutputStream.Close();
             }
             catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
             return output;

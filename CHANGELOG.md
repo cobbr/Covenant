@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v0.6] - 2020-08-04
 ### Added
 - Added CreateDirectory task
 - Add SharpSC submodule, ReferenceSourceLibrary, and GruntTask
@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ShellCodeLauncher using Donut
 - Added Copy command
 - Added missing Keylogger task
+- Added streaming task output
+- Added Download/Upload .NET Core Tasks
+- Added ReadTextFile,CreateDirectory,Delete .NET Core Tasks
+- Added UI Themes, new Heathen Mode theme
+- Added a TabbedTerminal view to GruntIndex component
+- Added message that Covenant has started
 
 ### Changed
 - Add SharpSploit.LateralMovement namespace to SharpShell command
@@ -24,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified compilation optimization to use HashSet
 - Limited compilation optimization for SharpSC
 - Updated Seatbelt to latest version
+- Updated SharpSploit to latest version, PowerShell task should include verbose/error output
+- Changed GruntTask export to exclude GruntTaskOption value property
+- Updated codemirror, added night theme for codemirror
+- Removed Covenant certificate hash message
 
 ### Fixed
 - Fixed order of Upload parameters
@@ -49,6 +59,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing ReferenceAssemblies for SharpSploit
 - Fixed WMICommand/WMIGrunt output format
 - Fixed ConnectAttempts bug
+- Fixed BridgeListener ArgumentOutOfRangeException
+- Fix/tweak Connect/Disconnect tasks
+- Fixed JwtKey issue
+- Fixed ImplantTemplateForm options resetting issue
+- Fixed terminal typeahead issues
+- Fixed HttpProfile editing issue
+- Fixed POST /api/users API endpoint authentication issue
+- Fixed profiles using Cookie header
+- Fixed profile using curly brace character
+- Fix create/edit for ReferenceSourceLibraries,ReferenceAssemblies,EmbeddedResources
+- Fix launcher commands (i.e. BypassUacGrunt, WMIGrunt, PowerShellRemotingGrunt)
+- Fix Launcher properties not being applied during generation
+- Fixed Graph with BridgeListener issue
 
 ## [v0.5] - 2020-06-04
 ### Added
@@ -245,3 +268,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.3.1]: https://github.com/cobbr/Covenant/compare/v0.3...v0.3.1
 [v0.3.2]: https://github.com/cobbr/Covenant/compare/v0.3.1...v0.3.2
 [v0.4]: https://github.com/cobbr/Covenant/compare/v0.3.2...v0.4
+[v0.5]: https://github.com/cobbr/Covenant/compare/v0.4...v0.5
+[v0.6]: https://github.com/cobbr/Covenant/compare/v0.5...v0.6

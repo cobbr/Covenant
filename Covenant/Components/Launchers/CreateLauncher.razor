@@ -1,13 +1,16 @@
 ﻿@page "/launcher/create/{LauncherId:int}"
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
 
 @using Covenant.Core
+@using Covenant.Models.Covenant
 @using Covenant.Models.Listeners
 @using Covenant.Models.Launchers
 
 @using Microsoft.JSInterop
 @inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">@Launcher.Name Launcher</h1>
@@ -92,6 +95,9 @@
     [Parameter]
     public Launcher Launcher { get; set; }
 
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
     private const int MAX_LAUNCHER_LENGTH = 20000;
 
     private string PowerShellEncodedLauncherString
@@ -122,14 +128,29 @@
     protected override async Task OnInitializedAsync()
     {
         this.Launcher = this.Launcher ?? await Service.GetLauncher(this.LauncherId);
+        this.INotificationService.OnEditLauncher += OnEditLauncher;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, true);
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString(), true);
             await IJSRuntime.InvokeAsync<string>("ShowTab", "#generate-tab");
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditLauncher -= OnEditLauncher;
+    }
+
+    private void OnEditLauncher(object sender, Launcher launcher)
+    {
+        if (this.Launcher.Id == launcher.Id)
+        {
+            this.Launcher = launcher;
+            this.InvokeAsync(() => this.StateHasChanged());
         }
     }
 

@@ -138,28 +138,28 @@
         case "ShellCode":
             break;
         case "Cscript":
-            <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
             break;
         case "InstallUtil":
             break;
         case "MSBuild":
-            <MSBuildLauncherFormPartial Launcher="@((MSBuildLauncher)Launcher)" />
+            <MSBuildLauncherFormPartial @bind-Launcher="Launcher" />
             break;
         case "Mshta":
-            <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
             break;
         case "PowerShell":
-            <PowerShellLauncherFormPartial Launcher="@((PowerShellLauncher)Launcher)" />
+            <PowerShellLauncherFormPartial @bind-Launcher="Launcher" />
             break;
         case "Regsvr32":
-            <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
-            <Regsvr32LauncherFormPartial Launcher="@((Regsvr32Launcher)Launcher)" />
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
+            <Regsvr32LauncherFormPartial @bind-Launcher="Launcher" />
             break;
         case "Wmic":
-            <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
             break;
         case "Wscript":
-            <ScriptletLauncherFormPartial Launcher="@((ScriptletLauncher)Launcher)" />
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
             break;
     }
     <div class="btn-group" role="group">

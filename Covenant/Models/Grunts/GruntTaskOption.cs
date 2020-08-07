@@ -29,7 +29,7 @@ namespace Covenant.Models.Grunts
             return new SerializedGruntTaskOption
             {
                 Name = this.Name,
-                Value = this.Value,
+                Value = "",
                 DefaultValue = this.DefaultValue,
                 Description = this.Description,
                 SuggestedValues = this.SuggestedValues,

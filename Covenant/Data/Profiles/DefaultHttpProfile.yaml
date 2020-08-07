@@ -22,7 +22,7 @@ HttpUrls:
 HttpRequestHeaders:
     - Name: User-Agent
       Value: Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36
-    - Name: Cookies
+    - Name: Cookie
       Value: ASPSESSIONID={GUID}; SESSIONID=1552332971750
 HttpPostRequest: |
     i=a19ea23062db990386a3a478cb89d52e&data={DATA}&session=75db-99b1-25fe4e9afbe58696-320bea73

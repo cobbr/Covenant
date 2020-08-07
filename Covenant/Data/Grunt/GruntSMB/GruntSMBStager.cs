@@ -65,7 +65,7 @@ namespace GruntStager
                 System.Threading.Thread.Sleep(5000);
                 var Stage0Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileWriteFormat, transformedResponse, GUID));
                 Write(pipe, Stage0Bytes);
-                Stage0Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
+                Stage0Response = Encoding.UTF8.GetString(Read(pipe));
                 string extracted = Parse(Stage0Response, ProfileReadFormat)[0];
                 extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 List<string> parsed = Parse(extracted, MessageFormat);
@@ -96,7 +96,7 @@ namespace GruntStager
                 string Stage1Response = "";
                 var Stage1Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileWriteFormat, transformedResponse, GUID));
                 Write(pipe, Stage1Bytes);
-                Stage1Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
+                Stage1Response = Encoding.UTF8.GetString(Read(pipe));
                 extracted = Parse(Stage1Response, ProfileReadFormat)[0];
                 extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);
@@ -124,7 +124,7 @@ namespace GruntStager
                 string Stage2Response = "";
                 var Stage2Bytes = Encoding.UTF8.GetBytes(String.Format(ProfileWriteFormat, transformedResponse, GUID));
                 Write(pipe, Stage2Bytes);
-                Stage2Response = Encoding.UTF8.GetString(Read(pipe)).Replace("\"", "");
+                Stage2Response = Encoding.UTF8.GetString(Read(pipe));
                 extracted = Parse(Stage2Response, ProfileReadFormat)[0];
                 extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);

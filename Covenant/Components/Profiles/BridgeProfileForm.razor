@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
 @using Covenant.Core
+@using Covenant.Models.Covenant
 @using Covenant.Models.Listeners
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -77,13 +78,16 @@
     [Parameter]
     public string SubmitLabel { get; set; } = "Edit";
 
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
     private IList<ElementReference> CodeMirrorElements { get; set; } = GetElementReferenceList(4);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
         {
-            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement);
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
         }
     }
 

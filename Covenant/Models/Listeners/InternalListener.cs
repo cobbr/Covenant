@@ -442,6 +442,7 @@ namespace Covenant.Models.Listeners
                     if (message.GUID.Length == 20)
                     {
                         string originalServerGuid = message.GUID.Substring(0, 10);
+                        guid = message.GUID.Substring(10, 10);
                         targetGrunt = await _client.GetGruntByOriginalServerGUIDAsync(originalServerGuid);
 						if (targetGrunt != null)
 						{
@@ -451,7 +452,11 @@ namespace Covenant.Models.Listeners
 								// Get connecting Grunt as egress
 								List<APIModels.GruntTasking> taskings = (await _client.GetAllGruntTaskingsAsync()).ToList();
 								// TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
-								APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
+								APIModels.GruntTasking connectTasking = taskings
+                                    .Where(GT => GT.Type == APIModels.GruntTaskingType.Connect &&
+                                            (GT.Status == APIModels.GruntTaskingStatus.Progressed || GT.Status == APIModels.GruntTaskingStatus.Tasked))
+                                    .Reverse()
+                                    .FirstOrDefault();
 								if (connectTasking == null)
 								{
 								    egressGrunt = null;
@@ -459,7 +464,7 @@ namespace Covenant.Models.Listeners
 								else
 								{
 								    APIModels.Grunt taskedGrunt = await _client.GetGruntAsync(connectTasking.GruntId);
-								    egressGrunt = await _client.GetOutboundGruntAsync(taskedGrunt.Id ?? default);
+								    egressGrunt ??= await _client.GetOutboundGruntAsync(taskedGrunt.Id ?? default);
 								}
 							}
 						}
@@ -472,16 +477,7 @@ namespace Covenant.Models.Listeners
                         return guid;
                     }
                 }
-                /*
-				if (targetGrunt != null)
-				{
-					var it = await _client.GetImplantTemplateAsync(targetGrunt.ImplantTemplateId);
-					if (it.CommType == APIModels.CommunicationType.SMB)
-					{
-						egressGrunt = await _client.GetOutboundGruntAsync(targetGrunt.Id ?? default);
-					}
-				}
-                */
+
 				switch (targetGrunt.Status)
 				{
 					case APIModels.GruntStatus.Uninitialized:
@@ -554,16 +550,16 @@ namespace Covenant.Models.Listeners
                 this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
                 return;
             }
-			string taskOutput = Common.CovenantEncoding.GetString(_utilities.GruntSessionDecrypt(targetGrunt, outputMessage));
-            // gruntTasking.GruntCommand.CommandOutput = await _client.GetCommandOutputAsync(gruntTasking.GruntCommand.CommandOutputId ?? default);
+			string taskRawResponse = Common.CovenantEncoding.GetString(_utilities.GruntSessionDecrypt(targetGrunt, outputMessage));
+            ModelUtilities.GruntTaskingMessageResponse taskResponse = JsonConvert.DeserializeObject<ModelUtilities.GruntTaskingMessageResponse>(taskRawResponse);
             APIModels.GruntCommand command = await _client.GetGruntCommandAsync(gruntTasking.GruntCommandId ?? default);
-            command.CommandOutput = command.CommandOutput ?? await _client.GetCommandOutputAsync(command.CommandOutputId);
-            command.CommandOutput.Output = taskOutput;
-            await _client.EditCommandOutputAsync(command.CommandOutput);
+            await _client.AppendCommandOutputAsync(command.CommandOutputId, taskResponse.Output);
 
-			gruntTasking.Status = APIModels.GruntTaskingStatus.Completed;
-			gruntTasking.CompletionTime = DateTime.UtcNow;
-			// gruntTasking.GruntCommand = await _client.EditGruntCommandAsync(gruntTasking.GruntCommand);
+			gruntTasking.Status = taskResponse.Status;
+            if (gruntTasking.Status == APIModels.GruntTaskingStatus.Completed)
+            {
+                gruntTasking.CompletionTime = DateTime.UtcNow;
+            }
 			await _client.EditGruntTaskingAsync(gruntTasking);
             lock (_hashCodesLock)
             {
@@ -645,7 +641,10 @@ namespace Covenant.Models.Listeners
                 // Add this as Child grunt to Grunt that connects it
                 List<APIModels.GruntTasking> taskings = _client.GetAllGruntTaskings().ToList();
                 // TODO: Finding the connectTasking this way could cause race conditions, should fix w/ guid of some sort?
-                APIModels.GruntTasking connectTasking = taskings.Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && GT.Status == APIModels.GruntTaskingStatus.Progressed).Reverse().FirstOrDefault();
+                APIModels.GruntTasking connectTasking = taskings
+                    .Where(GT => GT.Type == APIModels.GruntTaskingType.Connect && (GT.Status == APIModels.GruntTaskingStatus.Progressed || GT.Status == APIModels.GruntTaskingStatus.Tasked))
+                    .Reverse()
+                    .FirstOrDefault();
                 if (connectTasking == null)
                 {
                     this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = null });
@@ -926,6 +925,25 @@ namespace Covenant.Models.Listeners
                 public string Message { get; set; }
                 [JsonProperty(PropertyName = "token")]
                 public bool? Token { get; set; }
+            }
+
+            public partial class GruntTaskingMessageResponse
+            {
+                public GruntTaskingMessageResponse()
+                {
+                    CustomInit();
+                }
+                public GruntTaskingMessageResponse(APIModels.GruntTaskingStatus? status = default(APIModels.GruntTaskingStatus?), string output = default(string))
+                {
+                    Status = status;
+                    Output = output;
+                    CustomInit();
+                }
+                partial void CustomInit();
+                [JsonProperty(PropertyName = "status")]
+                public APIModels.GruntTaskingStatus? Status { get; set; }
+                [JsonProperty(PropertyName = "output")]
+                public string Output { get; set; }
             }
 
             public enum GruntEncryptedMessageType

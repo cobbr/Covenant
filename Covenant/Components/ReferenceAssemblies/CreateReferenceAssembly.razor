@@ -16,12 +16,17 @@
     [Parameter]
     public ReferenceAssembly ReferenceAssembly { get; set; }
 
+    protected override void OnInitialized()
+    {
+        this.ReferenceAssembly = this.ReferenceAssembly ?? new ReferenceAssembly();
+    }
+
     public async Task OnCreate(ReferenceAssembly assembly)
     {
         try
         {
             await Service.CreateReferenceAssembly(assembly);
-            NavigationManager.NavigateTo("/referenceassembly");
+            NavigationManager.NavigateTo("/grunttask");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

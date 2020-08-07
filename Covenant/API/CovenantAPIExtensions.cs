@@ -143,6 +143,33 @@ namespace Covenant.API
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static void AppendCommandOutput(this ICovenantAPI operations, int id, string body = default(string))
+            {
+                operations.AppendCommandOutputAsync(id, body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task AppendCommandOutputAsync(this ICovenantAPI operations, int id, string body = default(string), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.AppendCommandOutputWithHttpMessagesAsync(id, body, null, cancellationToken).ConfigureAwait(false)).Dispose();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
             public static IList<CovenantUser> GetUsers(this ICovenantAPI operations)
             {
                 return operations.GetUsersAsync().GetAwaiter().GetResult();
@@ -193,7 +220,7 @@ namespace Covenant.API
             /// </param>
             /// <param name='body'>
             /// </param>
-            public static CovenantUser EditUser(this ICovenantAPI operations, CovenantUserLogin body = default(CovenantUserLogin))
+            public static CovenantUser EditUser(this ICovenantAPI operations, CovenantUser body = default(CovenantUser))
             {
                 return operations.EditUserAsync(body).GetAwaiter().GetResult();
             }
@@ -206,7 +233,7 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<CovenantUser> EditUserAsync(this ICovenantAPI operations, CovenantUserLogin body = default(CovenantUserLogin), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<CovenantUser> EditUserAsync(this ICovenantAPI operations, CovenantUser body = default(CovenantUser), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.EditUserWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
                 {
@@ -306,6 +333,32 @@ namespace Covenant.API
             public static async Task<CovenantUserLoginResult> LoginAsync(this ICovenantAPI operations, CovenantUserLogin body = default(CovenantUserLogin), CancellationToken cancellationToken = default(CancellationToken))
             {
                 using (var _result = await operations.LoginWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static CovenantUser EditUserPassword(this ICovenantAPI operations, CovenantUserLogin body = default(CovenantUserLogin))
+            {
+                return operations.EditUserPasswordAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<CovenantUser> EditUserPasswordAsync(this ICovenantAPI operations, CovenantUserLogin body = default(CovenantUserLogin), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.EditUserPasswordWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -4384,6 +4437,129 @@ namespace Covenant.API
             public static async Task DeleteReferenceSourceLibraryAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
             {
                 (await operations.DeleteReferenceSourceLibraryWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            public static IList<Theme> GetThemes(this ICovenantAPI operations)
+            {
+                return operations.GetThemesAsync().GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<IList<Theme>> GetThemesAsync(this ICovenantAPI operations, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetThemesWithHttpMessagesAsync(null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static Theme CreateTheme(this ICovenantAPI operations, Theme body = default(Theme))
+            {
+                return operations.CreateThemeAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<Theme> CreateThemeAsync(this ICovenantAPI operations, Theme body = default(Theme), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.CreateThemeWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            public static Theme EditTheme(this ICovenantAPI operations, Theme body = default(Theme))
+            {
+                return operations.EditThemeAsync(body).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='body'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<Theme> EditThemeAsync(this ICovenantAPI operations, Theme body = default(Theme), CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.EditThemeWithHttpMessagesAsync(body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static Theme GetTheme(this ICovenantAPI operations, int id)
+            {
+                return operations.GetThemeAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<Theme> GetThemeAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.GetThemeWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static void DeleteTheme(this ICovenantAPI operations, int id)
+            {
+                operations.DeleteThemeAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task DeleteThemeAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.DeleteThemeWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false)).Dispose();
             }
 
     }

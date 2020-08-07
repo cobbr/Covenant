@@ -24,7 +24,7 @@
 else
 {
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
-        <h1 class="h2">Grunt: <span id="grunt-name" class="text-primary">@Grunt.Name</span></h1>
+        <h1 class="h2">Grunt: <span id="grunt-name" class="primary-color">@Grunt.Name</span></h1>
     </div>
 
     @if (!string.IsNullOrEmpty(this.Grunt.Note))
@@ -65,12 +65,11 @@ else
         </div>
         <div class="tab-pane fade" id="interact" role="tabpanel" aria-labelledby="interact-tab">
             <GruntInteractTerminal Grunt="Grunt" OnInteract="OnInteract" />
-            <br /><br /><br /><br /><br />
         </div>
         <div class="tab-pane fade" id="task" role="tabpanel" aria-labelledby="task-tab">
             <GruntTaskAssignForm GruntId="GruntId" OnSubmit="OnTask" />
         </div>
-        <div class="tab-pane fade" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
+        <div class="tab-pane fade mb-5" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
             <GruntTaskingTable GruntTaskings="GruntTaskings" PageLength="50" />
         </div>
     </div>
@@ -131,7 +130,7 @@ else
         if (this.GruntId == gruntTasking.GruntId)
         {
             this.GruntTaskings.Add(gruntTasking);
-            scrollToBottom = true;
+            // scrollToBottom = true;
         }
     }
 
@@ -143,7 +142,7 @@ else
             if (index != -1)
             {
                 this.GruntTaskings[index] = gruntTasking;
-                scrollToBottom = true;
+                // scrollToBottom = true;
                 _ = this.InvokeAsync(() => this.StateHasChanged());
             }
         }
@@ -163,9 +162,9 @@ else
         }
     }
 
-    private async Task OnInteract(string input)
+    private async Task OnInteract(Tuple<Grunt, string> tuple)
     {
-        GruntCommand command = await Service.InteractGrunt(this.Grunt.Id, this.CovenantUser.Id, input);
+        GruntCommand command = await Service.InteractGrunt(this.Grunt.Id, this.CovenantUser.Id, tuple.Item2);
         Service.DisposeContext();
         this.StateHasChanged();
     }

@@ -1,0 +1,39 @@
+﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="EmbeddedResource" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(EmbeddedResource))">
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="EmbeddedResource.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => EmbeddedResource.Name" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label for="Location">Location</label>
+            <input id="Location" name="Location" @bind="EmbeddedResource.Location" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => EmbeddedResource.Location" /></div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+    </button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EmbeddedResource EmbeddedResource { get; set; }
+
+    [Parameter]
+    public string SubmitIcon { get; set; }
+
+    [Parameter]
+    public string SubmitLabel { get; set; }
+
+    [Parameter]
+    public EventCallback<EmbeddedResource> OnSubmit { get; set; }
+}

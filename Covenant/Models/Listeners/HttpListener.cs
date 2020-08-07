@@ -151,10 +151,11 @@ namespace Covenant.Models.Listeners
                 var services = scope.ServiceProvider;
                 HttpListenerContext context = services.GetRequiredService<HttpListenerContext>();
                 context.Database.EnsureCreated();
-                if (!context.HttpProfiles.Any())
+                foreach(APIModels.HttpProfile profile in context.HttpProfiles)
                 {
-                    context.HttpProfiles.Add(context.ToHttpProfile((HttpProfile)this.Profile));
+                    context.HttpProfiles.Remove(profile);
                 }
+                context.HttpProfiles.Add(context.ToHttpProfile((HttpProfile)this.Profile));
                 context.SaveChanges();
                 InternalListener internalListener = services.GetRequiredService<InternalListener>();
                 IConfiguration configuration = services.GetRequiredService<IConfiguration>();

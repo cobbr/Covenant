@@ -29,7 +29,6 @@
         {
             await Service.CreateGruntTask(task);
             NavigationManager.NavigateTo("/grunttask");
-            this.StateHasChanged();
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {

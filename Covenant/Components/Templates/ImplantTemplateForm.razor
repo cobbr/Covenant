@@ -3,6 +3,7 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
+@using Covenant.Models.Covenant
 @using Covenant.Models.Grunts
 @using Covenant.Models.Listeners
 @inject IJSRuntime IJSRuntime
@@ -88,14 +89,14 @@
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="StagerCode">StagerCode</label>
-            <textarea id="StagerCode" name="StagerCode" @ref="CodeMirrorElements[0]" @bind="ImplantTemplate.StagerCode" rows="5" class="form-control border-1 code-mirror-csharp"></textarea>
+            <textarea @ref="CodeMirrorElements[0]" id="StagerCode" name="StagerCode" value="@ImplantTemplate.StagerCode" @onchange="e => OnSetStagerCode(e)" rows="5" class="form-control code-mirror-csharp"></textarea>
             <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.StagerCode" /></div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-12">
             <label for="ExecutorCode">ExecutorCode</label>
-            <textarea id="ExecutorCode" name="ExecutorCode" @ref="CodeMirrorElements[1]" @bind="ImplantTemplate.ExecutorCode" rows="5" class="form-control border-1 code-mirror-csharp"></textarea>
+            <textarea @ref="CodeMirrorElements[1]" id="ExecutorCode" name="ExecutorCode" value="@ImplantTemplate.ExecutorCode" @onchange="e => OnSetExecutorCode(e)" rows="5" class="form-control code-mirror-csharp"></textarea>
             <div class="text-danger"><ValidationMessage For="() => ImplantTemplate.ExecutorCode" /></div>
         </div>
     </div>
@@ -135,6 +136,9 @@
     [Parameter]
     public EventCallback<ImplantTemplate> OnSubmit { get; set; }
 
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
     private IList<ElementReference> CodeMirrorElements { get; set; } = GetElementReferenceList(2);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -143,7 +147,7 @@
         {
             foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
             {
-                await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement);
+                await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
             }
         }
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", new object[] { "#Language.selectpicker", ((int)Enum.Parse(typeof(ImplantLanguage), ImplantTemplate.Language.ToString())).ToString() });
@@ -193,6 +197,20 @@
     {
         string[] ids = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#CompatibleDotNetVersions" });
         return ids.Where(id => Enum.TryParse<Common.DotNetVersion>(id, out _)).Select(id => Enum.Parse<Common.DotNetVersion>(id)).ToList();
+    }
+
+    private async Task OnSetStagerCode(ChangeEventArgs e)
+    {
+        this.ImplantTemplate.CompatibleDotNetVersions = await this.GetCompatibleDotNetVersions();
+        this.ImplantTemplate.SetListenerTypeImplantTemplates(await this.GetCompatibleListenerTypeImplantTemplates());
+        this.ImplantTemplate.StagerCode = e.Value.ToString();
+    }
+
+    private async Task OnSetExecutorCode(ChangeEventArgs e)
+    {
+        this.ImplantTemplate.CompatibleDotNetVersions = await this.GetCompatibleDotNetVersions();
+        this.ImplantTemplate.SetListenerTypeImplantTemplates(await this.GetCompatibleListenerTypeImplantTemplates());
+        this.ImplantTemplate.ExecutorCode = e.Value.ToString();
     }
 
     private async Task Submit()

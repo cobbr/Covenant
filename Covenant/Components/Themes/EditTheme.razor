@@ -1,0 +1,45 @@
+﻿@page "/theme/edit/{ThemeId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Theme: <span class="primary-color">@Theme.Name</span></h1>
+</div>
+
+<ThemeForm Theme="Theme" OnSubmit="OnEdit">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-edit"></span> Edit
+    </button>
+</ThemeForm>
+
+@code {
+    [Parameter]
+    public int ThemeId { get; set; }
+
+    [Parameter]
+    public Theme Theme { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Theme = this.Theme ?? await Service.GetTheme(this.ThemeId);
+        Service.DisposeContext();
+    }
+
+    private async Task OnEdit(Theme theme)
+    {
+        try
+        {
+            await Service.EditTheme(theme);
+            NavigationManager.NavigateTo($"/covenantuser/index");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+}
