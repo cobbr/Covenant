@@ -12,6 +12,9 @@ using System.Security.Principal;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using Microsoft.CSharp;
+using System.Net.Sockets;
+using System.Security.Policy;
 
 namespace GruntExecutor
 {
