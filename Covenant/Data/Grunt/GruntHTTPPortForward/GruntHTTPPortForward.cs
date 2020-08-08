@@ -790,8 +790,8 @@ namespace GruntExecutor
                     string[] pieces = message.Message.Split(',');
                     if (pieces.Length > 0)
                     {
-                        object[] parameters = null;
-                        if (pieces.Length > 1) { parameters = new object[pieces.Length - 1]; }
+                        string[] parameters = null;
+                        if (pieces.Length > 1) { parameters = new string[pieces.Length - 1]; }
                         for (int i = 1; i < pieces.Length; i++) { parameters[i - 1] = Encoding.UTF8.GetString(Convert.FromBase64String(pieces[i])); }
                         byte[] compressedBytes = Convert.FromBase64String(pieces[0]);
                         byte[] decompressedBytes = Utilities.Decompress(compressedBytes);
