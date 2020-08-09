@@ -12,7 +12,9 @@ This fork is an alternative version with some different functionalities added: R
 ## 📌 Milestones
 
 Improve Reverse Port Forward: make all the traffic between C2 and Grunt go through the socket connection in the port the grunt originally established the connection.
+
 Pivoting: make possible for a grunt to connect to C2 through another Grunt already connected.
+
 DNS Grunt.
 
 ![Covenant Dashboard](https://github.com/cobbr/Covenant/wiki/images/covenant-gui-dashboard.png)
