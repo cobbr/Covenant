@@ -3282,7 +3282,7 @@ namespace Covenant.Core
                         if (parsed_command.Length == 5)
                         {
                             string[] new_params = new string[6];
-                            string externalip = new WebClient().DownloadString("http://icanhazip.com");
+                            string externalip = tasking.Grunt.Listener.ConnectAddresses[0];
                             String ip_aux = tasking.Grunt.IPAddress;
                             string[] params_parsed = parameters[0].Split(' ');
                             new_params[0] = params_parsed[0];
