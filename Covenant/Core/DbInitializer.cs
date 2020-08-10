@@ -75,8 +75,17 @@ namespace Covenant.Core
                         CommType = CommunicationType.HTTP,
                         ImplantDirection = ImplantDirection.Pull,
                         CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore31 }
+                    },
+                    new ImplantTemplate
+                    {
+                        Name = "GruntHTTPPortForward",
+                        Description = "A Windows implant written in C# that communicates over HTTP. Contains reverse port forward functionality.",
+                        Language = ImplantLanguage.CSharp,
+                        CommType = CommunicationType.HTTP,
+                        ImplantDirection = ImplantDirection.Pull,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     }
-                };
+                    };
                 templates.ToList().ForEach(t => t.ReadFromDisk());
                 await service.CreateImplantTemplates(templates);
 
@@ -105,6 +114,11 @@ namespace Covenant.Core
                     {
                         ListenerType = await service.GetListenerTypeByName("HTTP"),
                         ImplantTemplate = await service.GetImplantTemplateByName("Brute")
+                    },
+                    new ListenerTypeImplantTemplate
+                    {
+                        ListenerType = await service.GetListenerTypeByName("HTTP"),
+                        ImplantTemplate = await service.GetImplantTemplateByName("GruntHTTPPortForward")
                     }
                 );
             }
