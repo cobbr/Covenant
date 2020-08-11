@@ -1,4 +1,4 @@
-﻿// Author: Ryan Cobb (@cobbr_io)
+// Author: Ryan Cobb (@cobbr_io)
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
