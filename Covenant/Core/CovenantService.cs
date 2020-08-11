@@ -3074,9 +3074,9 @@ namespace Covenant.Core
                     {
                         if (id == 0)
                         {
-                            if (bytesFromClientR.Count == 10)
+                            if (bytesFromClientR.Count == 10000)
                             {
-                                System.Threading.Thread.Sleep(1000);
+                                System.Threading.Thread.Sleep(250);
                             }
                             else
                             {
@@ -3089,9 +3089,9 @@ namespace Covenant.Core
                         }
                         if (id == 1)
                         {
-                            if (bytesFromGruntR.Count == 10)
+                            if (bytesFromGruntR.Count == 10000)
                             {
-                                System.Threading.Thread.Sleep(1000);
+                                System.Threading.Thread.Sleep(250);
                             }
                             else
                             {
@@ -3122,7 +3122,7 @@ namespace Covenant.Core
                     }
                     catch (Exception e)
                     {
-                        break;
+                        System.Threading.Thread.Sleep(250);
                     }
                 }
                 try
@@ -3155,7 +3155,7 @@ namespace Covenant.Core
                             }
                             else
                             {
-                                System.Threading.Thread.Sleep(1000);
+                                System.Threading.Thread.Sleep(250);
                             }
                         }
                         if (id == 1)
@@ -3167,13 +3167,13 @@ namespace Covenant.Core
                             }
                             else
                             {
-                                System.Threading.Thread.Sleep(1000);
+                                System.Threading.Thread.Sleep(250);
                             }
                         }
                     }
                     catch (Exception e)
                     {
-                        break;
+                        System.Threading.Thread.Sleep(250);
                     }
                 }
                 try
@@ -3209,15 +3209,40 @@ namespace Covenant.Core
                         }
                         catch
                         {
-                            keep_reading_from_Client.Abort();
-                            keep_reading_from_Client = null;
-                            keep_writing_to_Grunt.Abort();
-                            keep_writing_to_Grunt = null;
-                            keep_reading_from_Grunt.Abort();
-                            keep_reading_from_Grunt = null;
-                            keep_writing_to_Client.Abort();
-                            keep_writing_to_Client = null;
-                            sock_gr.Close();
+                            try
+                            {
+                                keep_reading_from_Client.Abort();
+                                keep_reading_from_Client = null;
+                            }
+                            catch { }
+                            try
+                            {
+                                keep_writing_to_Grunt.Abort();
+                                keep_writing_to_Grunt = null;
+                            }catch { }
+                            try
+                            {
+                                keep_reading_from_Grunt.Abort();
+                                keep_reading_from_Grunt = null;
+                            }catch { }
+                            try
+                            {
+                                keep_writing_to_Client.Abort();
+                                keep_writing_to_Client = null;
+                            }
+                            catch{ }
+                            try
+                            {
+                                sock_gr.Close();
+                                sock_gr.Shutdown(SocketShutdown.Both);
+                            }
+                            catch { }
+                            try
+                            {
+                                sock_cl.Close();
+                                sock_cl.Shutdown(SocketShutdown.Both);
+                            }
+                            catch { }
                             break;
                         }
                         System.Threading.Thread.Sleep(2000);
