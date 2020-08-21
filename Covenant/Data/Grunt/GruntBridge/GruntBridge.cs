@@ -339,27 +339,6 @@ namespace GruntExecutor
         }
     }
 
-public enum MessageType
-    {
-        Read,
-        Write
-    }
-
-    public class ProfileMessage
-    {
-        public MessageType Type { get; set; }
-        public string Message { get; set; }
-    }
-
-    public interface IMessenger
-    {
-        string Hostname { get; }
-        string Identifier { get; set; }
-        string Authenticator { get; set; }
-        ProfileMessage Read();
-        void Write(string Message);
-        void Close();
-    }
 
     public class Profile
     {
