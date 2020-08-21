@@ -2,6 +2,7 @@
 
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
 @using Covenant.Models.Covenant
@@ -19,14 +20,24 @@
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="user">
-        @{ IEnumerable<string> roles = GetRoles(user); }
+        @{
+            IEnumerable<string> roles = GetRoles(user);
+            IEnumerable<string> currentUserRoles = GetRoles(this.CurrentUser);
+        }
         @if ((!roles.Contains("Listener") && !roles.Contains("ServiceUser")) || roles.Contains("User"))
         {
             <tr>
                 <td>
-                    <a href="/covenantuser/edit/@user.Id">
+                    @if (currentUserRoles.Contains("Administrator") || user.UserName == this.CurrentUser.UserName)
+                    {
+                        <a href="/covenantuser/edit/@user.Id">
+                            @user.UserName
+                        </a>
+                    }
+                    else
+                    {
                         @user.UserName
-                    </a>
+                    }
                 </td>
                 <td>@string.Join(", ", roles)</td>
             </tr>
@@ -49,6 +60,16 @@
 
     [Parameter]
     public int PageLength { get; set; } = 50;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+    private CovenantUser CurrentUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CurrentUser = this.CurrentUser ?? await Service.GetCurrentUser((await AuthenticationState).User);
+        Service.DisposeContext();
+    }
 
     private IEnumerable<string> GetRoles(CovenantUser user)
     {

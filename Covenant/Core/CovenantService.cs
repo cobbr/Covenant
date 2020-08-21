@@ -569,14 +569,9 @@ namespace Covenant.Core
             {
                 throw new ControllerNotFoundException($"NotFound - CovenantUser with username: {user.UserName}");
             }
-            var admins = from users in _context.Users
-                         join userroles in _context.UserRoles on users.Id equals userroles.UserId
-                         join roles in _context.Roles on userroles.RoleId equals roles.Id
-                         where roles.Name == "Administrator"
-                         select users.UserName;
-            if (currentUser.UserName != matching_user.UserName && !admins.Contains(currentUser.UserName))
+            if (currentUser.UserName != matching_user.UserName)
             {
-                throw new ControllerBadRequestException($"BadRequest - Current user: {currentUser.UserName} is not an Administrator and cannot change password of user: {user.Password}");
+                throw new ControllerBadRequestException($"BadRequest - Current user: {currentUser.UserName} cannot change password of user: {user.Password}");
             }
             matching_user.PasswordHash = _userManager.PasswordHasher.HashPassword(matching_user, user.Password);
             IdentityResult result = await _userManager.UpdateAsync(matching_user);
