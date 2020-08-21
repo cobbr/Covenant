@@ -957,17 +957,11 @@
     
     public static class Task
     {
-        public static string Execute(string hex)
+        public static string Execute(string payload)
         {
             try
             {
-                byte[] bytes = new byte[hex.Length / 2];
-                for (int i = 0; i < hex.Length; i += 2)
-                {
-                    bytes[i/2] = Convert.ToByte(hex.Substring(i, 2), 16);
-                }
-                
-                if (ShellCode.ShellCodeExecute(bytes))
+                if (ShellCode.ShellCodeExecute(Convert.FromBase64String(payload)))
                 {
                     return "ShellCode execution succeeded.";
                 }
@@ -983,20 +977,22 @@
   UnsafeCompile: false
   TokenTask: false
   Options:
-  - Name: Hex
+  - Name: ShellCode
     Value: ''
     DefaultValue: ''
-    Description: Hex string representing the Shellcode bytes to execute.
+    Description: ShellCode to execute.
     SuggestedValues: []
     Optional: false
-    DisplayInCommand: true
-    FileOption: false
+    DisplayInCommand: false
+    FileOption: true
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
     Location: SharpSploit\SharpSploit\
     Language: CSharp
-    CompatibleDotNetVersions: *o0
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
       Location: net35\System.Management.Automation.dll

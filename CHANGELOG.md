@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Disallow Administrators from changing other user's passwords
 - Restrict non-admin users from visiting other user's profile in UI
+- Updated ShellCode task to use file upload of raw binary
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
