@@ -516,7 +516,7 @@ namespace Covenant.Core
                 }
                 throw new ControllerBadRequestException(ErrorMessage);
             }
-            
+
             if (!_userManager.Users.Any())
             {
                 await _userManager.AddToRoleAsync(user, "Administrator");
@@ -2465,7 +2465,7 @@ namespace Covenant.Core
                 {
                     if (!task.Options[i].DisplayInCommand && parameters.Count > (i + 1))
                     {
-                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i+1].Value}""", "");
+                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i + 1].Value}""", "");
                     }
                 }
             }
@@ -3731,6 +3731,7 @@ public static class Task
             matchingListener.BindAddress = listener.BindAddress;
             matchingListener.BindPort = listener.BindPort;
             matchingListener.ConnectAddresses = listener.ConnectAddresses;
+            matchingListener.CovenantUrl = listener.CovenantUrl;
             matchingListener.CovenantToken = listener.CovenantToken;
 
             if (matchingListener.Status == ListenerStatus.Active && listener.Status == ListenerStatus.Stopped)
@@ -3962,6 +3963,7 @@ public static class Task
             });
             IdentityRole listenerRole = await this.GetRoleByName("Listener");
             IdentityUserRole<string> userrole = await this.CreateUserRole(listenerUser.Id, listenerRole.Id);
+            listener.CovenantUrl = "https://localhost:" + _configuration["CovenantPort"];
             listener.CovenantToken = Utilities.GenerateJwtToken(
                 listenerUser.UserName, listenerUser.Id, new[] { listenerRole.Name },
                 _configuration["JwtKey"], _configuration["JwtIssuer"],
@@ -3999,6 +4001,7 @@ public static class Task
             });
             IdentityRole listenerRole = await _context.Roles.FirstOrDefaultAsync(R => R.Name == "Listener");
             IdentityUserRole<string> userrole = await this.CreateUserRole(listenerUser.Id, listenerRole.Id);
+            listener.CovenantUrl = "https://localhost:" + _configuration["CovenantPort"];
             listener.CovenantToken = Utilities.GenerateJwtToken(
                 listenerUser.UserName, listenerUser.Id, new[] { listenerRole.Name },
                 _configuration["JwtKey"], _configuration["JwtIssuer"],

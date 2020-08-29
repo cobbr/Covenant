@@ -33,7 +33,7 @@ namespace Covenant.Core
                 }
             };
             _connection = new HubConnectionBuilder()
-                .WithUrl("https://localhost:7443/covenantHub", options =>
+                .WithUrl("https://localhost:" + configuration["CovenantPort"] + "/covenantHub", options =>
                 {
                     options.AccessTokenProvider = () => { return Task.FromResult(configuration["ServiceUserToken"]); };
                     options.HttpMessageHandlerFactory = inner =>

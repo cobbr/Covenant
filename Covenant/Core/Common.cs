@@ -15,7 +15,7 @@ namespace Covenant.Core
 {
     public static class Common
     {
-        public static int CovenantHTTPSPort = 7443;
+        public static int CovenantDefaultAdminPort = 7443;
 
         public static Encoding CovenantEncoding = Encoding.UTF8;
         public static int AesIVLength = 16;

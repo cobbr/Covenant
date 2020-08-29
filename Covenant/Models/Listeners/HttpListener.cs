@@ -49,7 +49,7 @@ namespace Covenant.Models.Listeners
         [Required]
         [DisplayName("UseSSL")]
         public bool UseSSL { get; set; } = false;
-        private string SSLCertificateFile { get {  return this.ListenerDirectory + "httplistener-" + this.GUID + "-certificate.pfx"; } }
+        private string SSLCertificateFile { get { return this.ListenerDirectory + "httplistener-" + this.GUID + "-certificate.pfx"; } }
         [DisplayName("SSLCertificate")]
         public string SSLCertificate { get; set; }
         [DisplayName("SSLCertificatePassword")]
@@ -141,7 +141,7 @@ namespace Covenant.Models.Listeners
             }
             return Directory.Exists(this.ListenerDirectory) && Directory.Exists(this.ListenerStaticHostDirectory);
         }
-        
+
         public override CancellationTokenSource Start()
         {
             IHost host = BuildHost();
@@ -151,7 +151,7 @@ namespace Covenant.Models.Listeners
                 var services = scope.ServiceProvider;
                 HttpListenerContext context = services.GetRequiredService<HttpListenerContext>();
                 context.Database.EnsureCreated();
-                foreach(APIModels.HttpProfile profile in context.HttpProfiles)
+                foreach (APIModels.HttpProfile profile in context.HttpProfiles)
                 {
                     context.HttpProfiles.Remove(profile);
                 }
@@ -159,7 +159,7 @@ namespace Covenant.Models.Listeners
                 context.SaveChanges();
                 InternalListener internalListener = services.GetRequiredService<InternalListener>();
                 IConfiguration configuration = services.GetRequiredService<IConfiguration>();
-                _ = internalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, configuration["CovenantToken"]);
+                _ = internalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, configuration["CovenantUrl"], configuration["CovenantToken"]);
             }
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             LoggingConfiguration loggingConfig = new LoggingConfiguration();
@@ -234,6 +234,7 @@ namespace Covenant.Models.Listeners
                     })
                     .UseNLog()
                     .UseStartup<HttpListenerStartup>()
+                    .UseSetting("CovenantUrl", this.CovenantUrl)
                     .UseSetting("CovenantToken", this.CovenantToken)
                     .UseSetting("ProfileUrls", JsonConvert.SerializeObject((this.Profile as HttpProfile).HttpUrls))
                     .UseSetting("ListenerStaticHostDirectory", this.ListenerStaticHostDirectory)
@@ -266,7 +267,7 @@ namespace Covenant.Models.Listeners
             string FullPath = Path.GetFullPath(Path.Combine(this.ListenerStaticHostDirectory, hostFileRequest.Path));
             if (!FullPath.StartsWith(this.ListenerStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
             FileInfo file = new FileInfo(FullPath);
-            if(file.Exists)
+            if (file.Exists)
             {
                 file.Delete();
             }
@@ -276,7 +277,7 @@ namespace Covenant.Models.Listeners
     public class HttpListenerContext : IdentityDbContext
     {
         public DbSet<APIModels.HttpProfile> HttpProfiles { get; set; }
-        
+
         public HttpListenerContext(DbContextOptions<HttpListenerContext> options) : base(options)
         {
 

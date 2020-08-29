@@ -6037,6 +6037,9 @@
         "status": {
           "$ref": "#/definitions/ListenerStatus"
         },
+        "covenantUrl": {
+          "type": "string"
+        },
         "covenantToken": {
           "type": "string"
         },
@@ -7689,6 +7692,9 @@
         "status": {
           "$ref": "#/definitions/ListenerStatus"
         },
+        "covenantUrl": {
+          "type": "string"
+        },
         "covenantToken": {
           "type": "string"
         },
@@ -7778,6 +7784,9 @@
         },
         "status": {
           "$ref": "#/definitions/ListenerStatus"
+        },
+        "covenantUrl": {
+          "type": "string"
         },
         "covenantToken": {
           "type": "string"
