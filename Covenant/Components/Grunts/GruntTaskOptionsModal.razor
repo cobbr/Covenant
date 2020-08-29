@@ -1,0 +1,120 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.IO
+@using Microsoft.JSInterop
+@using BlazorInputFile
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+
+<div class="modal fade" id="file-modal" tabindex="-1" role="dialog" aria-labelledby="file-modal-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="file-modal-label">Select File</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (this.GruntTask != null)
+                {
+                    @for (int i = 0; i < this.GruntTask.Options.Count; i++)
+                    {
+                        int number = i;
+                        @if (this.GruntTask.Options[number].FileOption)
+                        {
+                            <div class="form-group">
+                                <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
+                                <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                                @if (string.IsNullOrEmpty(this.ErrorMessage))
+                                {
+                                    <span class="text-danger">@ErrorMessage</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-group">
+                                <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label>
+                                <input id="@GruntTask.Options[number].Name" name="@GruntTask.Options[number].Name" @bind="GruntTask.Options[number].Value" class="form-control">
+                            </div>
+                        }
+                    }
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" @onclick="Execute" class="btn btn-primary">Execute</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<GruntTask> OnSubmit { get; set; }
+
+    private GruntTask GruntTask { get; set; }
+    private InputFile InputFile { get; set; }
+    private IList<MemoryStream> UploadedFiles { get; set; }
+
+    public async Task Show(GruntTask task)
+    {
+        this.GruntTask = task;
+        this.StateHasChanged();
+        await IJSRuntime.InvokeAsync<string>("ActivateModal", "#file-modal");
+    }
+
+    private async Task Execute()
+    {
+        if (this.UploadedFiles != null && this.GruntTask.Options.Any(O => O.FileOption && string.IsNullOrEmpty(O.Value)))
+        {
+            this.OnRead(this.UploadedFiles);
+        }
+        await IJSRuntime.InvokeAsync<string>("ModalCommand", "#file-modal", "hide");
+        await OnSubmit.InvokeAsync(GruntTask);
+    }
+
+    private string ErrorMessage { get; set; }
+    private async Task OnUpload(IFileListEntry[] files)
+    {
+        try
+        {
+            this.UploadedFiles = new List<MemoryStream>();
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (files[i] != null)
+                {
+                    MemoryStream ms = new MemoryStream();
+                    await files[i].Data.CopyToAsync(ms);
+                    this.UploadedFiles.Add(ms);
+                    this.OnRead(this.UploadedFiles);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            this.ErrorMessage = e.Message;
+            this.StateHasChanged();
+        }
+    }
+
+    private void OnRead(IList<MemoryStream> Streams)
+    {
+        try
+        {
+            for (int i = 0; i < Streams.Count(); i++)
+            {
+                GruntTaskOption option = this.GruntTask.Options.Where(O => O.FileOption).ToList()[i];
+                option.Value = Convert.ToBase64String(Streams[i].ToArray());
+                this.UploadedFiles[i] = new MemoryStream(Convert.FromBase64String(option.Value));
+            }
+        }
+        catch (Exception e)
+        {
+            this.ErrorMessage = e.Message;
+            this.StateHasChanged();
+        }
+    }
+}

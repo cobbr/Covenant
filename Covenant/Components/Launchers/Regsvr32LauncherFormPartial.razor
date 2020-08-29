@@ -1,0 +1,41 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Launchers
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="ParameterString">ParameterString</label>
+        <input id="ParameterString" name="ParameterString" value="@Regsvr32Launcher.ParameterString" @onchange="(e => OnParameterStringChanged(e))" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Regsvr32Launcher.ParameterString" /></div>
+    </div>
+    <div class="form-group col-md-6">
+        <label for="DllName">DllName</label>
+        <input id="DllName" name="DllName" value="@Regsvr32Launcher.DllName" @onchange="(e => OnDllNameChanged(e))" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Regsvr32Launcher.DllName" /></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+    public Regsvr32Launcher Regsvr32Launcher { get; set; }
+
+    [Parameter]
+    public EventCallback<Launcher> LauncherChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.Regsvr32Launcher = (Regsvr32Launcher)this.Launcher;
+    }
+
+    private void OnParameterStringChanged(ChangeEventArgs e)
+    {
+        this.Regsvr32Launcher.ParameterString = e.Value.ToString();
+        this.LauncherChanged.InvokeAsync(this.Regsvr32Launcher);
+    }
+
+    private void OnDllNameChanged(ChangeEventArgs e)
+    {
+        this.Regsvr32Launcher.DllName = e.Value.ToString();
+        this.LauncherChanged.InvokeAsync(this.Regsvr32Launcher);
+    }
+}

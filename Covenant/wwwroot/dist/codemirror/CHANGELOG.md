@@ -1,3 +1,203 @@
+## 5.55.0 (2020-05-20)
+
+### Bug fixes
+
+The editor no longer overrides the rendering of zero-width joiners (allowing combined emoji to be shown).
+
+[vim bindings](https://codemirror.net/demo/vim.html): Fix an issue where the `vim-mode-change` event was fired twice.
+
+[javascript mode](https://codemirror.net/mode/javascript/): Only allow `-->`-style comments at the start of a line.
+
+[julia mode](https://codemirror.net/mode/julia/): Improve indentation.
+
+[pascal mode](https://codemirror.net/mode/pascal/index.html): Recognize curly bracket comments.
+
+[runmode addon](https://codemirror.net/doc/manual.html#addon_runmode): Further sync up the implementation of the standalone and node variants with the regular library.
+
+### New features
+
+[loadmode addon](https://codemirror.net/doc/manual.html#addon_loadmode): Allow overriding the way the addon constructs filenames and loads modules.
+
+## 5.54.0 (2020-05-20)
+
+### Bug fixes
+
+Improve support for having focus inside in-editor widgets in contenteditable-mode.
+
+Fix issue where the scroll position could jump when clicking on a selection in Chrome.
+
+[python mode](https://codemirror.net/mode/python/): Better format string support.
+
+[javascript mode](https://codemirror.net/mode/javascript/): Improve parsing of private properties and class fields.
+
+[matchbrackets addon](https://codemirror.net/doc/manual.html#addon_matchbrackets): Disable highlighting when the editor doesn't have focus.
+
+### New features
+
+[runmode addon](https://codemirror.net/doc/manual.html#addon_runmode): Properly support for cross-line lookahead.
+
+[vim bindings](https://codemirror.net/demo/vim.html): Allow Ex-Commands with non-word names.
+
+[gfm mode](https://codemirror.net/mode/gfm/): Add a `fencedCodeBlockDefaultMode` option.
+
+## 5.53.2 (2020-04-21)
+
+### Bug fixes
+
+[show-hint addon](https://codemirror.net/doc/manual.html#addon_show-hint): Fix a regression that broke completion picking.
+
+## 5.53.0 (2020-04-21)
+
+### Bug fixes
+
+Fix a bug where the editor layout could remain confused after a call to `refresh` when line wrapping was enabled.
+
+[dialog addon](https://codemirror.net/doc/manual.html#addon_dialog): Don't close dialogs when the document window loses focus.
+
+[merge addon](https://codemirror.net/doc/manual.html#addon_merge): Compensate for editor top position when aligning lines.
+
+[vim bindings](https://codemirror.net/demo/vim.html): Improve EOL handling.
+
+[emacs bindings](https://codemirror.net/demo/emacs.html): Include default keymap as a fallback.
+
+[julia mode](https://codemirror.net/mode/julia/): Fix an infinite loop bug.
+
+[show-hint addon](https://codemirror.net/doc/manual.html#addon_show-hint): Scroll cursor into view when picking a completion.
+
+### New features
+
+New option: [`screenReaderLabel`](https://codemirror.net/doc/manual.html#option_screenReaderLabel) to add a label to the editor.
+
+New mode: [wast](https://codemirror.net/mode/wast/).
+
+## 5.52.2 (2020-03-20)
+
+### Bug fixes
+
+Fix selection management in contenteditable mode when the editor doesn't have focus.
+
+Fix a bug that would cause the editor to get confused about the visible viewport in some situations in line-wrapping mode.
+
+[markdown mode](https://codemirror.net/mode/markdown/): Don't treat single dashes as setext header markers.
+
+[zenburn theme](https://codemirror.net/demo/theme.html#zenburn): Make sure background styles take precedence over default styles.
+
+[css mode](https://codemirror.net/mode/css/): Recognize a number of new properties.
+
+## 5.52.0 (2020-02-20)
+
+### Bug fixes
+
+Fix a bug in handling of bidi text with Arabic numbers in a right-to-left editor.
+
+Fix a crash when combining file drop with a `"beforeChange"` filter.
+
+Prevent issue when passing negative coordinates to `scrollTo`.
+
+### New features
+
+[lint](https://codemirror.net/doc/manual.html#addon_lint) and [tern](https://codemirror.net/demo/tern.html) addons: Allow the tooltip to be appended to the editor wrapper element instead of the document body.
+
+## 5.51.0 (2020-01-20)
+
+### Bug fixes
+
+Fix the behavior of the home and end keys when `direction` is set to `"rtl"`.
+
+When dropping multiple files, don't abort the drop of the valid files when there's an invalid or binary file among them.
+
+Make sure `clearHistory` clears the history in all linked docs with a shared history.
+
+[vim bindings](https://codemirror.net/demo/vim.html): Fix behavior of `'` and `` ` `` marks, fix `R` in visual mode.
+
+### New features
+
+[vim bindings](https://codemirror.net/demo/vim.html): Support `gi`, `gI`, and `gJ`.
+
+## 5.50.2 (2020-01-01)
+
+### Bug fixes
+
+Fix bug that broke removal of line widgets.
+
+## 5.50.0 (2019-12-20)
+
+### Bug fixes
+
+Make Shift-Delete to cut work on Firefox.
+
+[closetag addon](https://codemirror.net/demo/closetag.html): Properly handle self-closing tags.
+
+[handlebars mode](https://codemirror.net/mode/handlebars/): Fix triple-brace support.
+
+[searchcursor addon](https://codemirror.net/doc/manual.html#addon_searchcursor): Support mathing `$` in reverse regexp search.
+
+[panel addon](https://codemirror.net/doc/manual.html#addon_panel): Don't get confused by changing panel sizes.
+
+[javascript-hint addon](https://codemirror.net/doc/manual.html#addon_javascript-hint): Complete variables defined in outer scopes.
+
+[sublime bindings](https://codemirror.net/demo/sublime.html): Make by-subword motion more consistent with Sublime Text.
+
+[julia mode](https://codemirror.net/mode/julia/): Don't break on zero-prefixed integers.
+
+[elm mode](https://codemirror.net/mode/elm/): Sync with upstream version.
+
+[sql mode](https://codemirror.net/mode/sql/): Support Postgres-style backslash-escaped string literals.
+
+### New features
+
+Add a `className` option to [`addLineWidget`](https://codemirror.net/doc/manual.html#addLineWidget).
+
+[foldcode addon](https://codemirror.net/doc/manual.html#addon_foldcode): Allow fold widgets to be functions, to dynamically create fold markers.
+
+New themes: [ayu-dark](https://codemirror.net/demo/theme.html#ayu-dark) and [ayu-mirage](https://codemirror.net/demo/theme.html#ayu-mirage).
+
+## 5.49.2 (2019-10-21)
+
+### Bug fixes
+
+[sublime bindings](https://codemirror.net/demo/sublime.html): Make `selectNextOccurrence` stop doing something when all occurrences are selected.
+
+[continuecomment addon](https://codemirror.net/doc/manual.html#addon_continuecomment): Respect `indentWithTabs` option.
+
+[foldgutter addon](https://codemirror.net/doc/manual.html#addon_foldgutter): Optimize by reusing DOM when possible.
+
+[markdown mode](https://codemirror.net/mode/markdown/): Don't reset inline styles at the start of a continued list item line.
+
+[clike mode](https://codemirror.net/mode/clike/): Add a configuration for Objective-C++.
+
+## 5.49.0 (2019-09-20)
+
+### Bug fixes
+
+[octave mode](https://codemirror.net/mode/octave/index.html): Don't mark common punctuation as error.
+
+[clike mode](https://codemirror.net/mode/clike/): Support nested comments and properly indent lambdas in Kotlin.
+
+[foldgutter](https://codemirror.net/doc/manual.html#addon_foldgutter) and [annotatescrollbar](https://codemirror.net/doc/manual.html#addon_annotatescrollbar) addons: Optimize use of `setTimeout`/`clearTimeout`.
+
+### New features
+
+New themes: [moxer](https://codemirror.net/demo/theme.html#moxer), [material-darker](https://codemirror.net/demo/theme.html#material-darker), [material-palenight](https://codemirror.net/demo/theme.html#material-palenight), [material-ocean](https://codemirror.net/demo/theme.html#material-ocean).
+
+[xml mode](https://codemirror.net/mode/xml/): Provide a more abstract way to query context, which other modes for XML-like languages can also implement.
+
+## 5.48.4 (2019-08-20)
+
+### Bug fixes
+
+Make default styles for line elements more specific so that they don't apply to all `<pre>` elements inside the editor.
+
+Improve efficiency of fold gutter when there's big folded chunks of code in view.
+
+Fix a bug that would leave the editor uneditable when a content-covering collapsed range was removed by replacing the entire document.
+
+[julia mode](https://codemirror.net/mode/julia/): Support number separators.
+
+[asterisk mode](https://codemirror.net/mode/asterisk/): Improve comment support.
+
+[handlebars mode](https://codemirror.net/mode/handlebars/): Support triple-brace tags.
+
 ## 5.48.2 (2019-07-20)
 
 ### Bug fixes

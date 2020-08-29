@@ -1,0 +1,37 @@
+﻿@page "/covenantuser/create"
+@attribute [Authorize(Roles = "Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create User</h1>
+</div>
+
+<CovenantUserRegisterForm CovenantUserRegister="CovenantUserRegister" OnSubmit="OnCreateUser">
+    <span class="fe fe-plus"></span> Create
+</CovenantUserRegisterForm>
+
+@code {
+    [Parameter]
+    public CovenantUserRegister CovenantUserRegister { get; set; } = new CovenantUserRegister();
+
+    public async Task OnCreateUser(CovenantUserRegister register)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.CreateUserVerify(state.User, register);
+            NavigationManager.NavigateTo("/covenantuser");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+}

@@ -1,0 +1,200 @@
+﻿@page "/grunttask"
+@page "/grunttask/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using System.IO
+@using Microsoft.JSInterop
+
+@using BlazorInputFile
+@using YamlDotNet.Serialization
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@using Covenant.Components.EmbeddedResources
+@using Covenant.Components.ReferenceAssemblies
+@using Covenant.Components.ReferenceSourceLibraries
+@inject INotificationService INotificationService
+@inject IJSRuntime IJSRuntime
+
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Tasks</h1>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="grunt-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" id="tasks-tab" data-toggle="tab" href="#tasks" role="tab" aria-controls="tasks" aria-selected="false">Tasks</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="libraries-tab" data-toggle="tab" href="#libraries" role="tab" aria-controls="libraries" aria-selected="false">Reference Source Libraries</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="assemblies-tab" data-toggle="tab" href="#assemblies" role="tab" aria-controls="assemblies" aria-selected="false">Reference Assemblies</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="resources-tab" data-toggle="tab" href="#resources" role="tab" aria-controls="resources" aria-selected="false">Embedded Resources</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="grunt-tab-content">
+    <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+        <GruntTaskTable GruntTasks="GruntTasks" />
+        <a href="/grunttask/create" class="btn btn-primary">
+            <span class="fe fe-plus"></span>
+            Create
+        </a>
+        <ButtonActivatedModal @ref="_ImportModal" class="btn btn-secondary">
+            <ButtonContent>
+                <span class="fe fe-download"></span>
+                Import
+            </ButtonContent>
+            <TitleContent>Import GruntTask(s)</TitleContent>
+            <ModalBody>
+                <InputFile OnChange="OnUploadImport"></InputFile>
+                @if (string.IsNullOrEmpty(this.ErrorMessage))
+                {
+                    <span class="text-danger">@ErrorMessage</span>
+                }
+            </ModalBody>
+            <ModalFooter>
+                <button type="button" class="btn btn-primary" @onclick="OnImport" data-dismiss="modal">
+                    <span class="fe fe-download"></span>
+                    Import
+                </button>
+            </ModalFooter>
+        </ButtonActivatedModal>
+        <button type="button" class="btn btn-secondary" @onclick="OnExport">
+            <span class="fe fe-share"></span>
+            Export All
+        </button>
+    </div>
+    <div class="tab-pane fade" id="libraries" role="tabpanel" aria-labelledby="libraries-tab">
+        <ReferenceSourceLibraryTable ReferenceSourceLibraries="ReferenceSourceLibraries" />
+        <a href="/referencesourcelibrary/create" class="btn btn-primary">
+            <span class="fe fe-plus"></span>
+            Create
+        </a>
+    </div>
+    <div class="tab-pane fade" id="assemblies" role="tabpanel" aria-labelledby="assemblies-tab">
+        <ReferenceAssemblyTable ReferenceAssemblies="ReferenceAssemblies" />
+        <a href="/referenceassembly/create" class="btn btn-primary">
+            <span class="fe fe-plus"></span>
+            Create
+        </a>
+    </div>
+    <div class="tab-pane fade" id="resources" role="tabpanel" aria-labelledby="resources-tab">
+        <EmbeddedResourceTable EmbeddedResources="EmbeddedResources" />
+        <a href="/embeddedresource/create" class="btn btn-primary">
+            <span class="fe fe-plus"></span>
+            Create
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IList<GruntTask> GruntTasks { get; set; }
+
+    [Parameter]
+    public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
+
+    [Parameter]
+    public IList<ReferenceAssembly> ReferenceAssemblies { get; set; }
+
+    [Parameter]
+    public IList<EmbeddedResource> EmbeddedResources { get; set; }
+
+    private ButtonActivatedModal _ImportModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTasks = this.GruntTasks ?? (await Service.GetGruntTasks()).ToList();
+        this.ReferenceSourceLibraries = this.ReferenceSourceLibraries ?? (await Service.GetReferenceSourceLibraries()).ToList();
+        this.ReferenceAssemblies = this.ReferenceAssemblies ?? (await Service.GetReferenceAssemblies()).ToList();
+        this.EmbeddedResources = this.EmbeddedResources ?? (await Service.GetEmbeddedResources()).ToList();
+        this.INotificationService.OnCreateGruntTask += OnCreateGruntTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "#tasks-tab");
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateGruntTask -= OnCreateGruntTask;
+    }
+
+    private void OnCreateGruntTask(object sender, GruntTask task)
+    {
+        this.GruntTasks.Add(task);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private string ErrorMessage { get; set; }
+    private List<GruntTask> ImportedTasks { get; set; } = null;
+    private async Task OnUploadImport(IFileListEntry[] files)
+    {
+        try
+        {
+            IFileListEntry file = files.FirstOrDefault();
+            if (file != null)
+            {
+                MemoryStream ms = new MemoryStream();
+                await file.Data.CopyToAsync(ms);
+                string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
+                IDeserializer deserializer = new DeserializerBuilder().Build();
+                List<SerializedGruntTask> serialized = deserializer.Deserialize<List<SerializedGruntTask>>(yaml);
+                this.ImportedTasks = serialized.Select(S => new GruntTask().FromSerializedGruntTask(S)).ToList();
+            }
+        }
+        catch (Exception e)
+        {
+            this.ErrorMessage = e.Message;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task OnImport()
+    {
+        if (this.ImportedTasks != null)
+        {
+            this.ErrorMessage = "";
+            foreach (GruntTask importedTask in this.ImportedTasks)
+            {
+                try
+                {
+                    await Service.CreateGruntTask(importedTask);
+                }
+                catch (Exception e)
+                {
+                    this.ErrorMessage += e.Message + Environment.NewLine;
+                    this.StateHasChanged();
+                }
+            }
+            this.ImportedTasks = null;
+            await _ImportModal.DismissModal();
+        }
+    }
+
+    private async Task OnExport()
+    {
+        try
+        {
+            List<SerializedGruntTask> tasks = this.GruntTasks.Select(GT => GT.ToSerializedGruntTask()).ToList();
+            ISerializer serializer = new SerializerBuilder().Build();
+            string yaml = serializer.Serialize(tasks);
+            await IJSRuntime.InvokeAsync<string>("DownloadFile", "GruntTasks.yaml", "application/x-yaml", Convert.ToBase64String(Common.CovenantEncoding.GetBytes(yaml)));
+        }
+        catch (Exception)
+        {
+            //
+        }
+    }
+}

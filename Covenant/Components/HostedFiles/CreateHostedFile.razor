@@ -1,0 +1,35 @@
+﻿@page "/listener/{ListenerId:int}/hostedfile/create"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Listeners
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Create HostedFile</h1>
+</div>
+
+<HostedFileForm HostedFile="HostedFile" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
+@code {
+    [Parameter]
+    public HostedFile HostedFile { get; set; }
+
+    [Parameter]
+    public int ListenerId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.HostedFile = new HostedFile
+        {
+            ListenerId = ListenerId
+        };
+    }
+
+    private async Task OnCreate(HostedFile file)
+    {
+        this.HostedFile = await Service.CreateHostedFile(file);
+        NavigationManager.NavigateTo($"/listener/edit/{file.ListenerId}");
+    }
+}

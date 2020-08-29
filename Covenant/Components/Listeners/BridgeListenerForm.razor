@@ -1,0 +1,85 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Listeners
+
+<EditForm Model="Listener" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Listener))">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label for="Description">Description</label>
+        <input id="Description" name="Description" @bind="@Listener.Description" class="form-control-plaintext" readonly>
+    </div>
+    <div class="form-group">
+        <label for="Name">Name</label>
+        <input id="Name" name="Name" @bind="@Listener.Name" disabled="@Disabled" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => Listener.Name" /></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="BindAddress">BindAddress</label>
+            <input id="BindAddress" name="BindAddress" @bind="@Listener.BindAddress" disabled="@Disabled" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Listener.BindAddress" /></div>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="BindPort">BindPort</label>
+            <input id="BindPort" name="BindPort" @bind="@Listener.BindPort" disabled="@Disabled" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Listener.BindPort" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="ConnectPort">ConnectPort</label>
+            <input id="ConnectPort" name="ConnectPort" @bind-value="Listener.ConnectPort" @bind-value:event="oninput" disabled="@Disabled" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Listener.ConnectPort" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="ConnectAddresses_0_">ConnectAddress</label>
+            <input id="ConnectAddresses_0_" name="ConnectAddresses[0]" @bind="@Listener.ConnectAddresses[0]" disabled="@Disabled" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Listener.ConnectAddresses" /></div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="ProfileId">BridgeProfile</label>
+        <select id="ProfileId" name="ProfileId" @bind="Listener.ProfileId" class="form-control">
+            @foreach (var Profile in Profiles)
+            {
+                <option value="@Profile.Id">@Profile.Name</option>
+            }
+        </select>
+        <div class="text-danger"><ValidationMessage For="() => Listener.ProfileId" /></div>
+    </div>
+    @if (!Disabled)
+    {
+        <button type="submit" class="btn btn-primary">
+            <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+        </button>
+    }
+</EditForm>
+
+@code {
+    [Parameter]
+    public BridgeListener Listener { get; set; }
+
+    [Parameter]
+    public IEnumerable<Profile> Profiles { get; set; }
+
+    [Parameter]
+    public string SubmitIcon { get; set; } = "edit";
+
+    [Parameter]
+    public string SubmitLabel { get; set; } = "Edit";
+
+    [Parameter]
+    public EventCallback<BridgeListener> OnSubmit { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        if (!this.Listener.ConnectAddresses.Any())
+        {
+            this.Listener.ConnectAddresses.Add("");
+        }
+    }
+}

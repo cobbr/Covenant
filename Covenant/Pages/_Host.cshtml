@@ -1,0 +1,48 @@
+﻿@page "/"
+@namespace Covenant.Pages
+@using Covenant.Components
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
+    <base href="/">
+    <title>Covenant</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/bootstrap-datetimepicker.min.css" />
+    <link rel="stylesheet" href="/css/bootstrap-select.min.css" />
+    <link rel="stylesheet" href="/css/bootstrap-multiselect.css" />
+    <link rel="stylesheet" href="/css/jquery.typeahead.min.css" />
+    <link rel="stylesheet" href="/dist/feather.css" />
+    <link rel="stylesheet" href="/dist/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/dist/codemirror/theme/night.css">
+    <link rel="stylesheet" href="/css/covenant.css" />
+    <link rel="stylesheet" href="/css/covenant-graph.css" />
+</head>
+<body>
+    <app><component type="typeof(App)" render-mode="ServerPrerendered" /></app>
+
+    <script src="/_framework/blazor.server.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="/js/typeahead.bundle.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/moment.min.js"></script>
+    <script src="/lib/signalr/dist/browser/signalr.js"></script>
+    <script src="/js/bootstrap-select.min.js"></script>
+    <script src="/js/bootstrap-multiselect.js"></script>
+    <script src="/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="/dist/codemirror/lib/codemirror.js"></script>
+    <script src="/dist/codemirror/mode/clike/clike.js"></script>
+    <script src="/dist/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+    <script src="/js/d3.min.js"></script>
+    <script src="/js/inputfile.js"></script>
+    <script src="/js/components/master.js"></script>
+</body>
+</html>

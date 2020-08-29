@@ -1,0 +1,219 @@
+﻿@page "/listener/edit/{ListenerId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.Extensions.Configuration;
+
+@using Covenant.Core
+@using Covenant.Models.Covenant;
+@using Covenant.Models.Listeners;
+@using Covenant.Components.HostedFiles
+
+@inject IJSRuntime IJSRuntime
+@inject UserManager<CovenantUser> UserManager
+@inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Listener: <span class="primary-color">@Listener.Name</span></h1>
+</div>
+
+@if (Listener.ListenerType.Name == "HTTP")
+{
+    <ul class="nav nav-tabs mb-3" id="listener-tab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="false">
+                <span class="fe fe-info"></span>
+                Info
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="host-tab" data-toggle="tab" href="#host" role="tab" aria-controls="host" aria-selected="false">
+                <span class="fe fe-cloud"></span>
+                Hosted Files
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="listener-tab-content">
+        <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <HttpListenerForm Listener="@((HttpListener)Listener)"
+                              Profiles="new List<Profile> { Listener.Profile }"
+                              OnSubmit="OnSubmitHttpListener"
+                              SubmitIcon="edit"
+                              SubmitLabel="Edit"
+                              Disabled="true" />
+            <div class="btn-group" role="group">
+                @if (Listener.Status == ListenerStatus.Active)
+                {
+                    <button type="button" @onclick="StopListener" class="btn btn-warning">
+                        <span class="fe fe-stop-circle"></span> Stop
+                    </button>
+                }
+                else
+                {
+                    <button type="button" @onclick="StartListener" class="btn btn-primary">
+                        <span class="fe fe-play"></span> Start
+                    </button>
+                }
+                <button type="button" @onclick="DeleteListener" class="btn btn-danger ml-2">
+                    <span class="fe fe-x"></span> Delete
+                </button>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
+            <HostedFileIndex ListenerId="ListenerId" HostedFiles="GetHostedFiles()" />
+        </div>
+    </div>
+}
+else if (Listener.ListenerType.Name == "Bridge")
+{
+    <ul class="nav nav-tabs mb-3" id="listener-tab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="false">
+                <span class="fe fe-info"></span>
+                Info
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="listener-tab-content">
+        <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <BridgeListenerForm Listener="@((BridgeListener)Listener)"
+                                Profiles="new List<Profile> { Listener.Profile }"
+                                OnSubmit="OnSubmitBridgeListener"
+                                SubmitIcon="edit"
+                                SubmitLabel="Edit"
+                                Disabled="true" />
+            <div class="btn-group" role="group">
+                @if (Listener.Status == ListenerStatus.Active)
+                {
+                    <button type="button" @onclick="StopListener" class="btn btn-warning">
+                        <span class="fe fe-stop-circle"></span> Stop
+                    </button>
+                }
+                else
+                {
+                    <button type="button" @onclick="StartListener" class="btn btn-primary">
+                        <span class="fe fe-play"></span> Start
+                    </button>
+                }
+                <button type="button" @onclick="DeleteListener" class="btn btn-danger ml-2">
+                    <span class="fe fe-x"></span> Delete
+                </button>
+            </div>
+        </div>
+        @*
+        <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
+            <HostedFileIndex />
+        </div>
+        *@
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int ListenerId { get; set; }
+
+    [Parameter]
+    public Listener Listener { get; set; }
+
+    private bool IsDeleted { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Listener = this.Listener ?? await Service.GetListener(this.ListenerId);
+        Service.DisposeContext();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#info-tab" });
+    }
+
+    private async Task OnSubmitHttpListener(HttpListener listener)
+    {
+        try
+        {
+            await Service.EditHttpListener(listener);
+            NavigationManager.NavigateTo("/listener");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create));
+        }
+    }
+
+    private async Task OnSubmitBridgeListener(BridgeListener listener)
+    {
+        try
+        {
+            await Service.EditBridgeListener(listener);
+            NavigationManager.NavigateTo("/listener");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create));
+        }
+    }
+
+    private async Task StartListener()
+    {
+        try
+        {
+            if (Listener.Status != ListenerStatus.Active)
+            {
+                Listener.Status = ListenerStatus.Active;
+                await Service.EditListener(Listener);
+                NavigationManager.NavigateTo("/listener");
+            }
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private async Task StopListener()
+    {
+        try
+        {
+            if (Listener.Status != ListenerStatus.Stopped)
+            {
+                Listener.Status = ListenerStatus.Stopped;
+                await Service.EditListener(Listener);
+                NavigationManager.NavigateTo("/listener");
+            }
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private async Task DeleteListener()
+    {
+        try
+        {
+            this.IsDeleted = true;
+            await Service.DeleteListener(Listener.Id);
+            NavigationManager.NavigateTo("/listener");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private IEnumerable<HostedFile> GetHostedFiles()
+    {
+        return this.IsDeleted ? new List<HostedFile>() : Service.GetHostedFilesForListener(Listener.Id).WaitResult();
+    }
+}

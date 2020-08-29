@@ -29,7 +29,7 @@ namespace Covenant.API.Models
         /// 'Bridge'</param>
         /// <param name="implantDirection">Possible values include: 'Push',
         /// 'Pull'</param>
-        public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), ImplantDirection? implantDirection = default(ImplantDirection?), IList<ListenerType> compatibleListenerTypes = default(IList<ListenerType>), string stagerCode = default(string), string executorCode = default(string))
+        public ImplantTemplate(int? id = default(int?), string name = default(string), string description = default(string), ImplantLanguage? language = default(ImplantLanguage?), CommunicationType? commType = default(CommunicationType?), ImplantDirection? implantDirection = default(ImplantDirection?), IList<ListenerType> compatibleListenerTypes = default(IList<ListenerType>), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), string stagerCode = default(string), string executorCode = default(string))
         {
             Id = id;
             Name = name;
@@ -38,6 +38,7 @@ namespace Covenant.API.Models
             CommType = commType;
             ImplantDirection = implantDirection;
             CompatibleListenerTypes = compatibleListenerTypes;
+            CompatibleDotNetVersions = compatibleDotNetVersions;
             StagerCode = stagerCode;
             ExecutorCode = executorCode;
             CustomInit();
@@ -85,6 +86,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "compatibleListenerTypes")]
         public IList<ListenerType> CompatibleListenerTypes { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "compatibleDotNetVersions")]
+        public IList<DotNetVersion?> CompatibleDotNetVersions { get; set; }
 
         /// <summary>
         /// </summary>

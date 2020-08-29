@@ -1,0 +1,55 @@
+﻿@using System.Timers
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject IJSRuntime IJSRuntime
+
+<div id="@GuidId" class="toast border-1" role="alert" aria-live="assertive" aria-atomic="true" data-delay="@EventDisplayTime">
+    <div class="toast-header border-1">
+        <strong class="mr-auto">@Event.MessageHeader</strong>
+        <small>@string.Format("{0:hh\\:mm\\:ss}", Event.Time.TimeOfDay)</small>
+        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="toast-body">
+        @Event.MessageBody
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Event Event { get; set; }
+
+    [Parameter]
+    public int EventDisplayTime { get; set; } = 15000;
+
+    [Parameter]
+    public EventCallback<Event> OnEventFinished { get; set; }
+
+    private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
+    private bool Elapsed { get; set; } = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Timer count = new Timer(EventDisplayTime);
+            count.Elapsed += OnCountdownElapsed;
+            count.AutoReset = false;
+            count.Start();
+            await IJSRuntime.InvokeAsync<string>("Toast", "#" + this.GuidId + ".toast", "show");
+        }
+    }
+
+    protected override bool ShouldRender()
+    {
+        return !Elapsed;
+    }
+
+    private void OnCountdownElapsed(object source, ElapsedEventArgs e)
+    {
+        this.Elapsed = true;
+        _ = this.InvokeAsync(() => OnEventFinished.InvokeAsync(this.Event));
+    }
+}

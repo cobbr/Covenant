@@ -1,0 +1,74 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="CovenantUser" OnSubmit="OnSubmit">
+    <div class="form-group">
+        <label for="Roles">Edit Roles</label><br />
+        <select name="Roles" id="Roles" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+            @foreach (var role in Roles)
+            {
+                @if (UserInRole(CovenantUser, role.Id))
+                {
+                    <option selected value="@role.Id">@role.Name</option>
+                }
+                else
+                {
+                    <option value="@role.Id">@role.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-edit"></span> Edit Roles
+    </button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public CovenantUser CovenantUser { get; set; }
+
+    [Parameter]
+    public EventCallback<IEnumerable<IdentityRole>> OnChangeRoles { get; set; }
+
+    private IEnumerable<IdentityRole> Roles { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Roles = await Service.GetRoles();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Roles.selectpicker");
+    }
+
+    private bool UserInRole(CovenantUser user, string role)
+    {
+        try
+        {
+            Service.GetUserRole(user.Id, role).WaitTask();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private async Task<IEnumerable<IdentityRole>> GetSelectedRoles()
+    {
+        string[] ids = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#Roles" });
+        return ids.Select(id => Service.GetRole(id).WaitResult()).ToList();
+    }
+
+    private async Task OnSubmit()
+    {
+        await OnChangeRoles.InvokeAsync(await GetSelectedRoles());
+    }
+}

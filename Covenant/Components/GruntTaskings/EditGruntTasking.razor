@@ -1,0 +1,25 @@
+﻿@page "/grunttasking/edit/{GruntTaskingId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">GruntTasking: <span id="tasking-name" class="primary-color">@GruntTasking.Name</span></h1>
+</div>
+
+<GruntTaskingForm GruntTasking="GruntTasking" />
+
+@code {
+    [Parameter]
+    public int GruntTaskingId { get; set; }
+
+    [Parameter]
+    public GruntTasking GruntTasking { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTasking = this.GruntTasking ?? await Service.GetGruntTasking(this.GruntTaskingId);
+    }
+}

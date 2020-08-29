@@ -1,0 +1,332 @@
+﻿@page "/launcher/create/{LauncherId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Models.Listeners
+@using Covenant.Models.Launchers
+
+@using Microsoft.JSInterop
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">@Launcher.Name Launcher</h1>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="launcher-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" id="generate-tab" data-toggle="tab" href="#generate" role="tab" aria-controls="generate" aria-selected="false">
+            <span class="fe fe-zap"></span>
+            Generate
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="host-tab" data-toggle="tab" href="#host" role="tab" aria-controls="host" aria-selected="false">
+            <span class="fe fe-cloud-lightning"></span>
+            Host
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="code-tab" data-toggle="tab" href="#code" role="tab" aria-controls="code" aria-selected="false">
+            <span class="fe fe-code"></span>
+            Code
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content" id="launcher-tab-content">
+    <div class="tab-pane fade" id="generate" role="tabpanel" aria-labelledby="generate-tab">
+        <LauncherForm Launcher="Launcher" OnGenerate="OnGenerate" />
+    </div>
+    <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
+        <LauncherHost Launcher="Launcher" OnHost="OnHost" />
+    </div>
+    <div class="tab-pane fade" id="code" role="tabpanel" aria-labelledby="code-tab">
+        <div class="form-group col-md-12">
+            <label for="copy-stager-code">StagerCode</label>
+            <textarea @ref="CodeMirrorElement" rows="10" value="@Launcher.StagerCode" class="form-control code-mirror-csharp" disabled></textarea>
+        </div>
+        <div class="form-group col-md-12">
+            <button type="button" @onclick="(e => CopyToClipboard(Launcher.StagerCode))" class="btn btn-primary">
+                <span class="fe fe-clipboard"></span>
+                Copy
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="border-top mt-4">
+    <div class="form-group mt-4">
+        <label for="Launcher">Launcher</label>
+        <div class="input-group">
+            <input id="Launcher" value="@LauncherString" class="form-control">
+            <div class="input-group-append">
+                <button type="button" @onclick="(e => CopyToClipboard(LauncherString))" class="btn btn-outline-primary">
+                    <span class="fe fe-clipboard"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@if (Launcher.Name == "PowerShell")
+{
+    <div class="border-top mt-4">
+        <div class="form-group mt-2">
+            <label for="EncodedLauncher">EncodedLauncher</label>
+            <div class="input-group">
+                <input id="EncodedLauncher" class="form-control" value="@PowerShellEncodedLauncherString" />
+                <div class="input-group-append">
+                    <button type="button" @onclick="(e => CopyToClipboard(PowerShellEncodedLauncherString))" class="btn btn-outline-primary">
+                        <span class="fe fe-clipboard"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int LauncherId { get; set; }
+
+    [Parameter]
+    public Launcher Launcher { get; set; }
+
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
+    private const int MAX_LAUNCHER_LENGTH = 20000;
+
+    private string PowerShellEncodedLauncherString
+    {
+        get
+        {
+            if (Launcher.Name == "PowerShell")
+            {
+                var PSL = ((PowerShellLauncher)Launcher);
+                string esl = PSL.EncodedLauncherString;
+                return esl.Substring(0, Math.Min(esl.Length, MAX_LAUNCHER_LENGTH));
+            }
+            return "";
+        }
+    }
+
+    private string LauncherString
+    {
+        get
+        {
+            string ls = Launcher.LauncherString;
+            return ls.Substring(0, Math.Min(ls.Length, MAX_LAUNCHER_LENGTH));
+        }
+    }
+
+    private ElementReference CodeMirrorElement { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Launcher = this.Launcher ?? await Service.GetLauncher(this.LauncherId);
+        this.INotificationService.OnEditLauncher += OnEditLauncher;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString(), true);
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "#generate-tab");
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditLauncher -= OnEditLauncher;
+    }
+
+    private void OnEditLauncher(object sender, Launcher launcher)
+    {
+        if (this.Launcher.Id == launcher.Id)
+        {
+            this.Launcher = launcher;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await IJSRuntime.InvokeAsync<string>("CopyToClipboard", text);
+    }
+
+    private async Task OnGenerate(Launcher aLauncher)
+    {
+        try
+        {
+            switch (aLauncher.Name)
+            {
+                case "Binary":
+                    BinaryLauncher binaryLauncher = (BinaryLauncher)aLauncher;
+                    binaryLauncher = await Service.EditBinaryLauncher(binaryLauncher);
+                    Launcher = await Service.GenerateBinaryLauncher();
+                    break;
+                case "ShellCode":
+                    ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)aLauncher;
+                    shellcodeLauncher = await Service.EditShellCodeLauncher(shellcodeLauncher);
+                    Launcher = await Service.GenerateShellCodeLauncher();
+                    break;
+                case "Cscript":
+                    CscriptLauncher cscriptLauncher = (CscriptLauncher)aLauncher;
+                    cscriptLauncher = await Service.EditCscriptLauncher(cscriptLauncher);
+                    Launcher = await Service.GenerateCscriptLauncher();
+                    break;
+                case "InstallUtil":
+                    InstallUtilLauncher installUtilLauncher = (InstallUtilLauncher)aLauncher;
+                    installUtilLauncher = await Service.EditInstallUtilLauncher(installUtilLauncher);
+                    Launcher = await Service.GenerateInstallUtilLauncher();
+                    break;
+                case "MSBuild":
+                    MSBuildLauncher msBuildLauncher = (MSBuildLauncher)aLauncher;
+                    msBuildLauncher = await Service.EditMSBuildLauncher(msBuildLauncher);
+                    Launcher = await Service.GenerateMSBuildLauncher();
+                    break;
+                case "Mshta":
+                    MshtaLauncher mshtaLauncher = (MshtaLauncher)aLauncher;
+                    mshtaLauncher = await Service.EditMshtaLauncher(mshtaLauncher);
+                    Launcher = await Service.GenerateMshtaLauncher();
+                    break;
+                case "PowerShell":
+                    PowerShellLauncher powershellLauncher = (PowerShellLauncher)aLauncher;
+                    powershellLauncher = await Service.EditPowerShellLauncher(powershellLauncher);
+                    Launcher = await Service.GeneratePowerShellLauncher();
+                    break;
+                case "Regsvr32":
+                    Regsvr32Launcher regSvr32Launcher = (Regsvr32Launcher)aLauncher;
+                    regSvr32Launcher = await Service.EditRegsvr32Launcher(regSvr32Launcher);
+                    Launcher = await Service.GenerateRegsvr32Launcher();
+                    break;
+                case "Wmic":
+                    WmicLauncher wmicLauncher = (WmicLauncher)aLauncher;
+                    wmicLauncher = await Service.EditWmicLauncher(wmicLauncher);
+                    Launcher = await Service.GenerateWmicLauncher();
+                    break;
+                case "Wscript":
+                    WscriptLauncher wscriptLauncher = (WscriptLauncher)aLauncher;
+                    wscriptLauncher = await Service.EditWscriptLauncher(wscriptLauncher);
+                    Launcher = await Service.GenerateWscriptLauncher();
+                    break;
+            }
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+
+    private async Task OnHost(string Path)
+    {
+        try
+        {
+            HostedFile file = new HostedFile
+            {
+                ListenerId = Launcher.ListenerId,
+                Path = Path,
+                Content = GetContent()
+            };
+            switch (Launcher.Name)
+            {
+                case "Binary":
+                    BinaryLauncher binaryLauncher = (BinaryLauncher)Launcher;
+                    binaryLauncher = await Service.GenerateBinaryLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateBinaryHostedLauncher(file);
+                    break;
+                case "ShellCode":
+                    ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)Launcher;
+                    shellcodeLauncher = await Service.GenerateShellCodeLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateShellCodeHostedLauncher(file);
+                    break;
+                case "Cscript":
+                    CscriptLauncher cscriptLauncher = (CscriptLauncher)Launcher;
+                    cscriptLauncher = await Service.GenerateCscriptLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateCscriptHostedLauncher(file);
+                    break;
+                case "InstallUtil":
+                    InstallUtilLauncher installUtilLauncher = (InstallUtilLauncher)Launcher;
+                    installUtilLauncher = await Service.GenerateInstallUtilLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateInstallUtilHostedLauncher(file);
+                    break;
+                case "MSBuild":
+                    MSBuildLauncher msbuildLauncher = (MSBuildLauncher)Launcher;
+                    msbuildLauncher = await Service.GenerateMSBuildLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateMSBuildHostedLauncher(file);
+                    break;
+                case "Mshta":
+                    MshtaLauncher mshtaLauncher = (MshtaLauncher)Launcher;
+                    mshtaLauncher = await Service.GenerateMshtaLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateMshtaHostedLauncher(file);
+                    break;
+                case "PowerShell":
+                    PowerShellLauncher powerShellLauncher = (PowerShellLauncher)Launcher;
+                    powerShellLauncher = await Service.GeneratePowerShellLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GeneratePowerShellHostedLauncher(file);
+                    break;
+                case "Regsvr32":
+                    Regsvr32Launcher regsvr32Launcher = (Regsvr32Launcher)Launcher;
+                    regsvr32Launcher = await Service.GenerateRegsvr32Launcher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateRegsvr32HostedLauncher(file);
+                    break;
+                case "Wmic":
+                    WmicLauncher wmicLauncher = (WmicLauncher)Launcher;
+                    wmicLauncher = await Service.GenerateWmicLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateWmicHostedLauncher(file);
+                    break;
+                case "Wscript":
+                    WscriptLauncher wscriptLauncher = (WscriptLauncher)Launcher;
+                    wscriptLauncher = await Service.GenerateWscriptLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateWscriptHostedLauncher(file);
+                    break;
+            }
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+
+    private string GetContent()
+    {
+        string content = "";
+        if (Launcher.Name == "Binary" || Launcher.Name == "ShellCode")
+        {
+            content = Launcher.Base64ILByteString;
+        }
+        else if (Launcher.Name == "PowerShell")
+        {
+            string code = ((PowerShellLauncher)Launcher).PowerShellCode;
+            content = string.IsNullOrEmpty(code) ? "" : Convert.ToBase64String(Common.CovenantEncoding.GetBytes(code));
+        }
+        else if (Launcher.Name == "InstallUtil")
+        {
+            string code = ((DiskLauncher)Launcher).DiskCode;
+            content = code == null ? "" : code;
+        }
+        else if (new List<string> { "Cscript", "InstallUtil", "MSBuild", "Mshta", "Regsvr32", "Wmic", "Wscript" }.Contains(Launcher.Name))
+        {
+            string code = ((DiskLauncher)Launcher).DiskCode;
+            content = string.IsNullOrEmpty(code) ? "" : Convert.ToBase64String(Common.CovenantEncoding.GetBytes(code));
+        }
+        return content == null ? "" : content;
+    }
+}

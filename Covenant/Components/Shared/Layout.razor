@@ -1,0 +1,140 @@
+﻿@inherits LayoutComponentBase
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Components.Themes 
+@using Covenant.Components.Events
+@using Covenant.Components.CovenantUsers
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UserManager<CovenantUser> UserManager
+@inject ICovenantService ICovenantService
+
+<AuthorizeView>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+    <Authorized>
+        @if (UserManager.Users.Count() <= 1)
+        {
+            <RedirectToLogin />
+        }
+        else
+        {
+            <CascadingValue Value="Theme">
+                <nav class="navbar navbar-expand navbar-dark sticky-top border-bottom border-dark">
+                    <a class="navbar-brand ml-3 align-items-center" href="/">
+                        <img src="/images/covenant-white.png" alt="Covenant" height="28" width="101">
+                    </a>
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item text-nowrap">
+                            <a class="nav-link" href="/covenantuser/edit/@User.Id">Welcome, @User.UserName!</a>
+                        </li>
+                        <li class="nav-item text-nowrap">
+                            <a class="nav-link" href="/covenantuser/logout">Logout</a>
+                        </li>
+                    </ul>
+                </nav>
+                <EventNotifier />
+                <div id="covenant-container" class="container-fluid">
+                    <div class="d-flex flex-row">
+                        <nav class="col-sm-2 bg-light sidebar border-right border-dark">
+                            <div class="sidebar-sticky">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <NavLink href="/home" id="nav-dashboard" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-home"></span>
+                                            Dashboard
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/listener" id="nav-listeners" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-headphones"></span>
+                                            Listeners
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/launcher" id="nav-launchers" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-zap"></span>
+                                            Launchers
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/grunt" id="nav-grunts" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-terminal"></span>
+                                            Grunts
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/template" id="nav-templates" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-code"></span>
+                                            Templates
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/grunttask" id="nav-tasks" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-package"></span>
+                                            Tasks
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/grunttasking" id="nav-taskings" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-layers"></span>
+                                            Taskings
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/graph" id="nav-graph" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-share-2"></span>
+                                            Graph
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/data" id="nav-data" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-database"></span>
+                                            Data
+                                        </NavLink>
+                                    </li>
+                                    <li class="nav-item">
+                                        <NavLink href="/covenantuser" id="nav-users" class="nav-link" Match="NavLinkMatch.Prefix">
+                                            <span class="fe fe-users"></span>
+                                            Users
+                                        </NavLink>
+                                    </li>
+                                </ul>
+                            </div>
+                        </nav>
+
+                        <main role="main" class="col-sm-10 pt-3">
+                            @Body
+                        </main>
+                    </div>
+                    <footer>
+                        <p></p>
+                    </footer>
+                </div>
+                <DisplayTheme CovenantUser="User" />
+            </CascadingValue>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; }
+
+    private CovenantUser User { get; set; }
+    private Theme Theme { get; set; }
+    private IEnumerable<Theme> Themes { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.User = await this.UserManager.GetUserAsync((await AuthState).User);
+        this.Themes = await this.ICovenantService.GetThemes();
+        if (this.User != null)
+        {
+            this.Theme = await this.ICovenantService.GetTheme(this.User.ThemeId);
+        }
+    }
+}

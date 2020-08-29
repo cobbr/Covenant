@@ -1,0 +1,65 @@
+﻿@using Microsoft.JSInterop
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="ImplantTemplate" Items="ImplantTemplates.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="ImplantTemplate" TItem2="string" GetSortableProperty="(template) => template.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ImplantTemplate" TItem2="string" GetSortableProperty="(template) => template.Description">
+            <HeaderContent>Description</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ImplantTemplate" TItem2="ImplantLanguage" GetSortableProperty="(template) => template.Language">
+            <HeaderContent>Language</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ImplantTemplate" TItem2="CommunicationType" GetSortableProperty="(template) => template.CommType">
+            <HeaderContent>CommType</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ImplantTemplate" TItem2="ImplantDirection" GetSortableProperty="(template) => template.ImplantDirection">
+            <HeaderContent>ImplantDirection</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="template">
+        <tr>
+            <td>
+                <a href="/template/edit/@template.Id">
+                    @template.Name
+                </a>
+            </td>
+            <td>@template.Description</td>
+            <td>@template.Language</td>
+            <td>@template.CommType</td>
+            <td>@template.ImplantDirection</td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<ImplantTemplate> ImplantTemplates { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = false;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private bool IsRowDisplayed(ImplantTemplate template, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            template.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            template.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            template.Language.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            template.CommType.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            template.ImplantDirection.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

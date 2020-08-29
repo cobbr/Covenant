@@ -1,0 +1,39 @@
+﻿@page "/referencesourcelibrary/edit/{ReferenceSourceLibraryId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">ReferenceSourceLibrary: <span id="task-name" class="primary-color">@ReferenceSourceLibrary.Name</span></h1>
+</div>
+
+<ReferenceSourceLibraryForm ReferenceSourceLibrary="ReferenceSourceLibrary" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit" />
+
+@code {
+    [Parameter]
+    public int ReferenceSourceLibraryId { get; set; }
+
+    [Parameter]
+    public ReferenceSourceLibrary ReferenceSourceLibrary { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ReferenceSourceLibrary = this.ReferenceSourceLibrary ?? await Service.GetReferenceSourceLibrary(this.ReferenceSourceLibraryId);
+    }
+
+    public async Task OnEdit(ReferenceSourceLibrary library)
+    {
+        try
+        {
+            await Service.EditReferenceSourceLibrary(library);
+            NavigationManager.NavigateTo("/listener");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Edit), new { id = libraryModel.Id });
+        }
+    }
+}

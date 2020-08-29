@@ -1,0 +1,72 @@
+﻿@typeparam TItem
+@typeparam TItem2
+@implements IDisposable
+
+<th class="pl-1 pr-1" @attributes="InputAttributes" @onclick="OnSortHeader">
+    <div class="d-flex flex-nowrap">
+        @HeaderContent
+        <div class="ml-3 d-flex flex-nowrap" style="font-size: 16px;">
+            @if (this.Sorted && this.Ascending)
+            {
+                <span>&uarr;</span>
+                <span class="text-muted" style="opacity: 0.5;">&darr;</span>
+            }
+            else if (!this.Sorted && this.Ascending)
+            {
+                <span class="text-muted" style="opacity: 0.5;">&uarr;</span>
+                <span class="text-muted" style="opacity: 0.5;">&darr;</span>
+            }
+            else if (this.Sorted && !this.Ascending)
+            {
+                <span>&darr;</span>
+                <span class="text-muted" style="opacity: 0.5;">&uarr;</span>
+            }
+            else if (!this.Sorted && !this.Ascending)
+            {
+                <span class="text-muted" style="opacity: 0.5;">&darr;</span>
+                <span class="text-muted" style="opacity: 0.5;">&uarr;</span>
+            }
+        </div>
+    </div>
+</th>
+
+@code {
+    [CascadingParameter]
+    public CovenantTable<TItem> CovenantTable { get; set; }
+
+    [Parameter]
+    public Func<TItem, TItem2> GetSortableProperty { get; set; }
+
+    [Parameter]
+    public RenderFragment HeaderContent { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> InputAttributes { get; set; }
+
+    private bool Sorted { get; set; } = false;
+    private bool Ascending { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        this.CovenantTable.OnSortHeader += this.OnAnotherHeaderSorted;
+    }
+
+    public void Dispose()
+    {
+        this.CovenantTable.OnSortHeader -= this.OnAnotherHeaderSorted;
+    }
+
+    public void OnAnotherHeaderSorted(object sender, EventArgs e)
+    {
+        this.Sorted = false;
+        this.StateHasChanged();
+    }
+
+    private void OnSortHeader()
+    {
+        _ = this.CovenantTable.OnSort(GetSortableProperty, this.Ascending);
+        this.Ascending = !this.Ascending;
+        this.Sorted = true;
+        this.StateHasChanged();
+    }
+}

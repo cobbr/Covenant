@@ -24,16 +24,17 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the ReferenceSourceLibrary class.
         /// </summary>
-        public ReferenceSourceLibrary(int? id = default(int?), string name = default(string), string description = default(string), string location = default(string), IList<DotNetVersion?> supportedDotNetVersions = default(IList<DotNetVersion?>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>), IList<GruntTask> gruntTasks = default(IList<GruntTask>))
+        /// <param name="language">Possible values include: 'CSharp'</param>
+        public ReferenceSourceLibrary(int? id = default(int?), string name = default(string), string description = default(string), string location = default(string), ImplantLanguage? language = default(ImplantLanguage?), IList<DotNetVersion?> compatibleDotNetVersions = default(IList<DotNetVersion?>), IList<ReferenceAssembly> referenceAssemblies = default(IList<ReferenceAssembly>), IList<EmbeddedResource> embeddedResources = default(IList<EmbeddedResource>))
         {
             Id = id;
             Name = name;
             Description = description;
             Location = location;
-            SupportedDotNetVersions = supportedDotNetVersions;
+            Language = language;
+            CompatibleDotNetVersions = compatibleDotNetVersions;
             ReferenceAssemblies = referenceAssemblies;
             EmbeddedResources = embeddedResources;
-            GruntTasks = gruntTasks;
             CustomInit();
         }
 
@@ -63,9 +64,15 @@ namespace Covenant.API.Models
         public string Location { get; set; }
 
         /// <summary>
+        /// Gets or sets possible values include: 'CSharp'
         /// </summary>
-        [JsonProperty(PropertyName = "supportedDotNetVersions")]
-        public IList<DotNetVersion?> SupportedDotNetVersions { get; set; }
+        [JsonProperty(PropertyName = "language")]
+        public ImplantLanguage? Language { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "compatibleDotNetVersions")]
+        public IList<DotNetVersion?> CompatibleDotNetVersions { get; set; }
 
         /// <summary>
         /// </summary>
@@ -76,11 +83,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "embeddedResources")]
         public IList<EmbeddedResource> EmbeddedResources { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "gruntTasks")]
-        public IList<GruntTask> GruntTasks { get; private set; }
 
     }
 }

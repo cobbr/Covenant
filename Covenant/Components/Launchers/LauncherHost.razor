@@ -1,0 +1,28 @@
+﻿@using Covenant.Models.Launchers
+
+<form>
+    <div asp-validation-summary="All"></div>
+    <div class="mt-4">
+        <div class="form-group">
+            <div class="input-group col-md-6">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">Url</div>
+                </div>
+                <input id="Path" name="Path" @bind="Path" class="form-control">
+                <div class="input-group-append" role="group">
+                    <button type="button" @onclick="(e => OnHost.InvokeAsync(Path))"  class="btn btn-primary" id="host">Host</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnHost { get; set; }
+
+    private string Path { get; set; } = "/path/to/file";
+}

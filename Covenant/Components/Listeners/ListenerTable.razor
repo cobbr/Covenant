@@ -1,0 +1,83 @@
+﻿@using System.Collections.Generic
+@using Microsoft.JSInterop
+@using Covenant.Models.Listeners
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="Listener" Items="Listeners.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="Listener" TItem2="string" GetSortableProperty="(listener) => listener.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Listener" TItem2="ListenerType" GetSortableProperty="(listener) => listener.ListenerType">
+            <HeaderContent>ListenerType</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Listener" TItem2="ListenerStatus" GetSortableProperty="(listener) => listener.Status">
+            <HeaderContent>Status</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Listener" TItem2="DateTime" GetSortableProperty="(listener) => listener.StartTime">
+            <HeaderContent>StartTime</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Listener" TItem2="string" GetSortableProperty="(listener) => ToString(listener.ConnectAddresses)">
+            <HeaderContent>ConnectAddresses</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Listener" TItem2="int" GetSortableProperty="(listener) => listener.ConnectPort">
+            <HeaderContent>ConnectPort</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="listener">
+        <tr>
+            <td>
+                <a href="/listener/edit/@listener.Id">@listener.Name</a>
+            </td>
+            <td>@listener.ListenerType.Name</td>
+            <td>@listener.Status</td>
+            <td>@listener.StartTime</td>
+            <td>@ToString(listener.ConnectAddresses)</td>
+            <td>@listener.ConnectPort</td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public List<Listener> Listeners { get; set; }
+
+    [Parameter]
+    public EventCallback<List<Listener>> ListenersChanged { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private string ToString(List<string> list)
+    {
+        return string.Join(",", list);
+    }
+
+    private void OnListenersChanged(List<Listener> Listeners)
+    {
+        this.Listeners = Listeners;
+        this.ListenersChanged.InvokeAsync(Listeners);
+    }
+
+    private bool IsRowDisplayed(Listener listener, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            listener.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            listener.ListenerType.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            listener.Status.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            listener.StartTime.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            ToString(listener.ConnectAddresses).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            listener.ConnectPort.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

@@ -1,0 +1,115 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+
+<form>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="GruntTasking.Name" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="Grunt.Name">Grunt</label>
+            <a id="Grunt.Name" name="Grunt.Name" href="/grunt/interact/@GruntTasking.Grunt.Id" class="btn btn-secondary text-left w-100">
+                @GruntTasking.Grunt.Name
+            </a>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="GruntTask.Name">Task</label>
+            <a id="GruntTask.Name" name="GruntTask.Name" href="/grunttask/edit/@GruntTasking.GruntTask.Id" class="btn btn-secondary text-left w-100">
+                @GruntTasking.GruntTask.Name
+            </a>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Status">Status</label><br />
+            <select id="Status" name="Status" @bind="GruntTasking.Status" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto" disabled>
+                @foreach (var n in Enum.GetNames(typeof(GruntTaskingStatus)))
+                {
+                    if (Enum.TryParse<GruntTaskingStatus>(n, out GruntTaskingStatus status) && this.GruntTasking.Status == status)
+                    {
+                        <option selected value="@(((Enum)typeof(GruntTaskingStatus).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(GruntTaskingStatus).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="GruntCommand.CommandTime">CommandTime</label>
+            <input id="GruntCommand.CommandTime" name="GruntCommand.CommandTime" @bind="GruntTasking.GruntCommand.CommandTime" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="Type">Type</label><br />
+            <select id="Type" name="Type" @bind="GruntTasking.Type" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto" disabled>
+                @foreach (var n in Enum.GetNames(typeof(GruntTaskingType)))
+                {
+                    if (Enum.TryParse<GruntTaskingType>(n, out GruntTaskingType type) && this.GruntTasking.Type == type)
+                    {
+                        <option selected value="@(((Enum)typeof(GruntTaskingType).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(GruntTaskingType).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="GruntCommand.User.UserName">UserName</label>
+            <input id="GruntCommand.User.UserName" name="GruntCommand.User.UserName" @bind="GruntTasking.GruntCommand.User.UserName" class="form-control" readonly>
+        </div>
+        <div class="form-group col-md-8">
+            <label for="GruntCommand.Command">Command</label>
+            <textarea id="GruntCommand.Command" name="GruntCommand.Command" @bind="GruntTasking.GruntCommand.Command" rows="1" class="form-control" readonly></textarea>
+        </div>
+    </div>
+    @for (int i = 0; i < Math.Min(GruntTasking.Parameters.Count, GruntTasking.GruntTask.Options.Count); i++)
+    {
+        <div class="form-group">
+            <label for="Parameters[@i]">@GruntTasking.GruntTask.Options[i].Name</label>
+            <input id="Parameters[@i]" name="Parameters[@i]" @bind="GruntTasking.Parameters[i]" class="form-control" readonly>
+        </div>
+    }
+    <div class="form-group">
+        <label for="GruntCommand.CommandOutput.Output">Output</label>
+        @if (this.GruntTasking.GruntTask.Name == "ScreenShot")
+        {
+            <img style="max-width:100%" src="data:image/png;base64, @GruntTasking.GruntCommand.CommandOutput.Output" />
+        }
+        else
+        {
+            <textarea asp-for="GruntCommand.CommandOutput.Output" @bind="GruntTasking.GruntCommand.CommandOutput.Output" rows="20" class="form-control" readonly></textarea>
+        }
+    </div>
+</form>
+
+@code {
+    [Parameter]
+    public GruntTasking GruntTasking { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTasking.Grunt = this.GruntTasking.Grunt ?? await Service.GetGrunt(this.GruntTasking.GruntId);
+        this.GruntTasking.GruntTask = this.GruntTasking.GruntTask ?? await Service.GetGruntTask(this.GruntTasking.GruntTaskId);
+        this.GruntTasking.GruntCommand = this.GruntTasking.GruntCommand ?? await Service.GetGruntCommand(this.GruntTasking.GruntCommandId);
+        this.GruntTasking.GruntCommand.CommandOutput = this.GruntTasking.GruntCommand.CommandOutput ?? await Service.GetCommandOutput(this.GruntTasking.GruntCommand.CommandOutputId);
+        this.GruntTasking.GruntCommand.User = this.GruntTasking.GruntCommand.User ?? await Service.GetUser(this.GruntTasking.GruntCommand.UserId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Type.selectpicker");
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Status.selectpicker");
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Type.selectpicker", ((int)Enum.Parse(typeof(GruntTaskingType), this.GruntTasking.Type.ToString())).ToString());
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Status.selectpicker", ((int)Enum.Parse(typeof(GruntTaskingStatus), this.GruntTasking.Status.ToString())).ToString());
+    }
+}

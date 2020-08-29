@@ -1,0 +1,24 @@
+﻿@page "/launcher"
+@page "/launcher/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Launchers
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Launchers</h1>
+</div>
+
+<LauncherTable Launchers="Launchers" />
+
+@code {
+    [Parameter]
+    public IEnumerable<Launcher> Launchers { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Launchers = this.Launchers ?? await Service.GetLaunchers();
+        this.Launchers.OrderBy(L => L.Name);
+    }
+}

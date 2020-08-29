@@ -1,0 +1,120 @@
+﻿@page "/grunt"
+@page "/grunt/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Grunts</h1>
+</div>
+
+<GruntTable @bind-Grunts="Grunts" class="p-2" OnSelectTerminal="OnSelectTerminal">
+    <ButtonTray>
+        @if (this.SomeHidden && this.Hidden)
+        {
+            <button type="button" class="btn btn-info" @onclick="OnToggleHide">
+                <span class="fe fe-eye"></span>
+            </button>
+        }
+        else if (this.SomeHidden)
+        {
+            <button type="button" class="btn btn-info" @onclick="OnToggleHide">
+                <span class="fe fe-eye-off"></span>
+            </button>
+        }
+    </ButtonTray>
+</GruntTable>
+
+<TabbedTerminals @ref="TabbedTerminals" @bind-TerminalGrunts="TerminalGrunts" OnRemoveTerminal="OnRemoveTerminal"/>
+
+@code {
+        [Parameter]
+        public List<Grunt> Grunts { get; set; }
+    private List<Grunt> UnfilteredGrunts { get; set; }
+
+    private TabbedTerminals TabbedTerminals { get; set; }
+    private List<Grunt> TerminalGrunts { get; set; } = new List<Grunt>();
+
+    private bool SomeHidden { get; set; } = false;
+    private bool Hidden { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.UnfilteredGrunts = this.Grunts ?? (await Service.GetGrunts())
+            .OrderByDescending(G => G.LastCheckIn)
+            .ToList();
+        this.FilterGrunts();
+        Service.DisposeContext();
+        this.INotificationService.OnCreateGrunt += OnCreateGrunt;
+        this.INotificationService.OnEditGrunt += OnEditGrunt;
+    }
+
+    private void FilterGrunts()
+    {
+        this.SomeHidden = this.UnfilteredGrunts.Any(G => G.Status == GruntStatus.Hidden);
+        this.Grunts = this.UnfilteredGrunts
+            .Where(G => (!this.Hidden || G.Status != GruntStatus.Hidden) && G.Status != GruntStatus.Uninitialized)
+            .ToList();
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateGrunt -= OnCreateGrunt;
+        this.INotificationService.OnEditGrunt -= OnEditGrunt;
+    }
+
+    private void OnCreateGrunt(object sender, Grunt grunt)
+    {
+        this.UnfilteredGrunts.Add(grunt);
+        if ((!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
+        {
+            this.FilterGrunts();
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnEditGrunt(object sender, Grunt grunt)
+    {
+        bool inDisplayedGrunts = this.Grunts.Any(G => G.Id == grunt.Id);
+        if (inDisplayedGrunts)
+        {
+            this.Grunts[this.Grunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+        if (this.UnfilteredGrunts.Any(G => G.Id == grunt.Id))
+        {
+            this.UnfilteredGrunts[this.UnfilteredGrunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
+            if (!inDisplayedGrunts && (!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
+            {
+                this.FilterGrunts();
+                this.InvokeAsync(() => this.StateHasChanged());
+            }
+        }
+    }
+
+    public void OnSelectTerminal(Grunt grunt)
+    {
+        this.TabbedTerminals.OnSelectTerminal(grunt);
+    }
+
+    public void OnRemoveTerminal(int number)
+    {
+        this.TerminalGrunts.RemoveAt(number);
+    }
+
+    private void OnToggleHide()
+    {
+        this.Hidden = !this.Hidden;
+        this.FilterGrunts();
+        this.StateHasChanged();
+    }
+}

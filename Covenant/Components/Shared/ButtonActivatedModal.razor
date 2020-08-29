@@ -1,0 +1,54 @@
+﻿@using System
+@using Microsoft.JSInterop
+@using Covenant.Core
+@inject IJSRuntime IJSRuntime
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#@GuidId" @attributes="InputAttributes">
+    @ButtonContent
+</button>
+
+<div class="modal fade" id="@GuidId" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@GuidId-title">@TitleContent</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+            </div>
+            <div class="modal-body">
+                @ModalBody
+            </div>
+            <div class="modal-footer">
+                @ModalFooter
+                <button type="button" class="btn btn-danger close" data-dismiss="modal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ButtonContent { get; set; }
+
+    [Parameter]
+    public RenderFragment TitleContent { get; set; }
+
+    [Parameter]
+    public RenderFragment ModalBody { get; set; }
+
+    [Parameter]
+    public RenderFragment ModalFooter { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> InputAttributes { get; set; }
+
+    private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
+
+    public async Task DismissModal()
+    {
+        await IJSRuntime.InvokeAsync<string>("ModalCommand", GuidId, "hide");
+    }
+}

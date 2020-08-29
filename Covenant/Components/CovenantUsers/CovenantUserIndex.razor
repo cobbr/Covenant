@@ -1,0 +1,80 @@
+﻿@page "/covenantuser"
+@page "/covenantuser/index"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Components.Themes
+@inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Users</h1>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="user-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" id="users-tab" data-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="false">
+            <span class="fe fe-users"></span>
+            Users
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="themes-tab" data-toggle="tab" href="#themes" role="tab" aria-controls="themes" aria-selected="false">
+            <span class="fe fe-aperture"></span>
+            Themes
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content" id="users-tab-content">
+    <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="users-tab">
+        <CovenantUserTable CovenantUsers="CovenantUsers" />
+        @if (IsAdmin())
+        {
+            <a href="/covenantuser/create" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </a>
+        }
+    </div>
+    <div class="tab-pane fade" id="themes" role="tabpanel" aria-labelledby="themes-tab">
+        <ThemeTable Themes="Themes" />
+        <a href="/theme/create" class="btn btn-primary">
+            <span class="fe fe-plus"></span>
+            Create
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<CovenantUser> CovenantUsers { get; set; }
+
+    [Parameter]
+    public IEnumerable<Theme> Themes { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CovenantUsers = this.CovenantUsers ?? await Service.GetUsers();
+        this.Themes = this.Themes ?? await Service.GetThemes();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "#users-tab");
+        }
+    }
+
+    private bool IsAdmin()
+    {
+        AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
+        return state.User.IsInRole("Administrator");
+    }
+}

@@ -1,0 +1,854 @@
+- Name: Rubeus
+  Aliases: []
+  Description: Use a rubeus command.
+  Author: 
+      Name: Will Schroeder
+      Handle: harmj0y
+      Link: https://twitter.com/harmj0y
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    
+    using Rubeus.Domain;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command)
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = Command.Split(' ');
+                try
+                {
+                    Info.ShowLogo();
+    
+                    // try to parse the command line arguments, show usage on failure and then bail
+                    var parsed = ArgumentParser.Parse(args);
+                    if (parsed.ParsedOk == false)
+                    {
+                        Info.ShowUsage();
+                    }
+                    else
+                    {
+                        // Try to execute the command using the arguments passed in
+    
+                        var commandName = args.Length != 0 ? args[0] : "";
+    
+                        var commandFound = new CommandCollection().ExecuteCommand(commandName, parsed.Arguments);
+    
+                        // show the usage if no commands were found for the command name
+                        if (commandFound == false)
+                            Info.ShowUsage();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("\r\n[!] Unhandled Rubeus exception:\r\n");
+                    Console.WriteLine(e);
+                }
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: triage
+    DefaultValue: ''
+    Description: Rubeus command to execute.
+    SuggestedValues:
+    - triage
+    - dump
+    - asktgt
+    - asktgs
+    - renew
+    - s4u
+    - ptt
+    - purge
+    - describe
+    - klist
+    - tgtdeleg
+    - monitor
+    - harvest
+    - kerberoast
+    - asreproast
+    - createnetonly
+    - changepw
+    - hash
+    - tgssub
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: Rubeus
+    Description: Rubeus is a C# toolset for raw Kerberos interaction and abuses.
+    Location: Rubeus\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.AccountManagement.dll
+      Location: net40\System.DirectoryServices.AccountManagement.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.AccountManagement.dll
+      Location: net35\System.DirectoryServices.AccountManagement.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: SharpDPAPI
+  Aliases: []
+  Description: Use a SharpDPAPI command.
+  Author: 
+      Name: Will Schroeder
+      Handle: harmj0y
+      Link: https://twitter.com/harmj0y
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    
+    using SharpDPAPI.Domain;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command = "")
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = Command.Split(' ');
+                Info.Logo();
+    
+                // try to parse the command line arguments, show usage on failure and then bail
+                var parsed = ArgumentParser.Parse(args);
+                if (parsed.ParsedOk == false)
+                    Info.ShowUsage();
+                else
+                {
+                    // Try to execute the command using the arguments passed in
+    
+                    var commandName = args.Length != 0 ? args[0] : "";
+    
+                    var commandFound = new CommandCollection().ExecuteCommand(commandName, parsed.Arguments);
+    
+                    // show the usage if no commands were found for the command name
+                    if (commandFound == false)
+                        Info.ShowUsage();
+                }
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: triage
+    DefaultValue: ''
+    Description: SharpDPAPI command to execute.
+    SuggestedValues:
+    - triage
+    - machinetriage
+    - backupkey
+    - masterkeys
+    - machinemasterkeys
+    - credentials
+    - machinecredentials
+    - vaults
+    - machinevaults
+    - rdg
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpDPAPI
+    Description: SharpDPAPI is a C# port of some Mimikatz DPAPI functionality.
+    Location: SharpDPAPI\SharpDPAPI\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Security.dll
+      Location: net40\System.Security.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Security.dll
+      Location: net35\System.Security.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: SharpUp
+  Aliases: []
+  Description: Use a SharpUp command.
+  Author: 
+      Name: Will Schroeder
+      Handle: harmj0y
+      Link: https://twitter.com/harmj0y
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Linq;
+    
+    using SharpUp;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command = "")
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = Command.Split(' ');
+                bool auditMode = args.Contains("audit", StringComparer.CurrentCultureIgnoreCase);
+    
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+    
+                Console.WriteLine("\r\n=== SharpUp: Running Privilege Escalation Checks ===");
+    
+                Program.PrivescChecks(auditMode);
+    
+                watch.Stop();
+                Console.WriteLine(String.Format("\r\n\r\n[*] Completed Privesc Checks in {0} seconds\r\n", watch.ElapsedMilliseconds / 1000));
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: SharpUp command to execute.
+    SuggestedValues:
+    - audit
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpUp
+    Description: SharpUp is a C# port of various PowerUp functionality.
+    Location: SharpUp\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: SharpDump
+  Aliases: []
+  Description: Use a SharpDump command.
+  Author: 
+      Name: Will Schroeder
+      Handle: harmj0y
+      Link: https://twitter.com/harmj0y
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    
+    using SharpDump;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string ProcessID = "")
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = ProcessID.Split(' ');
+    
+                string systemRoot = Environment.GetEnvironmentVariable("SystemRoot");
+                string dumpDir = String.Format("{0}\\Temp\\", systemRoot);
+                if (!Directory.Exists(dumpDir))
+                {
+                    Console.WriteLine(String.Format("\n[X] Dump directory \"{0}\" doesn't exist!\n", dumpDir));
+                }
+                else
+                {
+                    if (ProcessID.Length == 0)
+                    {
+                        // dump LSASS by default
+                        Program.Minidump();
+                    }
+                    else if (args.Length == 1)
+                    {
+                        int retNum;
+                        if (int.TryParse(Convert.ToString(args[0]), System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out retNum))
+                        {
+                            // arg is a number, so we're specifying a PID
+                            Program.Minidump(retNum);
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nPlease use \"SharpDump.exe [pid]\" format\n");
+                        }
+                    }
+                    else if (args.Length == 2)
+                    {
+                        Console.WriteLine("\nPlease use \"SharpDump.exe [pid]\" format\n");
+                    }
+                }
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ProcessID
+    Value: ''
+    DefaultValue: ''
+    Description: ProcessID of the process to createa dump file of.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpDump
+    Description: SharpDump is a C# port of PowerSploit's Out-Minidump.ps1 functionality.
+    Location: SharpDump\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Seatbelt
+  Aliases: []
+  Description: Use a Seatbelt command.
+  Author: 
+      Name: Will Schroeder
+      Handle: harmj0y
+      Link: https://twitter.com/harmj0y
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Reflection;
+    
+    using Seatbelt;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command = "")
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = Command.Split(' ');
+                typeof(Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: Seatbelt command to execute.
+    SuggestedValues:
+    - -group=all
+    - -group=user
+    - -group=system
+    - -group=slack
+    - -group=chrome
+    - -group=remote
+    - -group=misc
+    - AMSIProviders
+    - AntiVirus
+    - AppLocker
+    - ARPTable
+    - AuditPolicies
+    - AuditPolicyRegistry
+    - AutoRuns
+    - ChromeBookmarks
+    - ChromeHistory
+    - ChromePresence
+    - CloudCredentials
+    - CredEnum
+    - CredGuard
+    - dir
+    - DNSCache
+    - DotNet
+    - DpapiMasterKeys
+    - EnvironmentPath
+    - EnvironmentVariables
+    - ExplicitLogonEvents
+    - ExplorerMRUs
+    - ExplorerRunCommands
+    - FileInfo
+    - FirefoxHistory
+    - FirefoxPresence
+    - IdleTime
+    - IEFavorites
+    - IETabs
+    - IEUrls
+    - InstalledProducts
+    - InterestingFiles
+    - InterestingProcesses
+    - InternetSettings
+    - LAPS
+    - LastShutdown
+    - LocalGPOs
+    - LocalGroups
+    - LocalUsers
+    - LogonEvents
+    - LogonSessions
+    - LSASettings
+    - MappedDrives
+    - NamedPipes
+    - NetworkProfiles
+    - NetworkShares
+    - NTLMSettings
+    - OfficeMRUs
+    - OSInfo
+    - OutlookDownloads
+    - PoweredOnEvents
+    - PowerShell
+    - PowerShellEvents
+    - Printers
+    - ProcessCreationEvents
+    - Processes
+    - ProcessOwners
+    - PSSessionSettings
+    - PuttyHostKeys
+    - PuttySessions
+    - RDCManFiles
+    - RDPSavedConnections
+    - RDPSessions
+    - RecycleBin
+    - reg
+    - RPCMappedEndpoints
+    - SCCM
+    - ScheduledTasks
+    - SearchIndex
+    - SecurityPackages
+    - Services
+    - SlackDownloads
+    - SlackPresence
+    - SlackWorkspaces
+    - Sysmon
+    - SysmonEvents
+    - TcpConnections
+    - TokenGroups
+    - TokenPrivileges
+    - UAC
+    - UdpConnections
+    - UserRightAssignments
+    - WindowsAutoLogon
+    - WindowsCredentialFiles
+    - WindowsDefender
+    - WindowsEventForwarding
+    - WindowsFirewall
+    - WindowsVault
+    - WMIEventConsumer
+    - WMIEventFilter
+    - WMIFilterBinding
+    - WSUS
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: Seatbelt
+    Description: Seatbelt is a C# project that performs a number of security oriented host-survey "safety checks" relevant from both offensive and defensive security perspectives.
+    Location: Seatbelt\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Web.Extensions.dll
+      Location: net40\System.Web.Extensions.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Web.Extensions.dll
+      Location: net35\System.Web.Extensions.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    - Name: System.Data.dll
+      Location: net35\System.Data.dll
+      DotNetVersion: Net35
+    - Name: System.Data.dll
+      Location: net40\System.Data.dll
+      DotNetVersion: Net40
+    - Name: System.Data.DataSetExtensions.dll
+      Location: net35\System.Data.DataSetExtensions.dll
+      DotNetVersion: Net35
+    - Name: System.Data.DataSetExtensions.dll
+      Location: net40\System.Data.DataSetExtensions.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: SharpWMI
+  Aliases: []
+  Description: Use a SharpWMI command.
+  Author: 
+      Name: Will Schroeder
+      Handle: harmj0y
+      Link: https://twitter.com/harmj0y
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Reflection;
+    
+    using SharpWMI;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command = "")
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = Command.Split(' ');
+                typeof(Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: SharpWMI command to execute.
+    SuggestedValues:
+    - action=query
+    - action=create
+    - action=executevbs
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpWMI
+    Description: SharpWMI is a C# implementation of various WMI functionality.
+    Location: SharpWMI\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

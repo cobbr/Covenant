@@ -1,21 +1,32 @@
 [submodule "Covenant/Data/ReferenceSourceLibraries/Rubeus"]
 	path = Covenant/Data/ReferenceSourceLibraries/Rubeus
 	url = https://github.com/GhostPack/Rubeus
+	ignore = dirty
 [submodule "Covenant/Data/ReferenceSourceLibraries/SharpSploit"]
 	path = Covenant/Data/ReferenceSourceLibraries/SharpSploit
 	url = https://github.com/cobbr/SharpSploit
+	ignore = dirty
 [submodule "Covenant/Data/ReferenceSourceLibraries/SharpDPAPI"]
 	path = Covenant/Data/ReferenceSourceLibraries/SharpDPAPI
 	url = https://github.com/GhostPack/SharpDPAPI
+	ignore = dirty
 [submodule "Covenant/Data/ReferenceSourceLibraries/SharpUp"]
 	path = Covenant/Data/ReferenceSourceLibraries/SharpUp
 	url = https://github.com/GhostPack/SharpUp
+	ignore = dirty
 [submodule "Covenant/Data/ReferenceSourceLibraries/Seatbelt"]
 	path = Covenant/Data/ReferenceSourceLibraries/Seatbelt
 	url = https://github.com/GhostPack/Seatbelt
+	ignore = dirty
 [submodule "Covenant/Data/ReferenceSourceLibraries/SharpDump"]
 	path = Covenant/Data/ReferenceSourceLibraries/SharpDump
 	url = https://github.com/GhostPack/SharpDump
+	ignore = dirty
 [submodule "Covenant/Data/ReferenceSourceLibraries/SharpWMI"]
 	path = Covenant/Data/ReferenceSourceLibraries/SharpWMI
 	url = https://github.com/GhostPack/SharpWMI
+	ignore = dirty
+[submodule "Covenant/Data/ReferenceSourceLibraries/SharpSC"]
+	path = Covenant/Data/ReferenceSourceLibraries/SharpSC
+	url = https://github.com/djhohnstein/SharpSC
+        ignore = dirty

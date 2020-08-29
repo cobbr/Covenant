@@ -88,12 +88,10 @@ public class BridgeMessenger : IMessenger
 
         public static BridgeProfile Create(string ProfileFilePath)
         {
-            using (TextReader reader = File.OpenText(ProfileFilePath))
-            {
-                var deserializer = new DeserializerBuilder().Build();
-                BridgeProfileYaml yaml = deserializer.Deserialize<BridgeProfileYaml>(reader);
-                return CreateFromBridgeProfileYaml(yaml);
-            }
+            using TextReader reader = File.OpenText(ProfileFilePath);
+            IDeserializer deserializer = new DeserializerBuilder().Build();
+            BridgeProfileYaml yaml = deserializer.Deserialize<BridgeProfileYaml>(reader);
+            return CreateFromBridgeProfileYaml(yaml);
         }
 
         private class BridgeProfileYaml

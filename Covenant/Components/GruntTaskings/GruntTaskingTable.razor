@@ -1,0 +1,103 @@
+﻿@using System.Collections.Generic
+@using Microsoft.JSInterop
+@using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="GruntTasking" Items="GruntTaskings" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="string" GetSortableProperty="(tasking) => tasking.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="string" GetSortableProperty="(tasking) => tasking.Grunt.Name">
+            <HeaderContent>Grunt</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="string" GetSortableProperty="(tasking) => tasking.GruntTask.Name">
+            <HeaderContent>Task</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="GruntTaskingStatus" GetSortableProperty="(tasking) => tasking.Status">
+            <HeaderContent>Status</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="string" GetSortableProperty="(tasking) => tasking.GruntCommand.User.UserName">
+            <HeaderContent>UserName</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="string" GetSortableProperty="(tasking) => tasking.GruntCommand.Command">
+            <HeaderContent>Command</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="DateTime" GetSortableProperty="(tasking) => tasking.GruntCommand.CommandTime">
+            <HeaderContent>CommandTime</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTasking" TItem2="DateTime" GetSortableProperty="(tasking) => tasking.CompletionTime">
+            <HeaderContent>CompletionTime</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="tasking">
+        <tr>
+            <td>
+                <a href="/grunttasking/edit/@tasking.Id">
+                    @tasking.Name
+                </a>
+            </td>
+            <td>
+                <a href="/grunt/interact/@tasking.GruntId">
+                    @tasking.Grunt.Name
+                </a>
+            </td>
+            <td>
+                <a href="/grunttask/edit/@tasking.GruntTaskId">
+                    @tasking.GruntTask.Name
+                </a>
+            </td>
+            <td>@tasking.Status</td>
+            <td>
+                <a href="/covenantuser/edit/@tasking.GruntCommand.User.Id">
+                    @tasking.GruntCommand.User.UserName
+                </a>
+            </td>
+            <td>@tasking.GruntCommand.Command</td>
+            <td>@tasking.GruntCommand.CommandTime</td>
+            <td>@tasking.CompletionTime</td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public List<GruntTasking> GruntTaskings { get; set; }
+
+    [Parameter]
+    public EventCallback<List<GruntTasking>> GruntTaskingsChanged { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = true;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 50;
+
+    private void OnGruntTaskingsChanged(List<GruntTasking> GruntTaskings)
+    {
+        this.GruntTaskings = GruntTaskings;
+        this.GruntTaskingsChanged.InvokeAsync(GruntTaskings);
+    }
+
+    private bool IsRowDisplayed(GruntTasking tasking, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            tasking.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.Grunt.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.GruntTask.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.Status.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.GruntCommand.User.UserName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.GruntCommand.Command.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.GruntCommand.CommandTime.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            tasking.CompletionTime.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            (tasking.GruntCommand.CommandOutput != null && tasking.GruntCommand.CommandOutput.Output.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase));
+    }
+}

@@ -1,0 +1,1581 @@
+- Name: ListDirectory
+  Aliases:
+  - ls
+  Description: Get a listing of the current directory.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Collections;
+    using System.Collections.Generic;
+    
+    public static class Task
+    {
+        public static string Execute(string Path = "")
+        {
+            try
+            {
+                return string.IsNullOrEmpty(Path.Trim()) ? Host.GetDirectoryListing().ToString() : Host.GetDirectoryListing(Path.Trim()).ToString();
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+    
+    public class Host
+    {
+        /// <summary>
+        /// Gets the full path of the current working directory.
+        /// </summary>
+        /// <returns>Current working directory.</returns>
+        public static string GetCurrentDirectory()
+        {
+            return Directory.GetCurrentDirectory();
+        }
+    
+        /// <summary>
+        /// Gets a directory listing of the current working directory.
+        /// </summary>
+        /// <returns>List of FileSystemEntryResults.</returns>
+        public static SharpSploitResultList<FileSystemEntryResult> GetDirectoryListing()
+        {
+            return GetDirectoryListing(GetCurrentDirectory());
+        }
+    
+        /// <summary>
+        /// Gets a directory listing of a directory.
+        /// </summary>
+        /// <param name="Path">The path of the directory to get a listing of.</param>
+        /// <returns>List of FileSystemEntryResults.</returns>
+        public static SharpSploitResultList<FileSystemEntryResult> GetDirectoryListing(string Path)
+        {
+            SharpSploitResultList<FileSystemEntryResult> results = new SharpSploitResultList<FileSystemEntryResult>();
+            foreach (string dir in Directory.GetDirectories(Path))
+            {
+                results.Add(new FileSystemEntryResult(dir));
+            }
+            foreach (string file in Directory.GetFiles(Path))
+            {
+                results.Add(new FileSystemEntryResult(file));
+            }
+            return results;
+        }
+    }
+    
+    /// <summary>
+    /// FileSystemEntryResult represents a file on disk, used with the GetDirectoryListing() function.
+    /// </summary>
+    public sealed class FileSystemEntryResult : SharpSploitResult
+    {
+        public string Name { get; } = "";
+        protected internal override IList<SharpSploitResultProperty> ResultProperties
+        {
+            get
+            {
+                return new List<SharpSploitResultProperty>
+                {
+                    new SharpSploitResultProperty
+                    {
+                        Name = "Name",
+                        Value = this.Name
+                    }
+                };
+            }
+        }
+    
+        public FileSystemEntryResult(string Name = "")
+        {
+            this.Name = Name;
+        }
+    }
+    
+    public sealed class GenericObjectResult : SharpSploitResult
+    {
+        public object Result { get; }
+        protected internal override IList<SharpSploitResultProperty> ResultProperties
+        {
+            get
+            {
+                return new List<SharpSploitResultProperty>
+                    {
+                        new SharpSploitResultProperty
+                        {
+                            Name = this.Result.GetType().Name,
+                            Value = this.Result
+                        }
+                    };
+            }
+        }
+    
+        public GenericObjectResult(object Result)
+        {
+            this.Result = Result;
+        }
+    }
+    
+    /// <summary>
+    /// SharpSploitResultList extends the IList interface for SharpSploitResults to easily
+    /// format a list of results from various SharpSploit functions.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class SharpSploitResultList<T> : IList<T> where T : SharpSploitResult
+    {
+        private List<T> Results { get; } = new List<T>();
+    
+        public int Count => Results.Count;
+        public bool IsReadOnly => ((IList<T>)Results).IsReadOnly;
+    
+    
+        private const int PROPERTY_SPACE = 3;
+    
+        /// <summary>
+        /// Formats a SharpSploitResultList to a string similar to PowerShell's Format-List function.
+        /// </summary>
+        /// <returns>string</returns>
+        public string FormatList()
+        {
+            return this.ToString();
+        }
+    
+        private string FormatTable()
+        {
+            // TODO
+            return "";
+        }
+        
+        /// <summary>
+        /// Formats a SharpSploitResultList as a string. Overrides ToString() for convenience.
+        /// </summary>
+        /// <returns>string</returns>
+        public override string ToString()
+        {
+            if (this.Results.Count > 0)
+            {
+                StringBuilder builder1 = new StringBuilder();
+                StringBuilder builder2 = new StringBuilder();
+                for (int i = 0; i < this.Results[0].ResultProperties.Count; i++)
+                {
+                    builder1.Append(this.Results[0].ResultProperties[i].Name);
+                    builder2.Append(new String('-', this.Results[0].ResultProperties[i].Name.Length));
+                    if (i != this.Results[0].ResultProperties.Count-1)
+                    {
+                        builder1.Append(new String(' ', PROPERTY_SPACE));
+                        builder2.Append(new String(' ', PROPERTY_SPACE));
+                    }
+                }
+                builder1.AppendLine();
+                builder1.AppendLine(builder2.ToString());
+                foreach (SharpSploitResult result in this.Results)
+                {
+                    for (int i = 0; i < result.ResultProperties.Count; i++)
+                    {
+                        SharpSploitResultProperty property = result.ResultProperties[i];
+                        string ValueString = property.Value.ToString();
+                        builder1.Append(ValueString);
+                        if (i != result.ResultProperties.Count-1)
+                        {
+                            builder1.Append(new String(' ', Math.Max(1, property.Name.Length + PROPERTY_SPACE - ValueString.Length)));
+                        }
+                    }
+                    builder1.AppendLine();
+                }
+                return builder1.ToString();
+            }
+            return "";
+        }
+    
+        public T this[int index] { get => Results[index]; set => Results[index] = value; }
+    
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Results.Cast<T>().GetEnumerator();
+        }
+    
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return Results.Cast<T>().GetEnumerator();
+        }
+    
+        public int IndexOf(T item)
+        {
+            return Results.IndexOf(item);
+        }
+    
+        public void Add(T t)
+        {
+            Results.Add(t);
+        }
+    
+        public void AddRange(IEnumerable<T> range)
+        {
+            Results.AddRange(range);
+        }
+    
+        public void Insert(int index, T item)
+        {
+            Results.Insert(index, item);
+        }
+    
+        public void RemoveAt(int index)
+        {
+            Results.RemoveAt(index);
+        }
+    
+        public void Clear()
+        {
+            Results.Clear();
+        }
+    
+        public bool Contains(T item)
+        {
+            return Results.Contains(item);
+        }
+    
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            Results.CopyTo(array, arrayIndex);
+        }
+    
+        public bool Remove(T item)
+        {
+            return Results.Remove(item);
+        }
+    }
+    
+    /// <summary>
+    /// Abstract class that represents a result from a SharpSploit function.
+    /// </summary>
+    public abstract class SharpSploitResult
+    {
+        protected internal abstract IList<SharpSploitResultProperty> ResultProperties { get; }
+    }
+    
+    /// <summary>
+    /// SharpSploitResultProperty represents a property that is a member of a SharpSploitResult's ResultProperties.
+    /// </summary>
+    public class SharpSploitResultProperty
+    {
+        public string Name { get; set; }
+        public object Value { get; set; }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: .
+    DefaultValue: .
+    Description: Directory to list.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Assembly
+  Aliases: []
+  Description: Execute a dotnet Assembly EntryPoint.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Collections;
+    using System.Collections.Generic;
+    using Reflect = System.Reflection;
+
+    public static class Task
+    {
+        public static string Execute(string Assembly, string AssemblyName, string Parameters = "")
+        {
+            string output = "";
+            try
+            {
+                string[] args = SplitCommandLine(Parameters).ToArray();
+                
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StringWriter();
+                TextWriter stdErrWriter = new StringWriter();
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                Assem.AssemblyExecute(Assembly, new Object[] { args });
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                output = stdOutWriter.ToString();
+                output += stdErrWriter.ToString();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+
+        // Credit: https://stackoverflow.com/a/298990
+        private static IEnumerable<string> SplitCommandLine(string commandLine)
+        {
+            bool inQuotes = false;
+
+            return commandLine.Split(c =>
+            {
+                if (c == '\"' || c == '\'')
+                    inQuotes = !inQuotes;
+
+                return !inQuotes && c == ' ';
+            })
+                .Select(arg => arg.Trim().TrimMatchingQuotes('\"').TrimMatchingQuotes('\''))
+                .Where(arg => !string.IsNullOrEmpty(arg));
+        }
+
+        private static IEnumerable<string> Split(this string str, Func<char, bool> controller)
+        {
+            int nextPiece = 0;
+
+            for (int c = 0; c < str.Length; c++)
+            {
+                if (controller(str[c]))
+                {
+                    yield return str.Substring(nextPiece, c - nextPiece);
+                    nextPiece = c + 1;
+                }
+            }
+
+            yield return str.Substring(nextPiece);
+        }
+
+        private static string TrimMatchingQuotes(this string input, char quote)
+        {
+            if ((input.Length >= 2) && 
+                (input[0] == quote) && (input[input.Length - 1] == quote))
+                return input.Substring(1, input.Length - 2);
+
+            return input;
+        }
+    }
+
+    /// <summary>
+    /// Assembly is a library for loading .NET assemblies and executing methods contained within them.
+    /// </summary>
+    public class Assem
+    {
+        /// <summary>
+        /// Loads a specified .NET assembly byte array and executes the EntryPoint.
+        /// </summary>
+        /// <param name="AssemblyBytes">The .NET assembly byte array.</param>
+        /// <param name="Args">The arguments to pass to the assembly's EntryPoint.</param>
+        public static void AssemblyExecute(byte[] AssemblyBytes, Object[] Args = null)
+        {
+            if (Args == null)
+            {
+                Args = new Object[] { new string[] { } };
+            }
+            Reflect.Assembly assembly = Load(AssemblyBytes);
+            assembly.EntryPoint.Invoke(null, Args);
+        }
+
+        /// <summary>
+        /// Loads a specified .NET assembly byte array and executes a specified method within a
+        /// specified type with specified parameters.
+        /// </summary>
+        /// <param name="AssemblyBytes">The .NET assembly byte array.</param>
+        /// <param name="TypeName">The name of the type that contains the method to execute.</param>
+        /// <param name="MethodName">The name of the method to execute.</param>
+        /// <param name="Parameters">The parameters to pass to the method.</param>
+        /// <returns>GenericObjectResult of the method.</returns>
+        public static GenericObjectResult AssemblyExecute(byte[] AssemblyBytes, String TypeName = "", String MethodName = "Execute", Object[] Parameters = default(Object[]))
+        {
+            Reflect.Assembly assembly = Load(AssemblyBytes);
+            Type type = TypeName == "" ? assembly.GetTypes()[0] : assembly.GetType(TypeName);
+            Reflect.MethodInfo method = MethodName == "" ? type.GetMethods()[0] : type.GetMethod(MethodName);
+            var results = method.Invoke(null, Parameters);
+            return new GenericObjectResult(results);
+        }
+
+        /// <summary>
+        /// Loads a specified base64-encoded .NET assembly and executes a specified method within a
+        /// specified type with specified parameters.
+        /// </summary>
+        /// <param name="EncodedAssembly">The base64-encoded .NET assembly byte array.</param>
+        /// <param name="TypeName">The name of the type that contains the method to execute.</param>
+        /// <param name="MethodName">The name of the method to execute.</param>
+        /// <param name="Parameters">The parameters to pass to the method.</param>
+        /// <returns>GenericObjectResult of the method.</returns>
+        public static GenericObjectResult AssemblyExecute(String EncodedAssembly, String TypeName = "", String MethodName = "Execute", Object[] Parameters = default(Object[]))
+        {
+            return AssemblyExecute(Convert.FromBase64String(EncodedAssembly), TypeName, MethodName, Parameters);
+        }
+
+        /// <summary>
+        /// Loads a specified base64-encoded .NET assembly and executes the EntryPoint.
+        /// </summary>
+        /// <param name="EncodedAssembly">The base64-encoded .NET assembly byte array.</param>
+        /// <param name="Args">The arguments to pass to the assembly's EntryPoint.</param>
+        public static void AssemblyExecute(String EncodedAssembly, Object[] Args = default(Object[]))
+        {
+            AssemblyExecute(Convert.FromBase64String(EncodedAssembly), Args);
+        }
+
+        /// <summary>
+        /// Loads a specified .NET assembly byte array.
+        /// </summary>
+        /// <param name="AssemblyBytes">The .NET assembly byte array.</param>
+        /// <returns>Loaded assembly.</returns>
+        public static Reflect.Assembly Load(byte[] AssemblyBytes)
+        {
+            return Reflect.Assembly.Load(AssemblyBytes);
+        }
+
+        /// <summary>
+        /// Loads a specified .NET assembly byte array.
+        /// </summary>
+        /// <param name="EncodedAssembly">The base64-encoded .NET assembly byte array.</param>
+        /// <returns>Loaded assembly.</returns>
+        public static Reflect.Assembly Load(string EncodedAssembly)
+        {
+            return Reflect.Assembly.Load(Convert.FromBase64String(EncodedAssembly));
+        }
+    }
+    /// <summary>
+    /// GenericObjectResult for listing objects whose type is unknown at compile time.
+    /// </summary>
+    public sealed class GenericObjectResult : SharpSploitResult
+    {
+        public object Result { get; }
+        protected internal override IList<SharpSploitResultProperty> ResultProperties
+        {
+            get
+            {
+                return new List<SharpSploitResultProperty>
+                    {
+                        new SharpSploitResultProperty
+                        {
+                            Name = this.Result.GetType().Name,
+                            Value = this.Result
+                        }
+                    };
+            }
+        }
+
+        public GenericObjectResult(object Result)
+        {
+            this.Result = Result;
+        }
+    }
+
+    /// <summary>
+    /// SharpSploitResultList extends the IList interface for SharpSploitResults to easily /// format a list of results from various SharpSploit functions.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class SharpSploitResultList<T> : IList<T> where T : SharpSploitResult
+    {
+        private List<T> Results { get; } = new List<T>();
+
+        public int Count => Results.Count;
+        public bool IsReadOnly => ((IList<T>)Results).IsReadOnly;
+
+
+        private const int PROPERTY_SPACE = 3;
+
+        /// <summary>
+        /// Formats a SharpSploitResultList to a string similar to PowerShell's Format-List function.
+        /// </summary>
+        /// <returns>string</returns>
+        public string FormatList()
+        {
+            return this.ToString();
+        }
+
+        private string FormatTable()
+        {
+            // TODO
+            return "";
+        }
+        
+        /// <summary>
+        /// Formats a SharpSploitResultList as a string. Overrides ToString() for convenience.
+        /// </summary>
+        /// <returns>string</returns>
+        public override string ToString()
+        {
+            if (this.Results.Count > 0)
+            {
+                StringBuilder builder1 = new StringBuilder();
+                StringBuilder builder2 = new StringBuilder();
+                for (int i = 0; i < this.Results[0].ResultProperties.Count; i++)
+                {
+                    builder1.Append(this.Results[0].ResultProperties[i].Name);
+                    builder2.Append(new String('-', this.Results[0].ResultProperties[i].Name.Length));
+                    if (i != this.Results[0].ResultProperties.Count-1)
+                    {
+                        builder1.Append(new String(' ', PROPERTY_SPACE));
+                        builder2.Append(new String(' ', PROPERTY_SPACE));
+                    }
+                }
+                builder1.AppendLine();
+                builder1.AppendLine(builder2.ToString());
+                foreach (SharpSploitResult result in this.Results)
+                {
+                    for (int i = 0; i < result.ResultProperties.Count; i++)
+                    {
+                        SharpSploitResultProperty property = result.ResultProperties[i];
+                        string ValueString = property.Value.ToString();
+                        builder1.Append(ValueString);
+                        if (i != result.ResultProperties.Count-1)
+                        {
+                            builder1.Append(new String(' ', Math.Max(1, property.Name.Length + PROPERTY_SPACE - ValueString.Length)));
+                        }
+                    }
+                    builder1.AppendLine();
+                }
+                return builder1.ToString();
+            }
+            return "";
+        }
+
+        public T this[int index] { get => Results[index]; set => Results[index] = value; }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Results.Cast<T>().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return Results.Cast<T>().GetEnumerator();
+        }
+
+        public int IndexOf(T item)
+        {
+            return Results.IndexOf(item);
+        }
+
+        public void Add(T t)
+        {
+            Results.Add(t);
+        }
+
+        public void AddRange(IEnumerable<T> range)
+        {
+            Results.AddRange(range);
+        }
+
+        public void Insert(int index, T item)
+        {
+            Results.Insert(index, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            Results.RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Results.Clear();
+        }
+
+        public bool Contains(T item)
+        {
+            return Results.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            Results.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(T item)
+        {
+            return Results.Remove(item);
+        }
+    }
+
+    /// <summary>
+    /// Abstract class that represents a result from a SharpSploit function.
+    /// </summary>
+    public abstract class SharpSploitResult
+    {
+        protected internal abstract IList<SharpSploitResultProperty> ResultProperties { get; }
+    }
+
+    /// <summary>
+    /// SharpSploitResultProperty represents a property that is a member of a SharpSploitResult's ResultProperties.
+    /// </summary>
+    public class SharpSploitResultProperty
+    {
+        public string Name { get; set; }
+        public object Value { get; set; }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Assembly
+    Value: ''
+    DefaultValue: ''
+    Description: The Assembly to execute.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  - Name: AssemblyName
+    Value: ''
+    DefaultValue: ''
+    Description: Name of the assembly.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Parameters
+    Value: ''
+    DefaultValue: ''
+    Description: The command-line parameters to pass to the assembly's EntryPoint.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ShellCmd
+  Aliases: []
+  Description: Execute a Shell command using "cmd.exe /c"
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.Text;
+    using System.Diagnostics;
+
+    public static class Task
+    {
+        public static string Execute(string ShellCommand)
+        {
+            try
+            {
+                return Shell.ShellCmdExecute(ShellCommand);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+
+
+    /// <summary>
+
+    /// Shell is a library for executing shell commands.
+
+    /// </summary>
+
+    public class Shell
+
+    {
+        /// <summary>
+        /// Executes a specified Shell command, optionally with an alternative username and password.
+        /// Equates to `ShellExecuteWithPath(ShellCommand, "~")`.
+        /// </summary>
+        /// <param name="ShellCommand">The ShellCommand to execute, including any arguments.</param>
+        /// <param name="Username">Optional alternative username to execute ShellCommand as.</param>
+        /// <param name="Domain">Optional alternative Domain of the username to execute ShellCommand as.</param>
+        /// <param name="Password">Optional password to authenticate the username to execute the ShellCommand as.</param>
+        /// <returns>Ouput of the ShellCommand.</returns>
+        public static string ShellExecute(string ShellCommand, string Username = "", string Domain = "", string Password = "")
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+            {
+                return ShellExecuteWithPath(ShellCommand, "/bin/", Username, Domain, Password);
+            }
+            else if (Environment.OSVersion.Platform.ToString().Contains("Win32"))
+            {
+                return ShellExecuteWithPath(ShellCommand, "C:\\Windows\\System32\\", Username, Domain, Password);
+            }
+            return ShellExecuteWithPath(ShellCommand, "~", Username, Domain, Password);
+        }
+
+        /// <summary>
+        /// Executes a specified Shell command using cmd.exe, optionally with an alternative username and password.
+        /// Equates to `ShellExecute("cmd.exe /c " + ShellCommand)`.
+        /// </summary>
+        /// <param name="ShellCommand">The ShellCommand to execute, including any arguments.</param>
+        /// <param name="Username">Optional alternative username to execute ShellCommand as.</param>
+        /// <param name="Domain">Optional alternative Domain of the username to execute ShellCommand as.</param>
+        /// <param name="Password">Optional password to authenticate the username to execute the ShellCommand as.</param>
+        /// <returns>Ouput of the ShellCommand.</returns>
+        public static string ShellCmdExecute(string ShellCommand, string Username = "", string Domain = "", string Password = "")
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+            {
+                return ShellExecute("bash -c " + ShellCommand, Username, Domain, Password);
+            }
+            else if (Environment.OSVersion.Platform.ToString().Contains("Win32"))
+            {
+                return ShellExecute("cmd.exe /c " + ShellCommand, Username, Domain, Password);
+            }
+            return ShellExecute("cmd.exe /c " + ShellCommand, Username, Domain, Password);
+        }
+
+        /// <summary>
+        /// Executes a specified Shell command from a specified directory, optionally with an alternative username and password.
+        /// </summary>
+        /// <param name="ShellCommand">The ShellCommand to execute, including any arguments.</param>
+        /// <param name="Path">The Path of the directory from which to execute the ShellCommand.</param>
+        /// <param name="Username">Optional alternative username to execute ShellCommand as.</param>
+        /// <param name="Domain">Optional alternative Domain of the username to execute ShellCommand as.</param>
+        /// <param name="Password">Optional password to authenticate the username to execute the ShellCommand as.</param>
+        /// <returns>Output of the ShellCommand.</returns>
+        public static string ShellExecuteWithPath(string ShellCommand, string Path, string Username = "", string Domain = "", string Password = "")
+        {
+            if (ShellCommand == null || ShellCommand == "") return "";
+
+            string ShellCommandName = ShellCommand.Split(' ')[0];
+            string ShellCommandArguments = "";
+            if (ShellCommand.Contains(" "))
+            {
+                ShellCommandArguments = ShellCommand.Replace(ShellCommandName + " ", "");
+            }
+
+            Process shellProcess = new Process();
+            if (Username != "")
+            {
+                shellProcess.StartInfo.UserName = Username;
+                shellProcess.StartInfo.Domain = Domain;
+                System.Security.SecureString SecurePassword = new System.Security.SecureString();
+                foreach (char c in Password)
+                {
+                    SecurePassword.AppendChar(c);
+                }
+                shellProcess.StartInfo.Password = SecurePassword;
+            }
+            shellProcess.StartInfo.FileName = ShellCommandName;
+            shellProcess.StartInfo.Arguments = ShellCommandArguments;
+            shellProcess.StartInfo.WorkingDirectory = Path;
+            shellProcess.StartInfo.UseShellExecute = false;
+            shellProcess.StartInfo.CreateNoWindow = true;
+            shellProcess.StartInfo.RedirectStandardOutput = true;
+            shellProcess.StartInfo.RedirectStandardError = true;
+
+            var output = new StringBuilder();
+            shellProcess.OutputDataReceived += (sender, args) => { output.AppendLine(args.Data); };
+            shellProcess.ErrorDataReceived += (sender, args) => { output.AppendLine(args.Data); };
+
+            shellProcess.Start();
+
+            shellProcess.BeginOutputReadLine();
+            shellProcess.BeginErrorReadLine();
+            shellProcess.WaitForExit();
+
+            return output.ToString().TrimEnd();
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ShellCommand
+    Value: whoami
+    DefaultValue: ''
+    Description: The ShellCommand to execute.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Shell
+  Aliases: []
+  Description: Execute a Shell command.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.Text;
+    using System.Diagnostics;
+
+    public static class Task
+    {
+        public static string Execute(string ShellCommand)
+        {
+            try
+            {
+                return Shell.ShellExecute(ShellCommand);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+
+    /// <summary>
+    /// Shell is a library for executing shell commands.
+    /// </summary>
+
+    public class Shell
+    {
+        /// <summary>
+        /// Executes a specified Shell command, optionally with an alternative username and password.
+        /// </summary>
+        /// <param name="ShellCommand">The ShellCommand to execute, including any arguments.</param>
+        /// <param name="Username">Optional alternative username to execute ShellCommand as.</param>
+        /// <param name="Domain">Optional alternative Domain of the username to execute ShellCommand as.</param>
+        /// <param name="Password">Optional password to authenticate the username to execute the ShellCommand as.</param>
+        /// <returns>Ouput of the ShellCommand.</returns>
+        public static string ShellExecute(string ShellCommand, string Username = "", string Domain = "", string Password = "")
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
+            {
+                return ShellExecuteWithPath(ShellCommand, "/bin/", Username, Domain, Password);
+            }
+            else if (Environment.OSVersion.Platform.ToString().Contains("Win32"))
+            {
+                return ShellExecuteWithPath(ShellCommand, "C:\\Windows\\System32\\", Username, Domain, Password);
+            }
+            return ShellExecuteWithPath(ShellCommand, "~", Username, Domain, Password);
+        }
+
+        /// <summary>
+        /// Executes a specified Shell command from a specified directory, optionally with an alternative username and password.
+        /// </summary>
+        /// <param name="ShellCommand">The ShellCommand to execute, including any arguments.</param>
+        /// <param name="Path">The Path of the directory from which to execute the ShellCommand.</param>
+        /// <param name="Username">Optional alternative username to execute ShellCommand as.</param>
+        /// <param name="Domain">Optional alternative Domain of the username to execute ShellCommand as.</param>
+        /// <param name="Password">Optional password to authenticate the username to execute the ShellCommand as.</param>
+        /// <returns>Output of the ShellCommand.</returns>
+        public static string ShellExecuteWithPath(string ShellCommand, string Path, string Username = "", string Domain = "", string Password = "")
+        {
+            if (ShellCommand == null || ShellCommand == "") return "";
+
+            string ShellCommandName = ShellCommand.Split(' ')[0];
+            string ShellCommandArguments = "";
+            if (ShellCommand.Contains(" "))
+            {
+                ShellCommandArguments = ShellCommand.Replace(ShellCommandName + " ", "");
+            }
+
+            Process shellProcess = new Process();
+            if (Username != "")
+            {
+                shellProcess.StartInfo.UserName = Username;
+                shellProcess.StartInfo.Domain = Domain;
+                System.Security.SecureString SecurePassword = new System.Security.SecureString();
+                foreach (char c in Password)
+                {
+                    SecurePassword.AppendChar(c);
+                }
+                shellProcess.StartInfo.Password = SecurePassword;
+            }
+            shellProcess.StartInfo.FileName = ShellCommandName;
+            shellProcess.StartInfo.Arguments = ShellCommandArguments;
+            shellProcess.StartInfo.WorkingDirectory = Path;
+            shellProcess.StartInfo.UseShellExecute = false;
+            shellProcess.StartInfo.CreateNoWindow = true;
+            shellProcess.StartInfo.RedirectStandardOutput = true;
+            shellProcess.StartInfo.RedirectStandardError = true;
+
+            var output = new StringBuilder();
+            shellProcess.OutputDataReceived += (sender, args) => { output.AppendLine(args.Data); };
+            shellProcess.ErrorDataReceived += (sender, args) => { output.AppendLine(args.Data); };
+
+            shellProcess.Start();
+
+            shellProcess.BeginOutputReadLine();
+            shellProcess.BeginErrorReadLine();
+            shellProcess.WaitForExit();
+
+            return output.ToString().TrimEnd();
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ShellCommand
+    Value: whoami
+    DefaultValue: ''
+    Description: The ShellCommand to execute.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: WhoAmI
+  Aliases: []
+  Description: Gets the username of the currently used/impersonated token.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+
+    public static class Task
+    {
+        public static string Execute()
+        {
+            try
+            {
+                return Environment.UserDomainName + "\\" + Environment.UserName;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ChangeDirectory
+  Aliases:
+  - cd
+  Description: Change the current directory.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string DirectoryName)
+        {
+            try
+            {
+                Directory.SetCurrentDirectory(DirectoryName);
+                return Directory.GetCurrentDirectory();
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Directory
+    Value: .
+    DefaultValue: ''
+    Description: Directory to change to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ReadTextFile
+  Aliases:
+  - cat
+  Description: Read a text file on disk.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                return File.ReadAllText(Path);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: Path to the file.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: CreateDirectory
+  Aliases:
+  - mkdir
+  Description: Creates all directories and subdirectories in the specified path unless they already exist.
+  Author:
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help:
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                var directory = Directory.CreateDirectory(Path);
+                return directory.FullName + " created.";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: The directory to create.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Delete
+  Aliases:
+  - rm
+  - del
+  Description: Delete a file or directory.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                if (File.Exists(Path))
+                {
+                    File.Delete(Path);
+                    return $"File {Path} deleted.";
+                }
+    			else if (Directory.Exists(Path))
+                {
+                    Directory.Delete(Path, true);
+                    return $"Directory {Path} deleted.";
+                }
+                else
+                {
+                    return $"{Path} does not exist.";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: The path of the file or directory to delete.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Copy
+  Aliases:
+  - cp
+  Description: Copy a file from one location to another.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Source, string Destination)
+        {
+            try
+            {
+                File.Copy(Source, Destination);
+                return "Successfully copied file from: " + Source + " to: " + Destination;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Source
+    Value: ''
+    DefaultValue: ''
+    Description: Source file to copy
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Destination
+    Value: .
+    DefaultValue: ''
+    Description: Destination to copy file to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ProcessList
+  Aliases:
+  - ps
+  Description: Get a list of currently running processes.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.Linq;
+    using System.Text;
+    using System.Diagnostics;
+    using System.Collections;
+    using System.Collections.Generic;
+    
+    public static class Task
+    {
+        public static string Execute()
+        {
+            try
+            {
+                return Host.GetProcessList().ToString();
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+    
+    public class Host
+    {
+        /// <summary>
+        /// Gets a list of running processes on the system.
+        /// </summary>
+        /// <returns>List of ProcessResults.</returns>
+        public static SharpSploitResultList<ProcessResult> GetProcessList()
+        {
+            Process[] processes = Process.GetProcesses();
+            SharpSploitResultList<ProcessResult> results = new SharpSploitResultList<ProcessResult>();
+            foreach (Process process in processes)
+            {
+                results.Add(new ProcessResult(process.Id, 0, process.ProcessName));
+            }
+            return results;
+        }
+    }
+    
+    /// <summary>
+    /// ProcessResult represents a running process, used with the GetProcessList() function.
+    /// </summary>
+    public sealed class ProcessResult : SharpSploitResult
+    {
+        public int Pid { get; } = 0;
+        public int Ppid { get; } = 0;
+        public string Name { get; } = "";
+        protected internal override IList<SharpSploitResultProperty> ResultProperties
+        {
+            get
+            {
+                return new List<SharpSploitResultProperty>
+                {
+                    new SharpSploitResultProperty
+                    {
+                        Name = "Pid",
+                        Value = this.Pid
+                    },
+                    new SharpSploitResultProperty
+                    {
+                        Name = "Ppid",
+                        Value = this.Ppid
+                    },
+                    new SharpSploitResultProperty
+                    {
+                        Name = "Name",
+                        Value = this.Name
+                    }
+                };
+            }
+        }
+    
+        public ProcessResult(int Pid = 0, int Ppid = 0, string Name = "")
+        {
+            this.Pid = Pid;
+            this.Ppid = Ppid;
+            this.Name = Name;
+        }
+    }
+    
+    public sealed class GenericObjectResult : SharpSploitResult
+    {
+        public object Result { get; }
+        protected internal override IList<SharpSploitResultProperty> ResultProperties
+        {
+            get
+            {
+                return new List<SharpSploitResultProperty>
+                    {
+                        new SharpSploitResultProperty
+                        {
+                            Name = this.Result.GetType().Name,
+                            Value = this.Result
+                        }
+                    };
+            }
+        }
+    
+        public GenericObjectResult(object Result)
+        {
+            this.Result = Result;
+        }
+    }
+    
+    /// <summary>
+    /// SharpSploitResultList extends the IList interface for SharpSploitResults to easily
+    /// format a list of results from various SharpSploit functions.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class SharpSploitResultList<T> : IList<T> where T : SharpSploitResult
+    {
+        private List<T> Results { get; } = new List<T>();
+    
+        public int Count => Results.Count;
+        public bool IsReadOnly => ((IList<T>)Results).IsReadOnly;
+    
+    
+        private const int PROPERTY_SPACE = 3;
+    
+        /// <summary>
+        /// Formats a SharpSploitResultList to a string similar to PowerShell's Format-List function.
+        /// </summary>
+        /// <returns>string</returns>
+        public string FormatList()
+        {
+            return this.ToString();
+        }
+    
+        private string FormatTable()
+        {
+            // TODO
+            return "";
+        }
+        
+        /// <summary>
+        /// Formats a SharpSploitResultList as a string. Overrides ToString() for convenience.
+        /// </summary>
+        /// <returns>string</returns>
+        public override string ToString()
+        {
+            if (this.Results.Count > 0)
+            {
+                StringBuilder builder1 = new StringBuilder();
+                StringBuilder builder2 = new StringBuilder();
+                for (int i = 0; i < this.Results[0].ResultProperties.Count; i++)
+                {
+                    builder1.Append(this.Results[0].ResultProperties[i].Name);
+                    builder2.Append(new String('-', this.Results[0].ResultProperties[i].Name.Length));
+                    if (i != this.Results[0].ResultProperties.Count-1)
+                    {
+                        builder1.Append(new String(' ', PROPERTY_SPACE));
+                        builder2.Append(new String(' ', PROPERTY_SPACE));
+                    }
+                }
+                builder1.AppendLine();
+                builder1.AppendLine(builder2.ToString());
+                foreach (SharpSploitResult result in this.Results)
+                {
+                    for (int i = 0; i < result.ResultProperties.Count; i++)
+                    {
+                        SharpSploitResultProperty property = result.ResultProperties[i];
+                        string ValueString = property.Value.ToString();
+                        builder1.Append(ValueString);
+                        if (i != result.ResultProperties.Count-1)
+                        {
+                            builder1.Append(new String(' ', Math.Max(1, property.Name.Length + PROPERTY_SPACE - ValueString.Length)));
+                        }
+                    }
+                    builder1.AppendLine();
+                }
+                return builder1.ToString();
+            }
+            return "";
+        }
+    
+        public T this[int index] { get => Results[index]; set => Results[index] = value; }
+    
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Results.Cast<T>().GetEnumerator();
+        }
+    
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return Results.Cast<T>().GetEnumerator();
+        }
+    
+        public int IndexOf(T item)
+        {
+            return Results.IndexOf(item);
+        }
+    
+        public void Add(T t)
+        {
+            Results.Add(t);
+        }
+    
+        public void AddRange(IEnumerable<T> range)
+        {
+            Results.AddRange(range);
+        }
+    
+        public void Insert(int index, T item)
+        {
+            Results.Insert(index, item);
+        }
+    
+        public void RemoveAt(int index)
+        {
+            Results.RemoveAt(index);
+        }
+    
+        public void Clear()
+        {
+            Results.Clear();
+        }
+    
+        public bool Contains(T item)
+        {
+            return Results.Contains(item);
+        }
+    
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            Results.CopyTo(array, arrayIndex);
+        }
+    
+        public bool Remove(T item)
+        {
+            return Results.Remove(item);
+        }
+    }
+    
+    /// <summary>
+    /// Abstract class that represents a result from a SharpSploit function.
+    /// </summary>
+    public abstract class SharpSploitResult
+    {
+        protected internal abstract IList<SharpSploitResultProperty> ResultProperties { get; }
+    }
+    
+    /// <summary>
+    /// SharpSploitResultProperty represents a property that is a member of a SharpSploitResult's ResultProperties.
+    /// </summary>
+    public class SharpSploitResultProperty
+    {
+        public string Name { get; set; }
+        public object Value { get; set; }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Download
+  Aliases: []
+  Description: Download a file.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Linq;
+    using System.Collections.Generic;
+
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string FileName)
+        {
+            try
+            {
+                using (FileStream fs = File.OpenRead(FileName))
+                {
+                    byte[] read = new byte[1048576];
+                    int count;
+                    while ((count = fs.Read(read, 0, read.Length)) > 0)
+                    {
+                        IEnumerable<byte> finalRead = read.Take(count).AsEnumerable();
+                        int b = 0;
+                        while (count % 3 != 0 && b != -1)
+                        {
+                            b = fs.ReadByte();
+                            finalRead = finalRead.Concat(new byte[] { (byte)b });
+                            count++;
+                        }
+                        byte[] base64 = Encoding.UTF8.GetBytes(Convert.ToBase64String(finalRead.ToArray()));
+                        OutputStream.Write(base64, 0, base64.Length);
+                        OutputStream.Flush();
+                    }
+                }
+                OutputStream.Close();
+                return "";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: FileName
+    Value: ''
+    DefaultValue: ''
+    Description: Remote file name to download.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Upload
+  Aliases: []
+  Description: Upload a file.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - NetCore31
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string FilePath, string FileContents)
+        {
+            try
+            {
+                File.WriteAllBytes(FilePath, Convert.FromBase64String(FileContents));
+                return FilePath;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: FilePath
+    Value: ''
+    DefaultValue: ''
+    Description: Remote file path to write to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: FileContents
+    Value: ''
+    DefaultValue: ''
+    Description: Base64 contents of the file to be written.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

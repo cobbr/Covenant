@@ -1,0 +1,73 @@
+﻿@using System.Collections.Generic
+@using Covenant.Models.Listeners
+
+<div class="form-row">
+    <div class="form-group col-md-6 mb-0">
+        <label for=@(InputName + "_0_")>@InputName</label><br />
+    </div>
+</div>
+@for (int i = 0; i < FormList.Count; i++)
+{
+    int number = i;
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            <label for=@(InputName + "_" + number + "__Name")></label>
+            <input id=@(InputName + "_" + number + "__Name")
+                   name=@(InputName + "[" + number + "].Name")
+                   value="@FormList[number].Name" @oninput="e => OnFormListItemNameChanged(number, e)"
+                   class="form-control">
+            <label for=@(InputName + "_" + number + "__Value")></label>
+            <input id=@(InputName + "_" + number + "__Value")
+                   name=@(InputName + "[" + number + "].Value")
+                   value="@FormList[number].Value" @oninput="e => OnFormListItemValueChanged(number, e)"
+                   class="form-control">
+        </div>
+        <div class="col-auto align-self-center">
+            <button type="button" @onclick="(e => RemoveRow(number))" class="btn btn-outline-danger btn-sm xbutton">
+                <span class="fe fe-x"></span>
+            </button>
+        </div>
+    </div>
+}
+<button type="button" @onclick="AddRow" class="btn btn-outline-primary btn-sm mb-4">
+    <span class="fe fe-plus"></span> Add
+</button>
+
+@code {
+    [Parameter]
+    public List<HttpProfileHeader> FormList { get; set; }
+
+    [Parameter]
+    public EventCallback<List<HttpProfileHeader>> FormListChanged { get; set; }
+
+    [Parameter]
+    public string InputName { get; set; }
+
+    private async Task AddRow()
+    {
+        this.FormList.Add(new HttpProfileHeader
+        {
+            Name = "",
+            Value = ""
+        });
+        await this.FormListChanged.InvokeAsync(this.FormList);
+    }
+
+    private async Task RemoveRow(int row)
+    {
+        this.FormList.RemoveAt(row);
+        await this.FormListChanged.InvokeAsync(this.FormList);
+    }
+
+    private async Task OnFormListItemNameChanged(int index, ChangeEventArgs e)
+    {
+        this.FormList[index].Name = e.Value.ToString();
+        await this.FormListChanged.InvokeAsync(this.FormList);
+    }
+
+    private async Task OnFormListItemValueChanged(int index, ChangeEventArgs e)
+    {
+        this.FormList[index].Value = e.Value.ToString();
+        await this.FormListChanged.InvokeAsync(this.FormList);
+    }
+}

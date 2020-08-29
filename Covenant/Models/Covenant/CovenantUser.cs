@@ -2,6 +2,7 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System;
 using System.ComponentModel.DataAnnotations;
 
 using Microsoft.AspNetCore.Identity;
@@ -10,7 +11,17 @@ namespace Covenant.Models.Covenant
 {
     public class CovenantUser : IdentityUser
     {
-        
+        public CovenantUser() : base()
+        {
+            this.Email = "";
+            this.NormalizedEmail = "";
+            this.PhoneNumber = "";
+            this.LockoutEnd = DateTime.UnixEpoch;
+            this.ThemeId = 1;
+        }
+
+        public int ThemeId { get; set; }
+        public Theme Theme { get; set; }
     }
 
     public class CovenantUserLogin

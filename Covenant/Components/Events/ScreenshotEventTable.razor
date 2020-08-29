@@ -1,0 +1,57 @@
+﻿@using System
+@using Microsoft.JSInterop
+@using Covenant.Models.Covenant
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="ScreenshotEvent" Items="ScreenshotEvents.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => screenshot.FileName">
+            <HeaderContent>FileName</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="int" GetSortableProperty="(screenshot) => Convert.FromBase64String(screenshot.FileContents).Length">
+            <HeaderContent>Size</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => string.Empty">
+            <HeaderContent>Image</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="screenshot">
+        <tr>
+            <td>
+                @screenshot.FileName
+            </td>
+            <td>
+                @System.Convert.FromBase64String(screenshot.FileContents).Length
+            </td>
+            <td>
+                <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
+            </td>
+        </tr>
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<ScreenshotEvent> ScreenshotEvents { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = true;
+
+    [Parameter]
+    public int PageLength { get; set; } = 25;
+
+    private bool IsRowDisplayed(ScreenshotEvent screenshot, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            screenshot.FileName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            Convert.FromBase64String(screenshot.FileContents).Length.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

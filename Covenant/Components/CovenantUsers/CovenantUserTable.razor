@@ -1,0 +1,97 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+
+<CovenantTable TItem="CovenantUser" Items="CovenantUsers.ToList()" SearchRow="IsRowDisplayed"
+               IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
+    <TableHeader>
+        <SortableTableHeader TItem="CovenantUser" TItem2="string" GetSortableProperty="(user) => user.UserName">
+            <HeaderContent>UserName</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="CovenantUser" TItem2="string" GetSortableProperty="(user) => string.Join(',', GetRoles(user))">
+            <HeaderContent>Roles</HeaderContent>
+        </SortableTableHeader>
+    </TableHeader>
+    <TableRow Context="user">
+        @{
+            IEnumerable<string> roles = GetRoles(user);
+            IEnumerable<string> currentUserRoles = GetRoles(this.CurrentUser);
+        }
+        @if ((!roles.Contains("Listener") && !roles.Contains("ServiceUser")) || roles.Contains("User"))
+        {
+            <tr>
+                <td>
+                    @if (currentUserRoles.Contains("Administrator") || user.UserName == this.CurrentUser.UserName)
+                    {
+                        <a href="/covenantuser/edit/@user.Id">
+                            @user.UserName
+                        </a>
+                    }
+                    else
+                    {
+                        @user.UserName
+                    }
+                </td>
+                <td>@string.Join(", ", roles)</td>
+            </tr>
+        }
+    </TableRow>
+</CovenantTable>
+
+@code {
+    [Parameter]
+    public IEnumerable<CovenantUser> CovenantUsers { get; set; }
+
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public bool IsSortable { get; set; } = true;
+
+    [Parameter]
+    public bool IsPaginated { get; set; } = false;
+
+    [Parameter]
+    public int PageLength { get; set; } = 50;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+    private CovenantUser CurrentUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CurrentUser = this.CurrentUser ?? await Service.GetCurrentUser((await AuthenticationState).User);
+        Service.DisposeContext();
+    }
+
+    private IEnumerable<string> GetRoles(CovenantUser user)
+    {
+        try
+        {
+            IEnumerable<IdentityUserRole<string>> userRoles = Service.GetUserRoles().WaitResult();
+            return userRoles.Where(UR => UR.UserId == user.Id)
+                .Select(UR =>
+                {
+                    return Service.GetRole(UR.RoleId).WaitResult().Name;
+                }).ToList();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            return new List<string>();
+        }
+    }
+
+    private bool IsRowDisplayed(CovenantUser user, string SearchTerm)
+    {
+        return SearchTerm == string.Empty ||
+            user.UserName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            string.Join(',', GetRoles(user)).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+}

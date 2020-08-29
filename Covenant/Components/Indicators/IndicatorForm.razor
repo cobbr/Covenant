@@ -1,0 +1,159 @@
+﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Indicators
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="Indicator" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Indicator))">
+    <DataAnnotationsValidator />
+    <div class="form-row">
+        <div class="form-group">
+            <label for="Type">Type</label><br />
+            <select id="Type" name="Type" value="@Indicator.Type" @onchange="(e => OnChangeType(e))" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+                @foreach (var n in Enum.GetNames(typeof(IndicatorType)))
+                {
+                    if (Enum.TryParse<IndicatorType>(n, out IndicatorType type) && this.Indicator.Type == type)
+                    {
+                        <option selected value="@(((Enum)typeof(IndicatorType).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(IndicatorType).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Indicator.Type" /></div>
+        </div>
+    </div>
+    @if (this.Indicator.Type == IndicatorType.FileIndicator)
+    {
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="FileName">FileName</label>
+                <input id="FileName" name="FileName" @bind="((FileIndicator)Indicator).FileName" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((FileIndicator)Indicator).FileName" /></div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="FilePath">FilePath</label>
+                <input id="FilePath" name="FilePath" @bind="((FileIndicator)Indicator).FilePath" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((FileIndicator)Indicator).FilePath" /></div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="SHA2">SHA2</label>
+                <input id="SHA2" name="SHA2" @bind="((FileIndicator)Indicator).SHA2" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((FileIndicator)Indicator).SHA2" /></div>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="SHA1">SHA1</label>
+                <input id="SHA1" name="SHA1" @bind="((FileIndicator)Indicator).SHA1" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((FileIndicator)Indicator).SHA1" /></div>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="MD5">MD5</label>
+                <input id="MD5" name="MD5" @bind="((FileIndicator)Indicator).MD5" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((FileIndicator)Indicator).MD5" /></div>
+            </div>
+        </div>
+    }
+    @if (this.Indicator.Type == IndicatorType.NetworkIndicator)
+    {
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="Protocol">Protocol</label>
+                <input id="Protocol" name="Protocol" @bind="((NetworkIndicator)Indicator).Protocol" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((NetworkIndicator)Indicator).Protocol" /></div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="Domain">Domain</label>
+                <input id="Domain" name="Domain" @bind="((NetworkIndicator)Indicator).Domain" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((NetworkIndicator)Indicator).Domain" /></div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="IPAddress">IPAddress</label>
+                <input id="IPAddress" name="IPAddress" @bind="((NetworkIndicator)Indicator).IPAddress" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((NetworkIndicator)Indicator).IPAddress" /></div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="Port">Port</label>
+                <input id="Port" name="Port" @bind="((NetworkIndicator)Indicator).Port" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((NetworkIndicator)Indicator).Port" /></div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="URI">URI</label>
+                <input id="URI" name="URI" @bind="((NetworkIndicator)Indicator).URI" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((NetworkIndicator)Indicator).URI" /></div>
+            </div>
+        </div>
+    }
+    @if (this.Indicator.Type == IndicatorType.TargetIndicator)
+    {
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="ComputerName">ComputerName</label>
+                <input id="ComputerName" name="ComputerName" @bind="((TargetIndicator)Indicator).ComputerName" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((TargetIndicator)Indicator).ComputerName" /></div>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="UserName">UserName</label>
+                <input id="UserName" name="UserName" @bind="((TargetIndicator)Indicator).UserName" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => ((TargetIndicator)Indicator).UserName" /></div>
+            </div>
+        </div>
+    }
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+    </button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Indicator Indicator { get; set; }
+
+    [Parameter]
+    public EventCallback<Indicator> OnSubmit { get; set; }
+
+    [Parameter]
+    public string SubmitIcon { get; set; }
+
+    [Parameter]
+    public string SubmitLabel { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Type.selectpicker", ((int)Enum.Parse(typeof(IndicatorType), this.Indicator.Type.ToString())).ToString());
+    }
+
+    private void OnChangeType(ChangeEventArgs e)
+    {
+        IndicatorType type = Enum.Parse<IndicatorType>((string)e.Value);
+        switch (type)
+        {
+            case IndicatorType.FileIndicator:
+                this.Indicator = new FileIndicator
+                {
+                    Id = this.Indicator.Id,
+                    Type = type
+                };
+                break;
+            case IndicatorType.NetworkIndicator:
+                this.Indicator = new NetworkIndicator
+                {
+                    Id = this.Indicator.Id,
+                    Type = type
+                };
+                break;
+            case IndicatorType.TargetIndicator:
+                this.Indicator = new TargetIndicator
+                {
+                    Id = this.Indicator.Id,
+                    Type = type
+                };
+                break;
+        }
+    }
+}

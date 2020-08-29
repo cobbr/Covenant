@@ -1,0 +1,1160 @@
+- Name: Help
+  Aliases: []
+  Description: Show the help menu.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: TaskName
+    Value: ''
+    DefaultValue: ''
+    Description: The GruntTask name to retrieve help information for.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PowerShellImport
+  Aliases: []
+  Description: Import a PowerShell script.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: ''
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Script
+    Value: ''
+    DefaultValue: ''
+    Description: PowerShell Script to import.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Connect
+  Aliases: []
+  Description: Connect to a P2P Grunt.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: ''
+  TaskingType: Connect
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: ''
+    DefaultValue: ''
+    Description: ComputerName of Grunt to connect to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: PipeName
+    Value: ''
+    DefaultValue: ''
+    Description: PipeName of Grunt to connect to.
+    SuggestedValues:
+    - gruntsvc
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Exit
+  Aliases: []
+  Description: Exits the Grunt.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: Exit
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Tasks
+  Aliases: []
+  Description: Get active Tasks.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: Tasks
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: TaskKill
+  Aliases: []
+  Description: Kill an active task.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: TaskKill
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Task
+    Value: ''
+    DefaultValue: ''
+    Description: Task to kill.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Delay
+  Aliases: []
+  Description: Set how long a Grunt should delay between callbacks.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: SetDelay
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Seconds
+    Value: ''
+    DefaultValue: ''
+    Description: Numbers of seconds to set delay value to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Jitter
+  Aliases: []
+  Description: Set the percentage a Grunt should alter it's delay value between each callback.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: SetJitter
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Percentage
+    Value: ''
+    DefaultValue: ''
+    Description: Percentage to vary the delay value for each callback.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ConnectAttempts
+  Aliases: []
+  Description: Set the maximum number of consecutive unsuccessful attempts a Grunt will make to communicate back to a Listener before giving up and exiting.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: SetConnectAttempts
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Attempts
+    Value: ''
+    DefaultValue: ''
+    Description: Number of attempts before a Grunt will stop and exit.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: KillDate
+  Aliases: []
+  Description: Set the date at which a Grunt should exit.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  - NetCore31
+  Code: ''
+  TaskingType: SetKillDate
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Date
+    Value: ''
+    DefaultValue: ''
+    Description: The date at which a Grunt should automatically exit.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: Disconnect
+  Aliases: []
+  Description: Disconnect from a ChildGrunt.
+  Author: 
+      Name: Covenant
+      Handle: 
+      Link: https://github.com/cobbr/Covenant
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: ''
+  TaskingType: Disconnect
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: GruntName
+    Value: ''
+    DefaultValue: ''
+    Description: Name of Grunt to disconnect from.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ScreenShot
+  Aliases: []
+  Description: Takes a screenshot of the currently active desktop, move into a targeted pid for specific desktops
+  Author: 
+      Name: Muelsy
+      Handle: muelsy_
+      Link: https://twitter.com/muelsy_
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Drawing;
+    using System.Drawing.Imaging;
+    using System.Windows.Forms;
+
+    public static class Task
+    {
+        public static string Execute()
+        {
+            try
+            {
+                Rectangle bounds = Screen.GetBounds(Point.Empty);
+                using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+                {
+                    using (Graphics g = Graphics.FromImage(bitmap))
+                    {
+                        g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                    }
+                    MemoryStream ms = new MemoryStream();
+                    bitmap.Save(ms, ImageFormat.Png);
+                    byte[] bmpBytes = ms.ToArray();
+                    return Convert.ToBase64String(bmpBytes);
+                }
+            } catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.Drawing.dll
+    Location: net40\System.Drawing.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Windows.Forms.dll
+    Location: net40\System.Windows.Forms.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  - Name: System.Drawing.dll
+    Location: net35\System.Drawing.dll
+    DotNetVersion: Net35
+  - Name: System.Windows.Forms.dll
+    Location: net35\System.Windows.Forms.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: Download
+  Aliases: []
+  Description: Download a file.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Linq;
+    using System.Collections.Generic;
+
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string FileName)
+        {
+            try
+            {
+                using (FileStream fs = File.OpenRead(FileName))
+                {
+                    byte[] read = new byte[1048576];
+                    int count;
+                    while ((count = fs.Read(read, 0, read.Length)) > 0)
+                    {
+                        IEnumerable<byte> finalRead = read.Take(count).AsEnumerable();
+                        int b = 0;
+                        while (count % 3 != 0 && b != -1)
+                        {
+                            b = fs.ReadByte();
+                            finalRead = finalRead.Concat(new byte[] { (byte)b });
+                            count++;
+                        }
+                        byte[] base64 = Encoding.UTF8.GetBytes(Convert.ToBase64String(finalRead.ToArray()));
+                        OutputStream.Write(base64, 0, base64.Length);
+                        OutputStream.Flush();
+                    }
+                }
+                OutputStream.Close();
+                return "";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: FileName
+    Value: ''
+    DefaultValue: ''
+    Description: Remote file name to download.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: Upload
+  Aliases: []
+  Description: Upload a file.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string FilePath, string FileContents)
+        {
+            try
+            {
+                File.WriteAllBytes(FilePath, Convert.FromBase64String(FileContents));
+                return FilePath;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: FilePath
+    Value: ''
+    DefaultValue: ''
+    Description: Remote file path to write to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: FileContents
+    Value: ''
+    DefaultValue: ''
+    Description: Base64 contents of the file to be written.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: WhoAmI
+  Aliases: []
+  Description: Gets the username of the currently used/impersonated token.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Security.Principal;
+
+    public static class Task
+    {
+        public static string Execute()
+        {
+            try
+            {
+                return WindowsIdentity.GetCurrent().Name;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: GetCurrentDirectory
+  Aliases:
+  - pwd
+  Description: Get the Grunt's Current Working Directory
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute()
+        {
+            try
+            {
+                return Directory.GetCurrentDirectory();
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: ChangeDirectory
+  Aliases:
+  - cd
+  Description: Change the current directory.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    using SharpSploit.Enumeration;
+
+    public static class Task
+    {
+        public static string Execute(string Directory)
+        {
+            try
+            {
+                Host.ChangeCurrentDirectory(Directory);
+                return Host.GetCurrentDirectory();
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Directory
+    Value: .
+    DefaultValue: ''
+    Description: Directory to change to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: &o0
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ReadTextFile
+  Aliases:
+  - cat
+  Description: Read a text file on disk.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                return File.ReadAllText(Path);
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: Path to the file.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: CreateDirectory
+  Aliases:
+  - mkdir
+  Description: Creates all directories and subdirectories in the specified path unless they already exist.
+  Author:
+      Name: Daniel Duggan
+      Handle: _RastaMouse
+      Link: https://twitter.com/_RastaMouse
+  Help:
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                var directory = Directory.CreateDirectory(Path);
+                return directory.FullName + " created.";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: The directory to create.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: Delete
+  Aliases:
+  - rm
+  - del
+  Description: Delete a file or directory.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Path)
+        {
+            try
+            {
+                if (File.Exists(Path))
+                {
+                    File.Delete(Path);
+                    return $"File {Path} deleted.";
+                }
+    			      else if (Directory.Exists(Path))
+                {
+                    Directory.Delete(Path, true);
+                    return $"Directory {Path} deleted.";
+                }
+                else
+                {
+                    return $"{Path} does not exist.";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Path
+    Value: ''
+    DefaultValue: ''
+    Description: The path of the file or directory to delete.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: Copy
+  Aliases:
+  - cp
+  Description: Copy a file from one location to another.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+
+    public static class Task
+    {
+        public static string Execute(string Source, string Destination)
+        {
+            try
+            {
+                File.Copy(Source, Destination);
+                return "Successfully copied file from: " + Source + " to: " + Destination;
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Source
+    Value: ''
+    DefaultValue: ''
+    Description: Source file to copy
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Destination
+    Value: .
+    DefaultValue: ''
+    Description: Destination to copy file to.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: Kill
+  Aliases: []
+  Description: Kills the process of a given Process ID.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Diagnostics;
+
+    public static class Task
+    {
+        public static string Execute(string ProcessId)
+        {
+            try
+            {
+                int pid = int.Parse(ProcessId);
+                using (var process = Process.GetProcessById(pid))
+                {
+                    string processName = process.ProcessName;
+                    process.Kill();
+    				        if (process.HasExited)
+                    {
+                        return $"Process ID {pid} ({processName}) killed.";
+                    }
+                    else
+                    {
+                        return $"Could not kill Process ID {pid} ({processName})";
+                    }
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ProcessID
+    Value: ''
+    DefaultValue: ''
+    Description: The Process ID of the process to kill.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: SharpShell
+  Aliases: []
+  Description: Execute custom c# code.
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: ''
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Code
+    Value: ''
+    DefaultValue: ''
+    Description: C# code to execute.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

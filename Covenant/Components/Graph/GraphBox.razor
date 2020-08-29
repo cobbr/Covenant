@@ -1,0 +1,149 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
+@inject IJSRuntime IJSRuntime
+
+<div class="d-flex flex-wrap">
+    <div class="graph-box border m-1 p-1"></div>
+    <div class="flex-grow-1 border-left border-right border-bottom m-1 p-0">
+        <div class="border-top m-0 p-0">
+            <div class="m-2">
+                <h3 class="h3">Legend</h3>
+            </div>
+            <ul style="list-style-type: none;">
+                <li><img src="/images/legend-red.png" alt="Red" height="20" width="20" /> Listener</li>
+                <li><img src="/images/legend-blue.png" alt="Blue" height="20" width="20" /> Grunt (http)</li>
+                <li><img src="/images/legend-green.png" alt="Green" height="20" width="20" /> Grunt (smb)</li>
+            </ul>
+        </div>
+        <div class="border-top mb-1 pb-2 mt-1">
+            <div class="m-2">
+                <h3 class="h3">Node Information</h3>
+            </div>
+            <ul class="nav nav-tabs mb-3" id="graph-tab" role="tablist" hidden>
+                <li class="nav-link" id="start-tab-label" data-toggle="tab" href="#start-tab" role="tab" aria-controls="start-tab" aria-selected="true">
+                    Start Tab
+                </li>
+                @foreach (Grunt g in this.Grunts)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" id="@g.GUID-tab" data-toggle="tab" href="#node-@g.GUID" role="tab" aria-controls="@g.GUID" aria-selected="false">
+                            @g.Name
+                        </a>
+                    </li>
+                }
+                @foreach (Listener l in this.Listeners)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" id="@l.GUID-tab" data-toggle="tab" href="#node-@l.GUID" role="tab" aria-controls="@l.GUID" aria-selected="false">
+                            @l.Name
+                        </a>
+                    </li>
+                }
+            </ul>
+            <div class="tab-content p-2" id="graph-tab-content">
+                <div class="tab-pane fade" id="start-tab" role="tabpanel" aria-labelledby="start-tab-label">
+                    <p class="text-muted">Click on a node to reveal more information.</p>
+                </div>
+                @foreach (Grunt g in Grunts)
+                {
+                    <div class="tab-pane fade" id="node-@g.GUID" role="tabpanel" aria-labelledby="@g.GUID-tab">
+                        <h5 class="h5">Grunt</h5>
+                        <div class="form-group">
+                            <label for="Name">Name</label>
+                            <a id="Name" name="Name" href="/grunt/interact/@g.Id" class="btn btn-secondary text-left w-100">@g.Name</a>
+                        </div>
+                        <div class="form-group">
+                            <label for="Note">Note</label>
+                            <input id="Note" name="Note" @bind="@g.Note" class="form-control" readonly disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="ImplantTemplate.CommType">CommType</label>
+                            <input id="ImplantTemplate.CommType" name="ImplantTemplate.CommType" @bind="g.ImplantTemplate.CommType" class="form-control" readonly disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="Children">Children</label><br />
+                            <select id="Children" name="Children" readonly disabled class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-selected-text-format="count > 4">
+                                @foreach (string c in g.Children)
+                                {
+                                    <option selected value="@c">@c</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+                @foreach (Listener l in Listeners)
+                {
+                    <div class="tab-pane fade" id="node-@l.GUID" role="tabpanel" aria-labelledby="@l.GUID-tab">
+                        <h5 class="h5">Listener</h5>
+                        <div class="form-group">
+                            <label for="Listener.Name">Name</label>
+                            <a href="/listener/edit/@l.Id" class="btn btn-secondary text-left w-100">@l.Name</a>
+                        </div>
+                        <div class="form-group">
+                            <label for="Description">Description</label>
+                            <input id="Description" name="Description" @bind="@l.Description" class="form-control" readonly disabled>
+                        </div>
+                        @if (l.ListenerType.Name == "HTTP")
+                        {
+                            <div class="form-group">
+                                <label for="Urls">Urls</label>
+                                @{ string urls = string.Join(",", ((HttpListener)l).Urls); }
+                                <input id="Urls" name="Urls" value="@urls" class="form-control" readonly disabled>
+                            </div>
+                         }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<Listener> Listeners { get; set; }
+
+    private IEnumerable<Grunt> Grunts { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Grunts = await Service.GetGrunts();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "start-tab");
+            await IJSRuntime.InvokeAsync<string>("InitializeGraph", ".graph-box");
+            foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized))
+            {
+                await IJSRuntime.InvokeAsync<string>("GraphDisplayGrunt", grunt.GUID, grunt.Name);
+            }
+            foreach (Listener listener in this.Listeners.Where(L => L.Status == ListenerStatus.Active))
+            {
+                await IJSRuntime.InvokeAsync<string>("GraphDisplayListener", listener.GUID, listener.Name);
+            }
+            foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized))
+            {
+                foreach (string child in grunt.Children)
+                {
+                    Grunt childGrunt = await Service.GetGruntByGUID(child);
+                    await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntLink", grunt.GUID, childGrunt.GUID);
+                }
+            }
+            List<Grunt> grunts = this.Grunts
+                    .Where(G => G.Status != GruntStatus.Uninitialized)
+                    .Where(G => !this.Grunts.Any(AG => AG.Children.Contains(G.GUID)))
+                    .ToList();
+            foreach (Grunt grunt in grunts)
+            {
+                Listener listener = await Service.GetListener(grunt.ListenerId);
+                await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntListenerLink", listener.GUID, grunt.GUID);
+            }
+        }
+    }
+}

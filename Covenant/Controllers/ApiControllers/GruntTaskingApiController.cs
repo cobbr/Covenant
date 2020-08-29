@@ -2,40 +2,26 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
 
 using Covenant.Core;
-using Covenant.Hubs;
-using Covenant.Models;
 using Covenant.Models.Grunts;
-using Covenant.Models.Covenant;
 
 namespace Covenant.Controllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api")]
+    [ApiController, Route("api"), Authorize(Policy = "RequireJwtBearer")]
     public class GruntTaskingApiController : Controller
     {
-        private readonly CovenantContext _context;
-        private readonly UserManager<CovenantUser> _userManager;
-        private readonly IHubContext<GruntHub> _grunthub;
-        private readonly IHubContext<EventHub> _eventhub;
+        private readonly ICovenantService _service;
 
-        public GruntTaskingApiController(CovenantContext context, UserManager<CovenantUser> userManager, IHubContext<GruntHub> grunthub, IHubContext<EventHub> eventhub)
+        public GruntTaskingApiController(ICovenantService service)
         {
-            _context = context;
-            _userManager = userManager;
-            _grunthub = grunthub;
-            _eventhub = eventhub;
+            _service = service;
         }
 
         // GET: api/taskings
@@ -45,7 +31,7 @@ namespace Covenant.Controllers
         [HttpGet("taskings", Name = "GetAllGruntTaskings")]
         public async Task<ActionResult<IEnumerable<GruntTasking>>> GetAllGruntTaskings()
         {
-            return Ok(await _context.GetGruntTaskings());
+            return Ok(await _service.GetGruntTaskings());
         }
 
         // GET: api/grunts/{id}/taskings
@@ -55,7 +41,7 @@ namespace Covenant.Controllers
         [HttpGet("grunts/{id}/taskings", Name = "GetGruntTaskings")]
         public async Task<ActionResult<IEnumerable<GruntTasking>>> GetGruntTaskings(int id)
         {
-            return Ok(await _context.GetGruntTaskingsForGrunt(id));
+            return Ok(await _service.GetGruntTaskingsForGrunt(id));
         }
 
         // GET: api/grunts/{id}/taskings/search
@@ -65,7 +51,7 @@ namespace Covenant.Controllers
         [HttpGet("grunts/{id}/taskings/search", Name = "GetSearchGruntTaskings")]
         public async Task<ActionResult<IEnumerable<GruntTasking>>> GetSearchGruntTaskings(int id)
         {
-            return Ok(await _context.GetGruntTaskingsSearch(id));
+            return Ok(await _service.GetGruntTaskingsSearch(id));
         }
 
         // GET: api/grunts/{id}/taskings/uninitialized
@@ -75,7 +61,7 @@ namespace Covenant.Controllers
         [HttpGet("grunts/{id}/taskings/uninitialized", Name = "GetUninitializedGruntTaskings")]
         public async Task<ActionResult<IEnumerable<GruntTasking>>> GetUninitializedGruntTaskings(int id)
         {
-            return Ok(await _context.GetUninitializedGruntTaskingsForGrunt(id));
+            return Ok(await _service.GetUninitializedGruntTaskingsForGrunt(id));
         }
 
         // GET: api/grunts/{id}/taskings/search/uninitialized
@@ -85,7 +71,7 @@ namespace Covenant.Controllers
         [HttpGet("grunts/{id}/taskings/search/uninitialized", Name = "GetSearchUninitializedGruntTaskings")]
         public async Task<ActionResult<IEnumerable<GruntTasking>>> GetSearchUninitializedGruntTaskings(int id)
         {
-            IEnumerable<GruntTasking> taskings = await _context.GetGruntTaskingsSearch(id);
+            IEnumerable<GruntTasking> taskings = await _service.GetGruntTaskingsSearch(id);
             return Ok(taskings
                 .Where(GT => GT.Status == GruntTaskingStatus.Uninitialized)
                 .ToList());
@@ -100,7 +86,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntTasking(tid);
+                return await _service.GetGruntTasking(tid);
             }
             catch (ControllerNotFoundException e)
             {
@@ -121,7 +107,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.GetGruntTaskingByName(taskingname);
+                return await _service.GetGruntTaskingByName(taskingname);
             }
             catch (ControllerNotFoundException e)
             {
@@ -143,7 +129,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                GruntTasking tasking = await _context.CreateGruntTasking(_userManager, HttpContext.User, gruntTasking, _grunthub);
+                GruntTasking tasking = await _service.CreateGruntTasking(gruntTasking);
                 return CreatedAtRoute(nameof(GetGruntTasking), new { tid = tasking.Id }, tasking);
             }
             catch (ControllerNotFoundException e)
@@ -165,7 +151,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                return await _context.EditGruntTasking(gruntTasking, _grunthub, _eventhub);
+                return await _service.EditGruntTasking(gruntTasking);
             }
             catch (ControllerNotFoundException e)
             {
@@ -187,7 +173,7 @@ namespace Covenant.Controllers
         {
             try
             {
-                await _context.DeleteGruntTasking(tid);
+                await _service.DeleteGruntTasking(tid);
             }
             catch (ControllerNotFoundException e)
             {

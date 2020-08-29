@@ -1,0 +1,33 @@
+﻿@page "/covenantuser/login"
+@using Microsoft.AspNetCore.Identity
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject UserManager<CovenantUser> UserManager
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model Covenant.Pages.LoginModel
+@{
+    Layout = "_LoginLayout";
+}
+
+<div class="covenant-logo">
+    <img class="mb-5" src="~/images/covenant-white.png" height="175" width="602">
+    @if (!UserManager.Users.ToList().Where(U => UserManager.IsInRoleAsync(U, "Administrator").WaitResult()).Any())
+    {
+        <form method="post" class="form-signin">
+            <h1 class="h5 text-white">Register Initial User</h1>
+            <input asp-for="CovenantUserRegister.UserName" class="form-control mb-3" placeholder="Username" required autofocus>
+            <input asp-for="CovenantUserRegister.Password" class="form-control" placeholder="Password" type="password" required>
+            <input asp-for="CovenantUserRegister.ConfirmPassword" class="form-control mb-3" placeholder="Confirm Password" type="password" required>
+            <button type="submit" class="btn btn-lg btn-outline-primary btn-block">Register</button>
+        </form>
+    }
+    else
+    {
+        <form method="post" class="form-signin">
+            <input asp-for="CovenantUserRegister.UserName" class="form-control" placeholder="Username" required autofocus>
+            <input asp-for="CovenantUserRegister.Password" class="form-control mb-3" placeholder="Password" type="password" required>
+            <input asp-for="CovenantUserRegister.ConfirmPassword" value="login" class="form-control" hidden />
+            <button type="submit" class="btn btn-lg btn-outline-primary btn-block">Login</button>
+        </form>
+    }
+</div>

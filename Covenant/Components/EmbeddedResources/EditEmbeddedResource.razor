@@ -1,0 +1,39 @@
+﻿@page "/embeddedresource/edit/{EmbeddedResourceId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">EmbeddedResource: <span  class="primary-color">@EmbeddedResource.Name</span></h1>
+</div>
+
+<EmbeddedResourceForm EmbeddedResource="EmbeddedResource" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit" />
+
+@code {
+    [Parameter]
+    public int EmbeddedResourceId { get; set; }
+
+    [Parameter]
+    public EmbeddedResource EmbeddedResource { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.EmbeddedResource = this.EmbeddedResource ?? await Service.GetEmbeddedResource(this.EmbeddedResourceId);
+    }
+
+    public async Task OnEdit(EmbeddedResource resource)
+    {
+        try
+        {
+            await Service.EditEmbeddedResource(resource);
+            NavigationManager.NavigateTo("/grunttask");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Edit), new { id = resource.Id });
+        }
+    }
+}

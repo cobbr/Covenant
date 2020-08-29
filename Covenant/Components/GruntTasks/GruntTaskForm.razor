@@ -1,0 +1,478 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="GruntTask" OnValidSubmit="OnFormSubmit">
+    <DataAnnotationsValidator />
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="GruntTask.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => GruntTask.Name" /></div>
+        </div>
+        <div class="form-group col-md-8">
+            <label for="Description">Description</label>
+            <input id="Description" name="Description" @bind="GruntTask.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => GruntTask.Description" /></div>
+        </div>
+    </div>
+    <label>Author</label><br />
+    <div class="border rounded p-1">
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="Author_Name">Name</label>
+                <input id="Author_Name" name="Author_Name" @bind="GruntTask.Author.Name" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => GruntTask.Author.Name" /></div>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="Author_Handle">Handle</label>
+                <input id="Author_Handle" name="Author_Handle" @bind="GruntTask.Author.Handle" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => GruntTask.Author.Handle" /></div>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="Author_Link">Link</label>
+                <input id="Author_Link" name="Author_Link" @bind="GruntTask.Author.Link" class="form-control">
+                <div class="text-danger"><ValidationMessage For="() => GruntTask.Author.Link" /></div>
+            </div>
+        </div>
+    </div>
+    <label for="Aliases_0_">Aliases</label>
+    <div class="form-row input-group">
+        @if (GruntTask.Aliases.Count == 0)
+        {
+            <div class="form-group col-md-2 pr-1">
+                <input id="@("Aliases_0_")" value="None" readonly class="form-control form-control-sm" />
+            </div>
+        }
+        @for (int i = 0; i < GruntTask.Aliases.Count; i++)
+        {
+            int number = i;
+            <div class="form-group col-md-2 pr-1">
+                <input id="@("Aliases_" + number + "_")" name="@("Aliases[" + number + "_")" @bind="GruntTask.Aliases[number]" class="form-control form-control-sm" />
+            </div>
+        }
+        <div class="input-group-append ml-1 mb-3">
+            <button type="button" @onclick="(e => AddAlias())" class="btn btn-sm btn-outline-primary">
+                <span class="fe fe-plus"></span>
+            </button>
+            @if (GruntTask.Aliases.Count > 0)
+            {
+                <button type="button" @onclick="(e => RemoveAlias())" class="btn btn-sm btn-outline-danger">
+                    <span class="fe fe-x"></span>
+                </button>
+            }
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="Language">Language</label><br />
+            <select id="Language" name="Language" @bind="GruntTask.Language" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+                @foreach (var n in Enum.GetNames(typeof(ImplantLanguage)))
+                {
+                    if (Enum.TryParse<ImplantLanguage>(n, out ImplantLanguage language) && this.GruntTask.Language == language)
+                    {
+                        <option selected value="@(((Enum)typeof(ImplantLanguage).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(ImplantLanguage).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => GruntTask.Language" /></div>
+        </div>
+        @if (GruntTask.Language == ImplantLanguage.CSharp)
+        {
+            <div class="form-group col-md-3">
+                <label for="CompatibleDotNetVersions">CompatibleDotNetVersions</label><br />
+                <select id="CompatibleDotNetVersions" name="CompatibleDotNetVersions" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                    @foreach (var n in Enum.GetNames(typeof(Common.DotNetVersion)))
+                    {
+                        if (Enum.TryParse<Common.DotNetVersion>(n, out Common.DotNetVersion version) && this.GruntTask.CompatibleDotNetVersions.Contains(version))
+                        {
+                            <option selected value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                        }
+                        else
+                        {
+                            <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                        }
+                    }
+                </select>
+                <div class="text-danger"><ValidationMessage For="() => GruntTask.CompatibleDotNetVersions" /></div>
+            </div>
+        }
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3 ml-1">
+            <div class="form-check form-check-inline">
+                <input id="TokenTask" name="TokenTask" @bind="GruntTask.TokenTask" class="form-check-input" type="checkbox">
+                <label for="TokenTask" class="form-check-label">TokenTask</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-check-inline">
+                <input id="UnsafeCompile" name="UnsafeCompile" @bind="GruntTask.UnsafeCompile" class="form-check-input" type="checkbox">
+                <label for="UnsafeCompile" class="form-check-label">UnsafeCompile</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-check-inline">
+                <input id="Compiled" name="Compiled" @bind="GruntTask.Compiled" class="form-check-input" type="checkbox" disabled="@(!GruntTask.Compiled)">
+                <label for="Compiled" class="form-check-label">Compiled</label>
+            </div>
+        </div>
+        <div class="text-danger"><ValidationMessage For="() => GruntTask.TokenTask" /></div>
+        <div class="text-danger"><ValidationMessage For="() => GruntTask.UnsafeCompile" /></div>
+        <div class="text-danger"><ValidationMessage For="() => GruntTask.Compiled" /></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-5">
+            <label for="ReferenceSourceLibraries">ReferenceSourceLibraries</label><br />
+            <select id="ReferenceSourceLibraries" name="ReferenceSourceLibraries" @onchange="OnChangeReferenceSourceLibraries" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                @foreach (ReferenceSourceLibrary library in GetReferenceSourceLibraries())
+                {
+                    if (GruntTask.ReferenceSourceLibraries.Contains(library))
+                    {
+                        <option @key="library" selected value="@library.Id">@library.Name</option>
+                    }
+                    else
+                    {
+                        <option @key="library" value="@library.Id">@library.Name</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => GruntTask.ReferenceSourceLibraries" /></div>
+        </div>
+        <div class="form-group col-md-5">
+            <label for="EmbeddedResources">EmbeddedResources</label><br />
+            <select id="EmbeddedResources" name="EmbeddedResources" @onchange="OnChangeEmbeddedResources" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                @foreach (EmbeddedResource resource in GetEmbeddedResources())
+                {
+                    if (GruntTask.EmbeddedResources.Contains(resource))
+                    {
+                        <option @key="resource" selected value="@resource.Id">@resource.Name</option>
+                    }
+                    else
+                    {
+                        <option @key="resource" value="@resource.Id">@resource.Name</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => GruntTask.EmbeddedResources" /></div>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="ReferenceAssemblies">ReferenceAssemblies</label><br />
+            <select id="ReferenceAssemblies" name="ReferenceAssemblies" @onchange="OnChangeReferenceAssemblies" class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-width="auto" data-live-search="true" data-selected-text-format="count > 2">
+                @foreach (ReferenceAssembly assembly in GetReferenceAssemblies())
+                {
+                    if (GruntTask.ReferenceAssemblies.Contains(assembly))
+                    {
+                        <option @key="assembly" selected value="@assembly.Id">@assembly.Name (@assembly.DotNetVersion.ToString())</option>
+                    }
+                    else
+                    {
+                        <option @key="assembly" value="@assembly.Id">@assembly.Name (@assembly.DotNetVersion.ToString())</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => GruntTask.ReferenceAssemblies" /></div>
+        </div>
+    </div>
+
+    <h5>Options</h5>
+    <div class="d-flex flex-row flex-wrap ml-1 mb-1">
+        @if (GruntTask.Options.Count == 0)
+        {
+            <div class="col-md-6 p-1">
+                <div class="card h-100 bg-light">
+                    <div class="card-body m-1 p-1 d-flex justify-content-center align-items-center">
+                        <span class="text-muted">No Options</span>
+                    </div>
+                </div>
+            </div>
+        }
+        @for (int i = 0; i < GruntTask.Options.Count; i++)
+        {
+            int number = i;
+            <div class="col-md-6 p-1">
+                <div class="card h-100">
+                    <div class="card-body m-1 p-1">
+                        <div class="d-flex">
+                            <div class="ml-auto" style="z-index: 1">
+                                <button type="button" @onclick="(e => RemoveOption(number))" class="btn btn-sm btn-outline-danger xbutton">
+                                    <span class="fe fe-x"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-row mt-n4">
+                                <div class="form-group col-md-12 mb-1">
+                                    <label for="@("Options_" + number + "__Name")" class="col-form-label">Name</label>
+                                    <input id="@("Options_" + number + "__Name")" name="@("Options[" + number + "].Name")" @bind="GruntTask.Options[number].Name" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12 mb-1">
+                                    <label for="@("Options_" + number + "__Description")" class="col-form-label">Description</label>
+                                    <input id="@("Options_" + number + "__Description")" name="@("Options[" + number + "].Description")" @bind="GruntTask.Options[number].Description" class="form-control">
+                                </div>
+                            </div>
+                            @if (GruntTask.Options[number].Optional)
+                            {
+                                <div class="form-row">
+                                    <div class="form-group col-md-12 mb-1">
+                                        <label for="@("Options_" + number + "__DefaultValue")" class="col-form-label">DefaultValue</label>
+                                        <input id="@("Options_" + number + "__DefaultValue")" name="@("Options[" + number + "].DefaultValue")" @bind="@GruntTask.Options[number].DefaultValue" class="form-control">
+                                    </div>
+                                </div>
+                            }
+                            <label for="@("Options_" + number + "__SuggestedValues_0_")">SuggestedValues</label>
+                            <div class="form-row input-group">
+                                @if (GruntTask.Options[number].SuggestedValues.Count == 0)
+                                {
+                                    <div class="form-group col-md-3 pr-1 mb-1">
+                                        <input id="@("Options_" + number + "__SuggestedValues_0_")" value="None" readonly class="form-control form-control-sm" />
+                                    </div>
+                                }
+                                @for (int j = 0; j < GruntTask.Options[number].SuggestedValues.Count; j++)
+                                {
+                                    int number2 = j;
+                                    <div class="form-group col-md-3 pr-1 mb-1">
+                                        <input id="@("Options_" + number + "__SuggestedValues_" + number2 + "_")" name="@("Options[" + number + "__SuggestedValues_" + number2 + "_")" @bind="GruntTask.Options[number].SuggestedValues[number2]" class="form-control form-control-sm" />
+                                    </div>
+                                }
+                                <div class="input-group-append ml-1 pb-1">
+                                    <button type="button" @onclick="(e => AddSuggestedValue(number))" class="btn btn-sm btn-outline-primary">
+                                        <span class="fe fe-plus"></span>
+                                    </button>
+                                    @if (GruntTask.Options[number].SuggestedValues.Count > 0)
+                                    {
+                                        <button type="button" @onclick="(e => RemoveSuggestedValue(number))" class="btn btn-sm btn-outline-danger">
+                                            <span class="fe fe-x"></span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-3 ml-1">
+                                    <div class="form-check form-check-inline mt-2">
+                                        <input id="@("Options_" + number + "__Optional")" name="@("Options[" + number + "].Optional")" @bind="GruntTask.Options[number].Optional" class="form-check-input" type="checkbox">
+                                        <label for="@("Options_" + number + "__Optional")" class="form-check-label">Optional</label>
+                                    </div>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <div class="form-check form-check-inline mt-2">
+                                        <input id="@("Options_" + number + "__DisplayInCommand")" name="@("Options[" + number + "].DisplayInCommand")" @bind="GruntTask.Options[number].DisplayInCommand" class="form-check-input" type="checkbox">
+                                        <label for="@("Options_" + number + "__DisplayInCommand")" class="form-check-label">DisplayInCommand</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="col-md-6 p-1">
+            <div class="card h-100">
+                <div class="card-body p-0">
+                    <button type="button" @onclick="AddOption" class="btn btn-lg btn-block btn-outline-primary h-100" style="opacity: 0.4"><span style="font-size: 75px">+</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="Help">Help</label>
+        <textarea id="Help" name="Help" @bind="GruntTask.Help" rows="10" class="form-control"></textarea>
+        <div class="text-danger"><ValidationMessage For="() => GruntTask.Help" /></div>
+    </div>
+    <div class="form-group">
+        <label for="Code">Code</label>
+        <textarea id="Code" name="Code" @ref="CodeMirrorElement" @bind="GruntTask.Code" rows="20" class="form-control code-mirror-csharp"></textarea>
+        <div class="text-danger"><ValidationMessage For="() => GruntTask.Code" /></div>
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+    </button>
+    @ChildContent
+</EditForm>
+
+@code {
+    private GruntTask _GruntTask;
+    [Parameter]
+    public GruntTask GruntTask
+    {
+        get
+        {
+            return _GruntTask;
+        }
+        set
+        {
+            if (value != null && value.Id > 0)
+            {
+                _GruntTask = Service.GetGruntTask(value.Id).WaitResult();
+            }
+            else
+            {
+                _GruntTask = value;
+            }
+        }
+    }
+
+    [Parameter]
+    public string SubmitIcon { get; set; }
+
+    [Parameter]
+    public string SubmitLabel { get; set; }
+
+    [Parameter]
+    public EventCallback<GruntTask> OnSubmit { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
+    private ElementReference CodeMirrorElement { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
+        }
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#Language.selectpicker", ((int)Enum.Parse(typeof(ImplantLanguage), this.GruntTask.Language.ToString())).ToString());
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#ReferenceSourceLibraries.selectpicker");
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#ReferenceAssemblies.selectpicker");
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#EmbeddedResources.selectpicker");
+        if (this.GruntTask.Language == ImplantLanguage.CSharp)
+        {
+            await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#CompatibleDotNetVersions.selectpicker");
+        }
+    }
+
+    private void AddAlias()
+    {
+        this.GruntTask.Aliases.Add("");
+    }
+
+    private void RemoveAlias()
+    {
+        if (this.GruntTask.Aliases.Count > 0)
+        {
+            this.GruntTask.Aliases.RemoveAt(this.GruntTask.Aliases.Count - 1);
+        }
+    }
+
+    private void AddSuggestedValue(int index)
+    {
+        this.GruntTask.Options[index].SuggestedValues.Add("");
+    }
+
+    private void RemoveSuggestedValue(int index)
+    {
+        if (this.GruntTask.Options[index].SuggestedValues.Count > 0)
+        {
+            this.GruntTask.Options[index].SuggestedValues.RemoveAt(this.GruntTask.Options[index].SuggestedValues.Count - 1);
+        }
+    }
+
+    private void AddOption()
+    {
+        this.GruntTask.Options.Add(new GruntTaskOption
+        {
+            Id = 0,
+            GruntTaskId = this.GruntTask.Id,
+            Name = "",
+            Description = "",
+            Value = "",
+            DefaultValue = ""
+        });
+    }
+
+    private void RemoveOption(int index)
+    {
+        this.GruntTask.Options.RemoveAt(index);
+        StateHasChanged();
+    }
+
+    private IEnumerable<ReferenceSourceLibrary> GetReferenceSourceLibraries()
+    {
+        return Service.GetReferenceSourceLibraries().WaitResult();
+    }
+
+    private IEnumerable<ReferenceAssembly> GetReferenceAssemblies()
+    {
+        return Service.GetReferenceAssemblies().WaitResult();
+    }
+
+    private IEnumerable<EmbeddedResource> GetEmbeddedResources()
+    {
+        return Service.GetEmbeddedResources().WaitResult();
+    }
+
+    private async Task OnChangeReferenceSourceLibraries()
+    {
+        string[] rsls = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#ReferenceSourceLibraries" });
+        IEnumerable<int> ids = rsls.Where(id => int.TryParse(id, out _)).Select(sid => int.Parse(sid));
+        IEnumerable<int> adds = ids.Where(id => !this.GruntTask.ReferenceSourceLibraries.Select(RSL => RSL.Id).Contains(id));
+        IEnumerable<int> removes = this.GruntTask.ReferenceSourceLibraries.Select(RSL => RSL.Id).Where(id => !ids.Contains(id));
+        foreach (int id in adds)
+        {
+            this.GruntTask.Add(await Service.GetReferenceSourceLibrary(id));
+        }
+        foreach (int id in removes)
+        {
+            this.GruntTask.Remove(this.GruntTask.ReferenceSourceLibraries.Find(RSL => RSL.Id == id));
+        }
+    }
+
+    private async Task OnChangeReferenceAssemblies()
+    {
+        string[] ras = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#ReferenceAssemblies" });
+        IEnumerable<int> ids = ras.Where(id => int.TryParse(id, out _)).Select(sid => int.Parse(sid));
+        IEnumerable<int> adds = ids.Where(id => !this.GruntTask.ReferenceAssemblies.Select(RA => RA.Id).Contains(id));
+        IEnumerable<int> removes = this.GruntTask.ReferenceAssemblies.Select(RA => RA.Id).Where(id => !ids.Contains(id));
+        foreach (int id in adds)
+        {
+            this.GruntTask.Add(await Service.GetReferenceAssembly(id));
+        }
+        foreach (int id in removes)
+        {
+            this.GruntTask.Remove(this.GruntTask.ReferenceAssemblies.Find(RA => RA.Id == id));
+        }
+    }
+
+    private async Task OnChangeEmbeddedResources()
+    {
+        string[] ers = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#EmbeddedResources" });
+        IEnumerable<int> ids = ers.Where(id => int.TryParse(id, out _)).Select(sid => int.Parse(sid));
+        IEnumerable<int> adds = ids.Where(id => !this.GruntTask.EmbeddedResources.Select(ER => ER.Id).Contains(id));
+        IEnumerable<int> removes = this.GruntTask.EmbeddedResources.Select(ER => ER.Id).Where(id => !ids.Contains(id));
+        foreach (int id in adds)
+        {
+            this.GruntTask.Add(await Service.GetEmbeddedResource(id));
+        }
+        foreach (int id in removes)
+        {
+            this.GruntTask.Remove(this.GruntTask.EmbeddedResources.Find(ER => ER.Id == id));
+        }
+    }
+
+    private async Task<List<Common.DotNetVersion>> GetCompatibleDotNetVersions()
+    {
+        string[] ids = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#CompatibleDotNetVersions" });
+        return ids.Where(id => Enum.TryParse<Common.DotNetVersion>(id, out _)).Select(id => Enum.Parse<Common.DotNetVersion>(id)).ToList();
+    }
+
+    private async Task OnFormSubmit()
+    {
+        this.GruntTask.CompatibleDotNetVersions = await GetCompatibleDotNetVersions();
+        await this.OnSubmit.InvokeAsync(this.GruntTask);
+    }
+}

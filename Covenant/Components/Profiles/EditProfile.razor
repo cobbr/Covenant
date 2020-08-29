@@ -1,0 +1,70 @@
+﻿@page "/profile/edit/{ProfileId:int}"
+@attribute [Authorize(Roles = "Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Models.Listeners
+@inject UserManager<CovenantUser> UserManager
+@inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Profile: <span id="task-name" class="primary-color">@Profile.Name</span></h1>
+</div>
+
+@if (Profile.Type == ProfileType.HTTP)
+{
+    <HttpProfileForm Profile=@((HttpProfile)Profile) OnSubmit="OnEditHttpProfile"></HttpProfileForm>
+}
+else if (Profile.Type == ProfileType.Bridge)
+{
+    <BridgeProfileForm Profile=@((BridgeProfile)Profile) OnSubmit="OnEditBridgeProfile"></BridgeProfileForm>
+}
+
+@code {
+    [Parameter]
+    public int ProfileId { get; set; }
+
+    [Parameter]
+    public Profile Profile { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Profile = this.Profile ?? await Service.GetProfile(this.ProfileId);
+    }
+
+    private async Task OnEditHttpProfile(HttpProfile profile)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditHttpProfile(profile, await UserManager.GetUserAsync(state.User));
+            NavigationManager.NavigateTo($"/listener");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+
+    private async Task OnEditBridgeProfile(BridgeProfile profile)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditBridgeProfile(profile, await UserManager.GetUserAsync(state.User));
+            NavigationManager.NavigateTo($"/listener");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+}

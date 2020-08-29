@@ -1,0 +1,101 @@
+- Name: SharpSC
+  Aliases: []
+  Description: Use a SharpSC command.
+  Author: 
+      Name: Dwight Hohnstein
+      Handle: djhohnstein
+      Link: https://twitter.com/djhohnstein
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Reflection;
+    
+    using SharpSC;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command = "")
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                string[] args = Command.Split(' ');
+                typeof(Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: SharpSC command to execute.
+    SuggestedValues:
+    - action=query service=
+    - action=start service=
+    - action=stop service=
+    - action=create service=
+    - action=delete service=
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSC
+    Description: SharpSC is a .NET assembly to perform basic operations with services.
+    Location: SharpSC\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

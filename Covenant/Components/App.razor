@@ -1,0 +1,29 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Components.Shared
+@inject UserManager<CovenantUser> UserManager
+@inject SignInManager<CovenantUser> SignInManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject ICovenantService ICovenantService
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout)">
+                <NotAuthorized>
+                    <p>You are not authorized to view this page, contact a Covenant administrator for more information.</p>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <LayoutView Layout="typeof(Layout)">
+                <h1>Page not found</h1>
+                <p>Sorry, but there's nothing here!</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

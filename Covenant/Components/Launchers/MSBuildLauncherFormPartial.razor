@@ -1,0 +1,41 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Launchers
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="TargetName">TargetName</label>
+        <input id="TargetName" name="TargetName" value="@MSBuildLauncher.TargetName" @onchange="(e => OnTargetNameChanged(e))" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => MSBuildLauncher.TargetName" /></div>
+    </div>
+    <div class="form-group col-md-6">
+        <label for="TaskName">TaskName</label>
+        <input id="TaskName" name="TaskName" value="@MSBuildLauncher.TaskName" @onchange="(e => OnTaskNameChanged(e))" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => MSBuildLauncher.TaskName" /></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+    public MSBuildLauncher MSBuildLauncher { get; set; }
+
+    [Parameter]
+    public EventCallback<Launcher> LauncherChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.MSBuildLauncher = (MSBuildLauncher)this.Launcher;
+    }
+
+    private void OnTargetNameChanged(ChangeEventArgs e)
+    {
+        this.MSBuildLauncher.TargetName = e.Value.ToString();
+        this.LauncherChanged.InvokeAsync(this.MSBuildLauncher);
+    }
+
+    private void OnTaskNameChanged(ChangeEventArgs e)
+    {
+        this.MSBuildLauncher.TaskName = e.Value.ToString();
+        this.LauncherChanged.InvokeAsync(this.MSBuildLauncher);
+    }
+}

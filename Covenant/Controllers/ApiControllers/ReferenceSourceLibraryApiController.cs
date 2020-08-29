@@ -1,5 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿// Author: Ryan Cobb (@cobbr_io)
+// Project: Covenant (https://github.com/cobbr/Covenant)
+// License: GNU GPLv3
+
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -7,28 +9,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
 using Covenant.Core;
-using Covenant.Models;
 using Covenant.Models.Grunts;
 
 namespace Covenant.Controllers.ApiControllers
 {
-    [Authorize(Policy = "RequireJwtBearer")]
-    [ApiController]
-    [Route("api/referencesourcelibraries")]
+    [ApiController, Route("api/referencesourcelibraries"), Authorize(Policy = "RequireJwtBearer")]
     public class ReferenceSourceLibraryApiController : Controller
     {
-        private readonly CovenantContext _context;
+        private readonly ICovenantService _service;
 
-        public ReferenceSourceLibraryApiController(CovenantContext context)
+        public ReferenceSourceLibraryApiController(ICovenantService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/referencesourcelibraries
         [HttpGet(Name = "GetReferenceSourceLibraries")]
         public async Task<ActionResult<IEnumerable<ReferenceSourceLibrary>>> GetReferenceSourceLibraries()
         {
-            return Ok(await _context.GetReferenceSourceLibraries());
+            return Ok(await _service.GetReferenceSourceLibraries());
         }
 
         // GET api/referencesourcelibraries/{id}
@@ -37,7 +36,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                return await _context.GetReferenceSourceLibrary(id);
+                return await _service.GetReferenceSourceLibrary(id);
             }
             catch (ControllerNotFoundException e)
             {
@@ -59,7 +58,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                ReferenceSourceLibrary createdLibrary = await _context.CreateReferenceSourceLibrary(library);
+                ReferenceSourceLibrary createdLibrary = await _service.CreateReferenceSourceLibrary(library);
                 return CreatedAtRoute(nameof(GetReferenceSourceLibrary), new { id = createdLibrary.Id }, createdLibrary);
             }
             catch (ControllerNotFoundException e)
@@ -82,7 +81,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                return await _context.EditReferenceSourceLibrary(library);
+                return await _service.EditReferenceSourceLibrary(library);
             }
             catch (ControllerNotFoundException e)
             {
@@ -104,7 +103,7 @@ namespace Covenant.Controllers.ApiControllers
         {
             try
             {
-                await _context.DeleteReferenceSourceLibrary(id);
+                await _service.DeleteReferenceSourceLibrary(id);
                 return new NoContentResult();
             }
             catch (ControllerNotFoundException e)

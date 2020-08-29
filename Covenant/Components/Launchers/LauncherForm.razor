@@ -1,0 +1,353 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.Net.Mime
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Listeners
+@using Covenant.Models.Launchers
+@inject IJSRuntime IJSRuntime
+
+<EditForm Model="Launcher" OnValidSubmit="(e => this.OnGenerate.InvokeAsync(Launcher))">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label for="Description">Description</label>
+        <input id="Description" name="Description" @bind="Launcher.Description" class="form-control-plaintext" readonly>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="ListenerId">Listener</label>
+            <select id="ListenerId" name="ListenerId" @bind="Launcher.ListenerId" class="form-control">
+                @foreach (var Listener in ActiveListeners)
+                {
+                    <option value="@Listener.Id">@Listener.Name</option>
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.ListenerId" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="ImplantTemplateId">ImplantTemplate</label>
+            <select id="ImplantTemplateId" name="ImplantTemplateId" @onchange="(e => OnImplantTemplateChanged(e))" class="form-control">
+                @foreach (var ImplantTemplate in ApplicableImplantTemplates)
+                {
+                    if (ImplantTemplate.Id == Launcher.ImplantTemplateId)
+                    {
+                        <option selected value="@ImplantTemplate.Id">@ImplantTemplate.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@ImplantTemplate.Id">@ImplantTemplate.Name</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.ImplantTemplateId" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="DotNetVersion">DotNetVersion</label><br />
+            <select id="DotNetVersion" name="DotNetVersion" @bind="Launcher.DotNetVersion" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+                @foreach (var n in GetApplicableDotNetVersions())
+                {
+                    <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.DotNetVersion" /></div>
+        </div>
+    </div>
+    @if (Launcher.DotNetVersion == Common.DotNetVersion.NetCore31)
+    {
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label for="RuntimeIdentifier">RuntimeIdentifier</label><br />
+                <select id="RuntimeIdentifier" name="RuntimeIdentifier" @bind="Launcher.RuntimeIdentifier" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+                    @foreach (var n in Enum.GetNames(typeof(Compiler.RuntimeIdentifier)))
+                    {
+                        if (Enum.TryParse<Compiler.RuntimeIdentifier>(n, out Compiler.RuntimeIdentifier identifier) && this.Launcher.RuntimeIdentifier == identifier)
+                        {
+                            <option selected value="@(((Enum)typeof(Compiler.RuntimeIdentifier).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                        }
+                        else
+                        {
+                            <option value="@(((Enum)typeof(Compiler.RuntimeIdentifier).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                        }
+                    }
+                </select>
+                <div class="text-danger"><ValidationMessage For="() => Launcher.RuntimeIdentifier" /></div>
+                @*<EnumSelect id="RuntimeIdentifier" Name="RuntimeIdentifier" @bind-Value="Launcher.RuntimeIdentifier" />*@
+            </div>
+        </div>
+    }
+    @if (this.CurrentImplantTemplate != null && this.CurrentImplantTemplate.Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+    {
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label for="ValidateCert">ValidateCert</label>
+                <select id="ValidateCert" name="ValidateCert" @onchange="(e => UpdateValidateCert(e))" class="form-control">
+                    <option value="True">True</option>
+                    <option value="False">False</option>
+                </select>
+                <div class="text-danger"><ValidationMessage For="() => Launcher.ValidateCert" /></div>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="UseCertPinning">UseCertPinning</label>
+                <select id="UseCertPinning" name="UseCertPinning" @onchange="(e => UpdateUseCertPinning(e))" class="form-control">
+                    <option value="True">True</option>
+                    <option value="False">False</option>
+                </select>
+                <div class="text-danger"><ValidationMessage For="() => Launcher.UseCertPinning" /></div>
+            </div>
+        </div>
+    }
+    @if (this.CurrentImplantTemplate != null && this.CurrentImplantTemplate.Name.Contains("SMB", StringComparison.CurrentCultureIgnoreCase))
+    {
+        <div class="form-group">
+            <label for="SMBPipeName">SMBPipeName</label>
+            <input id="SMBPipeName" name="SMBPipeName" @bind="@Launcher.SMBPipeName" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.SMBPipeName" /></div>
+        </div>
+    }
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="Delay">Delay</label>
+            <input id="Delay" name="Delay" @bind="@Launcher.Delay" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.Delay" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="JitterPercent">JitterPercent</label>
+            <input id="JitterPercent" name="JitterPercent" @bind="Launcher.JitterPercent" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.JitterPercent" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="ConnectAttempts">ConnectAttempts</label>
+            <input id="ConnectAttempts" name="ConnectAttempts" @bind="Launcher.ConnectAttempts" class="form-control" type="number">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.ConnectAttempts" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="KillDate">KillDate</label>
+            <input id="KillDate" name="KillDate" @bind="Launcher.KillDate" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.KillDate" /></div>
+        </div>
+    </div>
+
+    @switch (Launcher.Name)
+    {
+        case "Binary":
+            break;
+        case "ShellCode":
+            break;
+        case "Cscript":
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+        case "InstallUtil":
+            break;
+        case "MSBuild":
+            <MSBuildLauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+        case "Mshta":
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+        case "PowerShell":
+            <PowerShellLauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+        case "Regsvr32":
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
+            <Regsvr32LauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+        case "Wmic":
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+        case "Wscript":
+            <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
+            break;
+    }
+    <div class="btn-group" role="group">
+        <button type="submit" class="btn btn-primary mr-5" id="generate">
+            <span class="fe fe-zap"></span> Generate
+        </button>
+        <button type="button" @onclick="OnDownload" class="btn btn-outline-primary ml-5" id="download">
+            <span class="fe fe-download"></span> Download
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+
+    [Parameter]
+    public EventCallback<Launcher> OnGenerate { get; set; }
+
+    private IEnumerable<Listener> _ActiveListeners;
+    private IEnumerable<Listener> ActiveListeners
+    {
+        get
+        {
+            if (_ActiveListeners == null)
+            {
+                _ActiveListeners = Service.GetListeners().WaitResult().Where(L => L.Status == ListenerStatus.Active);
+            }
+            if (Launcher.ListenerId == 0 && _ActiveListeners.Count() > 0)
+            {
+                Launcher.ListenerId = _ActiveListeners.First().Id;
+                StateHasChanged();
+            }
+            return _ActiveListeners;
+        }
+    }
+
+    private IEnumerable<ImplantTemplate> _ApplicableImplantTemplates;
+    private IEnumerable<ImplantTemplate> ApplicableImplantTemplates
+    {
+        get
+        {
+            if (_ApplicableImplantTemplates == null)
+            {
+                _ApplicableImplantTemplates = Service.GetImplantTemplates().WaitResult().Where(IT => ActiveListeners.Any(AL => IT.CompatibleListenerTypes.Contains(AL.ListenerType)));
+            }
+            if (Launcher.ImplantTemplateId == 0 && _ApplicableImplantTemplates.Count() > 0)
+            {
+                Launcher.ImplantTemplateId = _ApplicableImplantTemplates.First().Id;
+                StateHasChanged();
+            }
+            return _ApplicableImplantTemplates;
+        }
+    }
+
+    private bool RefreshNeeded { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        if (this.CurrentImplantTemplate != null)
+        {
+            this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (RefreshNeeded)
+        {
+            await IJSRuntime.InvokeAsync<string>("RefreshSelectPicker", "#DotNetVersion.selectpicker");
+            RefreshNeeded = false;
+        }
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#DotNetVersion.selectpicker", ((int)Enum.Parse(typeof(Common.DotNetVersion), this.Launcher.DotNetVersion.ToString())).ToString());
+        await IJSRuntime.InvokeAsync<string>("InitializeDateTimePicker", "#KillDate");
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#RuntimeIdentifier.selectpicker", ((int)Enum.Parse(typeof(Compiler.RuntimeIdentifier), this.Launcher.RuntimeIdentifier.ToString())).ToString());
+    }
+
+    private IEnumerable<string> GetApplicableDotNetVersions()
+    {
+        if (this.CurrentImplantTemplate != null)
+        {
+            IEnumerable<string> names = this.CurrentImplantTemplate.CompatibleDotNetVersions.Select(CDN => CDN.ToString());
+            return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s));
+        }
+        return new List<string>();
+    }
+
+    private ImplantTemplate CurrentImplantTemplate
+    {
+        get
+        {
+            if (ApplicableImplantTemplates.Any())
+            {
+                return ApplicableImplantTemplates.First(IT => IT.Id == this.Launcher.ImplantTemplateId);
+            }
+            return null;
+        }
+    }
+
+    private void OnImplantTemplateChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse((string)e.Value, out int id))
+        {
+            this.Launcher.ImplantTemplateId = id;
+            if (this.CurrentImplantTemplate != null)
+            {
+                this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+            }
+            this.RefreshNeeded = true;
+        }
+    }
+
+    private void UpdateValidateCert(ChangeEventArgs e)
+    {
+        if (bool.TryParse(e.Value.ToString(), out bool result))
+        {
+            Launcher.ValidateCert = result;
+        }
+    }
+
+    private void UpdateUseCertPinning(ChangeEventArgs e)
+    {
+        if (bool.TryParse(e.Value.ToString(), out bool result))
+        {
+            Launcher.UseCertPinning = result;
+        }
+    }
+
+    private async Task OnDownload()
+    {
+        string filename = (await Service.GetImplantTemplate(this.Launcher.ImplantTemplateId)).Name ?? "GruntStager";
+        string fileext = ".exe";
+        string mediatype = "";
+        string content = "";
+
+        switch (this.Launcher.Type)
+        {
+            case LauncherType.Binary:
+                fileext = ".exe";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = ((BinaryLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.ShellCode:
+                fileext = ".bin";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = ((ShellCodeLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.Cscript:
+                fileext = ".js";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((CscriptLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.InstallUtil:
+                fileext = ".dll";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = Convert.ToBase64String(Convert.FromBase64String(((InstallUtilLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.MSBuild:
+                fileext = ".xml";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((MSBuildLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.Mshta:
+                fileext = ".hta";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((MshtaLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.PowerShell:
+                fileext = ".ps1";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((PowerShellLauncher)this.Launcher).PowerShellCode));
+                break;
+            case LauncherType.Regsvr32:
+                fileext = ".sct";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((Regsvr32Launcher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.Wmic:
+                fileext = "xsl";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((WmicLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.Wscript:
+                fileext = "GruntStager.js";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((WscriptLauncher)this.Launcher).DiskCode));
+                break;
+        }
+        await IJSRuntime.InvokeAsync<string>("DownloadFile", filename + fileext, mediatype, content);
+    }
+}

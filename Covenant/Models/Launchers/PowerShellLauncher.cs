@@ -14,8 +14,8 @@ namespace Covenant.Models.Launchers
     public class PowerShellLauncher : Launcher
     {
         public string ParameterString { get; set; } = "-Sta -Nop -Window Hidden";
-        public string PowerShellCode { get; set; }
-        public string EncodedLauncherString { get; set; }
+        public string PowerShellCode { get; set; } = "";
+        public string EncodedLauncherString { get; set; } = "";
 
         public PowerShellLauncher()
         {

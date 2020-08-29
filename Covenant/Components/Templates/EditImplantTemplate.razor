@@ -1,0 +1,41 @@
+﻿@page "/template/edit/{ImplantTemplateId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Implant Template: <span id="implant-name" class="primary-color">@ImplantTemplate.Name</span></h1>
+</div>
+
+<ImplantTemplateForm ImplantTemplate="ImplantTemplate" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit" />
+
+@code {
+    [Parameter]
+    public int ImplantTemplateId { get; set; }
+
+    [Parameter]
+    public ImplantTemplate ImplantTemplate { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ImplantTemplate = this.ImplantTemplate ?? await Service.GetImplantTemplate(this.ImplantTemplateId);
+    }
+
+    private async Task OnEdit(ImplantTemplate template)
+    {
+        try
+        {
+            await Service.EditImplantTemplate(template);
+            NavigationManager.NavigateTo("/template");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+}

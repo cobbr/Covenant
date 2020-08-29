@@ -1,0 +1,218 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.SignalR
+
+@using Covenant.Core
+@using Covenant.Hubs
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inject IHubContext<GruntHub> GruntHub
+@inject IHubContext<EventHub> EventHub
+@inject INotificationService INotificationService
+
+<GruntTaskOptionsModal @ref="OptionsModal" OnSubmit="OnTaskInteract"></GruntTaskOptionsModal>
+
+<div class="interact-style interact-border d-flex flex-column rounded-lg">
+    <div id="interact-scroll" class="grunt-interact overflow-auto">
+        <div id="interact-accordion" class="accordion w-100">
+            @for (int i = 0; i < this.GruntCommands.Count(); i++)
+            {
+                int number = i;
+                GruntCommand command = this.GruntCommands[number];
+                <GruntCommandCard GruntCommandId="command.Id" IsMinimized="(number < this.GruntCommands.Count() - 5)" />
+            }
+        </div>
+    </div>
+    <div class="interact-style interact-border d-flex flex-row w-100 p-0 m-0">
+        <div class="d-inline d-flex flex-column justify-content-center text-muted ml-1">
+            <div @onclick="HistoryUp" class="mb-n1 p-0 border-0 hover-white" style="z-index: 1">
+                <span class="fe fe-chevron-up"></span>
+            </div>
+            <div @onclick="HistoryDown" class="mt-n1 p-0 border-0 hover-white">
+                <span class="fe fe-chevron-down"></span>
+            </div>
+        </div>
+        <input id="@GuidId"
+               class="interact-style d-inline form-control typeahead w-100 mr-0 pl-1 border-0"
+               @onkeyup="(e => OnKeyUp(e))" value="@InteractInput" @onchange="e => OnSetInteractInput(e)"
+               type="text" autocomplete="off" placeholder="Interact..." aria-label="Interact" />
+
+        <button type="button" @onclick="OnSubmit" class="interact-style interact-button-border d-inline btn rounded-0">
+            Send
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Grunt Grunt { get; set; }
+    private IList<GruntCommand> GruntCommands { get; set; }
+
+    [Parameter]
+    public EventCallback<Tuple<Grunt, string>> OnInteract { get; set; }
+
+    private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
+
+    private GruntTaskOptionsModal OptionsModal { get; set; }
+
+    private int HistoryIndex { get; set; }
+    private IList<GruntCommand> History { get; set; }
+    private string HistorySavedState { get; set; } = string.Empty;
+    private string InteractInput { get; set; } = string.Empty;
+    private IEnumerable<string> Suggestions { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntCommands = (await Service.GetGruntCommandsForGrunt(this.Grunt.Id)).ToList();
+        this.History = this.GruntCommands.OrderBy(GC => GC.CommandTime).ToList();
+        this.HistoryIndex = this.History.Count;
+        this.Suggestions = await Service.GetCommandSuggestionsForGrunt(this.Grunt);
+        Service.DisposeContext();
+        this.INotificationService.OnCreateGruntCommand += OnCreateGruntCommand;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("InitializeTypeahead", $"#{GuidId}.typeahead", this.Suggestions);
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateGruntCommand -= OnCreateGruntCommand;
+    }
+
+    private async void OnCreateGruntCommand(object sender, GruntCommand gruntCommand)
+    {
+        if (this.Grunt.Id == gruntCommand.GruntId)
+        {
+            this.GruntCommands = (await Service.GetGruntCommandsForGrunt(this.Grunt.Id)).ToList();
+            Service.DisposeContext();
+            this.History = this.GruntCommands.OrderBy(GC => GC.CommandTime).ToList();
+            this.HistoryIndex = this.History.Count;
+            await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void HistoryUp()
+    {
+        bool updated = false;
+        if (this.HistoryIndex == this.History.Count && this.InteractInput != string.Empty)
+        {
+            this.HistorySavedState = this.InteractInput;
+        }
+        else if (this.HistoryIndex == this.History.Count && this.InteractInput == string.Empty && this.HistorySavedState != string.Empty)
+        {
+            this.InteractInput = this.HistorySavedState;
+            updated = true;
+        }
+        if (this.HistoryIndex != 0)
+        {
+            if (!updated)
+            {
+                this.HistoryIndex--;
+                this.InteractInput = this.History[this.HistoryIndex].Command;
+            }
+            this.StateHasChanged();
+            _ = IJSRuntime.InvokeAsync<string>("SetTypeaheadVal", $"#{GuidId}.typeahead", this.InteractInput);
+        }
+    }
+
+    private void HistoryDown()
+    {
+        if (this.HistoryIndex < (this.History.Count - 1))
+        {
+            this.HistoryIndex++;
+            this.InteractInput = this.History[this.HistoryIndex].Command;
+            this.StateHasChanged();
+            _ = IJSRuntime.InvokeAsync<string>("SetTypeaheadVal", $"#{GuidId}.typeahead", this.InteractInput);
+        }
+        else if (this.HistoryIndex == (this.History.Count - 1))
+        {
+            this.HistoryIndex++;
+            this.InteractInput = this.HistorySavedState;
+            this.StateHasChanged();
+            _ = IJSRuntime.InvokeAsync<string>("SetTypeaheadVal", $"#{GuidId}.typeahead", this.InteractInput);
+        }
+        else if (this.HistoryIndex == this.History.Count && this.InteractInput != string.Empty)
+        {
+            this.HistorySavedState = this.InteractInput;
+            this.InteractInput = string.Empty;
+            this.StateHasChanged();
+            _ = IJSRuntime.InvokeAsync<string>("SetTypeaheadVal", $"#{GuidId}.typeahead", this.InteractInput);
+        }
+    }
+
+    private void OnSetInteractInput(ChangeEventArgs e)
+    {
+        this.InteractInput = e.Value.ToString();
+        _ = IJSRuntime.InvokeAsync<string>("ClearSelectedTypeaheadVal");
+    }
+
+    private async Task OnKeyUp(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowUp":
+                bool hasSuggestions = await IJSRuntime.InvokeAsync<bool>("TypeAheadHasSuggestions", $"#{GuidId}.typeahead");
+                if (!hasSuggestions)
+                {
+                    HistoryUp();
+                }
+                break;
+            case "ArrowDown":
+                HistoryDown();
+                break;
+            case "Enter":
+                string val = await IJSRuntime.InvokeAsync<string>("GetSelectedTypeaheadVal", $"#{GuidId}.typeahead");
+                if (! string.IsNullOrWhiteSpace(val))
+                {
+                    this.InteractInput = val;
+                }
+                await this.OnSubmit();
+                break;
+        }
+    }
+
+    private async Task OnSubmit()
+    {
+        string copy = this.InteractInput;
+        this.InteractInput = "";
+        this.StateHasChanged();
+
+        List<ParsedParameter> parameters = ParsedParameter.GetParsedCommandParameters(copy);
+        string commandName = parameters.Count > 0 ? parameters.FirstOrDefault().Value : "";
+        GruntTask commandTask = null;
+        try
+        {
+            commandTask = await Service.GetGruntTaskByName(commandName, this.Grunt.DotNetVersion);
+            Service.DisposeContext();
+            string errors = await Service.ParseParametersIntoTask(commandTask, parameters);
+            Service.DisposeContext();
+        }
+        catch (ControllerNotFoundException) { }
+        if (commandTask != null && commandTask.Options.Any(O => O.FileOption))
+        {
+            await OptionsModal.Show(commandTask);
+        }
+        else
+        {
+            this.OnInteractProxy(copy);
+        }
+    }
+
+    private void OnTaskInteract(GruntTask task)
+    {
+        this.OnInteractProxy(task.GetVerboseCommand(true));
+    }
+
+    private void OnInteractProxy(string input)
+    {
+        _ = OnInteract.InvokeAsync(new Tuple<Grunt, string>(this.Grunt, input));
+        _ = IJSRuntime.InvokeAsync<string>("SetTypeaheadVal", $"#{GuidId}.typeahead", this.InteractInput);
+    }
+}

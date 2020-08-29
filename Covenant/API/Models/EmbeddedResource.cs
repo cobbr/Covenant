@@ -7,8 +7,6 @@
 namespace Covenant.API.Models
 {
     using Newtonsoft.Json;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
 
     public partial class EmbeddedResource
@@ -24,13 +22,11 @@ namespace Covenant.API.Models
         /// <summary>
         /// Initializes a new instance of the EmbeddedResource class.
         /// </summary>
-        public EmbeddedResource(int? id = default(int?), string name = default(string), string location = default(string), IList<ReferenceSourceLibrary> referenceSourceLibraries = default(IList<ReferenceSourceLibrary>), IList<GruntTask> gruntTasks = default(IList<GruntTask>))
+        public EmbeddedResource(int? id = default(int?), string name = default(string), string location = default(string))
         {
             Id = id;
             Name = name;
             Location = location;
-            ReferenceSourceLibraries = referenceSourceLibraries;
-            GruntTasks = gruntTasks;
             CustomInit();
         }
 
@@ -53,16 +49,6 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "location")]
         public string Location { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "referenceSourceLibraries")]
-        public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "gruntTasks")]
-        public IList<GruntTask> GruntTasks { get; private set; }
 
     }
 }

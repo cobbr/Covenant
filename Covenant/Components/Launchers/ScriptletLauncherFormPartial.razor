@@ -1,0 +1,57 @@
+﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Launchers
+@inject IJSRuntime IJSRuntime
+
+<div class="form-row">
+    <div class="form-group col-md-3">
+        <label for="ScriptLanguage">ScriptLanguage</label><br />
+        <select id="ScriptLanguage" name="ScriptLanguage" value="@ScriptletLauncher" @onchange="(e => OnScriptLanguageChanged(e))" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+            @foreach (var n in Enum.GetNames(typeof(ScriptingLanguage)))
+            {
+                <option value="@(((Enum)typeof(ScriptingLanguage).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+            }
+        </select>
+        <div class="text-danger"><ValidationMessage For="() => ScriptletLauncher.ScriptLanguage" /></div>
+        @*<EnumSelect id="ScriptLanguage" name="ScriptLanguage" EnumType="ScriptingLanguage" @bind-Value="Launcher.ScriptLanguage" />*@
+    </div>
+    <div class="form-group col-md-6">
+        <label for="ProgId">ProgId</label>
+        <input id="ProgId" name="ProgId" value="@ScriptletLauncher.ProgId" @onchange="(e => OnProgIdChanged(e))" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => ScriptletLauncher.ProgId" /></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+    public ScriptletLauncher ScriptletLauncher { get; set; }
+
+    [Parameter]
+    public EventCallback<Launcher> LauncherChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.ScriptletLauncher = (ScriptletLauncher)this.Launcher;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#ScriptLanguage.selectpicker", ((int)Enum.Parse(typeof(ScriptingLanguage), ScriptletLauncher.ScriptLanguage.ToString())).ToString());
+    }
+
+    private void OnScriptLanguageChanged(ChangeEventArgs e)
+    {
+        if (Enum.TryParse(e.Value.ToString(), out ScriptingLanguage lang))
+        {
+            this.ScriptletLauncher.ScriptLanguage = lang;
+            this.LauncherChanged.InvokeAsync(this.ScriptletLauncher);
+        }
+    }
+
+    private void OnProgIdChanged(ChangeEventArgs e)
+    {
+        this.ScriptletLauncher.ProgId = e.Value.ToString();
+        this.LauncherChanged.InvokeAsync(this.ScriptletLauncher);
+    }
+}

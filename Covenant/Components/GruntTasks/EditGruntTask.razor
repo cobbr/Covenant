@@ -1,0 +1,51 @@
+﻿@page "/grunttask/edit/{GruntTaskId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">GruntTask: <span class="primary-color">@GruntTask.Name</span></h1>
+</div>
+
+<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit">
+    <button type="button" @onclick="OnExport" class="btn btn-secondary">
+        <span class="fe fe-share"></span>
+        Export
+    </button>
+</GruntTaskForm>
+
+@code {
+    [Parameter]
+    public int GruntTaskId { get; set; }
+
+    [Parameter]
+    public GruntTask GruntTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.GruntTask = this.GruntTask ?? await Service.GetGruntTask(this.GruntTaskId);
+    }
+
+    private async Task OnEdit(GruntTask task)
+    {
+        try
+        {
+            await Service.EditGruntTask(task);
+            NavigationManager.NavigateTo("/grunttask");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Edit), new { Id = taskModel.Id });
+        }
+    }
+
+    private async Task OnExport()
+    {
+        await IJSRuntime.InvokeAsync<string>("DownloadFile", this.GruntTask.Name + ".yaml", "application/x-yaml", Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.GruntTask.ToYaml())));
+    }
+}

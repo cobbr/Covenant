@@ -1,0 +1,30 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Covenant.Models.Launchers
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="ParameterString">ParameterString</label>
+        <input id="ParameterString" name="ParameterString" value="@PowerShellLauncher.ParameterString" @onchange="(e => OnParameterStringChanged(e))" class="form-control">
+        <div class="text-danger"><ValidationMessage For="() => PowerShellLauncher.ParameterString" /></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+    public PowerShellLauncher PowerShellLauncher { get; set; }
+
+    [Parameter]
+    public EventCallback<Launcher> LauncherChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.PowerShellLauncher = (PowerShellLauncher)this.Launcher;
+    }
+
+    private void OnParameterStringChanged(ChangeEventArgs e)
+    {
+        this.PowerShellLauncher.ParameterString = e.Value.ToString();
+        this.LauncherChanged.InvokeAsync(this.PowerShellLauncher);
+    }
+}

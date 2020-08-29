@@ -1,0 +1,111 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+
+@if (this.TerminalGrunts.Any())
+{
+    <ul id="terminals-tab" class="nav nav-tabs mb-3" style="margin-top: 6rem;" role="tablist">
+        @for (int i = 0; i < TerminalGrunts.Count(); i++)
+        {
+            int number = i;
+            <li class="nav-item">
+                <a class="nav-link d-flex flex-row justify-content-start pr-0" id="terminal-tab-@number" data-toggle="tab" href="#terminal-@number" role="tab" aria-controls="terminal-@number" aria-selected="false">
+                    <span class="fe fe-terminal"></span>
+                    <span class="ml-1 mr-2">@TerminalGrunts[number].Name</span>
+                    <div class="text-muted text-decoration-none mr-2" style="margin-top: -0.1rem;" @onclick="e => OnRemoveTerminal.InvokeAsync(number)">
+                        <span class="fe fe-x" style="font-size: 0.88rem;"></span>
+                    </div>
+                </a>
+            </li>
+        }
+    </ul>
+
+    <div class="tab-content" id="terminal-tab-content">
+        @for (int i = 0; i < TerminalGrunts.Count(); i++)
+        {
+            int number = i;
+            <div class="tab-pane fade mb-5" id="terminal-@number" role="tabpanel" aria-labelledby="terminal-tab-@number">
+                @if (!string.IsNullOrWhiteSpace(this.TerminalGrunts[number].Note))
+                {
+                    <p><b>Note</b>: @this.TerminalGrunts[number].Note</p>
+                }
+                <GruntInteractTerminal Grunt="TerminalGrunts[number]" OnInteract="OnInteract" />
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public List<Grunt> TerminalGrunts { get; set; } = new List<Grunt>();
+
+    [Parameter]
+    public EventCallback<List<Grunt>> TerminalGruntsChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnRemoveTerminal { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private CovenantUser CurrentUser { get; set; }
+    private string ShowTab { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CurrentUser = await Service.GetCurrentUser((await this.AuthenticationState).User);
+        this.INotificationService.OnEditGrunt += OnEditGrunt;
+        Service.DisposeContext();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (this.ShowTab != string.Empty)
+        {
+            await IJSRuntime.InvokeAsync<string>("ShowTab", ShowTab);
+            this.ShowTab = string.Empty;
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditGrunt -= OnEditGrunt;
+    }
+
+    private void OnEditGrunt(object sender, Grunt grunt)
+    {
+        if (this.TerminalGrunts.Any(G => G.Id == grunt.Id))
+        {
+            this.TerminalGrunts[this.TerminalGrunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    public void OnSelectTerminal(Grunt grunt)
+    {
+        int index = this.TerminalGrunts.FindIndex(G => G.Id == grunt.Id);
+        if (index == -1)
+        {
+            this.TerminalGrunts.Add(grunt);
+            index = this.TerminalGrunts.Count() - 1;
+        }
+        this.ShowTab = $"#terminal-tab-{index}";
+        this.TerminalGruntsChanged.InvokeAsync(this.TerminalGrunts);
+        this.StateHasChanged();
+    }
+
+    private async Task OnInteract(Tuple<Grunt, string> tuple)
+    {
+        GruntCommand command = await Service.InteractGrunt(tuple.Item1.Id, this.CurrentUser.Id, tuple.Item2);
+        Service.DisposeContext();
+        this.StateHasChanged();
+    }
+}

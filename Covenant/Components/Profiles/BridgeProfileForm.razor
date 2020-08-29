@@ -1,0 +1,108 @@
+﻿@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Models.Listeners
+@using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<EditForm Model="Profile" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Profile))">
+    <DataAnnotationsValidator />
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="Profile.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Profile.Name" /></div>
+        </div>
+        <div class="form-group">
+            <label for="Type">Type</label><br />
+            <EnumSelect id="Type" name="Type" @bind-Value="Profile.Type" disabled="true" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label for="Description">Description</label>
+            <input id="Description" name="Description" @bind="Profile.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Profile.Description" /></div>
+        </div>
+    </div>
+    @if (IsAdmin())
+    {
+        <div class="form-row">
+            <div class="form-group col-md-12">
+                <label for="MessageTransform">MessageTransform</label>
+                <textarea @ref="CodeMirrorElements[0]" id="MessageTransform" name="MessageTransform" @bind="Profile.MessageTransform" rows="10" class="form-control code-mirror-csharp"></textarea>
+                <div class="text-danger"><ValidationMessage For="() => Profile.MessageTransform" /></div>
+            </div>
+        </div>
+    }
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label for="ReadFormat">ReadFormat</label>
+            <textarea @ref="CodeMirrorElements[1]" id="ReadFormat" name="ReadFormat" @bind="Profile.ReadFormat" rows="20" class="form-control code-mirror-csharp"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => Profile.ReadFormat" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label for="WriteFormat">WriteFormat</label>
+            <textarea @ref="CodeMirrorElements[2]" id="WriteFormat" name="WriteFormat" @bind="Profile.WriteFormat" rows="20" class="form-control code-mirror-csharp"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => Profile.WriteFormat" /></div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-12">
+            <label for="BridgeMessengerCode">BridgeMessengerCode</label>
+            <textarea @ref="CodeMirrorElements[3]" id="BridgeMessengerCode" name="BridgeMessengerCode" @bind="Profile.BridgeMessengerCode" rows="20" class="form-control code-mirror-csharp"></textarea>
+            <div class="text-danger"><ValidationMessage For="() => Profile.BridgeMessengerCode" /></div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+    </button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public BridgeProfile Profile { get; set; }
+
+    [Parameter]
+    public EventCallback<BridgeProfile> OnSubmit { get; set; }
+
+    [Parameter]
+    public string SubmitIcon { get; set; } = "edit";
+
+    [Parameter]
+    public string SubmitLabel { get; set; } = "Edit";
+
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
+    private IList<ElementReference> CodeMirrorElements { get; set; } = GetElementReferenceList(4);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
+        {
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
+        }
+    }
+
+    private static IList<ElementReference> GetElementReferenceList(int size)
+    {
+        IList<ElementReference> references = new List<ElementReference>();
+        for (int i = 0; i < size; i++)
+        {
+            references.Add(new ElementReference());
+        }
+        return references;
+    }
+
+    private bool IsAdmin()
+    {
+        return AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult().User.IsInRole("Administrator");
+    }
+}

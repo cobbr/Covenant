@@ -1,0 +1,38 @@
+﻿@page "/grunttask/create"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject IJSRuntime IJSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+    <h1 class="h2">Create GruntTask</h1>
+</div>
+
+<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
+@code {
+    [Parameter]
+    public GruntTask GruntTask { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.GruntTask = this.GruntTask ?? new GruntTask();
+    }
+
+    private async Task OnCreate(GruntTask task)
+    {
+        try
+        {
+            await Service.CreateGruntTask(task);
+            NavigationManager.NavigateTo("/grunttask");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Edit), new { Id = taskModel.Id });
+        }
+    }
+}

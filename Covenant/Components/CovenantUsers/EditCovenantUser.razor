@@ -1,0 +1,124 @@
+﻿@page "/covenantuser/edit/{CovenantUserId}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@inject UserManager<CovenantUser> UserManager
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">User: <span id="user-name" class="primary-color">@CovenantUser.UserName</span></h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4 border-right">
+        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnSubmit="OnEditPassword" Disabled="this.CurrentUser.Id != this.CovenantUser.Id" readonly>
+            <span class="fe fe-edit"></span> Edit Password
+        </CovenantUserRegisterForm>
+    </div>
+    <div class="col-md-4">
+        <EditForm Model="CovenantUser" OnSubmit="OnChangeTheme">
+            <div class="form-group">
+                <label for="ThemeId">Theme</label>
+                <select id="ThemeId" name="ThemeId" @bind="CovenantUser.ThemeId" class="form-control">
+                    @foreach (Theme Theme in Themes)
+                    {
+                        <option value="@Theme.Id">@Theme.Name</option>
+                    }
+                </select>
+                <div class="text-danger"><ValidationMessage For="() => CovenantUser.ThemeId" /></div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-edit"></span> Edit Theme
+            </button>
+        </EditForm>
+    </div>
+    <div class="col-md-4">
+        <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnEditRoles" />
+    </div>
+</div>
+
+<button type="button" class="btn btn-danger mt-2" @onclick="(e => OnDeleteUser(CovenantUser))">
+    <span class="fe fe-x"></span> Delete
+</button>
+
+@code {
+    [Parameter]
+    public string CovenantUserId { get; set; }
+
+    [Parameter]
+    public CovenantUser CovenantUser { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+    private CovenantUser CurrentUser { get; set; }
+
+    private IEnumerable<Theme> Themes { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CovenantUser = this.CovenantUser ?? await Service.GetUser(this.CovenantUserId);
+        this.CurrentUser = this.CurrentUser ?? await Service.GetCurrentUser((await AuthenticationState).User);
+        this.Themes = await Service.GetThemes();
+        Service.DisposeContext();
+    }
+
+    private async Task OnEditRoles(IEnumerable<IdentityRole> roles)
+    {
+        try
+        {
+            IEnumerable<IdentityRole> currentRoles = (await Service.GetUserRolesForUser(this.CovenantUser.Id)).Select(UR =>
+            {
+                return Service.GetRole(UR.RoleId).WaitResult();
+            });
+
+            IEnumerable<IdentityRole> rolesToAdd = roles.Where(R => !currentRoles.Select(CR => CR.Id).Contains(R.Id));
+            IEnumerable<IdentityRole> rolesToRemove = currentRoles.Where(CR => !roles.Select(R => R.Id).Contains(CR.Id));
+            Service.DisposeContext();
+            foreach (IdentityRole role in rolesToAdd)
+            {
+                await Service.CreateUserRole(this.CovenantUser.Id, role.Id);
+            }
+            Service.DisposeContext();
+            foreach (IdentityRole role in rolesToRemove)
+            {
+                await Service.DeleteUserRole(this.CovenantUser.Id, role.Id);
+            }
+            NavigationManager.NavigateTo("/covenantuser");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private async Task OnEditPassword(CovenantUserRegister register)
+    {
+        await Service.EditUserPassword(this.CurrentUser, register);
+        NavigationManager.NavigateTo("/covenantuser");
+    }
+
+    private async Task OnDeleteUser(CovenantUser user)
+    {
+        try
+        {
+            await Service.DeleteUser(user.Id);
+            NavigationManager.NavigateTo("/covenantuser");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+
+    private async Task OnChangeTheme()
+    {
+        await Service.EditUser(this.CovenantUser);
+        Service.DisposeContext();
+    }
+}

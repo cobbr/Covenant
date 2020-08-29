@@ -1,0 +1,207 @@
+﻿@page "/grunt/interact/{GruntId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Covenant
+@using Covenant.Components.GruntTaskings
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject UserManager<CovenantUser> UserManager
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+
+@if (this.Grunt == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
+        <h1 class="h2">Grunt: <span id="grunt-name" class="primary-color">@Grunt.Name</span></h1>
+    </div>
+
+    @if (!string.IsNullOrEmpty(this.Grunt.Note))
+    {
+        <p><b>Note</b>: @Grunt.Note</p>
+    }
+
+    <ul class="nav nav-tabs mb-3" id="grunt-tab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="false">
+                <span class="fe fe-info"></span>
+                Info
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="interact-tab" data-toggle="tab" href="#interact" role="tab" aria-controls="interact" aria-selected="false">
+                <span class="fe fe-terminal"></span>
+                Interact
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="task-tab" data-toggle="tab" href="#task" role="tab" aria-controls="task" aria-selected="false">
+                <span class="fe fe-box"></span>
+                Task
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="taskings-tab" data-toggle="tab" href="#taskings" role="tab" aria-controls="taskings" aria-selected="false">
+                <span class="fe fe-layers"></span>
+                Taskings
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="grunt-tab-content">
+        <div class="tab-pane fade" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <GruntForm Grunt="Grunt" OnSubmit="OnEdit" />
+        </div>
+        <div class="tab-pane fade" id="interact" role="tabpanel" aria-labelledby="interact-tab">
+            <GruntInteractTerminal Grunt="Grunt" OnInteract="OnInteract" />
+        </div>
+        <div class="tab-pane fade" id="task" role="tabpanel" aria-labelledby="task-tab">
+            <GruntTaskAssignForm GruntId="GruntId" OnSubmit="OnTask" />
+        </div>
+        <div class="tab-pane fade mb-5" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
+            <GruntTaskingTable GruntTaskings="GruntTaskings" PageLength="50" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int GruntId { get; set; }
+
+    [Parameter]
+    public Grunt Grunt { get; set; }
+
+    private CovenantUser CovenantUser { get; set; }
+    private List<GruntTasking> GruntTaskings { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Grunt = this.Grunt ?? await Service.GetGrunt(this.GruntId);
+        AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        this.CovenantUser = await UserManager.GetUserAsync(state.User);
+        this.GruntTaskings = (await Service.GetGruntTaskingsForGrunt(this.GruntId)).ToList();
+        Service.DisposeContext();
+        this.INotificationService.OnEditGrunt += OnEditGrunt;
+        this.INotificationService.OnCreateGruntTasking += OnCreateGruntTasking;
+        this.INotificationService.OnEditGruntTasking += OnEditGruntTasking;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditGrunt -= OnEditGrunt;
+        this.INotificationService.OnCreateGruntTasking -= OnCreateGruntTasking;
+        this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
+    }
+
+    bool scrollToBottom = false;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "#info-tab");
+        }
+        if (scrollToBottom)
+        {
+            await IJSRuntime.InvokeAsync<string>("ScrollToBottom", "#interact-scroll");
+        }
+    }
+
+    private void OnEditGrunt(object sender, Grunt grunt)
+    {
+        if (this.GruntId == grunt.Id)
+        {
+            this.Grunt = grunt;
+        }
+    }
+
+    private void OnCreateGruntTasking(object sender, GruntTasking gruntTasking)
+    {
+        if (this.GruntId == gruntTasking.GruntId)
+        {
+            this.GruntTaskings.Add(gruntTasking);
+            // scrollToBottom = true;
+        }
+    }
+
+    private void OnEditGruntTasking(object sender, GruntTasking gruntTasking)
+    {
+        if (this.GruntId == gruntTasking.GruntId)
+        {
+            int index = this.GruntTaskings.FindIndex(GT => GT.Id == gruntTasking.Id);
+            if (index != -1)
+            {
+                this.GruntTaskings[index] = gruntTasking;
+                // scrollToBottom = true;
+                _ = this.InvokeAsync(() => this.StateHasChanged());
+            }
+        }
+    }
+
+    private async Task OnEdit(Grunt grunt)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnInteract(Tuple<Grunt, string> tuple)
+    {
+        GruntCommand command = await Service.InteractGrunt(this.Grunt.Id, this.CovenantUser.Id, tuple.Item2);
+        Service.DisposeContext();
+        this.StateHasChanged();
+    }
+
+    private async Task OnTask(GruntTask task)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+            task = await Service.EditGruntTask(task);
+            Service.DisposeContext();
+            CovenantUser currentUser = await Service.GetCurrentUser(state.User);
+            GruntCommand command = await Service.CreateGruntCommand(new GruntCommand
+            {
+                Command = task.GetVerboseCommand(),
+                CommandTime = DateTime.UtcNow,
+                UserId = currentUser.Id,
+                GruntId = this.Grunt.Id,
+                CommandOutputId = 0,
+                CommandOutput = new CommandOutput()
+            });
+            Service.DisposeContext();
+            GruntTasking created = await Service.CreateGruntTasking(new GruntTasking
+            {
+                GruntTaskId = task.Id,
+                GruntId = this.Grunt.Id,
+                Type = task.TaskingType,
+                Status = GruntTaskingStatus.Uninitialized,
+                GruntCommandId = command.Id
+            });
+            Service.DisposeContext();
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "#interact-tab");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Index));
+        }
+    }
+}
