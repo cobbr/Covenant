@@ -26,7 +26,7 @@ namespace Covenant.Core
                 }
             };
             _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
+                new Uri($"https://localhost:{Common.CovenantHTTPSPort}"),
                 new TokenCredentials(configuration["ServiceUserToken"]),
                 clientHandler
             );
