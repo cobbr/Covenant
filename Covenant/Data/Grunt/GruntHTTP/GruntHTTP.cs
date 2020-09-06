@@ -185,7 +185,7 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
+                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message, Delay));
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                                 bool completed = t.Join(5000);
@@ -205,7 +205,7 @@ namespace GruntExecutor
                             }
                             else
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message));
+                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }
@@ -233,7 +233,7 @@ namespace GruntExecutor
             }
         }
 
-        private static IntPtr TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message)
+        private static IntPtr TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message, int Delay)
         {
             const int MAX_MESSAGE_SIZE = 1048576;
             string output = "";
@@ -288,6 +288,13 @@ namespace GruntExecutor
                                                         }
                                                         catch (Exception) {}
                                                     }
+                                                    currentRead = "";
+                                                    lastTime = DateTime.Now;
+                                                }
+                                                else if (currentRead.Length > 0 && DateTime.Now > (lastTime.Add(TimeSpan.FromSeconds(Delay))))
+                                                {
+                                                    GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, currentRead);
+                                                    messenger.QueueTaskingMessage(response.ToJson(), message.Name);
                                                     currentRead = "";
                                                     lastTime = DateTime.Now;
                                                 }
