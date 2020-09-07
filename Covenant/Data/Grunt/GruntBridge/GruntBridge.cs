@@ -290,6 +290,7 @@ namespace GruntExecutor
                                                 {
                                                     GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, currentRead);
                                                     messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                    messenger.WriteTaskingMessage();
                                                     currentRead = "";
                                                     lastTime = DateTime.Now;
                                                 }
