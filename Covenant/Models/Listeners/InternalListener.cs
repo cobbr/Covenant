@@ -560,6 +560,10 @@ namespace Covenant.Models.Listeners
             {
                 gruntTasking.CompletionTime = DateTime.UtcNow;
             }
+            if (gruntTasking.Type == APIModels.GruntTaskingType.Connect)
+            {
+                gruntTasking.Status = APIModels.GruntTaskingStatus.Progressed;
+            }
             await _client.EditGruntTaskingAsync(gruntTasking);
             lock (_hashCodesLock)
             {
@@ -654,6 +658,7 @@ namespace Covenant.Models.Listeners
                 targetGrunt.Hostname = tmessage.Message.Split(",")[0];
                 await _client.EditGruntAsync(targetGrunt);
                 connectTasking.Status = APIModels.GruntTaskingStatus.Completed;
+                connectTasking.Parameters.Add(targetGrunt.Guid);
                 await _client.EditGruntTaskingAsync(connectTasking);
                 targetGrunt = await _client.GetGruntAsync(targetGrunt.Id ?? default);
             }

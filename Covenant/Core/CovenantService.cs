@@ -1193,24 +1193,27 @@ namespace Covenant.Core
             {
                 return DateTime.UtcNow >= lostTime;
             }
+            if (DateTime.UtcNow < lostTime)
+            {
+                return false;
+            }
+
             Grunt sg = await _context.Grunts
                     .Where(GR => GR.Id == g.Id)
                     .Include(GR => GR.GruntCommands)
                     .ThenInclude(GC => GC.GruntTasking)
                     .FirstOrDefaultAsync();
-
-            if (DateTime.UtcNow >= lostTime &&
-                sg != null &&
-                sg.GruntCommands != null &&
-                sg.GruntCommands.Count > 0 &&
-                sg.GruntCommands.Any(
-                    GC => GC.GruntTasking != null &&
-                    (GC.GruntTasking.Status == GruntTaskingStatus.Uninitialized || GC.GruntTasking.Status == GruntTaskingStatus.Tasked)))
+            if (sg != null && sg.GruntCommands != null && sg.GruntCommands.Count > 0)
             {
-                lostTime = sg.GruntCommands.Where(GC => GC.GruntTasking != null &&
-                    (GC.GruntTasking.Status == GruntTaskingStatus.Uninitialized || GC.GruntTasking.Status == GruntTaskingStatus.Tasked)).Select(GC => GC.CommandTime).OrderBy(CT => CT).FirstOrDefault();
-                lostTime = lostTime.AddSeconds(g.Delay + (g.Delay * (g.JitterPercent / 100.0)) + Drift);
-                return DateTime.UtcNow >= lostTime;
+                GruntCommand lastCommand = sg.GruntCommands
+                    .Where(GC => GC.GruntTasking != null)
+                    .OrderByDescending(GC => GC.CommandTime)
+                    .FirstOrDefault();
+                if (lastCommand != null && (lastCommand.GruntTasking.Status == GruntTaskingStatus.Uninitialized || lastCommand.GruntTasking.Status == GruntTaskingStatus.Tasked))
+                {
+                    lostTime = lastCommand.CommandTime;
+                    return DateTime.UtcNow >= lastCommand.CommandTime.AddSeconds(g.Delay + (g.Delay * (g.JitterPercent / 100.0)) + Drift);
+                }
             }
             return false;
         }
@@ -2937,7 +2940,7 @@ public static class Task
             GruntTaskingStatus newStatus = tasking.Status;
             GruntTaskingStatus originalStatus = updatingGruntTasking.Status;
             if ((originalStatus == GruntTaskingStatus.Tasked || originalStatus == GruntTaskingStatus.Progressed) &&
-                newStatus == GruntTaskingStatus.Completed)
+                (newStatus == GruntTaskingStatus.Progressed || newStatus == GruntTaskingStatus.Completed))
             {
                 if (tasking.Type == GruntTaskingType.Exit)
                 {
@@ -2972,28 +2975,26 @@ public static class Task
                     // Check if this Grunt was already connected
                     string hostname = tasking.Parameters[0];
                     string pipename = tasking.Parameters[1];
-                    Grunt connectedGrunt = await _context.Grunts.FirstOrDefaultAsync(G =>
-                        G.ImplantTemplate.CommType == CommunicationType.SMB &&
-                        ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
-                        G.SMBPipeName == pipename
-                    );
-                    if ((connectedGrunt == null || connectedGrunt.GUID == null) && originalStatus == GruntTaskingStatus.Tasked)
+                    Grunt connectedGrunt = tasking.Parameters.Count >= 3 ? await this.GetGruntByGUID(tasking.Parameters[2]) :
+                        await _context.Grunts.Where(G =>
+                            G.Status != GruntStatus.Exited &&
+                            G.ImplantTemplate.CommType == CommunicationType.SMB &&
+                            ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
+                            G.SMBPipeName == pipename
+                        ).OrderByDescending(G => G.ActivationTime)
+                        .Include(G => G.ImplantTemplate)
+                        .FirstOrDefaultAsync();
+                    if (connectedGrunt == null)
                     {
-                        // If not already connected, the Grunt is going to stage, set status to Progressed
-                        newStatus = GruntTaskingStatus.Progressed;
+                        throw new ControllerNotFoundException($"NotFound - Grunt staging from {hostname}:{pipename}");
                     }
-                    else if (connectedGrunt != null)
+                    else
                     {
                         Grunt connectedGruntParent = _context.Grunts.AsEnumerable().FirstOrDefault(G => G.Children.Contains(connectedGrunt.GUID));
                         if (connectedGruntParent != null)
                         {
-                            // If already connected, disconnect to avoid cycles
-                            if (connectedGrunt.Status != GruntStatus.Disconnected)
-                            {
-                                connectedGruntParent.RemoveChild(connectedGrunt);
-                                _context.Grunts.Update(connectedGruntParent);
-                                await _notifier.NotifyEditGrunt(this, connectedGruntParent);
-                            }
+                            connectedGruntParent.RemoveChild(connectedGrunt);
+                            _context.Grunts.Update(connectedGruntParent);
                             // Connect to tasked Grunt, no need to "Progress", as Grunt is already staged
                             grunt.AddChild(connectedGrunt);
                             connectedGrunt.Status = GruntStatus.Active;
@@ -3007,12 +3008,21 @@ public static class Task
                             {
                                 connectedGrunt.Status = GruntStatus.Active;
                                 _context.Grunts.Update(connectedGrunt);
+                                await _notifier.NotifyEditGrunt(this, connectedGrunt);
                             }
                         }
-                    }
-                    else
-                    {
-                        throw new ControllerNotFoundException($"NotFound - Grunt staging from {hostname}:{pipename}");
+                        await _context.Grunts.Where(G =>
+                            G.GUID != connectedGrunt.GUID && G.GUID != grunt.GUID &&
+                            G.Status != GruntStatus.Exited &&
+                            G.ImplantTemplate.CommType == CommunicationType.SMB &&
+                            ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
+                            G.SMBPipeName == pipename
+                        ).ForEachAsync(G =>
+                        {
+                            G.Status = GruntStatus.Exited;
+                            _context.Update(G);
+                            _notifier.NotifyEditGrunt(this, G).Wait();
+                        });
                     }
                 }
                 else if (tasking.Type == GruntTaskingType.Disconnect)
@@ -3099,11 +3109,11 @@ public static class Task
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
             updatingGruntTasking.Status = newStatus;
-            _context.GruntTaskings.Update(updatingGruntTasking);
             _context.Grunts.Update(grunt);
+            _context.GruntTaskings.Update(updatingGruntTasking);
             await _context.SaveChangesAsync();
-            await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
             await _notifier.NotifyEditGrunt(this, grunt);
+            await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
             if (ev != null)
             {
                 tasking.GruntCommand = await _context.GruntCommands
