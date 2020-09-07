@@ -33,11 +33,17 @@ BridgeMessengerCode: |-
         public string Message { get; set; }
     }
     
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
     public interface IMessenger
     {
         string Hostname { get; }
         string Identifier { get; set; }
         string Authenticator { get; set; }
+        EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
         ProfileMessage Read();
         void Write(string Message);
         void Close();

