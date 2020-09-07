@@ -12,12 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disallow Administrators from changing other user's passwords
 - Restrict non-admin users from visiting other user's profile in UI
 - Updated ShellCode task to use file upload of raw binary
+- Updated streaming tasks to autoflush the console
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
 - Fix profile bug when HttpGetResponse differs from HttpPostResponse
 - Fix TaskKill display bug
 - Fix token impersonation issues
+- Fix streaming output to capture output after Delay time elapsed
+- Fix streaming output does not capture exceptions issue
+- Fix Keylogger task Delegate gets garbage collected
 - Fix ImplantTemplate becomes null on GruntTable
 - Fix P2P routing when disconnecting/reconnecting to same Grunt repeatedly
 - Fixed and improved P2P stability for GruntSMB
