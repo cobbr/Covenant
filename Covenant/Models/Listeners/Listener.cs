@@ -63,6 +63,7 @@ namespace Covenant.Models.Listeners
 
         [Required]
         public ListenerStatus Status { get; set; } = ListenerStatus.Uninitialized;
+        public string CovenantUrl { get; set; }
         public string CovenantToken { get; set; }
 
         public DateTime StartTime { get; set; } = DateTime.MinValue;

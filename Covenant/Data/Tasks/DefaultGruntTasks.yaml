@@ -433,7 +433,14 @@
                 OutputStream.Close();
                 return "";
             }
-            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly

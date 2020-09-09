@@ -27,7 +27,7 @@ namespace Covenant.API.Models
         /// </summary>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Active', 'Stopped'</param>
-        public Listener(string name, string guid, string description, string bindAddress, int bindPort, IList<string> connectAddresses, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
+        public Listener(string name, string guid, string description, string bindAddress, int bindPort, IList<string> connectAddresses, int connectPort, int profileId, int listenerTypeId, ListenerStatus status, int? id = default(int?), Profile profile = default(Profile), ListenerType listenerType = default(ListenerType), string covenantUrl = default(string), string covenantToken = default(string), System.DateTime? startTime = default(System.DateTime?))
         {
             Id = id;
             Name = name;
@@ -42,6 +42,7 @@ namespace Covenant.API.Models
             ListenerTypeId = listenerTypeId;
             ListenerType = listenerType;
             Status = status;
+            CovenantUrl = covenantUrl;
             CovenantToken = covenantToken;
             StartTime = startTime;
             CustomInit();
@@ -118,6 +119,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public ListenerStatus Status { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "covenantUrl")]
+        public string CovenantUrl { get; set; }
 
         /// <summary>
         /// </summary>

