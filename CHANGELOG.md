@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed and improved P2P stability for GruntSMB
 - Fix streaming output immediate write for push implants (SMB/Bridge)
 - Fix streaming output leftover buffer remaining output
+- Fix Download Task adding extra byte to files
+- Fix Download task exception on unexpected output
 
 ## [v0.6] - 2020-08-04
 ### Added
