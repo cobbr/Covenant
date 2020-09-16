@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated ShellCode task to use file upload of raw binary
 - Updated streaming tasks to autoflush the console
 - Updated Keylogger to handle VK_PACKET virtual keys
+- Update max LauncherString length in UI
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
