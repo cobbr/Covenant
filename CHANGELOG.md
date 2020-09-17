@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated streaming tasks to autoflush the console
 - Updated Keylogger to handle VK_PACKET virtual keys
 - Update max LauncherString length in UI
+- Changed Grunt ActivationTime and Events to not update on reconnected Lost grunt
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

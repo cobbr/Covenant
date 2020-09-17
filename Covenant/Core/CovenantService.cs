@@ -1048,16 +1048,12 @@ namespace Covenant.Core
                     if (G.Status == GruntStatus.Active && lost)
                     {
                         G.Status = GruntStatus.Lost;
-                        _context.Grunts.Update(G);
-                        _context.SaveChanges();
-                        await _notifier.NotifyEditGrunt(this, G);
+                        await this.EditGrunt(G);
                     }
                     else if (G.Status == GruntStatus.Lost && !lost)
                     {
                         G.Status = GruntStatus.Active;
-                        _context.Grunts.Update(G);
-                        _context.SaveChanges();
-                        await _notifier.NotifyEditGrunt(this, G);
+                        await this.EditGrunt(G);
                     }
                 }
             });
@@ -1079,16 +1075,12 @@ namespace Covenant.Core
                 if (grunt.Status == GruntStatus.Active && lost)
                 {
                     grunt.Status = GruntStatus.Lost;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
                 else if (grunt.Status == GruntStatus.Lost && !lost)
                 {
                     grunt.Status = GruntStatus.Active;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
             }
             return grunt;
@@ -1109,16 +1101,12 @@ namespace Covenant.Core
                 if (grunt.Status == GruntStatus.Active && lost)
                 {
                     grunt.Status = GruntStatus.Lost;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
                 else if (grunt.Status == GruntStatus.Lost && !lost)
                 {
                     grunt.Status = GruntStatus.Active;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
             }
             return grunt;
@@ -1139,16 +1127,12 @@ namespace Covenant.Core
                 if (grunt.Status == GruntStatus.Active && lost)
                 {
                     grunt.Status = GruntStatus.Lost;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
                 else if (grunt.Status == GruntStatus.Lost && !lost)
                 {
                     grunt.Status = GruntStatus.Active;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
             }
             return grunt;
@@ -1169,16 +1153,12 @@ namespace Covenant.Core
                 if (grunt.Status == GruntStatus.Active && lost)
                 {
                     grunt.Status = GruntStatus.Lost;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
                 else if (grunt.Status == GruntStatus.Lost && !lost)
                 {
                     grunt.Status = GruntStatus.Active;
-                    _context.Grunts.Update(grunt);
-                    _context.SaveChanges();
-                    await _notifier.NotifyEditGrunt(this, grunt);
+                    await this.EditGrunt(grunt);
                 }
             }
             return grunt;
@@ -1273,12 +1253,15 @@ namespace Covenant.Core
             return grunts;
         }
 
-        public async Task<Grunt> EditGrunt(Grunt grunt, CovenantUser user)
+        public async Task<Grunt> EditGrunt(Grunt grunt, CovenantUser user = null)
         {
             Grunt matching_grunt = await this.GetGrunt(grunt.Id);
-            if (matching_grunt.Status != GruntStatus.Active && grunt.Status == GruntStatus.Active)
+            if (matching_grunt.Status != GruntStatus.Active && matching_grunt.Status != GruntStatus.Lost && grunt.Status == GruntStatus.Active)
             {
-                grunt.ActivationTime = DateTime.UtcNow;
+                if (matching_grunt.Status != GruntStatus.Disconnected)
+                {
+                    grunt.ActivationTime = DateTime.UtcNow;
+                }
                 Event gruntEvent = new Event
                 {
                     Time = grunt.ActivationTime,
