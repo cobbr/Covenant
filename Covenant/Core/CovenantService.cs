@@ -1265,7 +1265,6 @@ namespace Covenant.Core
             await _context.Grunts.AddAsync(grunt);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGrunt(this, grunt);
-            await _logger.LogCreateGrunt(this, grunt);
             return await this.GetGrunt(grunt.Id);
         }
 
@@ -1294,6 +1293,8 @@ namespace Covenant.Core
                 };
                 await _context.Events.AddAsync(gruntEvent);
                 await _notifier.NotifyCreateEvent(this, gruntEvent);
+                await _logger.LogCreateGrunt(this, grunt);
+
             }
             matching_grunt.Name = grunt.Name;
             matching_grunt.GUID = grunt.GUID;
@@ -2629,7 +2630,7 @@ namespace Covenant.Core
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateCommandOutput(this, output);
             // _notifier.OnCreateCommandOutput(this, output);
-            // await _logger.LogCreateCommandOutput(this, output);
+            await _logger.LogCreateCommandOutput(this, output);
             return output;
         }
 
