@@ -3013,15 +3013,8 @@ public static class Task
                         Grunt connectedGruntParent = _context.Grunts.AsEnumerable().FirstOrDefault(G => G.Children.Contains(connectedGrunt.GUID));
                         if (connectedGruntParent != null)
                         {
-                            // If already connected, disconnect to avoid cycles
-                            if (connectedGrunt.Status != GruntStatus.Disconnected)
-                            {
-                                connectedGruntParent.RemoveChild(connectedGrunt);
-                                _context.Grunts.Update(connectedGruntParent);
-                                await _notifier.NotifyEditGrunt(this, connectedGruntParent);
-                                await _logger.LogEditGrunt(this, connectedGruntParent);
-
-                            }
+                            connectedGruntParent.RemoveChild(connectedGrunt);
+                            _context.Grunts.Update(connectedGruntParent);
                             // Connect to tasked Grunt, no need to "Progress", as Grunt is already staged
                             grunt.AddChild(connectedGrunt);
                             connectedGrunt.Status = GruntStatus.Active;
@@ -3150,7 +3143,7 @@ public static class Task
             await _notifier.NotifyEditGrunt(this, grunt);
             await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
             await _logger.LogEditGrunt(this, grunt);
-            await _logger.LogEditGruntTasking(this, updatingGruntTasking
+            await _logger.LogEditGruntTasking(this, updatingGruntTasking);
             if (ev != null)
             {
                 tasking.GruntCommand = await _context.GruntCommands
