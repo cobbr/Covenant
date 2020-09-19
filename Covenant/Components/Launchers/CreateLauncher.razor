@@ -170,6 +170,11 @@
                     binaryLauncher = await Service.EditBinaryLauncher(binaryLauncher);
                     Launcher = await Service.GenerateBinaryLauncher();
                     break;
+                case "ServiceBinary":
+                    ServiceBinaryLauncher serviceBinaryLauncher = (ServiceBinaryLauncher)aLauncher;
+                    serviceBinaryLauncher = await Service.EditServiceBinaryLauncher(serviceBinaryLauncher);
+                    Launcher = await Service.GenerateServiceBinaryLauncher();
+                    break;
                 case "ShellCode":
                     ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)aLauncher;
                     shellcodeLauncher = await Service.EditShellCodeLauncher(shellcodeLauncher);
@@ -241,6 +246,12 @@
                     binaryLauncher = await Service.GenerateBinaryLauncher();
                     file = await Service.CreateHostedFile(file);
                     Launcher = await Service.GenerateBinaryHostedLauncher(file);
+                    break;
+                case "ServiceBinary":
+                    ServiceBinaryLauncher serviceBinaryLauncher = (ServiceBinaryLauncher)Launcher;
+                    serviceBinaryLauncher = await Service.GenerateServiceBinaryLauncher();
+                    file = await Service.CreateHostedFile(file);
+                    Launcher = await Service.GenerateServiceBinaryHostedLauncher(file);
                     break;
                 case "ShellCode":
                     ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)Launcher;
@@ -317,7 +328,7 @@
             string code = ((PowerShellLauncher)Launcher).PowerShellCode;
             content = string.IsNullOrEmpty(code) ? "" : Convert.ToBase64String(Common.CovenantEncoding.GetBytes(code));
         }
-        else if (Launcher.Name == "InstallUtil")
+        else if (Launcher.Name == "InstallUtil" || Launcher.Name == "ServiceBinary")
         {
             string code = ((DiskLauncher)Launcher).DiskCode;
             content = code == null ? "" : code;

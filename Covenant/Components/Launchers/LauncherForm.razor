@@ -135,6 +135,8 @@
     {
         case "Binary":
             break;
+        case "ServiceBinary":
+            break;
         case "ShellCode":
             break;
         case "Cscript":
@@ -301,6 +303,11 @@
                 fileext = ".exe";
                 mediatype = MediaTypeNames.Application.Octet;
                 content = ((BinaryLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.ServiceBinary:
+                fileext = "SVC.exe"; // bit of a hack to get the SVC in the filename, but I like having it.
+                mediatype = MediaTypeNames.Application.Octet;
+                content = Convert.ToBase64String(Convert.FromBase64String(((ServiceBinaryLauncher)this.Launcher).DiskCode));
                 break;
             case LauncherType.ShellCode:
                 fileext = ".bin";

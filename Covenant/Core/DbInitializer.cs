@@ -147,6 +147,7 @@ namespace Covenant.Core
                 var launchers = new Launcher[]
                 {
                     new BinaryLauncher(),
+                    new ServiceBinaryLauncher(),
                     new ShellCodeLauncher(),
                     new PowerShellLauncher(),
                     new MSBuildLauncher(),

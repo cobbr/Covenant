@@ -26,6 +26,7 @@ namespace Covenant.Models.Launchers
         Wscript,
         PowerShell,
         Binary,
+        ServiceBinary,
         MSBuild,
         InstallUtil,
         ShellCode
