@@ -110,13 +110,13 @@ namespace Covenant.Models.Listeners
                 }
             };
             _client = new CovenantAPI(
-                new Uri($"https://localhost:{Common.CovenantHTTPSPort}"),
+                new Uri($"https://localhost:7443"),
                 new TokenCredentials(CovenantToken),
                 clientHandler
             );
 
             _connection = new HubConnectionBuilder()
-                .WithUrl($"https://localhost:{Common.CovenantHTTPSPort}/gruntHub", options =>
+                .WithUrl("https://localhost:7443/gruntHub", options =>
                 {
                     options.AccessTokenProvider = () => { return Task.FromResult(CovenantToken); };
                     options.HttpMessageHandlerFactory = inner =>

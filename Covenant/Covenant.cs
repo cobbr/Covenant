@@ -55,10 +55,6 @@ namespace Covenant
                 "The ComputerName (IPAddress or Hostname) to bind the Covenant API to. (env: COVENANT_COMPUTER_NAME)",
                 CommandOptionType.SingleValue
             );
-            var PortOption = app.Option(
-                "-x | --port <PORT>",
-                "The Port to start the Covenant Listener on.",
-                CommandOptionType.SingleValue);
 
             app.OnExecute(() =>
             {
@@ -73,7 +69,6 @@ namespace Covenant
 
                 string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
                 string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");
-                Common.CovenantHTTPSPort = PortOption.HasValue() ? int.Parse(PortOption.Value()) : 7443;
 
                 if (!string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 {
