@@ -3324,6 +3324,7 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
+            await _logger.LogCreateCapturedCredential(this, credential);
             // _notifier.OnCreateCapturedCredential(this, credential);
             return await GetPasswordCredential(credential.Id);
         }
