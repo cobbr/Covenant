@@ -85,7 +85,7 @@ namespace Covenant.Core
                         ImplantDirection = ImplantDirection.Pull,
                         CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
                     }
-                    };
+                };
                 templates.ToList().ForEach(t => t.ReadFromDisk());
                 await service.CreateImplantTemplates(templates);
 

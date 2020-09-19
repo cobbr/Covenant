@@ -4,6 +4,7 @@
 
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
 @using Covenant.Core
 @using Covenant.Models.Covenant
 @inject UserManager<CovenantUser> UserManager
@@ -15,7 +16,7 @@
 
 <div class="row">
     <div class="col-md-4 border-right">
-        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnSubmit="OnEditPassword" readonly>
+        <CovenantUserRegisterForm CovenantUserRegister="@(new CovenantUserRegister { UserName = CovenantUser.UserName })" OnSubmit="OnEditPassword" Disabled="this.CurrentUser.Id != this.CovenantUser.Id" readonly>
             <span class="fe fe-edit"></span> Edit Password
         </CovenantUserRegisterForm>
     </div>
@@ -37,7 +38,7 @@
         </EditForm>
     </div>
     <div class="col-md-4">
-        <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnChangeTheme" />
+        <EditCovenantUserRolesForm CovenantUser="CovenantUser" OnChangeRoles="OnEditRoles" />
     </div>
 </div>
 
@@ -52,11 +53,16 @@
     [Parameter]
     public CovenantUser CovenantUser { get; set; }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+    private CovenantUser CurrentUser { get; set; }
+
     private IEnumerable<Theme> Themes { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         this.CovenantUser = this.CovenantUser ?? await Service.GetUser(this.CovenantUserId);
+        this.CurrentUser = this.CurrentUser ?? await Service.GetCurrentUser((await AuthenticationState).User);
         this.Themes = await Service.GetThemes();
         Service.DisposeContext();
     }
@@ -92,7 +98,7 @@
 
     private async Task OnEditPassword(CovenantUserRegister register)
     {
-        await Service.EditUserPassword(this.CovenantUser, register);
+        await Service.EditUserPassword(this.CurrentUser, register);
         NavigationManager.NavigateTo("/covenantuser");
     }
 

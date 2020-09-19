@@ -99,6 +99,7 @@
         if (this.GruntCommand.CommandOutput != null && this.GruntCommand.CommandOutput.Id == commandOutput.Id)
         {
             this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
             this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
             Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
@@ -110,6 +111,7 @@
         if (this.GruntCommandId == gruntCommand.Id)
         {
             this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
             this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
             Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());

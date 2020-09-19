@@ -26,7 +26,7 @@ namespace Covenant.Core
                 }
             };
             _client = new CovenantAPI(
-                new Uri("https://localhost:7443"),
+                new Uri("https://localhost:" + configuration["CovenantPort"]),
                 new TokenCredentials(configuration["ServiceUserToken"]),
                 clientHandler
             );
@@ -36,12 +36,12 @@ namespace Covenant.Core
         {
             await _client.CreateHttpListenerAsync(ToAPIListener(listener));
         }
-        
+
         public async Task CreateBridgeListener(BridgeListener listener)
         {
             await _client.CreateBridgeListenerAsync(ToAPIListener(listener));
         }
-        
+
         public static Covenant.API.Models.HttpListener ToAPIListener(HttpListener listener)
         {
             return new Covenant.API.Models.HttpListener
@@ -52,6 +52,7 @@ namespace Covenant.Core
                 BindPort = listener.BindPort,
                 ConnectAddresses = listener.ConnectAddresses,
                 ConnectPort = listener.ConnectPort,
+                CovenantUrl = listener.CovenantUrl,
                 CovenantToken = listener.CovenantToken,
                 Description = listener.Description,
                 Guid = listener.GUID,
@@ -66,7 +67,7 @@ namespace Covenant.Core
                 UseSSL = listener.UseSSL
             };
         }
-        
+
         public static Covenant.API.Models.BridgeListener ToAPIListener(BridgeListener listener)
         {
             return new Covenant.API.Models.BridgeListener
@@ -77,6 +78,7 @@ namespace Covenant.Core
                 BindPort = listener.BindPort,
                 ConnectAddresses = listener.ConnectAddresses,
                 ConnectPort = listener.ConnectPort,
+                CovenantUrl = listener.CovenantUrl,
                 CovenantToken = listener.CovenantToken,
                 Description = listener.Description,
                 Guid = listener.GUID,

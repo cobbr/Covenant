@@ -21,12 +21,30 @@ ReadFormat: |-
 WriteFormat: |-
     {DATA},{GUID}
 BridgeMessengerCode: |-
+    public enum MessageType
+    {
+        Read,
+        Write
+    }
+
+    public class ProfileMessage
+    {
+        public MessageType Type { get; set; }
+        public string Message { get; set; }
+    }
+    
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
     public interface IMessenger
     {
         string Hostname { get; }
         string Identifier { get; set; }
         string Authenticator { get; set; }
-        string Read();
+        EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
+        ProfileMessage Read();
         void Write(string Message);
         void Close();
     }
@@ -44,7 +62,7 @@ BridgeMessengerCode: |-
             // TODO
         }
 
-        public string Read()
+        public ProfileMessage Read()
         {
             // TODO
             return null;

@@ -10,15 +10,15 @@
     </div>
     <div class="form-group">
         <label for="Password">Password</label>
-        <input type="password" id="Password" name="Password" @bind="CovenantUserRegister.Password" class="form-control">
+        <input type="password" id="Password" name="Password" @bind="CovenantUserRegister.Password" class="form-control" disabled="@Disabled">
         <div class="text-danger"><ValidationMessage For="() => CovenantUserRegister.Password" /></div>
     </div>
     <div class="form-group">
         <label for="ConfirmPassword">Confirm Password</label>
-        <input type="password" id="ConfirmPassword" name="ConfirmPassword" @bind="CovenantUserRegister.ConfirmPassword" class="form-control">
+        <input type="password" id="ConfirmPassword" name="ConfirmPassword" @bind="CovenantUserRegister.ConfirmPassword" class="form-control" disabled="@Disabled">
         <div class="text-danger"><ValidationMessage For="() => CovenantUserRegister.ConfirmPassword" /></div>
     </div>
-    <button type="submit" class="btn btn-primary">
+    <button type="submit" class="btn btn-primary" disabled="@Disabled">
         @ChildContent
     </button>
 </EditForm>
@@ -26,6 +26,9 @@
 @code {
     [Parameter]
     public CovenantUserRegister CovenantUserRegister { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; } = false;
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }

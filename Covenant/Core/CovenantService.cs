@@ -1,6 +1,10 @@
-// Author: Ryan Cobb (@cobbr_io)
+﻿// Author: Ryan Cobb (@cobbr_io)
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
+
+using System.Net;
+using System.Net.Sockets;
+
 
 using System;
 using System.IO;
@@ -12,13 +16,6 @@ using System.Security.Claims;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-
-
-using System.Net;
-using System.Net.Sockets;
-using HttpListener = Covenant.Models.Listeners.HttpListener;
-using System.Net.Security;
-using System.Drawing;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +29,13 @@ using Covenant.Models.Listeners;
 using Covenant.Models.Launchers;
 using Covenant.Models.Grunts;
 using Covenant.Models.Indicators;
+
+using HttpListener = Covenant.Models.Listeners.HttpListener;
+using System.Net.Security;
+using System.Drawing;
+
+
+
 
 namespace Covenant.Core
 {
@@ -523,7 +527,7 @@ namespace Covenant.Core
                 }
                 throw new ControllerBadRequestException(ErrorMessage);
             }
-            
+
             if (!_userManager.Users.Any())
             {
                 await _userManager.AddToRoleAsync(user, "Administrator");
@@ -576,14 +580,9 @@ namespace Covenant.Core
             {
                 throw new ControllerNotFoundException($"NotFound - CovenantUser with username: {user.UserName}");
             }
-            var admins = from users in _context.Users
-                         join userroles in _context.UserRoles on users.Id equals userroles.UserId
-                         join roles in _context.Roles on userroles.RoleId equals roles.Id
-                         where roles.Name == "Administrator"
-                         select users.UserName;
-            if (currentUser.UserName != matching_user.UserName && !admins.Contains(currentUser.UserName))
+            if (currentUser.UserName != matching_user.UserName)
             {
-                throw new ControllerBadRequestException($"BadRequest - Current user: {currentUser.UserName} is not an Administrator and cannot change password of user: {user.Password}");
+                throw new ControllerBadRequestException($"BadRequest - Current user: {currentUser.UserName} cannot change password of user: {user.Password}");
             }
             matching_user.PasswordHash = _userManager.PasswordHasher.HashPassword(matching_user, user.Password);
             IdentityResult result = await _userManager.UpdateAsync(matching_user);
@@ -1205,24 +1204,27 @@ namespace Covenant.Core
             {
                 return DateTime.UtcNow >= lostTime;
             }
+            if (DateTime.UtcNow < lostTime)
+            {
+                return false;
+            }
+
             Grunt sg = await _context.Grunts
                     .Where(GR => GR.Id == g.Id)
                     .Include(GR => GR.GruntCommands)
                     .ThenInclude(GC => GC.GruntTasking)
                     .FirstOrDefaultAsync();
-
-            if (DateTime.UtcNow >= lostTime &&
-                sg != null &&
-                sg.GruntCommands != null &&
-                sg.GruntCommands.Count > 0 &&
-                sg.GruntCommands.Any(
-                    GC => GC.GruntTasking != null &&
-                    (GC.GruntTasking.Status == GruntTaskingStatus.Uninitialized || GC.GruntTasking.Status == GruntTaskingStatus.Tasked)))
+            if (sg != null && sg.GruntCommands != null && sg.GruntCommands.Count > 0)
             {
-                lostTime = sg.GruntCommands.Where(GC => GC.GruntTasking != null &&
-                    (GC.GruntTasking.Status == GruntTaskingStatus.Uninitialized || GC.GruntTasking.Status == GruntTaskingStatus.Tasked)).Select(GC => GC.CommandTime).OrderBy(CT => CT).FirstOrDefault();
-                lostTime = lostTime.AddSeconds(g.Delay + (g.Delay * (g.JitterPercent / 100.0)) + Drift);
-                return DateTime.UtcNow >= lostTime;
+                GruntCommand lastCommand = sg.GruntCommands
+                    .Where(GC => GC.GruntTasking != null)
+                    .OrderByDescending(GC => GC.CommandTime)
+                    .FirstOrDefault();
+                if (lastCommand != null && (lastCommand.GruntTasking.Status == GruntTaskingStatus.Uninitialized || lastCommand.GruntTasking.Status == GruntTaskingStatus.Tasked))
+                {
+                    lostTime = lastCommand.CommandTime;
+                    return DateTime.UtcNow >= lastCommand.CommandTime.AddSeconds(g.Delay + (g.Delay * (g.JitterPercent / 100.0)) + Drift);
+                }
             }
             return false;
         }
@@ -2477,7 +2479,7 @@ namespace Covenant.Core
                 {
                     if (!task.Options[i].DisplayInCommand && parameters.Count > (i + 1))
                     {
-                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i+1].Value}""", "");
+                        UserInput = UserInput.Replace($@"/{parameters[i + 1].Label}:""{parameters[i + 1].Value}""", "");
                     }
                 }
             }
@@ -3074,9 +3076,9 @@ namespace Covenant.Core
                     {
                         if (id == 0)
                         {
-                            if (bytesFromClientR.Count == 10000)
+                            if (bytesFromClientR.Count == 10)
                             {
-                                System.Threading.Thread.Sleep(250);
+                                System.Threading.Thread.Sleep(1000);
                             }
                             else
                             {
@@ -3089,9 +3091,9 @@ namespace Covenant.Core
                         }
                         if (id == 1)
                         {
-                            if (bytesFromGruntR.Count == 10000)
+                            if (bytesFromGruntR.Count == 10)
                             {
-                                System.Threading.Thread.Sleep(250);
+                                System.Threading.Thread.Sleep(1000);
                             }
                             else
                             {
@@ -3122,7 +3124,7 @@ namespace Covenant.Core
                     }
                     catch (Exception e)
                     {
-                        System.Threading.Thread.Sleep(250);
+                        break;
                     }
                 }
                 try
@@ -3155,7 +3157,7 @@ namespace Covenant.Core
                             }
                             else
                             {
-                                System.Threading.Thread.Sleep(250);
+                                System.Threading.Thread.Sleep(1000);
                             }
                         }
                         if (id == 1)
@@ -3167,13 +3169,13 @@ namespace Covenant.Core
                             }
                             else
                             {
-                                System.Threading.Thread.Sleep(250);
+                                System.Threading.Thread.Sleep(1000);
                             }
                         }
                     }
                     catch (Exception e)
                     {
-                        System.Threading.Thread.Sleep(250);
+                        break;
                     }
                 }
                 try
@@ -3209,40 +3211,15 @@ namespace Covenant.Core
                         }
                         catch
                         {
-                            try
-                            {
-                                keep_reading_from_Client.Abort();
-                                keep_reading_from_Client = null;
-                            }
-                            catch { }
-                            try
-                            {
-                                keep_writing_to_Grunt.Abort();
-                                keep_writing_to_Grunt = null;
-                            }catch { }
-                            try
-                            {
-                                keep_reading_from_Grunt.Abort();
-                                keep_reading_from_Grunt = null;
-                            }catch { }
-                            try
-                            {
-                                keep_writing_to_Client.Abort();
-                                keep_writing_to_Client = null;
-                            }
-                            catch{ }
-                            try
-                            {
-                                sock_gr.Close();
-                                sock_gr.Shutdown(SocketShutdown.Both);
-                            }
-                            catch { }
-                            try
-                            {
-                                sock_cl.Close();
-                                sock_cl.Shutdown(SocketShutdown.Both);
-                            }
-                            catch { }
+                            keep_reading_from_Client.Abort();
+                            keep_reading_from_Client = null;
+                            keep_writing_to_Grunt.Abort();
+                            keep_writing_to_Grunt = null;
+                            keep_reading_from_Grunt.Abort();
+                            keep_reading_from_Grunt = null;
+                            keep_writing_to_Client.Abort();
+                            keep_writing_to_Client = null;
+                            sock_gr.Close();
                             break;
                         }
                         System.Threading.Thread.Sleep(2000);
@@ -3254,9 +3231,6 @@ namespace Covenant.Core
                 }
             }
         }
-
-
-
 
         public async Task<GruntTasking> CreateGruntTasking(GruntTasking tasking)
         {
@@ -3270,31 +3244,6 @@ namespace Covenant.Core
             {
                 parameters[0] = Common.CovenantEncoding.GetString(Convert.FromBase64String(tasking.Grunt.PowerShellImport)) + "\r\n" + parameters[0];
             }
-            else if (tasking.GruntTask.Name.Equals("powershellimport", StringComparison.OrdinalIgnoreCase))
-            {
-                if (parameters.Count >= 1)
-                {
-                    string import = parameters[0];
-                    byte[] importBytes = Convert.FromBase64String(import);
-                    if (importBytes.Length >= 3 && importBytes[0] == 0xEF && importBytes[1] == 0xBB && importBytes[2] == 0xBF)
-                    {
-                        import = Convert.ToBase64String(importBytes.Skip(3).ToArray());
-                    }
-                    tasking.Grunt.PowerShellImport = import;
-                }
-                else
-                {
-                    tasking.Grunt.PowerShellImport = "";
-                }
-                _context.Grunts.Update(tasking.Grunt);
-                tasking.GruntCommand.CommandOutput.Output = "PowerShell Imported";
-
-                _context.GruntCommands.Update(tasking.GruntCommand);
-                await _context.SaveChangesAsync();
-                await _notifier.NotifyEditGrunt(this, tasking.Grunt);
-                await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                tasking.Status = GruntTaskingStatus.Completed;
-            }
             else if (tasking.GruntTask.Name.Equals("rportfwd", StringComparison.OrdinalIgnoreCase))
             {
                 try
@@ -3307,7 +3256,7 @@ namespace Covenant.Core
                         if (parsed_command.Length == 5)
                         {
                             string[] new_params = new string[6];
-                            string externalip = tasking.Grunt.Listener.ConnectAddresses[0];
+                            string externalip = new WebClient().DownloadString("http://icanhazip.com");
                             String ip_aux = tasking.Grunt.IPAddress;
                             string[] params_parsed = parameters[0].Split(' ');
                             new_params[0] = params_parsed[0];
@@ -3351,6 +3300,31 @@ namespace Covenant.Core
                     Console.WriteLine(e.Message);
                 }
 
+            }
+            else if (tasking.GruntTask.Name.Equals("powershellimport", StringComparison.OrdinalIgnoreCase))
+            {
+                if (parameters.Count >= 1)
+                {
+                    string import = parameters[0];
+                    byte[] importBytes = Convert.FromBase64String(import);
+                    if (importBytes.Length >= 3 && importBytes[0] == 0xEF && importBytes[1] == 0xBB && importBytes[2] == 0xBF)
+                    {
+                        import = Convert.ToBase64String(importBytes.Skip(3).ToArray());
+                    }
+                    tasking.Grunt.PowerShellImport = import;
+                }
+                else
+                {
+                    tasking.Grunt.PowerShellImport = "";
+                }
+                _context.Grunts.Update(tasking.Grunt);
+                tasking.GruntCommand.CommandOutput.Output = "PowerShell Imported";
+
+                _context.GruntCommands.Update(tasking.GruntCommand);
+                await _context.SaveChangesAsync();
+                await _notifier.NotifyEditGrunt(this, tasking.Grunt);
+                await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
+                tasking.Status = GruntTaskingStatus.Completed;
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
             {
@@ -3528,7 +3502,7 @@ public static class Task
             GruntTaskingStatus newStatus = tasking.Status;
             GruntTaskingStatus originalStatus = updatingGruntTasking.Status;
             if ((originalStatus == GruntTaskingStatus.Tasked || originalStatus == GruntTaskingStatus.Progressed) &&
-                newStatus == GruntTaskingStatus.Completed)
+                (newStatus == GruntTaskingStatus.Progressed || newStatus == GruntTaskingStatus.Completed))
             {
                 if (tasking.Type == GruntTaskingType.Exit)
                 {
@@ -3563,28 +3537,26 @@ public static class Task
                     // Check if this Grunt was already connected
                     string hostname = tasking.Parameters[0];
                     string pipename = tasking.Parameters[1];
-                    Grunt connectedGrunt = await _context.Grunts.FirstOrDefaultAsync(G =>
-                        G.ImplantTemplate.CommType == CommunicationType.SMB &&
-                        ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
-                        G.SMBPipeName == pipename
-                    );
-                    if ((connectedGrunt == null || connectedGrunt.GUID == null) && originalStatus == GruntTaskingStatus.Tasked)
+                    Grunt connectedGrunt = tasking.Parameters.Count >= 3 ? await this.GetGruntByGUID(tasking.Parameters[2]) :
+                        await _context.Grunts.Where(G =>
+                            G.Status != GruntStatus.Exited &&
+                            G.ImplantTemplate.CommType == CommunicationType.SMB &&
+                            ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
+                            G.SMBPipeName == pipename
+                        ).OrderByDescending(G => G.ActivationTime)
+                        .Include(G => G.ImplantTemplate)
+                        .FirstOrDefaultAsync();
+                    if (connectedGrunt == null)
                     {
-                        // If not already connected, the Grunt is going to stage, set status to Progressed
-                        newStatus = GruntTaskingStatus.Progressed;
+                        throw new ControllerNotFoundException($"NotFound - Grunt staging from {hostname}:{pipename}");
                     }
-                    else if (connectedGrunt != null)
+                    else
                     {
                         Grunt connectedGruntParent = _context.Grunts.AsEnumerable().FirstOrDefault(G => G.Children.Contains(connectedGrunt.GUID));
                         if (connectedGruntParent != null)
                         {
-                            // If already connected, disconnect to avoid cycles
-                            if (connectedGrunt.Status != GruntStatus.Disconnected)
-                            {
-                                connectedGruntParent.RemoveChild(connectedGrunt);
-                                _context.Grunts.Update(connectedGruntParent);
-                                await _notifier.NotifyEditGrunt(this, connectedGruntParent);
-                            }
+                            connectedGruntParent.RemoveChild(connectedGrunt);
+                            _context.Grunts.Update(connectedGruntParent);
                             // Connect to tasked Grunt, no need to "Progress", as Grunt is already staged
                             grunt.AddChild(connectedGrunt);
                             connectedGrunt.Status = GruntStatus.Active;
@@ -3598,12 +3570,21 @@ public static class Task
                             {
                                 connectedGrunt.Status = GruntStatus.Active;
                                 _context.Grunts.Update(connectedGrunt);
+                                await _notifier.NotifyEditGrunt(this, connectedGrunt);
                             }
                         }
-                    }
-                    else
-                    {
-                        throw new ControllerNotFoundException($"NotFound - Grunt staging from {hostname}:{pipename}");
+                        await _context.Grunts.Where(G =>
+                            G.GUID != connectedGrunt.GUID && G.GUID != grunt.GUID &&
+                            G.Status != GruntStatus.Exited &&
+                            G.ImplantTemplate.CommType == CommunicationType.SMB &&
+                            ((G.IPAddress == hostname || G.Hostname == hostname) || (G.IPAddress == "" && G.Hostname == "")) &&
+                            G.SMBPipeName == pipename
+                        ).ForEachAsync(G =>
+                        {
+                            G.Status = GruntStatus.Exited;
+                            _context.Update(G);
+                            _notifier.NotifyEditGrunt(this, G).Wait();
+                        });
                     }
                 }
                 else if (tasking.Type == GruntTaskingType.Disconnect)
@@ -3690,11 +3671,11 @@ public static class Task
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
             updatingGruntTasking.Status = newStatus;
-            _context.GruntTaskings.Update(updatingGruntTasking);
             _context.Grunts.Update(grunt);
+            _context.GruntTaskings.Update(updatingGruntTasking);
             await _context.SaveChangesAsync();
-            await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
             await _notifier.NotifyEditGrunt(this, grunt);
+            await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
             if (ev != null)
             {
                 tasking.GruntCommand = await _context.GruntCommands
@@ -4322,6 +4303,7 @@ public static class Task
             matchingListener.BindAddress = listener.BindAddress;
             matchingListener.BindPort = listener.BindPort;
             matchingListener.ConnectAddresses = listener.ConnectAddresses;
+            matchingListener.CovenantUrl = listener.CovenantUrl;
             matchingListener.CovenantToken = listener.CovenantToken;
 
             if (matchingListener.Status == ListenerStatus.Active && listener.Status == ListenerStatus.Stopped)
@@ -4553,6 +4535,7 @@ public static class Task
             });
             IdentityRole listenerRole = await this.GetRoleByName("Listener");
             IdentityUserRole<string> userrole = await this.CreateUserRole(listenerUser.Id, listenerRole.Id);
+            listener.CovenantUrl = "https://localhost:" + _configuration["CovenantPort"];
             listener.CovenantToken = Utilities.GenerateJwtToken(
                 listenerUser.UserName, listenerUser.Id, new[] { listenerRole.Name },
                 _configuration["JwtKey"], _configuration["JwtIssuer"],
@@ -4590,6 +4573,7 @@ public static class Task
             });
             IdentityRole listenerRole = await _context.Roles.FirstOrDefaultAsync(R => R.Name == "Listener");
             IdentityUserRole<string> userrole = await this.CreateUserRole(listenerUser.Id, listenerRole.Id);
+            listener.CovenantUrl = "https://localhost:" + _configuration["CovenantPort"];
             listener.CovenantToken = Utilities.GenerateJwtToken(
                 listenerUser.UserName, listenerUser.Id, new[] { listenerRole.Name },
                 _configuration["JwtKey"], _configuration["JwtIssuer"],
