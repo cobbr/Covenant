@@ -41,7 +41,7 @@
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.Note">
             <HeaderContent>Note</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate.Name">
+        <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate?.Name">
             <HeaderContent>Template</HeaderContent>
         </SortableTableHeader>
     </TableHeader>
@@ -66,7 +66,7 @@
             <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
             <td @attributes="InputAttributes">@grunt.Status</td>
             <td @attributes="InputAttributes">@grunt.Note</td>
-            <td @attributes="InputAttributes">@grunt.ImplantTemplate.Name</td>
+            <td @attributes="InputAttributes">@grunt.ImplantTemplate?.Name</td>
         </tr>
     </TableRow>
     <ButtonTray>@ButtonTray</ButtonTray>
@@ -103,6 +103,7 @@
     protected async override Task OnInitializedAsync()
     {
         this.Grunts = this.Grunts ?? (await Service.GetGrunts()).ToList();
+        Service.DisposeContext();
     }
 
     private string GetGruntStatusOpacity(GruntStatus s)
@@ -120,7 +121,7 @@
     {
         return SearchTerm == string.Empty ||
             grunt.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            grunt.ImplantTemplate.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            (grunt.ImplantTemplate != null && grunt.ImplantTemplate.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase)) ||
             grunt.Hostname.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.UserName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.Status.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||

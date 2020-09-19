@@ -37,8 +37,8 @@
 <TabbedTerminals @ref="TabbedTerminals" @bind-TerminalGrunts="TerminalGrunts" OnRemoveTerminal="OnRemoveTerminal"/>
 
 @code {
-        [Parameter]
-        public List<Grunt> Grunts { get; set; }
+    [Parameter]
+    public List<Grunt> Grunts { get; set; }
     private List<Grunt> UnfilteredGrunts { get; set; }
 
     private TabbedTerminals TabbedTerminals { get; set; }
@@ -82,13 +82,18 @@
         }
     }
 
-    private void OnEditGrunt(object sender, Grunt grunt)
+    private async void OnEditGrunt(object sender, Grunt grunt)
     {
+        if (grunt.ImplantTemplate == null)
+        {
+            grunt.ImplantTemplate = await Service.GetImplantTemplate(grunt.ImplantTemplateId);
+            Service.DisposeContext();
+        }
         bool inDisplayedGrunts = this.Grunts.Any(G => G.Id == grunt.Id);
         if (inDisplayedGrunts)
         {
             this.Grunts[this.Grunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
-            this.InvokeAsync(() => this.StateHasChanged());
+            await this.InvokeAsync(() => this.StateHasChanged());
         }
         if (this.UnfilteredGrunts.Any(G => G.Id == grunt.Id))
         {
@@ -96,7 +101,7 @@
             if (!inDisplayedGrunts && (!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
             {
                 this.FilterGrunts();
-                this.InvokeAsync(() => this.StateHasChanged());
+                await this.InvokeAsync(() => this.StateHasChanged());
             }
         }
     }

@@ -21,13 +21,14 @@
         public static Stream OutputStream { get; set; }
         public static string Execute(string Command)
         {
-            string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StreamWriter(OutputStream);
-                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -67,9 +68,16 @@
                 Console.SetError(realStdErr);
                 
                 OutputStream.Close();
+                return "";
             }
-            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
-            return output;
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly
@@ -174,13 +182,14 @@
         public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
-            string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StreamWriter(OutputStream);
-                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -210,9 +219,16 @@
                 Console.SetError(realStdErr);
                 
                 OutputStream.Close();
+                return "";
             }
-            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
-            return output;
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly
@@ -303,13 +319,14 @@
         public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
-            string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StreamWriter(OutputStream);
-                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -331,9 +348,16 @@
                 Console.SetError(realStdErr);
                 
                 OutputStream.Close();
+                return "";
             }
-            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
-            return output;
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly
@@ -420,13 +444,14 @@
         public static Stream OutputStream { get; set; }
         public static string Execute(string ProcessID = "")
         {
-            string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StreamWriter(OutputStream);
-                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -470,9 +495,16 @@
                 Console.SetError(realStdErr);
                 
                 OutputStream.Close();
+                return "";
             }
-            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
-            return output;
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly
@@ -541,13 +573,14 @@
         public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
-            string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StreamWriter(OutputStream);
-                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -560,9 +593,16 @@
                 Console.SetError(realStdErr);
                 
                 OutputStream.Close();
+                return "";
             }
-            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
-            return output;
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly
@@ -777,13 +817,14 @@
         public static Stream OutputStream { get; set; }
         public static string Execute(string Command = "")
         {
-            string output = "";
             try
             {
                 TextWriter realStdOut = Console.Out;
                 TextWriter realStdErr = Console.Error;
-                TextWriter stdOutWriter = new StreamWriter(OutputStream);
-                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
@@ -796,9 +837,16 @@
                 Console.SetError(realStdErr);
                 
                 OutputStream.Close();
+                return "";
             }
-            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
-            return output;
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
     }
   TaskingType: Assembly

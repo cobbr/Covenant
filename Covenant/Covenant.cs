@@ -42,17 +42,22 @@ namespace Covenant
             app.HelpOption("-? | -h | --help");
             var UserNameOption = app.Option(
                 "-u | --username <USERNAME>",
-                "The UserName to login to the Covenant API. (env: COVENANT_USERNAME)",
+                "The initial user UserName to create on launch. (env: COVENANT_USERNAME)",
                 CommandOptionType.SingleValue
             );
             var PasswordOption = app.Option(
                 "-p | --password <PASSWORD>",
-                "The Password to login to the Covenant API. (env: COVENANT_PASSWORD)",
+                "The initial user Password to create on launch. (env: COVENANT_PASSWORD)",
                 CommandOptionType.SingleValue
             );
             var ComputerNameOption = app.Option(
                 "-c | --computername <COMPUTERNAME>",
-                "The ComputerName (IPAddress or Hostname) to bind the Covenant API to. (env: COVENANT_COMPUTER_NAME)",
+                "The ComputerName (IPAddress or Hostname) to bind Covenant to. (env: COVENANT_COMPUTER_NAME)",
+                CommandOptionType.SingleValue
+            );
+            var AdminPortOption = app.Option(
+                "-a | --adminport <PORT>",
+                "The Port number to bind Covenant to. (env: COVENANT_PORT)",
                 CommandOptionType.SingleValue
             );
 
@@ -83,6 +88,13 @@ namespace Covenant
                     CovenantBindUrl = "0.0.0.0";
                 }
 
+                int CovenantPort = Common.CovenantDefaultAdminPort;
+                string sPort = AdminPortOption.HasValue() ? AdminPortOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PORT");
+                if (!string.IsNullOrEmpty(sPort) && !int.TryParse(sPort, out CovenantPort))
+                {
+                    CovenantPort = Common.CovenantDefaultAdminPort;
+                }
+
                 IPAddress address = null;
                 try
                 {
@@ -92,8 +104,8 @@ namespace Covenant
                 {
                     address = Dns.GetHostAddresses(CovenantBindUrl).FirstOrDefault();
                 }
-                IPEndPoint CovenantEndpoint = new IPEndPoint(address, Common.CovenantHTTPSPort);
-                string CovenantUri = (CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + Common.CovenantHTTPSPort : "https://" + CovenantEndpoint);
+                IPEndPoint CovenantEndpoint = new IPEndPoint(address, CovenantPort);
+                string CovenantUri = CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + CovenantPort : "https://" + CovenantEndpoint;
                 var host = BuildHost(CovenantEndpoint, CovenantUri);
                 using (var scope = host.Services.CreateScope())
                 {
@@ -104,6 +116,7 @@ namespace Covenant
                     var signInManager = services.GetRequiredService<SignInManager<CovenantUser>>();
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
+                    configuration["CovenantPort"] = CovenantPort.ToString();
                     var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
                     DbInitializer.Initialize(service, context, roleManager, listenerTokenSources).Wait();
@@ -137,7 +150,7 @@ namespace Covenant
                         configuration["JwtAudience"], configuration["JwtExpireDays"]
                     );
                 }
-                
+
                 LoggingConfiguration loggingConfig = new LoggingConfiguration();
                 var consoleTarget = new ColoredConsoleTarget();
                 var fileTarget = new FileTarget();
@@ -234,7 +247,7 @@ namespace Covenant
 
         private static bool IsElevated()
         {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var identity = WindowsIdentity.GetCurrent();
                 var principal = new WindowsPrincipal(identity);

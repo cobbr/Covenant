@@ -5,16 +5,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+###
+- Added ability to specify custom admin port number
+
 ### Changed
 - Disallow Administrators from changing other user's passwords
 - Restrict non-admin users from visiting other user's profile in UI
 - Updated ShellCode task to use file upload of raw binary
+- Updated streaming tasks to autoflush the console
+- Updated Keylogger to handle VK_PACKET virtual keys
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
 - Fix profile bug when HttpGetResponse differs from HttpPostResponse
 - Fix TaskKill display bug
 - Fix token impersonation issues
+- Fix streaming output to capture output after Delay time elapsed
+- Fix streaming output does not capture exceptions issue
+- Fix Keylogger task Delegate gets garbage collected
+- Fix ImplantTemplate becomes null on GruntTable
+- Fix P2P routing when disconnecting/reconnecting to same Grunt repeatedly
+- Fixed and improved P2P stability for GruntSMB
+- Fix streaming output immediate write for push implants (SMB/Bridge)
+- Fix streaming output leftover buffer remaining output
+- Fix Download Task adding extra byte to files
+- Fix Download task exception on unexpected output
 
 ## [v0.6] - 2020-08-04
 ### Added

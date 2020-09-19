@@ -60,7 +60,7 @@ namespace Covenant.Models.Listeners
         public override CancellationTokenSource Start()
         {
             this.InternalListener = new InternalListener();
-            _ = this.InternalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, this.CovenantToken);
+            _ = this.InternalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, this.CovenantUrl, this.CovenantToken);
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() => this.Run(cancellationTokenSource.Token));
             return cancellationTokenSource;
