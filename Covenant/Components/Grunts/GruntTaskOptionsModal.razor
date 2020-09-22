@@ -1,6 +1,8 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
 @using System.IO
+@using System.Threading
+@using System.Threading.Tasks 
 @using Microsoft.JSInterop
 @using BlazorInputFile
 @using Covenant.Core
@@ -44,6 +46,10 @@
                 }
             </div>
             <div class="modal-footer">
+                @if (this.UploadInProgress)
+                {
+                    <span class="fe fe-loader" style="animation: spin-animation 1s infinite;"></span>
+                }
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="button" @onclick="Execute" class="btn btn-primary">Execute</button>
             </div>
@@ -58,6 +64,8 @@
     private GruntTask GruntTask { get; set; }
     private InputFile InputFile { get; set; }
     private IList<MemoryStream> UploadedFiles { get; set; }
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
 
     public async Task Show(GruntTask task)
     {
@@ -68,10 +76,12 @@
 
     private async Task Execute()
     {
+        await UploadSemaphore.WaitAsync();
         if (this.UploadedFiles != null && this.GruntTask.Options.Any(O => O.FileOption && string.IsNullOrEmpty(O.Value)))
         {
             this.OnRead(this.UploadedFiles);
         }
+        UploadSemaphore.Release();
         await IJSRuntime.InvokeAsync<string>("ModalCommand", "#file-modal", "hide");
         await OnSubmit.InvokeAsync(GruntTask);
     }
@@ -81,6 +91,9 @@
     {
         try
         {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
             this.UploadedFiles = new List<MemoryStream>();
             for (int i = 0; i < files.Length; i++)
             {
@@ -98,6 +111,8 @@
             this.ErrorMessage = e.Message;
             this.StateHasChanged();
         }
+        this.UploadInProgress = false;
+        UploadSemaphore.Release();
     }
 
     private void OnRead(IList<MemoryStream> Streams)
