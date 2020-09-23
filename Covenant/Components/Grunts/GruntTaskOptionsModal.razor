@@ -29,6 +29,10 @@
                             <div class="form-group">
                                 <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
                                 <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                                @if (this.UploadInProgress)
+                                {
+                                    <span class="fe fe-loader spin"></span>
+                                }
                                 @if (string.IsNullOrEmpty(this.ErrorMessage))
                                 {
                                     <span class="text-danger">@ErrorMessage</span>
@@ -46,10 +50,6 @@
                 }
             </div>
             <div class="modal-footer">
-                @if (this.UploadInProgress)
-                {
-                    <span class="fe fe-loader" style="animation: spin-animation 1s infinite;"></span>
-                }
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="button" @onclick="Execute" class="btn btn-primary">Execute</button>
             </div>
@@ -109,9 +109,9 @@
         catch (Exception e)
         {
             this.ErrorMessage = e.Message;
-            this.StateHasChanged();
         }
         this.UploadInProgress = false;
+        this.StateHasChanged();
         UploadSemaphore.Release();
     }
 

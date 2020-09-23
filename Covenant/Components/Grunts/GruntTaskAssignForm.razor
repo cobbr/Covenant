@@ -1,6 +1,8 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
 @using System.IO
+@using System.Threading
+@using System.Threading.Tasks
 @using Microsoft.AspNetCore.Components.Forms
 @using BlazorInputFile
 @using Covenant.Core
@@ -12,7 +14,7 @@
 }
 else
 {
-    <EditForm Model="GruntTask" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(GruntTask))">
+    <EditForm Model="GruntTask" OnValidSubmit="(e => this.OnTask())">
         <DataAnnotationsValidator />
         <div class="form-group col-md-4">
             <label for="GruntTaskId">GruntTask</label>
@@ -39,6 +41,10 @@ else
                     <div class="form-group col-md-12">
                         <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
                         <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                        @if (this.UploadInProgress)
+                        {
+                            <span class="fe fe-loader spin"></span>
+                        }
                         @if (string.IsNullOrEmpty(this.ErrorMessage))
                         {
                             <span class="text-danger">@ErrorMessage</span>
@@ -72,6 +78,8 @@ else
     public EventCallback<GruntTask> OnSubmit { get; set; }
 
     public InputFile InputFile { get; set; }
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
 
     private IList<GruntTask> GruntTasks { get; set; }
     private GruntTask GruntTask { get; set; }
@@ -81,6 +89,13 @@ else
         this.GruntTasks = (await Service.GetGruntTasksForGrunt(this.GruntId)).OrderBy(GT => GT.Name).ToList();
         Service.DisposeContext();
         this.GruntTask = this.GruntTasks.First();
+    }
+
+    private async Task OnTask()
+    {
+        await UploadSemaphore.WaitAsync();
+        await this.OnSubmit.InvokeAsync(GruntTask);
+        UploadSemaphore.Release();
     }
 
     private void OnChangeGruntTask(ChangeEventArgs e)
@@ -97,6 +112,9 @@ else
     {
         try
         {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
             for (int i = 0; i < files.Length; i++)
             {
                 if (files[i] != null)
@@ -114,7 +132,9 @@ else
         catch (Exception e)
         {
             this.ErrorMessage = e.Message;
-            this.StateHasChanged();
         }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
     }
 }

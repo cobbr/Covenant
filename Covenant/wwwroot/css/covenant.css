@@ -91,14 +91,32 @@ main {
     opacity: 1.0;
 }
 
-@keyframes spin-animation {
-    0% {
-        transform: rotate(0deg);
-    }
+@-webkit-keyframes spin-animation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(359deg); }
+}
 
-    100% {
-        transform: rotate(359deg);
-    }
+@-moz-keyframes spin-animation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(359deg); }
+}
+
+@-o-keyframes spin-animation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(359deg); }
+}
+
+@keyframes spin-animation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(359deg); }
+}
+
+.spin {
+    -webkit-animation: spin-animation 1s infinite;
+    -moz-animation: spin-animation 1s infinite;
+    -o-animation: spin-animation 1s infinite;
+    animation: spin-animation 1s infinite;
+    display: inline-block;
 }
 
 .grunt-interact {
