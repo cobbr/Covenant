@@ -9,13 +9,18 @@
 
 This fork is an alternative version with some different functionalities added: Reverse Port Forward.
 
+## 📌 Will be there SOON
+
+:fire: Process Injection Task: make it possible to easily inject to processes (by using different techniques in a highly customizable way. Create a turn on/off fork and run option for tasks executed by Assembly.Load.
+
+
 ## 📌 Milestones
 
-Improve Reverse Port Forward: make all the traffic between C2 and Grunt go through the socket connection in the port the grunt originally established the connection.
+:hammer: Improve Reverse Port Forward: make all the traffic between C2 and Grunt go through the socket connection in the port the grunt originally established the connection.
 
-Pivoting: make possible for a grunt to connect to C2 through another Grunt already connected.
+:hammer: Make Reverse Port Forward Available for other types of listeners.
 
-DNS Grunt.
+:hammer: DNS Grunt.
 
 ![Covenant Dashboard](https://github.com/cobbr/Covenant/wiki/images/covenant-gui-dashboard.png)
 
