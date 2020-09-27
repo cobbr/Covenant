@@ -817,7 +817,7 @@ namespace GruntExecutor
                             if (myMethodExists != null)
                             {
                                 string params_str = string.Join("", parameters);
-                                var results = Portfwd.dealwithit(params_str);
+                                results = Portfwd.dealwithit(params_str);
                                 if (results != null) { output += (string)results; }
                             }
                             else
