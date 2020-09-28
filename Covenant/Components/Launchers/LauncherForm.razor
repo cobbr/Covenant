@@ -122,17 +122,17 @@
             <input id="ConnectAttempts" name="ConnectAttempts" @bind="Launcher.ConnectAttempts" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Launcher.ConnectAttempts" /></div>
         </div>
-        <div class="form-group col-md-3">
-            <label for="Guardrails">Guardrails</label>
-            <input id="Guardrails" name="Guardrails" @bind="Launcher.Guardrails" class="form-control">
-            <div class="text-danger"><ValidationMessage For="() => Launcher.Guardrails" /></div>
-        </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="KillDate">KillDate</label>
             <input id="KillDate" name="KillDate" @bind="Launcher.KillDate" class="form-control">
             <div class="text-danger"><ValidationMessage For="() => Launcher.KillDate" /></div>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="Guardrails">Guardrails (envVar1=value1;envVar2=value2)</label>
+            <input id="Guardrails" name="Guardrails" @bind="Launcher.Guardrails" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.Guardrails" /></div>
         </div>
     </div>
 
