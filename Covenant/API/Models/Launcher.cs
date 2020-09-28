@@ -39,7 +39,7 @@ namespace Covenant.API.Models
         /// 'ConsoleApplication', 'WindowsApplication',
         /// 'DynamicallyLinkedLibrary', 'NetModule', 'WindowsRuntimeMetadata',
         /// 'WindowsRuntimeApplication'</param>
-        public Launcher(int? id = default(int?), int? listenerId = default(int?), int? implantTemplateId = default(int?), string name = default(string), string description = default(string), LauncherType? type = default(LauncherType?), DotNetVersion? dotNetVersion = default(DotNetVersion?), RuntimeIdentifier? runtimeIdentifier = default(RuntimeIdentifier?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), OutputKind? outputKind = default(OutputKind?), bool? compressStager = default(bool?))
+        public Launcher(int? id = default(int?), int? listenerId = default(int?), int? implantTemplateId = default(int?), string name = default(string), string description = default(string), LauncherType? type = default(LauncherType?), DotNetVersion? dotNetVersion = default(DotNetVersion?), RuntimeIdentifier? runtimeIdentifier = default(RuntimeIdentifier?), bool? validateCert = default(bool?), bool? useCertPinning = default(bool?), string smbPipeName = default(string), int? delay = default(int?), int? jitterPercent = default(int?), int? connectAttempts = default(int?), System.DateTime? killDate = default(System.DateTime?), string launcherString = default(string), string stagerCode = default(string), OutputKind? outputKind = default(OutputKind?), bool? compressStager = default(bool?), string guardrails)
         {
             Id = id;
             ListenerId = listenerId;
@@ -56,6 +56,7 @@ namespace Covenant.API.Models
             JitterPercent = jitterPercent;
             ConnectAttempts = connectAttempts;
             KillDate = killDate;
+            Guardrails = guardrails;
             LauncherString = launcherString;
             StagerCode = stagerCode;
             OutputKind = outputKind;
@@ -153,6 +154,11 @@ namespace Covenant.API.Models
         /// </summary>
         [JsonProperty(PropertyName = "killDate")]
         public System.DateTime? KillDate { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "guardrails")]
+        public string guardrails { get; set; }
 
         /// <summary>
         /// </summary>
