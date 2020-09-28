@@ -262,7 +262,7 @@ namespace Covenant.Core
                     },
                      new ReferenceSourceLibrary
                     {
-                        Name = "InternalMonologue", Description = "Internal Monologue repository.",
+                        Name = "InternalMonologue", Description = "Internal Monologue is a tool to retrieve NTLM hashes without touching LSASS.",
                         Location= "InternalMonologue" + Path.DirectorySeparatorChar,
                         CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
 					}

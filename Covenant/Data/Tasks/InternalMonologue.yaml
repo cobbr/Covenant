@@ -1,8 +1,8 @@
 - Name: InternalMonologue
   Aliases: []
   Author:
-    Name: ''
-    Handle: ''
+    Name: 'Simone Salucci & Daniel López'
+    Handle: '@saim1z, @attl4s'
     Link: ''
   Description: Execute Internal Monologue attack
   Help: 
@@ -19,7 +19,7 @@
     public static class Task
     {
         public static Stream OutputStream { get; set; }
-        public static string Execute(string Command)
+        public static string Execute(string Parameters)
         {
             string output = "";
             try
@@ -31,7 +31,7 @@
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
                 
-                String[] args = Command.Split(' ');
+                String[] args = Parameters.Split(' ');
                     
                 try
                 {            
@@ -60,14 +60,14 @@
   - Name: Parameters
     Value: ''
     DefaultValue: -Downgrade True -Restore True -Impersonate True -Thread False -Verbose False -Challenge 1122334455667788
-    Description: Internal Monologue custom parameters
+    Description: The command-line parameters to pass to the tool.
     SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
   ReferenceSourceLibraries:
   - Name: InternalMonologue
-    Description: Internal Monologue description.
+    Description: Internal Monologue is a tool to retrieve NTLM hashes without touching LSASS.
     Location: InternalMonologue\
     Language: CSharp
     CompatibleDotNetVersions:
