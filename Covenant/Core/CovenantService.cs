@@ -4300,6 +4300,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4347,6 +4348,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
             _context.Launchers.Update(matchingLauncher);
@@ -4390,6 +4392,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4437,6 +4440,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
             _context.Launchers.Update(matchingLauncher);
@@ -4474,6 +4478,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4521,6 +4526,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
             matchingLauncher.ParameterString = launcher.ParameterString;
@@ -4561,6 +4567,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4608,6 +4615,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
             matchingLauncher.DiskCode = launcher.DiskCode;
@@ -4648,6 +4656,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4695,6 +4704,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -4733,6 +4743,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4780,6 +4791,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -4821,6 +4833,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4868,6 +4881,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.ParameterString = launcher.ParameterString;
             matchingLauncher.DllName = launcher.DllName;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
@@ -4913,6 +4927,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -4960,6 +4975,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -5001,6 +5017,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -5048,6 +5065,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
@@ -5089,6 +5107,7 @@ public static class Task
                 JitterPercent = launcher.JitterPercent,
                 ConnectAttempts = launcher.ConnectAttempts,
                 KillDate = launcher.KillDate,
+                Guardrails = launcher.Guardrails,
                 DotNetVersion = launcher.DotNetVersion,
                 RuntimeIdentifier = launcher.RuntimeIdentifier
             };
@@ -5136,6 +5155,7 @@ public static class Task
             matchingLauncher.JitterPercent = launcher.JitterPercent;
             matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
             matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.Guardrails = launcher.Guardrails;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;

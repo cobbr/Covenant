@@ -75,6 +75,7 @@ namespace Covenant.Models.Grunts
         public int ConnectAttempts { get; set; } = 5000;
         [Required]
         public DateTime KillDate { get; set; } = DateTime.MaxValue;
+        public string Guardrails { get; set; } = "";
 
         // Attributes of the remote Grunt
         [Required]

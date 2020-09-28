@@ -15,7 +15,6 @@ namespace GruntStager
         public GruntStager()
         {
             string Guardrails = @"{{REPLACE_GUARDRAILS}}";
-            	
 			if (EnvCheck(Guardrails)){
             ExecuteStager();
 			}
