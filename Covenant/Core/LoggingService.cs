@@ -217,7 +217,7 @@ namespace Covenant.Core
         {
             this.OnCreateCovenantUser += (sender, covenantUser) =>
             {
-                _logger.Info($"[OnCreateCovenantUser] {covenantUser.Id} - {covenantUser.NormalizedUserName}");
+                _logger.Info($"[OnCreateCovenantUser]|{covenantUser.Id}|{covenantUser.NormalizedUserName}");
             };
             //this.OnEditCovenantUser += (sender, covenantUser) =>
             //{
@@ -225,13 +225,13 @@ namespace Covenant.Core
             //};
             this.OnDeleteCovenantUser += (sender, covenantUser) =>
             {
-                _logger.Info($"[OnDeleteCovenantUser] {covenantUser.Id} - {covenantUser.NormalizedUserName}");
+                _logger.Info($"[OnDeleteCovenantUser]|UserID:{covenantUser.Id}|UserName:{covenantUser.NormalizedUserName}");
             };
 
 
             this.OnCreateIdentityRole += (sender, role) =>
             {
-                _logger.Info($"[OnCreateIdentityRole] {role.Id} - {role.Name} ");
+                _logger.Info($"[OnCreateIdentityRole]|RoleID:{role.Id}|RoleName:{role.Name} ");
             };
             //this.OnEditIdentityRole += (sender, role) =>
             //{
@@ -239,95 +239,95 @@ namespace Covenant.Core
             //};
             this.OnDeleteIdentityRole += (sender, role) =>
             {
-                _logger.Info($"[OnDeleteIdentityRole] {role.Id} - {role.Name} ");
+                _logger.Info($"[OnDeleteIdentityRole]|RoleID:{role.Id}|RoleName:{role.Name} ");
             };
 
 
             this.OnCreateGrunt += (sender, grunt) =>
             {
-                _logger.Info($"[OnCreateGrunt] {grunt.Id} \r\n\t{grunt.Name}\r\n\t{grunt.Hostname}\r\n\t{grunt.Integrity}\r\n\t{grunt.IPAddress}\r\n\t{grunt.UserDomainName}");
+                _logger.Info($"[OnCreateGrunt]|GruntID:{grunt.Id}|GruntName:{grunt.Name}|HostName:{grunt.Hostname}|Integrity:{grunt.Integrity}|IPAddress:{grunt.IPAddress}|DomainName:{grunt.UserDomainName}");
             };
             //this.OnEditGrunt += (sender, grunt) =>
             //{
-            //    //_logger.Info($"[OnEditGrunt] {grunt.Id} \r\n\t{grunt.Name}\r\n\t{grunt.Hostname}\r\n\t{grunt.Integrity}\r\n\t{grunt.IPAddress}\r\n\t{grunt.UserDomainName}");
+            //    //_logger.Info($"[OnEditGrunt] {grunt.Id} |{grunt.Name}|{grunt.Hostname}|{grunt.Integrity}|{grunt.IPAddress}|{grunt.UserDomainName}");
             //};
             this.OnDeleteGrunt += (sender, grunt) =>
             {
-                _logger.Info($"[OnDeleteGrunt] {grunt.Id} \r\n\t{grunt.Name}\r\n\t{grunt.Hostname}\r\n\t{grunt.Integrity}\r\n\t{grunt.IPAddress}\r\n\t{grunt.UserDomainName}");
+                _logger.Info($"[OnDeleteGrunt]|GruntID:{grunt.Id}|GruntName:{grunt.Name}|HostName:{grunt.Hostname}|Integrity:{grunt.Integrity}|IPAddress:{grunt.IPAddress}|DomainName:{grunt.UserDomainName}");
             };
             
             this.OnCreateGruntCommand += (sender, command) =>
             {
-                _logger.Info($"[OnCreateGruntCommand] Grunt:{command.Grunt.Id}\r\n\tCommandID:{command.Id}\r\n\tCommand:{command.Command}");
+                _logger.Info($"[OnCreateGruntCommand]|Grunt:{command.Grunt.Id}|CommandID:{command.Id}|Command:{command.Command}");
             };
             this.OnEditGruntCommand += (sender, command) =>
             {
-                //_logger.Info($"[OnEditGruntCommand] Grunt:{command.Grunt.Name}\r\n\tCommandID:{command.Id}\r\n\tCommand:{command.Command}");
+                //_logger.Info($"[OnEditGruntCommand] Grunt:{command.Grunt.Name}|CommandID:{command.Id}|Command:{command.Command}");
             };
 
             this.OnCreateCommandOutput += (sender, command) =>
             {
-                _logger.Info($"[OnCreateCommandOutput] CommandID:{command.GruntCommandId}\r\nOutput:{command.Output}");
+                _logger.Info($"[OnCreateCommandOutput]|CommandID:{command.GruntCommandId}|Output:{command.Output}");
             };
              this.OnEditCommandOutput += (sender, command) =>
              {
-                 _logger.Info($"[OnEditCommandOutput] CommandID:{command.GruntCommandId}\r\nOutput:{command.Output}");
+                 _logger.Info($"[OnEditCommandOutput]|CommandID:{command.GruntCommandId}|Output:{command.Output}");
              };
 
 
 
             this.OnCreateGruntTasking += (sender, task) =>
             {
-                _logger.Info($"[OnCreateGruntTasking] Grunt:{task.Grunt.Id}\r\n\tCommandID:{task.Id}\r\n\tCommand:{task.Name}\r\n\tCommand:{String.Join(",",task.Parameters)}");
+                _logger.Info($"[OnCreateGruntTasking]|Grunt:{task.Grunt.Id}|CommandID:{task.Id}|Command:{task.Name}|Command:{String.Join(",",task.Parameters)}");
             };
             //this.OnEditGruntTasking += (sender, task) =>
             //{
-            //    //_logger.Info($"[OnEditGruntTasking] Grunt:{task.Grunt.Id}\r\n\tCommandID:{task.Id}\r\n\tCommand:{task.Name}\r\n\tCommand:{String.Join(",", task.Parameters)}");
+            //    //_logger.Info($"[OnEditGruntTasking] Grunt:{task.Grunt.Id}|CommandID:{task.Id}|Command:{task.Name}|Command:{String.Join(",", task.Parameters)}");
             //};
             this.OnDeleteGruntTasking += (sender, task) =>
             {
-                _logger.Info($"[OnDeleteGruntTasking] Grunt:{task.Grunt.Id}\r\n\tCommandID:{task.Id}\r\n\tCommand:{task.Name}\r\n\tCommand:{String.Join(",", task.Parameters)}");
+                _logger.Info($"[OnDeleteGruntTasking]|Grunt:{task.Grunt.Id}|CommandID:{task.Id}|Command:{task.Name}|Command:{String.Join(",", task.Parameters)}");
             };
 
             this.OnCreateCapturedCredential += (sender, credential) =>
             {
-                _logger.Info($"[OnCreateCapturedCredential] {credential.Domain}\\{credential.Username}");
+                _logger.Info($"[OnCreateCapturedCredential]|{credential.Domain}\\{credential.Username}");
             };
             this.OnEditCapturedCredential += (sender, credential) =>
             {
-                _logger.Info($"[OnEditCapturedCredential] {credential.Domain}\\{credential.Username}");
+                _logger.Info($"[OnEditCapturedCredential]|{credential.Domain}\\{credential.Username}");
             };
             this.OnDeleteCapturedCredential += (sender, credential) =>
             {
-                _logger.Info($"[OnDeleteCapturedCredential] {credential.Domain}\\{credential.Username}");
+                _logger.Info($"[OnDeleteCapturedCredential]|{credential.Domain}\\{credential.Username}");
             };
 
             this.OnCreateListener += (sender, listener) =>
             {
-                _logger.Info($"[OnCreateListener] ListenerID: {listener.Id}\r\n\tBindAddress: {listener.BindAddress}\r\n\tBindPort: {listener.BindPort}\r\n\tConnectAddresses: {String.Join(",",listener.ConnectAddresses)}\r\n\tConnectPort: {listener.ConnectPort}");
+                _logger.Info($"[OnCreateListener]|ListenerID:{listener.Id}|BindAddress:{listener.BindAddress}|BindPort:{listener.BindPort}|ConnectAddresses:{String.Join(",",listener.ConnectAddresses)}|ConnectPort:{listener.ConnectPort}");
             };
             /**
             this.OnEditListener += (sender, listener) =>
             {
-                _logger.Info($"[OnEditListener] ListenerID: {listener.Id}\r\n\tBindAddress: {listener.BindAddress}\r\n\tBindPort: {listener.BindPort}\r\n\tConnectAddresses: {String.Join(",", listener.ConnectAddresses)}\r\n\tConnectPort: {listener.ConnectPort}");
+                _logger.Info($"[OnEditListener] ListenerID: {listener.Id}|BindAddress: {listener.BindAddress}|BindPort: {listener.BindPort}|ConnectAddresses: {String.Join(",", listener.ConnectAddresses)}|ConnectPort: {listener.ConnectPort}");
             };
             **/
             this.OnDeleteListener += (sender, listener) =>
             {
-                _logger.Info($"[OnDeleteListener] ListenerID: {listener.Id}\r\n\tBindAddress: {listener.BindAddress}\r\n\tBindPort: {listener.BindPort}\r\n\tConnectAddresses: {String.Join(",", listener.ConnectAddresses)}\r\n\tConnectPort: {listener.ConnectPort}");
+                _logger.Info($"[OnDeleteListener]|ListenerID:{listener.Id}|BindAddress:{listener.BindAddress}|BindPort:{listener.BindPort}|ConnectAddresses:{String.Join(",", listener.ConnectAddresses)}|ConnectPort:{listener.ConnectPort}");
             };
 
             this.OnCreateHostedFile += (sender, file) =>
             {
-                _logger.Info($"[OnCreateHostedFile] ID: {file.Id}\r\n\tPath: {file.Path}");
+                _logger.Info($"[OnCreateHostedFile]|ID:{file.Id}|Path:{file.Path}");
             };
             //this.OnEditHostedFile += (sender, file) =>
             //{
-            //    _logger.Info($"[OnEditHostedFile] ID: {file.Id}\r\n\tPath: {file.Path}");
+            //    _logger.Info($"[OnEditHostedFile] ID: {file.Id}|Path: {file.Path}");
             //};
             this.OnDeleteHostedFile += (sender, file) =>
             {
-                _logger.Info($"[OnDeleteHostedFile] ID: {file.Id}\r\n\tPath: {file.Path}");
+                _logger.Info($"[OnDeleteHostedFile]|ID:|{file.Id}|Path:|{file.Path}");
             };
 
         }
