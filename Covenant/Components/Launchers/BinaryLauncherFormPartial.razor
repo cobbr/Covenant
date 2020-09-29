@@ -1,5 +1,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Models.Launchers
+@using Microsoft.JSInterop
+@inject IJSRuntime IJSRuntime
 
 <div class="form-group col-md-3">
 	<label for="OutputKind">OutputKind</label><br />
@@ -23,5 +25,10 @@
     protected override void OnInitialized()
     {
         this.BinaryLauncher = (BinaryLauncher)this.Launcher;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", new object[] { "#OutputKind.selectpicker", ((int)Enum.Parse(typeof(Covenant.API.Models.OutputKind), BinaryLauncher.OutputKind.ToString())).ToString() });
     }
 }
