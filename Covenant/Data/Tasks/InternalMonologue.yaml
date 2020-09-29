@@ -1,8 +1,8 @@
 - Name: InternalMonologue
   Aliases: []
   Author:
-    Name: 'Simone Salucci & Daniel López'
-    Handle: '@saim1z, @attl4s'
+    Name: 'Simone Salucci, Daniel López & Sergio Lázaro'
+    Handle: '@saim1z, @attl4s, @Slazar0'
     Link: ''
   Description: Internal Monologue downgrades NetNTLM and invokes a local procedure call to the NTLM authentication package (MSV1_0) with a specific challenge. The responses obtained can be cracked using rainbow tables.
   Help: 
