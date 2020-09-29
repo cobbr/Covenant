@@ -25,7 +25,6 @@
     protected override void OnInitialized()
     {
         this.BinaryLauncher = (BinaryLauncher)this.Launcher;
-        this.BinaryLauncher.OutputKind = (Microsoft.CodeAnalysis.OutputKind)typeof(Covenant.API.Models.OutputKind).GetField("WindowsApplication").GetValue(null);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
