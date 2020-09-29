@@ -18,7 +18,6 @@ namespace Covenant.Models.Launchers
             this.Type = LauncherType.Binary;
             this.Description = "Uses a generated .NET Framework binary to launch a Grunt.";
             this.Name = "Binary";
-            this.OutputKind = OutputKind.ConsoleApplication;
             this.CompressStager = false;
         }
 
