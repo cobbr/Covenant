@@ -426,45 +426,57 @@
   EmbeddedResources: []
 - Name: GetDomainGroup
   Aliases: []
+  Author:
+    Name: Ryan Cobb
+    Handle: cobbr_io
+    Link: https://twitter.com/cobbr_io
   Description: Gets a list of specified (or all) group `DomainObject`s in the current Domain.
-  Author: 
-      Name: Ryan Cobb
-      Handle: cobbr_io
-      Link: https://twitter.com/cobbr_io
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: |
+  Code: >-
     using System;
+
     using System.Text;
+
     using System.Linq;
+
     using System.Collections.Generic;
+
 
     using SharpSploit.Enumeration;
 
+
     public static class Task
+
     {
-        public static string Execute(string Identities = "")
+        public static string Execute(string Identities = "", string LDAPFilter = "", string Properties = null, string AdminCount = "0", string GroupScope = "", string GroupProperty = "", string FindOne = "0")
         {
             try
             {
                 List<Domain.DomainObject> domainGroups = new List<Domain.DomainObject>();
-                if (Identities.Trim() != "")
+                List<string> identityList = Identities.Split(',').ToList();
+                List<string> PropertyList = null;
+
+                if (Properties.Trim() != "")
                 {
-                    List<string> identityList = Identities.Split(',').ToList();
-                    domainGroups = new Domain.DomainSearcher().GetDomainGroups(identityList);
+                	PropertyList = Properties.Split(',').ToList();	
                 }
-                else
-                {
-                    domainGroups = new Domain.DomainSearcher().GetDomainGroups();
-                }
+
+                bool AdminCountBool = (AdminCount.ToLower() == "true" ? true : false);
+                bool FindOneBool = (FindOne.ToLower() == "true" ? true : false);
+
+                domainGroups = new Domain.DomainSearcher().GetDomainGroups(identityList, LDAPFilter, PropertyList, AdminCountBool, GroupScope, GroupProperty, FindOneBool);
+
                 StringBuilder results = new StringBuilder();
                 foreach (Domain.DomainObject domainGroup in domainGroups)
                 {
                     results.Append(domainGroup.ToString());
+                    results.AppendLine(" ");
                     results.AppendLine("------");
+                    results.AppendLine(" ");
                 }
                 return results.ToString();
             }
@@ -476,9 +488,57 @@
   TokenTask: false
   Options:
   - Name: Identities
-    Value: Domain Admins
+    Value: ''
     DefaultValue: ''
     Description: List of comma-delimited groups to retrieve.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: LDAPFilter
+    Value: ''
+    DefaultValue: ''
+    Description: LDAP Filter to use
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Properties
+    Value: ''
+    DefaultValue: ''
+    Description: List of comma-delimited properties to retrieve.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: AdminCount
+    Value: ''
+    DefaultValue: ''
+    Description: True/False
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: GroupScope
+    Value: ''
+    DefaultValue: ''
+    Description: DomainLocal, NotDomainLocal,  Global, NotGlobal,  Universal, NotUniversal
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: GroupProperty
+    Value: ''
+    DefaultValue: ''
+    Description: Security, Distribution, CreatedBySystem, NotCreatedBySystem
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: FindOne
+    Value: ''
+    DefaultValue: ''
+    Description: True/False
     SuggestedValues: []
     Optional: true
     DisplayInCommand: true
@@ -486,52 +546,78 @@
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\SharpSploit\
+    Location: SharpSploit/SharpSploit/
     Language: CSharp
-    CompatibleDotNetVersions: *o0
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
-      Location: net35\System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
       DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net40\System.Management.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
     - Name: System.Management.Automation.dll
-      Location: net40\System.Management.Automation.dll
-      DotNetVersion: Net40
-    - Name: System.IdentityModel.dll
-      Location: net40\System.IdentityModel.dll
-      DotNetVersion: Net40
-    - Name: System.dll
-      Location: net40\System.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.dll
-      Location: net40\System.DirectoryServices.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
     - Name: System.Core.dll
-      Location: net40\System.Core.dll
-      DotNetVersion: Net40
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
     - Name: mscorlib.dll
-      Location: net40\mscorlib.dll
-      DotNetVersion: Net40
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net35\System.Management.dll
-      DotNetVersion: Net35
-    - Name: mscorlib.dll
-      Location: net35\mscorlib.dll
-      DotNetVersion: Net35
-    - Name: System.Core.dll
-      Location: net35\System.Core.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.dll
-      Location: net35\System.DirectoryServices.dll
-      DotNetVersion: Net35
-    - Name: System.dll
-      Location: net35\System.dll
-      DotNetVersion: Net35
-    - Name: System.IdentityModel.dll
-      Location: net35\System.IdentityModel.dll
-      DotNetVersion: Net35
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
