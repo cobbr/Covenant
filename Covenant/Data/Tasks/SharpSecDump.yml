@@ -1,8 +1,8 @@
 - Name: SharpSecDump
   Aliases: []
   Author:
-    Name: Sergio Lazaro
-    Handle: slazar0
+    Name: 'Sergio Lázaro, Daniel López & Simone Salucci'
+    Handle: '@Slazar0, @attl4s, @saim1z'
     Link: ''
   Description: .Net port of the remote SAM + LSA Secrets dumping functionality of impacket's secretsdump.py
   Help: 
