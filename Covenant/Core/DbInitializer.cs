@@ -259,6 +259,12 @@ namespace Covenant.Core
                         Name = "SharpSC", Description = "SharpSC is a .NET assembly to perform basic operations with services.",
                         Location= "SharpSC" + Path.DirectorySeparatorChar,
                         CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "SharpSecDump", Description = "SharpSecDump is a .Net port of the remote SAM + LSA Secrets dumping functionality of impacket's secretsdump.py.",
+                        Location= "SharpSecDump" + Path.DirectorySeparatorChar,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net40 }
                     }
                 };
                 await service.CreateReferenceSourceLibraries(ReferenceSourceLibraries);
@@ -272,6 +278,7 @@ namespace Covenant.Core
                 var su = await service.GetReferenceSourceLibraryByName("SharpUp");
                 var sw = await service.GetReferenceSourceLibraryByName("SharpWMI");
                 var sc = await service.GetReferenceSourceLibraryByName("SharpSC");
+                var ssd = await service.GetReferenceSourceLibraryByName("SharpSecDump");
                 await service.CreateEntities(
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
@@ -391,7 +398,11 @@ namespace Covenant.Core
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35) },
-    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) }
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = sc, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40) },
+                
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ssd, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ssd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40) },
+    new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ssd, ReferenceAssembly = await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40) }          
                 );
             }
             #endregion
