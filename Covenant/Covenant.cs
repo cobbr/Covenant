@@ -84,7 +84,7 @@ namespace Covenant
                 string CovenantBindUrl = ComputerNameOption.HasValue() ? ComputerNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_COMPUTER_NAME"); ;
                 if (string.IsNullOrEmpty(CovenantBindUrl))
                 {
-                    CovenantBindUrl = "0.0.0.0";
+                    CovenantBindUrl = "127.0.0.1";
                 }
 
                 int CovenantPort = Common.CovenantDefaultAdminPort;
@@ -104,7 +104,7 @@ namespace Covenant
                     address = Dns.GetHostAddresses(CovenantBindUrl).FirstOrDefault();
                 }
                 IPEndPoint CovenantEndpoint = new IPEndPoint(address, CovenantPort);
-                string CovenantUri = CovenantBindUrl == "0.0.0.0" ? "https://127.0.0.1:" + CovenantPort : "https://" + CovenantEndpoint;
+                string CovenantUri = "https://" + CovenantEndpoint;
                 var host = BuildHost(CovenantEndpoint, CovenantUri);
                 using (var scope = host.Services.CreateScope())
                 {
