@@ -5,6 +5,8 @@
 @inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 
+@using Microsoft.AspNetCore.Components.Authorization
+
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Models.Listeners
@@ -12,6 +14,7 @@
 @using Covenant.Components.Grunts
 @using Covenant.Components.GruntTaskings
 @inject INotificationService INotificationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Dashboard</h1>
@@ -20,7 +23,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
     <h4 class="h5">Grunts</h4>
 </div>
-<GruntTable @bind-Grunts="Grunts" IsPaginated="true" PageLength="10" IsSearchable="false" />
+<GruntTable @bind-Grunts="Grunts" IsPaginated="true" PageLength="10" IsSearchable="false" OnSubmit="OnEdit" />
 <br />
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
@@ -115,4 +118,18 @@
             this.InvokeAsync(() => this.StateHasChanged());
         }
     }
+    
+    private async Task OnEdit(Grunt grunt)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }    
 }

@@ -6,6 +6,7 @@
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
+@using Microsoft.AspNetCore.Components.Forms
 @inject IJSRuntime IJSRuntime
 @inject INotificationService INotificationService
 
@@ -44,6 +45,11 @@
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate?.Name">
             <HeaderContent>Template</HeaderContent>
         </SortableTableHeader>
+        <th class="pl-1 pr-1">
+            <div class="secondary-color">
+               <span class="fe fe-eye"></span>
+            </div>
+        </th>
     </TableHeader>
     <TableRow Context="grunt">
         <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
@@ -67,6 +73,20 @@
             <td @attributes="InputAttributes">@grunt.Status</td>
             <td @attributes="InputAttributes">@grunt.Note</td>
             <td @attributes="InputAttributes">@grunt.ImplantTemplate?.Name</td>
+            <td @attributes="InputAttributes">
+					@if (grunt.Status == GruntStatus.Hidden)
+					{
+						<button type="button" @onclick="e => OnUnhide(grunt)"  class="btn btn-success ml-2" style="padding: 0 0.5em 0 0.5em">
+							<span class="fe fe-eye"></span>
+						</button>
+					}
+					else
+					{
+						<button type="button" @onclick="e => OnHide(grunt)"  class="btn btn-warning ml-2" style="padding: 0 0.5em 0 0.5em">
+							<span class="fe fe-eye-off"></span>
+						</button>
+					}
+            </td>
         </tr>
     </TableRow>
     <ButtonTray>@ButtonTray</ButtonTray>
@@ -93,6 +113,9 @@
 
     [Parameter]
     public EventCallback<Grunt> OnSelectTerminal { get; set; }
+    
+    [Parameter]
+    public EventCallback<Grunt> OnSubmit { get; set; }
 
     [Parameter]
     public RenderFragment ButtonTray { get; set; }
@@ -130,4 +153,18 @@
             grunt.OperatingSystem.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.Process.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
     }
+    
+
+    private async Task OnHide(Grunt grunt)
+    {
+        grunt.Status = GruntStatus.Hidden;
+        await this.OnSubmit.InvokeAsync(grunt);
+    }
+
+    private async Task OnUnhide(Grunt grunt)
+    {
+		grunt.Status = GruntStatus.Lost;
+        await this.OnSubmit.InvokeAsync(grunt);
+    }
+    
 }

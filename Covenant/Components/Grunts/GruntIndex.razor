@@ -17,7 +17,7 @@
     <h1 class="h2">Grunts</h1>
 </div>
 
-<GruntTable @bind-Grunts="Grunts" class="p-2" OnSelectTerminal="OnSelectTerminal">
+<GruntTable @bind-Grunts="Grunts" class="p-2" OnSelectTerminal="OnSelectTerminal" OnSubmit="OnEdit">
     <ButtonTray>
         @if (this.SomeHidden && this.Hidden)
         {
@@ -121,5 +121,20 @@
         this.Hidden = !this.Hidden;
         this.FilterGrunts();
         this.StateHasChanged();
+    }
+    
+    private async Task OnEdit(Grunt grunt)
+    {
+        try
+        {
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+            this.FilterGrunts();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
     }
 }
