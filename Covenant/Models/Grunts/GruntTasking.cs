@@ -11,10 +11,12 @@ using Newtonsoft.Json;
 
 using Covenant.Core;
 using Covenant.Models.Covenant;
+using NLog;
+using System.Threading.Tasks;
 
 namespace Covenant.Models.Grunts
 {
-    public class CommandOutput
+    public class CommandOutput : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -25,9 +27,18 @@ namespace Covenant.Models.Grunts
         public int GruntCommandId { get; set; }
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public GruntCommand GruntCommand { get; set; }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            if (Common.LogCommandOutput)
+            {
+                // GruntTasking|Action|User|UserId|GruntId|Id|Command|CommandOutput
+                await Task.Run(() => Common.logger.Log(level, $"GruntCommandOutPut|{action}|{this.Id}|{this.GruntCommandId}|{this.Output}"));
+            }
+        }
     }
 
-    public class GruntCommand
+    public class GruntCommand : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -49,6 +60,12 @@ namespace Covenant.Models.Grunts
         public int GruntId { get; set; }
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public Grunt Grunt { get; set; }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // GruntTasking|Action|User|UserId|GruntId|Id|Command
+            await Task.Run(() => Common.logger.Log(level, $"GruntCommand|{action}|{this.User}|{this.UserId}|{this.GruntId}|{this.Id}|{this.Command}|"));
+        }
     }
 
     public enum GruntTaskingStatus
@@ -74,7 +91,7 @@ namespace Covenant.Models.Grunts
         TaskKill
     }
 
-    public class GruntTasking
+    public class GruntTasking : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -97,5 +114,13 @@ namespace Covenant.Models.Grunts
         public int GruntCommandId { get; set; }
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public GruntCommand GruntCommand { get; set; }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+
+            // GruntTasking|Action|Id|Name|GruntId|GruntTaskId|GruntCommand|CommandOutput|Status
+            await Task.Run(() => Common.logger.Log(level, $"GruntTasking|{action}|{this.Id}|{this.Name}|{this.GruntId}|{this.GruntTaskId}|{this.Status}"));
+
+        }
     }
 }

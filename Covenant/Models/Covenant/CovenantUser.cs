@@ -4,12 +4,14 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
-
+using System.Threading.Tasks;
+using Covenant.Core;
 using Microsoft.AspNetCore.Identity;
+using NLog;
 
 namespace Covenant.Models.Covenant
 {
-    public class CovenantUser : IdentityUser
+    public class CovenantUser : IdentityUser, ILoggable
     {
         public CovenantUser() : base()
         {
@@ -22,6 +24,12 @@ namespace Covenant.Models.Covenant
 
         public int ThemeId { get; set; }
         public Theme Theme { get; set; }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // CovenantUser|Action|ID|UserName
+            await Task.Run(() => Common.logger.Log(level, $"CovenantUser|{action}|{this.Id}|{this.NormalizedUserName}"));
+        }
     }
 
     public class CovenantUserLogin

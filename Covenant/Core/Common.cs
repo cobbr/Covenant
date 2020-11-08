@@ -10,13 +10,15 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using NLog;
 
 namespace Covenant.Core
 {
     public static class Common
     {
         public static int CovenantDefaultAdminPort = 7443;
-
+        public static Logger logger = LogManager.GetCurrentClassLogger();
+        public static bool LogCommandOutput = false;
         public static Encoding CovenantEncoding = Encoding.UTF8;
         public static int AesIVLength = 16;
         public static CipherMode AesCipherMode = CipherMode.CBC;

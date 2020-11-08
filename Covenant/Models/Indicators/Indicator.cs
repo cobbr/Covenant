@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Covenant.Core;
+using NLog;
+using System;
+using System.Threading.Tasks;
 
 namespace Covenant.Models.Indicators
 {
@@ -15,7 +18,7 @@ namespace Covenant.Models.Indicators
         public IndicatorType Type { get; set; }
     }
 
-    public class FileIndicator : Indicator
+    public class FileIndicator : Indicator, ILoggable
     {
         public string FileName { get; set; } = "";
         public string FilePath { get; set; } = "";
@@ -40,9 +43,15 @@ namespace Covenant.Models.Indicators
 
             return output;
         }
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // FileIndicator|Action|ID|FileName|FilePath|SHA2|SHA1|MD5
+            await Task.Run(() => Common.logger.Log(level, $"FileIndicator|{action}|{this.Id}|{this.FileName}|{this.FilePath}|{this.SHA2}|{this.SHA1}|{this.MD5}"));
+        }
     }
 
-    public class NetworkIndicator : Indicator
+
+    public class NetworkIndicator : Indicator, ILoggable
     {
         public string Protocol { get; set; } = "";
         public string Domain { get; set; } = "";
@@ -66,9 +75,14 @@ namespace Covenant.Models.Indicators
 
             return output;
         }
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // NetworkIndicator|Action|ID|Protocol|Domain|IPAddress|Port|URI
+            await Task.Run(() => Common.logger.Log(level, $"NetworkIndicator|{action}|{this.Id}|{this.Protocol}|{this.Domain}|{this.IPAddress}|{this.Port}|{this.URI}"));
+        }
     }
 
-    public class TargetIndicator : Indicator
+    public class TargetIndicator : Indicator, ILoggable
     {
         public string ComputerName { get; set; } = "";
         public string UserName { get; set; } = "";
@@ -85,6 +99,11 @@ namespace Covenant.Models.Indicators
             if (UserName != "") { output += UserName; }
 
             return output;
+        }
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // TargetIndicator|Action|ID|ComputerName|UserName
+            await Task.Run(() => Common.logger.Log(level, $"TargetIndicator|{action}|{this.Id}|{this.ComputerName}|{this.UserName}"));
         }
     }
 }

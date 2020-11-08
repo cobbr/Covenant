@@ -14,6 +14,10 @@ using Newtonsoft.Json;
 
 using Covenant.Core;
 using Covenant.Models.Grunts;
+using NLog;
+using Covenant.API.Models;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Covenant.Models.Listeners
 {
@@ -35,7 +39,7 @@ namespace Covenant.Models.Listeners
         Stopped
     }
 
-    public class Listener
+    public class Listener : ILoggable
     {
         [Key]
         public int Id { get; set; }
@@ -72,6 +76,13 @@ namespace Covenant.Models.Listeners
         public virtual void Stop(CancellationTokenSource cancellationTokenSource) { }
 
         protected string ListenerDirectory { get { return Common.CovenantListenersDirectory + this.GUID + Path.DirectorySeparatorChar; } }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // Might need to split this for SMB & HTTP Listeners
+            // Listener|Action|ID|Name|GUID|BindAddress|BindPort|ConnectAddresses|ConnectPort|ProfileID|ListenerType|Status
+            await Task.Run(() => Common.logger.Log(level, $"Listener|{action}|{this.Id}|{this.Name}|{this.GUID}|{this.BindAddress}|{this.BindPort}|{string.Join(",",this.ConnectAddresses)}|{this.ConnectPort}|{this.ProfileId}|{this.ListenerType.Name}|{this.Status}"));
+        }
     }
 
     public class ListenerStartException : Exception

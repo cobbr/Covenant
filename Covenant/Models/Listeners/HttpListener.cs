@@ -20,11 +20,11 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using NLog;
 using NLog.Web;
 using NLog.Config;
 using NLog.Targets;
@@ -33,15 +33,22 @@ using Newtonsoft.Json;
 
 using Covenant.Core;
 using APIModels = Covenant.API.Models;
+using System.Threading.Tasks;
 
 namespace Covenant.Models.Listeners
 {
-    public class HostedFile
+    public class HostedFile : ILoggable
     {
         public int Id { get; set; }
         public int ListenerId { get; set; }
         public string Path { get; set; }
         public string Content { get; set; }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // NetworkIndicator|Action|ID|Protocol|Domain|IPAddress|Port|URI
+            await Task.Run(() => Common.logger.Log(level, $"HostedFile|{this.Id}|{this.ListenerId}|{this.Path}|{this.Content}"));
+        }
     }
 
     public class HttpListener : Listener

@@ -25,6 +25,7 @@ using Covenant.Models.Listeners;
 using Covenant.Models.Launchers;
 using Covenant.Models.Grunts;
 using Covenant.Models.Indicators;
+using NLog;
 
 namespace Covenant.Core
 {
@@ -381,12 +382,11 @@ namespace Covenant.Core
         protected readonly SignInManager<CovenantUser> _signInManager;
         protected readonly IConfiguration _configuration;
         protected readonly ConcurrentDictionary<int, CancellationTokenSource> _cancellationTokens;
-        protected readonly ILoggingService _logger;
 
 
         public CovenantService(DbContextOptions<CovenantContext> options, CovenantContext context, INotificationService notifier,
             UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager,
-            IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> cancellationTokens, ILoggingService logger)
+            IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> cancellationTokens)
         {
             _options = options;
             _context = context;
@@ -395,7 +395,6 @@ namespace Covenant.Core
             _signInManager = signInManager;
             _configuration = configuration;
             _cancellationTokens = cancellationTokens;
-            _logger = logger;
         }
 
         public void DisposeContext()
@@ -530,6 +529,8 @@ namespace Covenant.Core
             {
                 throw new ControllerNotFoundException($"NotFound - Could not find CovenantUser with username: {user.UserName}");
             }
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, savedUser);
+
             string savedRoles = String.Join(",", await this.GetUserRolesForUser(savedUser.Id));
 
             DateTime eventTime = DateTime.UtcNow;
@@ -544,7 +545,6 @@ namespace Covenant.Core
             await _context.Events.AddAsync(userEvent);
             // _notifier.OnCreateCovenantUser(this, savedUser);
             await _notifier.NotifyCreateEvent(this, userEvent);
-            await _logger.LogCreateCovenantUser(this, savedUser);
             return savedUser;
         }
 
@@ -563,7 +563,8 @@ namespace Covenant.Core
             }
             // await _context.SaveChangesAsync();
             await _notifier.NotifyEditCovenantUser(this, matching_user);
-            await _logger.LogEditCovenantUser(this, matching_user);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matching_user);
+
             return matching_user;
         }
 
@@ -586,7 +587,7 @@ namespace Covenant.Core
             }
             // await _context.SaveChangesAsync();
             await _notifier.NotifyEditCovenantUser(this, matching_user);
-            await _logger.LogEditCovenantUser(this, matching_user);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matching_user);
             return matching_user;
         }
 
@@ -602,7 +603,7 @@ namespace Covenant.Core
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             await _notifier.NotifyDeleteCovenantUser(this, user.Id);
-            await _logger.LogDeleteCovenantUser(this, user);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, user);
         }
 
         private IQueryable<CovenantUser> GetAdminUsers()
@@ -1296,7 +1297,7 @@ namespace Covenant.Core
                 };
                 await _context.Events.AddAsync(gruntEvent);
                 await _notifier.NotifyCreateEvent(this, gruntEvent);
-                await _logger.LogCreateGrunt(this, grunt);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, grunt);
 
             }
             matching_grunt.Name = grunt.Name;
@@ -1471,7 +1472,7 @@ namespace Covenant.Core
             _context.Grunts.Update(matching_grunt);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditGrunt(this, matching_grunt);
-            await _logger.LogEditGrunt(this, matching_grunt);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matching_grunt);
             return matching_grunt;
         }
 
@@ -1480,7 +1481,7 @@ namespace Covenant.Core
             Grunt grunt = await this.GetGrunt(gruntId);
             _context.Grunts.Remove(grunt);
             await _context.SaveChangesAsync();
-            await _logger.LogDeleteGrunt(this, grunt);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, grunt);
             // _notifier.OnDeleteGrunt(this, grunt.Id);
         }
 
@@ -2429,7 +2430,7 @@ namespace Covenant.Core
             command.User = await this.GetUser(command.UserId);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGruntCommand(this, command);
-            await _logger.LogCreateGruntCommand(this, command);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, command);
             return command;
         }
 
@@ -2461,7 +2462,8 @@ namespace Covenant.Core
             _context.GruntCommands.Update(updatingCommand);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditGruntCommand(this, updatingCommand);
-            await _logger.LogEditGruntCommand(this, updatingCommand);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, updatingCommand);
+
             return updatingCommand;
         }
 
@@ -2633,7 +2635,7 @@ namespace Covenant.Core
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateCommandOutput(this, output);
             // _notifier.OnCreateCommandOutput(this, output);
-            await _logger.LogCreateCommandOutput(this, output);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, output);
             return output;
         }
 
@@ -2776,8 +2778,8 @@ namespace Covenant.Core
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditGrunt(this, tasking.Grunt);
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                await _logger.LogEditGrunt(this, tasking.Grunt);
-                await _logger.LogEditGruntCommand(this, tasking.GruntCommand);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, tasking.Grunt);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, tasking.GruntCommand);
                 tasking.Status = GruntTaskingStatus.Completed;
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
@@ -2927,7 +2929,7 @@ public static class Task
             parent.Listener = await this.GetListener(parent.ListenerId);
             await _notifier.NotifyCreateGruntTasking(this, tasking);
             await _notifier.NotifyNotifyListener(this, parent);
-            await _logger.LogCreateGruntTasking(this, tasking);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, tasking);
             return tasking;
         }
 
@@ -2980,7 +2982,7 @@ public static class Task
                     }
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
-                    await _logger.LogEditGrunt(this, grunt);
+                    await LoggingService.Log(LogAction.Update, LogLevel.Trace, grunt);
 
                 }
                 else if (tasking.Type == GruntTaskingType.SetKillDate && tasking.Parameters.Count >= 1 && DateTime.TryParse(tasking.Parameters[0], out DateTime date))
@@ -2988,7 +2990,7 @@ public static class Task
                     grunt.KillDate = date;
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
-                    await _logger.LogEditGrunt(this, grunt);
+                    await LoggingService.Log(LogAction.Update, LogLevel.Trace, grunt);
                 }
                 else if (tasking.Type == GruntTaskingType.Connect)
                 {
@@ -3020,7 +3022,7 @@ public static class Task
                             connectedGrunt.Status = GruntStatus.Active;
                             _context.Grunts.Update(connectedGrunt);
                             await _notifier.NotifyEditGrunt(this, connectedGrunt);
-                            await _logger.LogEditGrunt(this, connectedGrunt);
+                            await LoggingService.Log(LogAction.Update, LogLevel.Trace, connectedGrunt);
 
                         }
                         else
@@ -3053,12 +3055,13 @@ public static class Task
                     disconnectFromGrunt.Status = GruntStatus.Disconnected;
                     _context.Grunts.Update(disconnectFromGrunt);
                     await _notifier.NotifyEditGrunt(this, disconnectFromGrunt);
-                    await _logger.LogEditGrunt(this, disconnectFromGrunt);
+                    //Maybe add a Connect/Disconnect to the Enum?
+                    await LoggingService.Log(LogAction.Update, LogLevel.Trace, disconnectFromGrunt);
 
                     grunt.RemoveChild(disconnectFromGrunt);
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
-                    await _logger.LogEditGrunt(this, grunt);
+                    await LoggingService.Log(LogAction.Update, LogLevel.Trace, grunt);
                 }
             }
             Event ev = null;
@@ -3123,7 +3126,7 @@ public static class Task
                         {
                             await _context.Credentials.AddAsync(cred);
                             await _context.SaveChangesAsync();
-                            await _logger.LogCreateCapturedCredential(this, cred);
+                            await LoggingService.Log(LogAction.Create, LogLevel.Trace, cred);
                             // _notifier.OnCreateCapturedCredential(this, cred);
                         }
                     }
@@ -3131,7 +3134,8 @@ public static class Task
                     _context.Entry(updatingGruntTasking.GruntCommand.CommandOutput).State = EntityState.Detached;
                     updatingGruntTasking.GruntCommand.CommandOutput.Output = tasking.GruntCommand.CommandOutput.Output;
                     await _notifier.NotifyEditCommandOutput(this, updatingGruntTasking.GruntCommand.CommandOutput);
-                    await _logger.LogEditCommandOutput(this, updatingGruntTasking.GruntCommand.CommandOutput);
+                    //Add a ToLog for CommandOutput?
+                    await LoggingService.Log(LogAction.Update, LogLevel.Trace, updatingGruntTasking.GruntCommand);
 
                 }
             }
@@ -3142,8 +3146,8 @@ public static class Task
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditGrunt(this, grunt);
             await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
-            await _logger.LogEditGrunt(this, grunt);
-            await _logger.LogEditGruntTasking(this, updatingGruntTasking);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, grunt);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, updatingGruntTasking);
             if (ev != null)
             {
                 tasking.GruntCommand = await _context.GruntCommands
@@ -3154,7 +3158,7 @@ public static class Task
                         .ThenInclude(GC => GC.GruntTask)
                     .FirstOrDefaultAsync();
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                await _logger.LogEditGruntCommand(this, tasking.GruntCommand);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, tasking.GruntCommand);
             }
             return await this.GetGruntTasking(updatingGruntTasking.Id);
         }
@@ -3168,7 +3172,7 @@ public static class Task
             }
             _context.GruntTaskings.Remove(removingGruntTasking);
             await _context.SaveChangesAsync();
-            await _logger.LogDeleteGruntTasking(this, removingGruntTasking);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, removingGruntTasking);
             // _notifier.OnDeleteGruntTasking(this, removingGruntTasking.Id);
         }
 
@@ -3330,7 +3334,7 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
-            await _logger.LogCreateCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             // _notifier.OnCreateCapturedCredential(this, credential);
             return await GetPasswordCredential(credential.Id);
         }
@@ -3340,7 +3344,7 @@ public static class Task
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
             // _notifier.OnCreateCapturedCredential(this, credential);
-            await _logger.LogCreateCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             return await GetHashCredential(credential.Id);
         }
 
@@ -3348,7 +3352,7 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
-            await _logger.LogCreateCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             // _notifier.OnCreateCapturedCredential(this, credential);
             return await GetTicketCredential(credential.Id);
         }
@@ -3358,7 +3362,7 @@ public static class Task
             await _context.Credentials.AddRangeAsync(credentials);
             foreach(var credential in credentials)
             {
-                await _logger.LogCreateCapturedCredential(this, credential);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             }
             await _context.SaveChangesAsync();
             return credentials;
@@ -3374,7 +3378,7 @@ public static class Task
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
             // _notifier.OnEditCapturedCredential(this, matchingCredential);
-            await _logger.LogEditCapturedCredential(this, matchingCredential);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matchingCredential);
             return await GetPasswordCredential(matchingCredential.Id);
         }
 
@@ -3388,7 +3392,7 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
-            await _logger.LogEditCapturedCredential(this, matchingCredential);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matchingCredential);
             // _notifier.OnEditCapturedCredential(this, matchingCredential);
             return await GetHashCredential(matchingCredential.Id);
         }
@@ -3404,7 +3408,7 @@ public static class Task
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
             // _notifier.OnEditCapturedCredential(this, matchingCredential);
-            await _logger.LogEditCapturedCredential(this, matchingCredential);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matchingCredential);
             return await GetTicketCredential(matchingCredential.Id);
         }
 
@@ -3417,7 +3421,7 @@ public static class Task
             }
             _context.Credentials.Remove(credential);
             await _context.SaveChangesAsync();
-            await _logger.LogDeleteCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, credential);
             // _notifier.OnDeleteCapturedCredential(this, credential.Id);
         }
         #endregion
@@ -3830,7 +3834,7 @@ public static class Task
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditListener(this, matchingListener);
-            await _logger.LogEditListener(this, matchingListener);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matchingListener);
             return await this.GetListener(matchingListener.Id);
         }
 
@@ -3844,7 +3848,7 @@ public static class Task
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditListener(this, listener);
-                await _logger.LogEditListener(this, listener);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, listener);
                 _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
             }
             catch (ListenerStartException e)
@@ -3869,7 +3873,7 @@ public static class Task
             });
             _context.Listeners.Remove(listener);
             await _context.SaveChangesAsync();
-            await _logger.LogDeleteListener(this, listener);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, listener);
             // _notifier.OnDeleteListener(this, listener.Id);
         }
 
@@ -4031,19 +4035,19 @@ public static class Task
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
-                await _logger.LogCreateListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
                 listener = await this.StartInitialHttpListener(listener);
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditListener(this, listener);
-                await _logger.LogEditListener(this, listener);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, listener);
             }
             else
             {
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
-                await _logger.LogCreateListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
             }
             return await this.GetHttpListener(listener.Id);
         }
@@ -4072,14 +4076,14 @@ public static class Task
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
-                await _logger.LogCreateListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
 
                 listener.Status = ListenerStatus.Active;
                 listener = await this.StartInitialBridgeListener(listener);
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditListener(this, listener);
-                await _logger.LogEditListener(this, listener);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, listener);
 
             }
             else
@@ -4087,7 +4091,7 @@ public static class Task
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
-                await _logger.LogCreateListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
 
             }
             return await this.GetBridgeListener(listener.Id);
@@ -4145,7 +4149,7 @@ public static class Task
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditListener(this, matchingListener);
-            await _logger.LogEditListener(this, matchingListener);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, listener);
             return await this.GetHttpListener(matchingListener.Id);
         }
 
@@ -4187,7 +4191,7 @@ public static class Task
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditListener(this, matchingListener);
-            await _logger.LogEditListener(this, matchingListener);
+            await LoggingService.Log(LogAction.Update, LogLevel.Trace, matchingListener);
             return await this.GetBridgeListener(matchingListener.Id);
         }
         #endregion
@@ -4258,7 +4262,7 @@ public static class Task
                 await _context.Indicators.AddAsync(indicator);
                 await _context.HostedFiles.AddAsync(hostedFile);
                 await _context.SaveChangesAsync();
-                await _logger.LogCreateHostedFile(this, hostedFile);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, hostedFile);
                 // _notifier.OnCreateIndicator(this, indicator);
                 // _notifier.OnCreateHostedFile(this, hostedFile);
                 return await this.GetHostedFile(hostedFile.Id);
@@ -4287,7 +4291,7 @@ public static class Task
                 HostedFile updatedFile = listener.HostFile(matchingFile);
                 _context.HostedFiles.Update(updatedFile);
                 await _context.SaveChangesAsync();
-                await _logger.LogEditHostedFile(this, matchingFile);
+                await LoggingService.Log(LogAction.Update, LogLevel.Trace, matchingFile);
                 // _notifier.OnEditHostedFile(this, updatedFile);
                 return await this.GetHostedFile(updatedFile.Id);
             }
@@ -4303,7 +4307,7 @@ public static class Task
             HostedFile file = await this.GetHostedFileForListener(listenerId, hostedFileId);
             _context.HostedFiles.Remove(file);
             await _context.SaveChangesAsync();
-            await _logger.LogDeleteHostedFile (this, file);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, file);
             // _notifier.OnDeleteHostedFile(this, file.Id);
         }
         #endregion

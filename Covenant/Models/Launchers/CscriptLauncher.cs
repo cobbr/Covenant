@@ -7,10 +7,12 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 
 using Covenant.Models.Listeners;
+using NLog;
+using Covenant.Core;
 
 namespace Covenant.Models.Launchers
 {
-    public class CscriptLauncher : ScriptletLauncher
+    public class CscriptLauncher : ScriptletLauncher, ILoggable
     {
         public CscriptLauncher()
         {
@@ -40,5 +42,10 @@ namespace Covenant.Models.Launchers
             }
             else { return ""; }
         }
+        //public void ToLog(LogAction action, LogLevel level)
+        //{
+            // CScriptLauncher|Action|ID|Name|LauncherString|ScriptType|OutputKind|CompressStager
+        //    Common.logger.Log(level, $"{this.Type}|{action}|{this.Id}|{this.Name}|{this.LauncherString}|{this.ScriptType}|{this.OutputKind}|{this.CompressStager}");
+        //}
     }
 }

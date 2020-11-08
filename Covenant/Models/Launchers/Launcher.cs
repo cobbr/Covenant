@@ -14,6 +14,8 @@ using Microsoft.CodeAnalysis;
 using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
+using NLog;
+using System.Threading.Tasks;
 
 namespace Covenant.Models.Launchers
 {
@@ -31,7 +33,7 @@ namespace Covenant.Models.Launchers
         ShellCode
     }
 
-    public class Launcher
+    public class Launcher : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -85,6 +87,12 @@ namespace Covenant.Models.Launchers
 
         public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
         public bool CompressStager { get; set; } = false;
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {
+            // CScriptLauncher|Action|ID|Name|LauncherString|ScriptType|OutputKind|CompressStager
+            await Task.Run(() => Common.logger.Log(level, $"{this.Type}|{action}|{this.Id}|{this.ListenerId}|{this.Name}|{this.LauncherString}|{this.OutputKind}|{this.CompressStager}"));
+        }
     }
 
     public abstract class DiskLauncher : Launcher

@@ -60,6 +60,11 @@ namespace Covenant
                 "The Port number to bind Covenant to. (env: COVENANT_PORT)",
                 CommandOptionType.SingleValue
             );
+            var LogCommandOutput = app.Option(
+                "-o | --LogCommandOutput",
+                "Log Command Output as well as commands issued to Grunts",
+                CommandOptionType.NoValue
+            );
 
             app.OnExecute(() =>
             {
@@ -70,6 +75,11 @@ namespace Covenant
                     Console.Error.WriteLine("Covenant's submodules can be cloned with: git clone --recurse-submodules https://github.com/cobbr/Covenant");
                     Console.Error.WriteLine("Or initialized after cloning with: git submodule update --init --recursive");
                     return -1;
+                }
+
+                if (LogCommandOutput.HasValue())
+                {
+                    Common.LogCommandOutput = true;
                 }
 
                 string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
@@ -151,7 +161,7 @@ namespace Covenant
                     );
                 }
 
-                LoggingConfiguration loggingConfig = new LoggingConfiguration();
+                /**LoggingConfiguration loggingConfig = new LoggingConfiguration();
                 var consoleTarget = new ColoredConsoleTarget();
                 var fileTarget = new FileTarget();
                 loggingConfig.AddTarget("console", consoleTarget);
@@ -163,9 +173,10 @@ namespace Covenant
                 loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "file");
 
                 var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
+                **/
                 try
                 {
-                    logger.Debug("Starting Covenant API");
+                    //logger.Debug("Starting Covenant API");
                     if (!IsElevated())
                     {
                         Console.Error.WriteLine("WARNING: Running Covenant non-elevated. You may not have permission to start Listeners on low-numbered ports. Consider running Covenant elevated.");
@@ -175,7 +186,7 @@ namespace Covenant
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, "Covenant stopped due to exception");
+                    //logger.Error(ex, "Covenant stopped due to exception");
                     throw;
                 }
                 finally

@@ -192,7 +192,7 @@ namespace Covenant
             });
             services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
             services.AddSingleton<INotificationService, NotificationService>();
-            services.AddSingleton<ILoggingService, LoggingService>();
+            //services.AddSingleton<ILoggingService, LoggingService>();
             services.AddSingleton<CovenantAPIService, CovenantAPIService>();
             services.AddTransient<ICovenantService, CovenantService>();
             // services.AddTransient<IRemoteCovenantService, CovenantHubService>();

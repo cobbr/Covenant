@@ -7,9 +7,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NLog;
 
 using Covenant.Core;
 using Covenant.Models.Listeners;
+using Microsoft.IdentityModel.Tokens;
+using System.Threading.Tasks;
 
 namespace Covenant.Models.Grunts
 {
@@ -35,7 +38,7 @@ namespace Covenant.Models.Grunts
         System
     }
 
-    public class Grunt
+    public class Grunt : ILoggable
     {
         // Information to uniquely identify this Grunt
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -105,7 +108,8 @@ namespace Covenant.Models.Grunts
 
         public string PowerShellImport { get; set; } = "";
         public List<GruntCommand> GruntCommands { get; set; } = new List<GruntCommand>();
-
+       
+        
         public void AddChild(Grunt grunt)
         {
             if (!string.IsNullOrWhiteSpace(grunt.GUID))
@@ -117,6 +121,15 @@ namespace Covenant.Models.Grunts
         public bool RemoveChild(Grunt grunt)
         {
             return this.Children.Remove(grunt.GUID);
+        }
+
+        public async Task ToLog(LogAction action, LogLevel level)
+        {            
+            //This is excluded due to the large amounts of logs that are created since Covenant updates grunt items often.
+            if(action != LogAction.Update)
+            {
+            await Task.Run(() => Common.logger.Log(level, $"Grunt|{action}|{this.Id}|{this.Name}|{this.Hostname}|{this.Integrity}|{this.IPAddress}|{this.UserDomainName}"));
+            }
         }
     }
 }
