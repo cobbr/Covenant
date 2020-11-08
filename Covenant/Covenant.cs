@@ -74,6 +74,10 @@ namespace Covenant
                     Console.Error.WriteLine("Error: git submodules have not been initialized");
                     Console.Error.WriteLine("Covenant's submodules can be cloned with: git clone --recurse-submodules https://github.com/cobbr/Covenant");
                     Console.Error.WriteLine("Or initialized after cloning with: git submodule update --init --recursive");
+
+                    Common.logger.Error("Error: git submodules have not been initialized");
+                    Common.logger.Error("Covenant's submodules can be cloned with: git clone --recurse-submodules https://github.com/cobbr/Covenant");
+                    Common.logger.Error("Or initialized after cloning with: git submodule update --init --recursive");
                     return -1;
                 }
 
@@ -150,6 +154,7 @@ namespace Covenant
                             else
                             {
                                 Console.Error.WriteLine($"Error creating user: {user.UserName}");
+                                Common.logger.Error($"Error creating user: {user.UserName}");
                                 return -1;
                             }
                         }
@@ -161,32 +166,22 @@ namespace Covenant
                     );
                 }
 
-                /**LoggingConfiguration loggingConfig = new LoggingConfiguration();
-                var consoleTarget = new ColoredConsoleTarget();
-                var fileTarget = new FileTarget();
-                loggingConfig.AddTarget("console", consoleTarget);
-                loggingConfig.AddTarget("file", fileTarget);
-                consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                fileTarget.FileName = Common.CovenantLogDirectory + "covenant.log";
-                loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "console");
-                loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "file");
-
-                var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
-                **/
                 try
                 {
-                    //logger.Debug("Starting Covenant API");
+                    Common.logger.Trace("Starting Covenant API");
                     if (!IsElevated())
                     {
                         Console.Error.WriteLine("WARNING: Running Covenant non-elevated. You may not have permission to start Listeners on low-numbered ports. Consider running Covenant elevated.");
+                        Common.logger.Warn("WARNING: Running Covenant non-elevated. You may not have permission to start Listeners on low-numbered ports. Consider running Covenant elevated.");
+
                     }
                     Console.WriteLine($"Covenant has started! Navigate to {CovenantUri} in a browser");
+                    Common.logger.Trace($"Covenant has started! Navigate to {CovenantUri} in a browser");
                     host.Run();
                 }
                 catch (Exception ex)
                 {
-                    //logger.Error(ex, "Covenant stopped due to exception");
+                    Common.logger.Error(ex, "Covenant stopped due to exception");
                     throw;
                 }
                 finally
@@ -211,6 +206,7 @@ namespace Covenant
                             if (!File.Exists(Common.CovenantPrivateCertFile) || !File.Exists(Common.CovenantPublicCertFile))
                             {
                                 Console.WriteLine("Creating cert...");
+                                Common.logger.Trace("Creating cert...");
                                 X509Certificate2 certificate = Utilities.CreateSelfSignedCertificate(CovenantEndpoint.Address, "CN=Covenant");
                                 File.WriteAllBytes(Common.CovenantPrivateCertFile, certificate.Export(X509ContentType.Pfx));
                                 File.WriteAllBytes(Common.CovenantPublicCertFile, certificate.Export(X509ContentType.Cert));
@@ -222,6 +218,7 @@ namespace Covenant
                             catch (CryptographicException)
                             {
                                 Console.Error.WriteLine("Error importing Covenant certificate.");
+                                Common.logger.Error("Error importing Covenant certificate.");
                             }
                             httpsOptions.SslProtocols = SslProtocols.Tls12;
                         });
@@ -235,6 +232,7 @@ namespace Covenant
                     if (appsettingscontents.Contains(Common.CovenantJwtKeyReplaceMessage))
                     {
                         Console.WriteLine("Found default JwtKey, replacing with auto-generated key...");
+                        Common.logger.Trace("Found default JwtKey, replacing with auto-generated key...");
                         File.WriteAllText(Common.CovenantAppSettingsFile, appsettingscontents.Replace(Common.CovenantJwtKeyReplaceMessage, Utilities.GenerateJwtKey()));
                     }
                     var env = hostingContext.HostingEnvironment;
