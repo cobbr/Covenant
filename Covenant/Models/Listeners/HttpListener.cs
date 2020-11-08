@@ -169,32 +169,16 @@ namespace Covenant.Models.Listeners
                 _ = internalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, configuration["CovenantUrl"], configuration["CovenantToken"]);
             }
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-            //LoggingConfiguration loggingConfig = new LoggingConfiguration();
-            using (var consoleTarget = new ColoredConsoleTarget())
+
+            System.Threading.Tasks.Task task = host.RunAsync(cancellationTokenSource.Token);
+            // Don't love this, but we wait to see if the Listener throws an error on Startup
+            Thread.Sleep(500);
+            if (task.Status == System.Threading.Tasks.TaskStatus.Faulted)
             {
-                using (var fileTarget = new FileTarget())
-                {
-                    //loggingConfig.AddTarget("console", consoleTarget);
-                    //loggingConfig.AddTarget("file", fileTarget);
-                    //consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                    //fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                    //fileTarget.FileName = Common.CovenantLogDirectory + "covenant-http.log";
-                    //loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "console");
-                    //loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "file");
-
-                    //var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
-
-                    System.Threading.Tasks.Task task = host.RunAsync(cancellationTokenSource.Token);
-                    // Don't love this, but we wait to see if the Listener throws an error on Startup
-                    Thread.Sleep(500);
-                    if (task.Status == System.Threading.Tasks.TaskStatus.Faulted)
-                    {
-                        throw new ListenerStartException(task.Exception.Message);
-                    }
-                    this.Status = ListenerStatus.Active;
-                    return cancellationTokenSource;
-                }
+                throw new ListenerStartException(task.Exception.Message);
             }
+            this.Status = ListenerStatus.Active;
+            return cancellationTokenSource;
         }
 
         public override void Stop(CancellationTokenSource cancellationTokenSource)
@@ -231,15 +215,6 @@ namespace Covenant.Models.Listeners
                         }
                     })
                     .UseContentRoot(Directory.GetCurrentDirectory())
-                    //.ConfigureLogging((hostingContext, logging) =>
-                    //{
-                        // logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    //    logging.AddConsole();
-                    //    logging.AddDebug();
-                    //    logging.AddFilter("System", LogLevel.Warning)
-                    //        .AddFilter("Microsoft", LogLevel.Warning);
-                    //})
-                    //.UseNLog()
                     .UseStartup<HttpListenerStartup>()
                     .UseSetting("CovenantUrl", this.CovenantUrl)
                     .UseSetting("CovenantToken", this.CovenantToken)
