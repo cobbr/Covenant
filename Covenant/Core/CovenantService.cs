@@ -2440,6 +2440,17 @@ namespace Covenant.Core
                 _context.CommandOutputs.Update(updatingCommand.CommandOutput);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditCommandOutput(this, updatingCommand.CommandOutput);
+
+                List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(updatingCommand.CommandOutput.Output);
+                foreach (CapturedCredential cred in capturedCredentials)
+                {
+                    if (!await this.ContainsCredentials(cred))
+                    {
+                        await _context.Credentials.AddAsync(cred);
+                        await _context.SaveChangesAsync();
+                        // _notifier.OnCreateCapturedCredential(this, cred);
+                    }
+                }
             }
             updatingCommand.GruntTaskingId = command.GruntTaskingId;
             if (updatingCommand.GruntTaskingId > 0)
@@ -2637,6 +2648,16 @@ namespace Covenant.Core
             _context.CommandOutputs.Update(updatingOutput);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditCommandOutput(this, updatingOutput);
+            List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(updatingOutput.Output);
+            foreach (CapturedCredential cred in capturedCredentials)
+            {
+                if (!await this.ContainsCredentials(cred))
+                {
+                    await _context.Credentials.AddAsync(cred);
+                    await _context.SaveChangesAsync();
+                    // _notifier.OnCreateCapturedCredential(this, cred);
+                }
+            }
             return updatingOutput;
         }
 
@@ -3088,23 +3109,6 @@ public static class Task
                     screenshotEvent.WriteToDisk();
                     await _context.Events.AddAsync(screenshotEvent);
                     await _notifier.NotifyCreateEvent(this, screenshotEvent);
-                }
-                else if (tasking.GruntCommand != null && tasking.GruntCommand.CommandOutput != null)
-                {
-                    List<CapturedCredential> capturedCredentials = CapturedCredential.ParseCredentials(tasking.GruntCommand.CommandOutput.Output);
-                    foreach (CapturedCredential cred in capturedCredentials)
-                    {
-                        if (!await this.ContainsCredentials(cred))
-                        {
-                            await _context.Credentials.AddAsync(cred);
-                            await _context.SaveChangesAsync();
-                            // _notifier.OnCreateCapturedCredential(this, cred);
-                        }
-                    }
-                    _context.Entry(updatingGruntTasking.GruntCommand).State = EntityState.Detached;
-                    _context.Entry(updatingGruntTasking.GruntCommand.CommandOutput).State = EntityState.Detached;
-                    updatingGruntTasking.GruntCommand.CommandOutput.Output = tasking.GruntCommand.CommandOutput.Output;
-                    await _notifier.NotifyEditCommandOutput(this, updatingGruntTasking.GruntCommand.CommandOutput);
                 }
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
