@@ -236,7 +236,7 @@ namespace Covenant.Models.Covenant
                         domain = string.Join(":", line.Split(":").Skip(1)).Trim();
                     }
                 }
-                MatchCollection ticket_matches = Regex.Matches(match.Groups[0].Value, "(?s)ServiceName              :.*?((?=ServiceName              :)|$)");
+                MatchCollection ticket_matches = Regex.Matches(match.Groups[0].Value, "(?s)ServiceName           :.*?((?=ServiceName              :)|$)");
                 foreach (Match ticket_match in ticket_matches)
                 {
 
