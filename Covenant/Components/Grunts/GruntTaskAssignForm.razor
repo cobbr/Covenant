@@ -40,7 +40,7 @@ else
                 {
                     <div class="form-group col-md-12">
                         <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
-                        <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                        <BlazorInputFile.InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
                         @if (this.UploadInProgress)
                         {
                             <span class="fe fe-loader spin"></span>
@@ -77,7 +77,7 @@ else
     [Parameter]
     public EventCallback<GruntTask> OnSubmit { get; set; }
 
-    public InputFile InputFile { get; set; }
+    public BlazorInputFile.InputFile InputFile { get; set; }
     private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
     private bool UploadInProgress { get; set; } = false;
 
