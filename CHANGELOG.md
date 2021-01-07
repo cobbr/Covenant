@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed Grunt ActivationTime and Events to not update on reconnected Lost grunt
 - Lock task execution during upload, display upload load animation
 - Updated to use net50
+- Changed terminal auto-scroll behavior, will auto-scroll a user's own commands
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

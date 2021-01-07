@@ -104,16 +104,11 @@ else
         this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
     }
 
-    bool scrollToBottom = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "#info-tab");
-        }
-        if (scrollToBottom)
-        {
-            await IJSRuntime.InvokeAsync<string>("ScrollToBottom", "#interact-scroll");
         }
     }
 
@@ -130,7 +125,6 @@ else
         if (this.GruntId == gruntTasking.GruntId)
         {
             this.GruntTaskings.Add(gruntTasking);
-            // scrollToBottom = true;
         }
     }
 
@@ -142,7 +136,6 @@ else
             if (index != -1)
             {
                 this.GruntTaskings[index] = gruntTasking;
-                // scrollToBottom = true;
                 _ = this.InvokeAsync(() => this.StateHasChanged());
             }
         }
