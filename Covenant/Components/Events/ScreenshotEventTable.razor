@@ -23,7 +23,15 @@
                 @screenshot.FileName
             </td>
             <td>
-                @System.Convert.FromBase64String(screenshot.FileContents).Length
+                @{
+                    int len = 0;
+                    try
+                    {
+                        len = Convert.FromBase64String(screenshot.FileContents).Length;
+                    }
+                    catch { }
+                }
+                @len
             </td>
             <td>
                 <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
