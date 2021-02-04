@@ -16,7 +16,7 @@ namespace Covenant.Models.Listeners
         Bridge
     }
 
-    public class Profile
+    public class Profile : ILoggable
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -34,6 +34,8 @@ namespace Covenant.Models.Listeners
         return System.Convert.FromBase64String(str);
     }
 }";
+        // Profile|Action|ID|Name|Description|Type
+        public string ToLog(LogAction action) => $"Listener|{action}|{this.Id}|{this.Name}|{this.Description}|{this.Type}";
     }
 
     public class BridgeProfile : Profile

@@ -1,12 +1,26 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using NLog;
 
 using Covenant.Core;
 
 namespace Covenant.Models
 {
+    public interface ILoggable
+    {
+        public string ToLog(LogAction action);
+    }
+
+    public enum LogAction
+    {
+        Create,
+        Edit,
+        Delete
+    }
+
     public interface IYamlSerializable<T>
     {
         public string ToYaml();

@@ -39,7 +39,7 @@ namespace Covenant.Models.Grunts
         public ImplantTemplate ImplantTemplate { get; set; }
     }
 
-    public class ImplantTemplate
+    public class ImplantTemplate : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -123,5 +123,8 @@ namespace Covenant.Models.Grunts
                 this.ExecutorCode = File.ReadAllText(this.ExecutorLocation);
             }
         }
+
+        // ImplantTemplate|Action|ID|Name|Description|Language|CommType|ImplantDirection
+        public string ToLog(LogAction action) => $"ImplantTemplate|{action}|{this.Id}|{this.Name}|{this.Description}|{this.Language}|{this.CommType}|{this.ImplantDirection}";
     }
 }

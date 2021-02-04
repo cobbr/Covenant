@@ -16,12 +16,14 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using NLog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 using Covenant.Hubs;
@@ -188,9 +190,9 @@ namespace Covenant
             {
                 opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
-
             services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
             services.AddSingleton<INotificationService, NotificationService>();
+            //services.AddSingleton<ILoggingService, LoggingService>();
             services.AddSingleton<CovenantAPIService, CovenantAPIService>();
             services.AddTransient<ICovenantService, CovenantService>();
             // services.AddTransient<IRemoteCovenantService, CovenantHubService>();

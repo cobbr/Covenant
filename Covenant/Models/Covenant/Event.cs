@@ -25,7 +25,7 @@ namespace Covenant.Models.Covenant
         Screenshot
     }
 
-    public class Event
+    public class Event : ILoggable
     {
         public int Id { get; set; }
         public DateTime Time { get; set; } = DateTime.UtcNow;
@@ -34,6 +34,9 @@ namespace Covenant.Models.Covenant
         public EventLevel Level { get; set; } = EventLevel.Highlight;
         public EventType Type { get; set; } = EventType.Normal;
 		public string Context { get; set; } = "*";
+
+        // Event|Action|ID|Time|Level|Type|Context|MessageHeader
+        public string ToLog(LogAction action) => $"Event|{action}|{this.Id}|{this.Time}|{this.Level}|{this.Type}|{this.Context}|{this.MessageHeader}";
     }
 
     public class DownloadEvent : Event

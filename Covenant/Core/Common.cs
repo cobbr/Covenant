@@ -10,6 +10,7 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using NLog;
 
 namespace Covenant.Core
 {

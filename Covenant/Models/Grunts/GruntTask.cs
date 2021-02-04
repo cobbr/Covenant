@@ -15,10 +15,12 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Covenant.Core;
+using NLog;
+using System.Threading.Tasks;
 
 namespace Covenant.Models.Grunts
 {
-    public class GruntTask : ISerializable<GruntTask>
+    public class GruntTask : ISerializable<GruntTask>, ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -398,6 +400,9 @@ namespace Covenant.Models.Grunts
                 }))
             );
         }
+
+        // GruntTask|Action|ID|Name|Author|Aliases|Description|TaskingType|UnsafeCompile
+        public string ToLog(LogAction action) => $"GruntTask|{action}|{this.Id}|{this.Name}|{this.Author}|{this.Aliases}|{this.Description}|{this.TaskingType}|{this.UnsafeCompile}";
     }
 
     internal class SerializedGruntTask
