@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added ability to specify custom admin port number
+- Added Covenant trace logging
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
