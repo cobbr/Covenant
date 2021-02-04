@@ -1252,6 +1252,7 @@ namespace Covenant.Core
             await _context.Grunts.AddAsync(grunt);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGrunt(this, grunt);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, grunt);
             return await this.GetGrunt(grunt.Id);
         }
 
