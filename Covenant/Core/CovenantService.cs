@@ -2814,16 +2814,6 @@ namespace Covenant.Core
                 if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
                 if (split.Count > 1) { parameters[1] += " " + String.Join(" ", split.Skip(1).ToArray()); }
             }
-            else if (tasking.GruntTask.Name.Equals("scmgrunt", StringComparison.OrdinalIgnoreCase))
-            {
-                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());
-                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
-                {
-                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
-                }
-
-                parameters[1] = ((ServiceBinaryLauncher)l).DiskCode;
-            }
             else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
             {
                 Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());

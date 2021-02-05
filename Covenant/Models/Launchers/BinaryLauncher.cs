@@ -13,7 +13,7 @@ using NLog;
 
 namespace Covenant.Models.Launchers
 {
-    public class BinaryLauncher : Launcher, ILoggable
+    public class BinaryLauncher : Launcher
     {
         public BinaryLauncher()
         {
@@ -43,10 +43,5 @@ namespace Covenant.Models.Launchers
             }
             else { return ""; }
         }
-        //public void ToLog(LogAction action, LogLevel level)
-        //{
-            // NetworkIndicator|Action|ID|Name|LauncherString|OutputKind|CompressStager
-        //    Common.logger.Log(level, $"BinaryLauncher|{action}|{this.Id}|{this.Name}|{this.LauncherString}|{this.OutputKind}|{this.CompressStager}");
-        //}
     }
 }

