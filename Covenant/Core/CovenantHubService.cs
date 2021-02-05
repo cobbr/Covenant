@@ -1224,5 +1224,25 @@ namespace Covenant.Core
         {
             return _connection.InvokeAsync<GruntTaskAuthor>("EditGruntTaskAuthor", author);
         }
+
+        public Task<ServiceBinaryLauncher> GetServiceBinaryLauncher()
+        {
+            return _connection.InvokeAsync<ServiceBinaryLauncher>("GetServiceBinaryLauncher");
+        }
+
+        public Task<ServiceBinaryLauncher> GenerateServiceBinaryLauncher()
+        {
+            return _connection.InvokeAsync<ServiceBinaryLauncher>("GenerateServiceBinaryLauncher");
+        }
+
+        public Task<ServiceBinaryLauncher> GenerateServiceBinaryHostedLauncher(HostedFile file)
+        {
+            return _connection.InvokeAsync<ServiceBinaryLauncher>("GenerateServiceBinaryHostedLauncher", file);
+        }
+
+        public Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher)
+        {
+            return _connection.InvokeAsync<ServiceBinaryLauncher>("EditServiceBinaryLauncher", launcher);
+        }
     }
 }

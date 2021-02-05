@@ -317,6 +317,10 @@ namespace Covenant.Core
         Task<BinaryLauncher> GenerateBinaryLauncher();
         Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file);
         Task<BinaryLauncher> EditBinaryLauncher(BinaryLauncher launcher);
+        Task<ServiceBinaryLauncher> GetServiceBinaryLauncher();
+        Task<ServiceBinaryLauncher> GenerateServiceBinaryLauncher();
+        Task<ServiceBinaryLauncher> GenerateServiceBinaryHostedLauncher(HostedFile file);
+        Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher);
         Task<ShellCodeLauncher> GetShellCodeLauncher();
         Task<ShellCodeLauncher> GenerateShellCodeLauncher();
         Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file);
@@ -2810,6 +2814,16 @@ namespace Covenant.Core
                 if (!parameters[1].StartsWith("C:\\", StringComparison.OrdinalIgnoreCase)) { parameters[1] = Directory + parameters[1]; }
                 if (split.Count > 1) { parameters[1] += " " + String.Join(" ", split.Skip(1).ToArray()); }
             }
+            else if (tasking.GruntTask.Name.Equals("scmgrunt", StringComparison.OrdinalIgnoreCase))
+            {
+                Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());
+                if (l == null || l.LauncherString == null || l.LauncherString.Trim() == "")
+                {
+                    throw new ControllerNotFoundException($"NotFound - Launcher with name: {parameters[1]}");
+                }
+
+                parameters[1] = ((ServiceBinaryLauncher)l).DiskCode;
+            }
             else if (tasking.GruntTask.Name.Equals("dcomgrunt", StringComparison.OrdinalIgnoreCase))
             {
                 Launcher l = await _context.Launchers.FirstOrDefaultAsync(L => L.Name.ToLower() == parameters[1].ToLower());
@@ -4398,6 +4412,96 @@ public static class Task
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
             return await this.GetBinaryLauncher();
+        }
+
+        public async Task<ServiceBinaryLauncher> GetServiceBinaryLauncher()
+        {
+            ServiceBinaryLauncher launcher = (ServiceBinaryLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.ServiceBinary);
+            if (launcher == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - ServiceBinaryLauncher");
+            }
+            return launcher;
+        }
+
+        public async Task<ServiceBinaryLauncher> GenerateServiceBinaryLauncher()
+        {
+            ServiceBinaryLauncher launcher = await this.GetServiceBinaryLauncher();
+            Listener listener = await this.GetListener(launcher.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
+            Profile profile = await this.GetProfile(listener.ProfileId);
+
+            if (!template.CompatibleListenerTypes.Select(LT => LT.Id).Contains(listener.ListenerTypeId))
+            {
+                throw new ControllerBadRequestException($"BadRequest - ListenerType not compatible with chosen ImplantTemplate");
+            }
+
+            Grunt grunt = new Grunt
+            {
+                ListenerId = listener.Id,
+                Listener = listener,
+                ImplantTemplateId = template.Id,
+                ImplantTemplate = template,
+                SMBPipeName = launcher.SMBPipeName,
+                ValidateCert = launcher.ValidateCert,
+                UseCertPinning = launcher.UseCertPinning,
+                Delay = launcher.Delay,
+                JitterPercent = launcher.JitterPercent,
+                ConnectAttempts = launcher.ConnectAttempts,
+                KillDate = launcher.KillDate,
+                DotNetVersion = launcher.DotNetVersion,
+                RuntimeIdentifier = launcher.RuntimeIdentifier
+            };
+
+            await _context.Grunts.AddAsync(grunt);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateGrunt(this, grunt);
+
+            launcher.GetLauncher(
+                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
+                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
+                grunt,
+                template
+            );
+            _context.Launchers.Update(launcher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, launcher);
+            return await this.GetServiceBinaryLauncher();
+        }
+
+        public async Task<ServiceBinaryLauncher> GenerateServiceBinaryHostedLauncher(HostedFile file)
+        {
+            ServiceBinaryLauncher launcher = await this.GetServiceBinaryLauncher();
+            Listener listener = await this.GetListener(launcher.ListenerId);
+            HostedFile savedFile = await this.GetHostedFile(file.Id);
+            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
+            _context.Launchers.Update(launcher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, launcher);
+            return await this.GetServiceBinaryLauncher();
+        }
+
+        public async Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher)
+        {
+            ServiceBinaryLauncher matchingLauncher = await this.GetServiceBinaryLauncher();
+            Listener listener = await this.GetListener(launcher.ListenerId);
+            matchingLauncher.ListenerId = listener.Id;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
+            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
+            matchingLauncher.ValidateCert = launcher.ValidateCert;
+            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
+            matchingLauncher.Delay = launcher.Delay;
+            matchingLauncher.JitterPercent = launcher.JitterPercent;
+            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
+            matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.LauncherString = launcher.LauncherString;
+            matchingLauncher.StagerCode = launcher.StagerCode;
+            _context.Launchers.Update(matchingLauncher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, matchingLauncher);
+            return await this.GetServiceBinaryLauncher();
         }
 
         public async Task<ShellCodeLauncher> GetShellCodeLauncher()

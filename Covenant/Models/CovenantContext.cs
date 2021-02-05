@@ -76,6 +76,7 @@ namespace Covenant.Models
             builder.Entity<MSBuildLauncher>();
             builder.Entity<PowerShellLauncher>();
             builder.Entity<BinaryLauncher>();
+            builder.Entity<ServiceBinaryLauncher>();
             builder.Entity<ShellCodeLauncher>();
 
             builder.Entity<CapturedPasswordCredential>();
