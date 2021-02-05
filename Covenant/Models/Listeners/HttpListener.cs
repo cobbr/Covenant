@@ -197,7 +197,8 @@ namespace Covenant.Models.Listeners
                                 listenOptions.UseHttps(httpsOptions =>
                                 {
                                     httpsOptions.ServerCertificate = new X509Certificate2(SSLCertificateFile, this.SSLCertificatePassword);
-                                    httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                                    httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls13 |
+                                                                System.Security.Authentication.SslProtocols.Tls12 |
                                                                 System.Security.Authentication.SslProtocols.Tls11 |
                                                                 System.Security.Authentication.SslProtocols.Tls;
                                 });
