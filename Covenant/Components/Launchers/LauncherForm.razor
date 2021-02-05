@@ -77,22 +77,23 @@
             </div>
         </div>
     }
-    @if (this.CurrentImplantTemplate != null && this.CurrentImplantTemplate.Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+    @if (this.CurrentImplantTemplate != null &&
+        (this.CurrentImplantTemplate.Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase) | this.CurrentImplantTemplate.Name.Contains("Brute", StringComparison.CurrentCultureIgnoreCase)))
     {
         <div class="form-row">
             <div class="form-group col-md-3">
                 <label for="ValidateCert">ValidateCert</label>
                 <select id="ValidateCert" name="ValidateCert" @onchange="(e => UpdateValidateCert(e))" class="form-control">
-                    <option value="True">True</option>
                     <option value="False">False</option>
+                    <option value="True">True</option>
                 </select>
                 <div class="text-danger"><ValidationMessage For="() => Launcher.ValidateCert" /></div>
             </div>
             <div class="form-group col-md-3">
                 <label for="UseCertPinning">UseCertPinning</label>
                 <select id="UseCertPinning" name="UseCertPinning" @onchange="(e => UpdateUseCertPinning(e))" class="form-control">
-                    <option value="True">True</option>
                     <option value="False">False</option>
+                    <option value="True">True</option>
                 </select>
                 <div class="text-danger"><ValidationMessage For="() => Launcher.UseCertPinning" /></div>
             </div>
