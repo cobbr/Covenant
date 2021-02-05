@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated to use net50
 - Changed terminal auto-scroll behavior, will auto-scroll a user's own commands
 - Update GruntHTTP, Brute implants to permit addtional SSL protocols
+- Update HttpListenerForm SSLCertificate upload, use InputFile component
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

@@ -1,9 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using System.IO
 @using System.Linq
+@using System.Threading
 @using Covenant.Models.Listeners
 
-@using BlazorInputFile
+@using System.ComponentModel.DataAnnotations
 
 <EditForm Model="Listener" OnValidSubmit="OnFormSubmit">
     <DataAnnotationsValidator />
@@ -81,15 +82,23 @@
 
         <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificateFile">SSLCertificate</label>
-            <BlazorInputFile.InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
-                        disabled="@Disabled"
-                        OnChange="FileUpload" />
+            <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
+                                       disabled="@Disabled"
+                                       OnChange="FileUpload" />
+            @if (this.UploadInProgress)
+            {
+                <span class="fe fe-loader spin"></span>
+            }
+            @if (string.IsNullOrEmpty(this.ErrorMessage))
+            {
+                <span class="text-danger">@ErrorMessage</span>
+            }
         </div>
 
         <div class="form-group col-md-6 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificatePassword">SSLCertificatePassword</label>
             <input id="SSLCertificatePassword" name="SSLCertificatePassword"
-                    @bind="Listener.SSLCertificatePassword" disabled="@Disabled" class="form-control form-control-sm">
+                   @bind="Listener.SSLCertificatePassword" disabled="@Disabled" class="form-control form-control-sm">
             <div class="text-danger"><ValidationMessage For="() => Listener.SSLCertificatePassword" /></div>
         </div>
     </div>
@@ -130,6 +139,9 @@
     [Parameter]
     public bool Disabled { get; set; } = false;
 
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
+
     private void UpdateRow(int row, ChangeEventArgs e)
     {
         Listener.ConnectAddresses[row] = e.Value.ToString();
@@ -153,17 +165,27 @@
         }
     }
 
-    private async Task FileUpload(IFileListEntry[] files)
+    private string ErrorMessage { get; set; }
+    private async Task FileUpload(InputFileChangeEventArgs e)
     {
-        IFileListEntry file = files.FirstOrDefault();
-        if (file != null)
+        try
         {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await file.Data.CopyToAsync(ms);
+                await e.File.OpenReadStream().CopyToAsync(ms);
                 Listener.SSLCertificate = Convert.ToBase64String(ms.ToArray());
             }
         }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = ex.Message;
+        }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
     }
 
     private async Task OnFormSubmit()
