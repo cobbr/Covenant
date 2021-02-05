@@ -74,26 +74,36 @@
         <div class="form-group col-md-3">
             <label for="UseSSL">UseSSL</label>
             <select id="UseSSL" name="UseSSL" @onchange="(e => UpdateUseSSL(e))" disabled="@Disabled" class="form-control form-control-sm">
-                <option value="False">False</option>
-                <option value="True">True</option>
+                @if (Listener.UseSSL)
+                {
+                    <option selected value="True">True</option>
+                    <option value="False">False</option>
+                }
+                else
+                {
+                    <option selected value="False">False</option>
+                    <option value="True">True</option>
+                }
             </select>
             <div class="text-danger"><ValidationMessage For="() => Listener.UseSSL" /></div>
         </div>
 
-        <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
-            <label for="SSLCertificateFile">SSLCertificate</label>
-            <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
-                                       disabled="@Disabled"
-                                       OnChange="FileUpload" />
-            @if (this.UploadInProgress)
-            {
-                <span class="fe fe-loader spin"></span>
-            }
-            @if (string.IsNullOrEmpty(this.ErrorMessage))
-            {
-                <span class="text-danger">@ErrorMessage</span>
-            }
-        </div>
+        @if (!Disabled)
+        {
+            <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
+                <label for="SSLCertificateFile">SSLCertificate</label>
+                <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
+                           OnChange="FileUpload" />
+                @if (this.UploadInProgress)
+                {
+                    <span class="fe fe-loader spin"></span>
+                }
+                @if (string.IsNullOrEmpty(this.ErrorMessage))
+                {
+                    <span class="text-danger">@ErrorMessage</span>
+                }
+            </div>
+        }
 
         <div class="form-group col-md-6 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificatePassword">SSLCertificatePassword</label>

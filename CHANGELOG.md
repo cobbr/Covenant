@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix credential tracking missing Kerberos tickets
 - Fix screenshot event table display error
 - Fix Brute implant to configure ValidateCert,UseCertPinning options
+- Fix EditHttpListener page to display accurate UseSSL value
 
 ## [v0.6] - 2020-08-04
 ### Added
