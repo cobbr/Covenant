@@ -553,6 +553,10 @@ namespace BruteExecutor
             this.ValidateCert = ValidateCert;
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | SecurityProtocolType.Ssl3; } catch {}
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)768; } catch {}
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)3072; } catch {}
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)12288; } catch {}
             ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, errors) =>
             {
                 bool valid = true;

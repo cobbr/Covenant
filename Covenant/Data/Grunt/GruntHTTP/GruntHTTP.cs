@@ -855,7 +855,12 @@ namespace GruntExecutor
             this.UseCertPinning = UseCertPinning;
             this.ValidateCert = ValidateCert;
 
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls | (SecurityProtocolType)768 | (SecurityProtocolType)3072 | (SecurityProtocolType)12288;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | SecurityProtocolType.Ssl3; } catch {}
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)768; } catch {}
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)3072; } catch {}
+            try { ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)12288; } catch {}
+
             ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, errors) =>
             {
                 bool valid = true;
