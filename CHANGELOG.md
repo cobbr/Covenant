@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update GruntHTTP, Brute implants to permit addtional SSL protocols
 - Update HttpListenerForm SSLCertificate upload, use InputFile component
 - Update HttpListener to allow all TLS versions
+- Updated Seatbelt,SharpDPAPI,SharpWMI,SharpSploit ReferenceSourceLibraries
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

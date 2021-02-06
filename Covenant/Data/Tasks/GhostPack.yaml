@@ -174,6 +174,7 @@
   Code: |
     using System;
     using System.IO;
+    using System.Reflection;
     
     using SharpDPAPI.Domain;
     
@@ -194,24 +195,7 @@
                 Console.SetError(stdErrWriter);
                 
                 string[] args = Command.Split(' ');
-                Info.Logo();
-    
-                // try to parse the command line arguments, show usage on failure and then bail
-                var parsed = ArgumentParser.Parse(args);
-                if (parsed.ParsedOk == false)
-                    Info.ShowUsage();
-                else
-                {
-                    // Try to execute the command using the arguments passed in
-    
-                    var commandName = args.Length != 0 ? args[0] : "";
-    
-                    var commandFound = new CommandCollection().ExecuteCommand(commandName, parsed.Arguments);
-    
-                    // show the usage if no commands were found for the command name
-                    if (commandFound == false)
-                        Info.ShowUsage();
-                }
+                typeof(SharpDPAPI.Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
                 
                 Console.Out.Flush();
                 Console.Error.Flush();
