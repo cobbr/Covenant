@@ -34,7 +34,29 @@
 
 <div class="tab-content" id="listener-tab-content">
     <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab">
-        <HttpProfileForm Profile="@(new HttpProfile())" OnSubmit="OnCreateHttpProfile" SubmitIcon="plus" SubmitLabel="Create"></HttpProfileForm>
+        @{
+            HttpProfile createdProfile = new HttpProfile
+            {
+                HttpUrls = new List<string> { "/index.html?id={GUID}" },
+                HttpRequestHeaders = new List<HttpProfileHeader>
+                {
+                    new HttpProfileHeader
+                    {
+                        Name = "User-Agent",
+                        Value = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+                    }
+                },
+                HttpResponseHeaders = new List<HttpProfileHeader>
+                {
+                    new HttpProfileHeader
+                    {
+                        Name = "Server",
+                        Value = "Microsoft-IIS/8.5"
+                    }
+                }
+            };
+        }
+        <HttpProfileForm Profile="@createdProfile" OnSubmit="OnCreateHttpProfile" SubmitIcon="plus" SubmitLabel="Create"></HttpProfileForm>
     </div>
     <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
         <BridgeProfileForm Profile="@(new BridgeProfile())" OnSubmit="OnCreateBridgeProfile" SubmitIcon="plus" SubmitLabel="Create"></BridgeProfileForm>

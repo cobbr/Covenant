@@ -9,18 +9,6 @@
 @inject IJSRuntime IJSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-@if (Profile.HttpUrls.Count == 0) {
-        Profile.HttpUrls = new List<string> { "/index.html?id={GUID}" };
-}
-
-@if (Profile.HttpRequestHeaders.Count == 0 ) {
-    Profile.HttpRequestHeaders = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "User-Agent", Value = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36" } };
-}
-
-@if (Profile.HttpResponseHeaders.Count == 0 ) {
-    Profile.HttpResponseHeaders = new List<HttpProfileHeader> { new HttpProfileHeader { Name = "Server", Value = "Microsoft-IIS/8.5" } };
-}
-
 <EditForm Model="Profile" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.Profile))">
     <DataAnnotationsValidator />
     <div class="form-row">
