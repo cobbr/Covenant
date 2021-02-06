@@ -42,7 +42,7 @@
     Description: SharpSploit is a library for C# post-exploitation modules.
     Location: SharpSploit\SharpSploit\
     Language: CSharp
-    CompatibleDotNetVersions: &o0
+    CompatibleDotNetVersions:
     - Net35
     - Net40
     ReferenceAssemblies:
@@ -91,9 +91,9 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
-- Name: DisableETW
+- Name: BypassETW
   Aliases: []
-  Description: Disable ETW by patching the EtwEventWrite function.
+  Description: Bypass ETW by patching the EtwEventWrite function.
   Author:
     Name: 'Simone Salucci & Daniel López'
     Handle: 'saim1z, attl4s'
@@ -113,7 +113,7 @@
         {
             try
             {
-                if (ETW.PatchEtw())
+                if (ETW.PatchETWEventWrite())
                 {
                 	return "ETW Patch Succeeded.";
                 }
@@ -134,7 +134,7 @@
     Description: SharpSploit is a library for C# post-exploitation modules.
     Location: SharpSploit\SharpSploit\
     Language: CSharp
-    CompatibleDotNetVersions: &o0
+    CompatibleDotNetVersions:
     - Net35
     - Net40
     ReferenceAssemblies:

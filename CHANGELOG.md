@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Covenant trace logging
 - Added ServiceBinary launcher, added PSExecCommand Task
 - Added OutputKind to LauncherForm
+- Added BypassETW task
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
