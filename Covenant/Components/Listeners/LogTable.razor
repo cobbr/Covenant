@@ -46,7 +46,11 @@
 
     protected override void OnInitialized()
     {
-        this.Logs = this.Logs ?? File.ReadLines(this.LogFile);
+        if (File.Exists(this.LogFile))
+        {
+            this.Logs = this.Logs ?? File.ReadLines(this.LogFile);
+        }
+        this.Logs = this.Logs ?? new List<string>();
     }
 
     private string ToString(List<string> list)
