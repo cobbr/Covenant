@@ -2,12 +2,14 @@
 
 @using System.Collections.Generic
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 @inject INotificationService INotificationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <CovenantTable TItem="Grunt" Items="Grunts" ItemsChanged="GruntsChanged" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -44,6 +46,11 @@
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate?.Name">
             <HeaderContent>Template</HeaderContent>
         </SortableTableHeader>
+        <th class="pl-1 pr-1">
+            <div class="d-flex flex-nowrap">
+                Action
+            </div>
+        </th>
     </TableHeader>
     <TableRow Context="grunt">
         <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
@@ -67,8 +74,44 @@
             <td @attributes="InputAttributes">@grunt.Status</td>
             <td @attributes="InputAttributes">@grunt.Note</td>
             <td @attributes="InputAttributes">@grunt.ImplantTemplate?.Name</td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
+                            type="button" id="dropdownActionGrunt" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownActionGrunt">
+                        <a class="dropdown-item" type="button" @onclick="(e => OnSelectTerminal.InvokeAsync(grunt))">
+                            <span class="fe fe-terminal"></span>
+                            Interact
+                        </a>
+                        @if (grunt.Status == GruntStatus.Active || grunt.Status == GruntStatus.Lost)
+                        {
+                            <a class="dropdown-item text-warning" type="button" @onclick="(e => OnHideGrunt(grunt))">
+                                <span class="fe fe-eye-off"></span>
+                                Hide
+                            </a>
+                        }
+                        else if (grunt.Status == GruntStatus.Hidden)
+                        {
+                            <a class="dropdown-item text-success" type="button" @onclick="(e => OnUnhideGrunt(grunt))">
+                                <span class="fe fe-eye"></span>
+                                Unhide
+                            </a>
+                        }
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteGrunt(grunt))">
+                            <span class="fe fe-x"></span>
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </td>
         </tr>
     </TableRow>
+    <TableBottom>
+        <br><br>
+    </TableBottom>
     <ButtonTray>@ButtonTray</ButtonTray>
 </CovenantTable>
 
@@ -129,5 +172,49 @@
             grunt.Integrity.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.OperatingSystem.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.Process.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnHideGrunt(Grunt grunt)
+    {
+        try
+        {
+            grunt.Status = GruntStatus.Hidden;
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnUnhideGrunt(Grunt grunt)
+    {
+        try
+        {
+            grunt.Status = GruntStatus.Active;
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnDeleteGrunt(Grunt grunt)
+    {
+        try
+        {
+            await Service.DeleteGrunt(grunt.Id);
+            grunt.Status = GruntStatus.Active;
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
     }
 }

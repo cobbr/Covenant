@@ -28,6 +28,7 @@
                     @TableRow(this.FilteredItems[number])
                 }
             </tbody>
+            @TableBottom
         </table>
     </div>
     @if (this.IsPaginated)
@@ -115,6 +116,9 @@
 
     [Parameter]
     public RenderFragment ButtonTray { get; set; }
+
+    [Parameter]
+    public RenderFragment TableBottom { get; set; }
 
     private List<TItem> _items;
     [Parameter]
