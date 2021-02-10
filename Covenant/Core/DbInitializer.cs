@@ -23,9 +23,9 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager)
         {
-            await InitializeListeners(service, context, ListenerCancellationTokens);
+            await InitializeListeners(service, context);
             await InitializeImplantTemplates(service, context);
             await InitializeTasks(service, context);
             await InitializeRoles(roleManager);
@@ -108,7 +108,7 @@ namespace Covenant.Core
             }
         }
 
-        public async static Task InitializeListeners(ICovenantService service, CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public async static Task InitializeListeners(ICovenantService service, CovenantContext context)
         {
             if (!context.ListenerTypes.Any())
             {
@@ -133,7 +133,6 @@ namespace Covenant.Core
 
             foreach (Listener l in listeners)
             {
-                l.Profile = await service.GetProfile(l.ProfileId);
                 await service.StartListener(l.Id);
             }
         }

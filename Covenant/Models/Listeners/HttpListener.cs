@@ -164,10 +164,10 @@ namespace Covenant.Models.Listeners
             }
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-            System.Threading.Tasks.Task task = host.RunAsync(cancellationTokenSource.Token);
+            Task task = host.RunAsync(cancellationTokenSource.Token);
             // Don't love this, but we wait to see if the Listener throws an error on Startup
             Thread.Sleep(500);
-            if (task.Status == System.Threading.Tasks.TaskStatus.Faulted)
+            if (task.Status == TaskStatus.Faulted)
             {
                 throw new ListenerStartException(task.Exception.Message);
             }

@@ -3844,7 +3844,6 @@ public static class Task
         public async Task StartListener(int listenerId)
         {
             Listener listener = await this.GetListener(listenerId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
             try
             {
                 CancellationTokenSource listenerCancellationToken = listener.Start();

@@ -44,6 +44,7 @@ namespace Covenant.Models.Listeners
             Ok,
             NotFound
         }
+
         internal class GruntMessageCacheInfo
         {
             public APIModels.GruntTasking Tasking { get; set; }
@@ -138,6 +139,10 @@ namespace Covenant.Models.Listeners
                 {
                     InternalRead(guid).Wait();
                 });
+                _connection.Reconnected += async (connectionId) =>
+                {
+                    await _connection.InvokeAsync("JoinGroup", ListenerGuid);
+                };
             }
             catch (Exception e)
             {

@@ -117,9 +117,8 @@ namespace Covenant
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     configuration["CovenantPort"] = CovenantPort.ToString();
-                    var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
                     context.Database.EnsureCreated();
-                    DbInitializer.Initialize(service, context, roleManager, listenerTokenSources).Wait();
+                    DbInitializer.Initialize(service, context, roleManager).Wait();
                     CovenantUser serviceUser = new CovenantUser { UserName = "ServiceUser" };
                     if (!context.Users.Any())
                     {
