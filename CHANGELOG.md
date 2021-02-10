@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Brute implant to configure ValidateCert,UseCertPinning options
 - Fix EditHttpListener page to display accurate UseSSL value
 - Fixed HttpProfile defaults values being added via APIs
+- Fixed Covenant fails on 'bin' in working directory path
 
 ## [v0.6] - 2020-08-04
 ### Added

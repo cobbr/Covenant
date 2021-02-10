@@ -10,70 +10,69 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using NLog;
 
 namespace Covenant.Core
 {
     public static class Common
     {
-        public static int CovenantDefaultAdminPort = 7443;
+        public static readonly int CovenantDefaultAdminPort = 7443;
 
-        public static Encoding CovenantEncoding = Encoding.UTF8;
-        public static int AesIVLength = 16;
-        public static CipherMode AesCipherMode = CipherMode.CBC;
-        public static PaddingMode AesPaddingMode = PaddingMode.PKCS7;
+        public static readonly Encoding CovenantEncoding = Encoding.UTF8;
+        public static readonly int AesIVLength = 16;
+        public static readonly CipherMode AesCipherMode = CipherMode.CBC;
+        public static readonly PaddingMode AesPaddingMode = PaddingMode.PKCS7;
 
-        public static string CovenantDirectory = Assembly.GetExecutingAssembly().Location.Split("bin")[0].Split("Covenant.dll")[0];
-        public static string CovenantDataDirectory = CovenantDirectory + "Data" + Path.DirectorySeparatorChar;
-        public static string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
-        public static string CovenantTempDirectory = CovenantDataDirectory + "Temp" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantDirectory = SplitLastMatch(SplitLastMatch(Assembly.GetExecutingAssembly().Location, "bin"), "Covenant.dll");
+        public static readonly string CovenantDataDirectory = CovenantDirectory + "Data" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
+        public static readonly string CovenantTempDirectory = CovenantDataDirectory + "Temp" + Path.DirectorySeparatorChar;
 
-        public static string CovenantProfileDirectory = CovenantDataDirectory + "Profiles" + Path.DirectorySeparatorChar;
-        public static string CovenantDefaultHttpProfile = CovenantProfileDirectory + "DefaultHttpProfile.yaml";
+        public static readonly string CovenantProfileDirectory = CovenantDataDirectory + "Profiles" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantDefaultHttpProfile = CovenantProfileDirectory + "DefaultHttpProfile.yaml";
 
-        public static string CovenantDownloadDirectory = CovenantDataDirectory + "Downloads" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantDownloadDirectory = CovenantDataDirectory + "Downloads" + Path.DirectorySeparatorChar;
 
-        public static string CovenantAssemblyReferenceDirectory = CovenantDataDirectory + "AssemblyReferences" + Path.DirectorySeparatorChar;
-        public static string CovenantAssemblyReferenceNet35Directory = CovenantAssemblyReferenceDirectory + "net35" + Path.DirectorySeparatorChar;
-        public static string CovenantAssemblyReferenceNet40Directory = CovenantAssemblyReferenceDirectory + "net40" + Path.DirectorySeparatorChar;
-        public static string CovenantEmbeddedResourcesDirectory = CovenantDataDirectory + "EmbeddedResources" + Path.DirectorySeparatorChar;
-        public static string CovenantReferenceSourceLibraries = CovenantDataDirectory + "ReferenceSourceLibraries" + Path.DirectorySeparatorChar;
-        public static string CovenantSharpSploitDirectory = CovenantReferenceSourceLibraries + "SharpSploit" + Path.DirectorySeparatorChar;
-        public static string CovenantRubeusDirectory = CovenantReferenceSourceLibraries + "Rubeus" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantAssemblyReferenceDirectory = CovenantDataDirectory + "AssemblyReferences" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantAssemblyReferenceNet35Directory = CovenantAssemblyReferenceDirectory + "net35" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantAssemblyReferenceNet40Directory = CovenantAssemblyReferenceDirectory + "net40" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantEmbeddedResourcesDirectory = CovenantDataDirectory + "EmbeddedResources" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantReferenceSourceLibraries = CovenantDataDirectory + "ReferenceSourceLibraries" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantSharpSploitDirectory = CovenantReferenceSourceLibraries + "SharpSploit" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantRubeusDirectory = CovenantReferenceSourceLibraries + "Rubeus" + Path.DirectorySeparatorChar;
 
-        public static string CovenantTaskDirectory = CovenantDataDirectory + "Tasks" + Path.DirectorySeparatorChar;
-        public static string CovenantTaskCSharpDirectory = CovenantTaskDirectory + "CSharp" + Path.DirectorySeparatorChar;
-        public static string CovenantTaskCSharpNetCoreApp30Directory = CovenantTaskCSharpDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
-        public static string CovenantTaskCSharpCompiledDirectory = CovenantTaskCSharpDirectory + "Compiled" + Path.DirectorySeparatorChar;
-        public static string CovenantTaskCSharpCompiledNet35Directory = CovenantTaskCSharpCompiledDirectory + "net35" + Path.DirectorySeparatorChar;
-        public static string CovenantTaskCSharpCompiledNet40Directory = CovenantTaskCSharpCompiledDirectory + "net40" + Path.DirectorySeparatorChar;
-        public static string CovenantTaskCSharpCompiledNetCoreApp30Directory = CovenantTaskCSharpCompiledDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskDirectory = CovenantDataDirectory + "Tasks" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpDirectory = CovenantTaskDirectory + "CSharp" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpNetCoreApp30Directory = CovenantTaskCSharpDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpCompiledDirectory = CovenantTaskCSharpDirectory + "Compiled" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpCompiledNet35Directory = CovenantTaskCSharpCompiledDirectory + "net35" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpCompiledNet40Directory = CovenantTaskCSharpCompiledDirectory + "net40" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpCompiledNetCoreApp30Directory = CovenantTaskCSharpCompiledDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
 
-        public static string CovenantLogDirectory = CovenantDataDirectory + "Logs" + Path.DirectorySeparatorChar;
-        public static string CovenantLogFile = CovenantLogDirectory + "covenant.log";
-        public static string CovenantPrivateCertFile = CovenantDataDirectory + "covenant-dev-private.pfx";
-        public static string CovenantPublicCertFile = CovenantDataDirectory + "covenant-dev-public.cer";
-        public static string CovenantListenersDirectory = CovenantDataDirectory + "Listeners" + Path.DirectorySeparatorChar;
-        public static string CovenantLauncherDirectory = CovenantDataDirectory + "Launchers" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantLogDirectory = CovenantDataDirectory + "Logs" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantLogFile = CovenantLogDirectory + "covenant.log";
+        public static readonly string CovenantPrivateCertFile = CovenantDataDirectory + "covenant-dev-private.pfx";
+        public static readonly string CovenantPublicCertFile = CovenantDataDirectory + "covenant-dev-public.cer";
+        public static readonly string CovenantListenersDirectory = CovenantDataDirectory + "Listeners" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantLauncherDirectory = CovenantDataDirectory + "Launchers" + Path.DirectorySeparatorChar;
 
-        public static string CovenantAppSettingsFile = CovenantDataDirectory + "appsettings.json";
-        public static string CovenantJwtKeyReplaceMessage = "[KEY USED TO SIGN/VERIFY JWT TOKENS, ALWAYS REPLACE THIS VALUE]";
+        public static readonly string CovenantAppSettingsFile = CovenantDataDirectory + "appsettings.json";
+        public static readonly string CovenantJwtKeyReplaceMessage = "[KEY USED TO SIGN/VERIFY JWT TOKENS, ALWAYS REPLACE THIS VALUE]";
 
-        public static List<Compiler.Reference> DefaultNet35References = new List<Compiler.Reference>
+        public static readonly List<Compiler.Reference> DefaultNet35References = new List<Compiler.Reference>
         {
             new Compiler.Reference { File = CovenantAssemblyReferenceNet35Directory + "mscorlib.dll", Framework = DotNetVersion.Net35, Enabled = true },
             new Compiler.Reference { File = CovenantAssemblyReferenceNet35Directory + "System.dll", Framework = DotNetVersion.Net35, Enabled = true },
             new Compiler.Reference { File = CovenantAssemblyReferenceNet35Directory + "System.Core.dll", Framework = DotNetVersion.Net35, Enabled = true },
         };
 
-        public static List<Compiler.Reference> DefaultNet40References = new List<Compiler.Reference>
+        public static readonly List<Compiler.Reference> DefaultNet40References = new List<Compiler.Reference>
         {
             new Compiler.Reference { File = CovenantAssemblyReferenceNet40Directory + "mscorlib.dll", Framework = DotNetVersion.Net40, Enabled = true },
             new Compiler.Reference { File = CovenantAssemblyReferenceNet40Directory + "System.dll", Framework = DotNetVersion.Net40, Enabled = true },
             new Compiler.Reference { File = CovenantAssemblyReferenceNet40Directory + "System.Core.dll", Framework = DotNetVersion.Net40, Enabled = true }
         };
 
-        public static List<Compiler.Reference> DefaultNetFrameworkReferences = new List<Compiler.Reference>
+        public static readonly List<Compiler.Reference> DefaultNetFrameworkReferences = new List<Compiler.Reference>
         {
             new Compiler.Reference { File = CovenantAssemblyReferenceNet35Directory + "mscorlib.dll", Framework = DotNetVersion.Net35, Enabled = true },
             new Compiler.Reference { File = CovenantAssemblyReferenceNet40Directory + "mscorlib.dll", Framework = DotNetVersion.Net40, Enabled = true },
@@ -83,7 +82,7 @@ namespace Covenant.Core
             new Compiler.Reference { File = CovenantAssemblyReferenceNet40Directory + "System.Core.dll", Framework = DotNetVersion.Net40, Enabled = true }
         };
 
-        public static List<Compiler.Reference> DefaultReferencesNetCore { get; set; } = new List<Compiler.Reference>
+        public static readonly List<Compiler.Reference> DefaultReferencesNetCore = new List<Compiler.Reference>
         {
             new Compiler.Reference
             {
@@ -99,8 +98,14 @@ namespace Covenant.Core
             NetCore31
         }
 
+        private static string SplitLastMatch(string FullString, string SubString)
+        {
+            int index = FullString.LastIndexOf(SubString);
+            return index == -1 ? FullString : FullString.Substring(0, index);
+        }
+
         // Credit - https://github.com/samuelneff/MimeTypeMap
-        public static string DefaultContentTypeMapping = "application/octet-stream";
+        public static readonly string DefaultContentTypeMapping = "application/octet-stream";
         public static readonly IDictionary<string, string> ContentTypeMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
                 {".323", "text/h323"},
