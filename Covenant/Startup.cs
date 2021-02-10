@@ -8,6 +8,8 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -16,7 +18,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 using Microsoft.OpenApi.Any;
@@ -148,7 +149,10 @@ namespace Covenant
             }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
             services.AddServerSideBlazor();
 
-            services.AddRouting(options => options.LowercaseUrls = true);
+            services.AddRouting(options => {
+                options.LowercaseUrls = true;
+            });
+
             services.AddSwaggerGen(c =>
             {
                 c.DocInclusionPredicate((version, desc) =>

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.ComponentModel;
@@ -16,12 +17,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
 
@@ -210,6 +214,7 @@ namespace Covenant.Models.Listeners
                     .UseSetting("CovenantUrl", this.CovenantUrl)
                     .UseSetting("CovenantToken", this.CovenantToken)
                     .UseSetting("ProfileUrls", JsonConvert.SerializeObject((this.Profile as HttpProfile).HttpUrls))
+                    .UseSetting("ListenerDirectory", this.ListenerDirectory)
                     .UseSetting("ListenerStaticHostDirectory", this.ListenerStaticHostDirectory)
                     .UseUrls((this.UseSSL ? "https://" : "http://") + this.BindAddress + ":" + this.BindPort);
                 })
@@ -311,18 +316,29 @@ namespace Covenant.Models.Listeners
 
     public class HttpListenerStartup
     {
-        public IConfiguration Configuration { get; }
+        private IConfiguration _configuration { get; }
+        private Action<HttpContext> _logContext { get; }
+
         public HttpListenerStartup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
+            _logContext = (HttpContext context) =>
+            {
+                string log = $@"{context.Connection.RemoteIpAddress} - - [{DateTime.Now}] ""{context.Request.Method} {context.Request.Path} {context.Request.Protocol}"" {context.Response.StatusCode} ""{context.Request.Headers["User-Agent"]}""{Environment.NewLine}";
+                File.AppendAllText(_configuration["ListenerDirectory"] + "requests.log", log);
+            };
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<HttpListenerContext>();
-            services.AddSingleton<InternalListener>(IL => new InternalListener());
-            services.AddMvc();
+            services.AddSingleton(IL => new InternalListener());
+            services.AddSingleton(F => this._logContext);
+            services.AddMvc().AddMvcOptions(options =>
+            {
+                options.Filters.Add(new WebLogResultServiceFilter(_logContext));
+            });
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
@@ -345,21 +361,43 @@ namespace Covenant.Models.Listeners
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                foreach (string route in JsonConvert.DeserializeObject<List<string>>(Configuration["ProfileUrls"]))
+                foreach (string route in JsonConvert.DeserializeObject<List<string>>(_configuration["ProfileUrls"]))
                 {
                     string urlOnly = route.Split("?").First();
                     endpoints.MapControllerRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Route" });
                 }
+                endpoints.MapFallbackToController("Fallback", "HttpListener");
             });
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Configuration["ListenerStaticHostDirectory"]),
+                FileProvider = new PhysicalFileProvider(_configuration["ListenerStaticHostDirectory"]),
                 RequestPath = "",
                 ContentTypeProvider = new FileExtensionContentTypeProvider(Common.ContentTypeMappings),
                 ServeUnknownFileTypes = true,
-                DefaultContentType = "text/plain"
+                DefaultContentType = "text/plain",
+                OnPrepareResponse = ctx => this._logContext(ctx.Context)
             });
+        }
+    }
+
+    public class WebLogResultServiceFilter : IResultFilter
+    {
+        private Action<HttpContext> _logContext;
+
+        public WebLogResultServiceFilter(Action<HttpContext> logContext)
+        {
+            _logContext = logContext;
+        }
+
+        public void OnResultExecuting(ResultExecutingContext context) { }
+
+        public void OnResultExecuted(ResultExecutedContext context)
+        {
+            if (context.HttpContext.Response.StatusCode != 200)
+            {
+                _logContext(context.HttpContext);
+            }
         }
     }
 }

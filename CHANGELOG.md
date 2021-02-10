@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added OutputKind to LauncherForm
 - Added BypassETW task
 - Added Action button for ListenerTable, GruntTable
+- Added Listener WebLog
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

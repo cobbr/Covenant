@@ -15,6 +15,7 @@ using Covenant.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 
 namespace Covenant.Controllers
 {
@@ -23,11 +24,13 @@ namespace Covenant.Controllers
     {
         private readonly Covenant.Models.Listeners.HttpListenerContext _context;
         private readonly Covenant.Models.Listeners.InternalListener _internalListener;
+        private Action<HttpContext> _logContext;
 
-		public HttpListenerController(Covenant.Models.Listeners.HttpListenerContext context, Covenant.Models.Listeners.InternalListener internalListener)
+        public HttpListenerController(Covenant.Models.Listeners.HttpListenerContext context, Covenant.Models.Listeners.InternalListener internalListener, Action<HttpContext> logContext)
         {
             _context = context;
             _internalListener = internalListener;
+            _logContext = logContext;
         }
 
         private void SetHeaders()
@@ -49,6 +52,10 @@ namespace Covenant.Controllers
                 if (HttpContext.Request.Method == "GET")
                 {
                     string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}"), await _internalListener.Read(guid), guid);
+                    if (string.IsNullOrEmpty(guid))
+                    {
+                        _logContext(HttpContext);
+                    }
                     return Ok(response);
 		        }
 		        else if (HttpContext.Request.Method == "POST")
@@ -76,6 +83,12 @@ namespace Covenant.Controllers
                 string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
                 return NotFound(response);
             }
+        }
+
+        [AllowAnonymous]
+        public ActionResult<string> Fallback()
+        {
+            return NotFound();
         }
 
         private string GetGuid(HttpContext httpContext)

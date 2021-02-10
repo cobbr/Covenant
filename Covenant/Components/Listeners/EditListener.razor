@@ -35,6 +35,12 @@
                 Hosted Files
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="log-tab" data-toggle="tab" href="#log" role="tab" aria-controls="log" aria-selected="false">
+                <span class="fe fe-book"></span>
+                Web Log
+            </a>
+        </li>
     </ul>
 
     <div class="tab-content" id="listener-tab-content">
@@ -65,6 +71,9 @@
         </div>
         <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
             <HostedFileIndex ListenerId="ListenerId" HostedFiles="GetHostedFiles()" />
+        </div>
+        <div class="tab-pane fade" id="log" role="tabpanel" aria-labelledby="log-tab">
+            <LogTable LogFile="@(Common.CovenantListenersDirectory + Utilities.GetSanitizedFilename(Listener.GUID) + System.IO.Path.DirectorySeparatorChar + "requests.log")"/>
         </div>
     </div>
 }
