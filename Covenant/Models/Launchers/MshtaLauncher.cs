@@ -14,7 +14,6 @@ namespace Covenant.Models.Launchers
     {
         public MshtaLauncher()
         {
-            this.Name = "Mshta";
             this.Type = LauncherType.Mshta;
             this.Description = "Uses mshta.exe to launch a Grunt using a COM activated Delegate and ActiveXObjects (ala DotNetToJScript). Please note that DotNetToJScript-based launchers may not work on Windows 10 and Windows Server 2016.";
             this.ScriptType = ScriptletType.TaggedScript;
@@ -29,7 +28,7 @@ namespace Covenant.Models.Launchers
             return this.LauncherString;
         }
 
-        public override string GetHostedLauncher(Listener listener, HostedFile hostedFile)
+        public override string GetHostedLauncherString(Listener listener, HostedFile hostedFile)
         {
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)

@@ -14,34 +14,29 @@ using Microsoft.CodeAnalysis;
 using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
-using NLog;
-using System.Threading.Tasks;
 
 namespace Covenant.Models.Launchers
 {
     public enum LauncherType
     {
-        Wmic,
-        Regsvr32,
-        Mshta,
-        Cscript,
-        Wscript,
-        PowerShell,
         Binary,
         ServiceBinary,
+        ShellCode,
+        PowerShell,
         MSBuild,
         InstallUtil,
-        ShellCode
+        Regsvr32,
+        Mshta
     }
 
-    public class Launcher : ILoggable
+    public abstract class Launcher : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int ListenerId { get; set; }
         public int ImplantTemplateId { get; set; }
 
-        public string Name { get; set; } = "";
+        public string Name { get; set; } = Utilities.CreateShortGuid();
         public string Description { get; set; } = "";
         public LauncherType Type { get; set; } = LauncherType.Binary;
         public Common.DotNetVersion DotNetVersion { get; set; } = Common.DotNetVersion.Net35;
@@ -83,8 +78,8 @@ namespace Covenant.Models.Launchers
             }
         }
 
-        public virtual string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template) { return ""; }
-        public virtual string GetHostedLauncher(Listener listener, HostedFile hostedFile) { return ""; }
+        public abstract string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template);
+        public abstract string GetHostedLauncherString(Listener listener, HostedFile hostedFile);
 
         public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
         public bool CompressStager { get; set; } = false;
@@ -119,7 +114,7 @@ namespace Covenant.Models.Launchers
 
         protected ScriptletType ScriptType { get; set; } = ScriptletType.Scriptlet;
 
-        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
+        public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
             this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);

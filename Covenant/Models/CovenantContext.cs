@@ -62,33 +62,30 @@ namespace Covenant.Models
         {
             builder.Entity<GruntTaskOption>().ToTable("GruntTaskOption");
 
-            builder.Entity<HttpListener>();
+            builder.Entity<HttpListener>().HasBaseType<Listener>();
             builder.Entity<HttpProfile>().HasBaseType<Profile>();
-            builder.Entity<BridgeListener>();
+            builder.Entity<BridgeListener>().HasBaseType<Listener>();
             builder.Entity<BridgeProfile>().HasBaseType<Profile>();
 
-            builder.Entity<WmicLauncher>();
-            builder.Entity<Regsvr32Launcher>();
-            builder.Entity<MshtaLauncher>();
-            builder.Entity<CscriptLauncher>();
-            builder.Entity<WscriptLauncher>();
-            builder.Entity<InstallUtilLauncher>();
-            builder.Entity<MSBuildLauncher>();
-            builder.Entity<PowerShellLauncher>();
-            builder.Entity<BinaryLauncher>();
-            builder.Entity<ServiceBinaryLauncher>();
-            builder.Entity<ShellCodeLauncher>();
+            builder.Entity<Regsvr32Launcher>().HasBaseType<Launcher>();
+            builder.Entity<MshtaLauncher>().HasBaseType<Launcher>();
+            builder.Entity<InstallUtilLauncher>().HasBaseType<Launcher>();
+            builder.Entity<MSBuildLauncher>().HasBaseType<Launcher>();
+            builder.Entity<PowerShellLauncher>().HasBaseType<Launcher>();
+            builder.Entity<BinaryLauncher>().HasBaseType<Launcher>();
+            builder.Entity<ServiceBinaryLauncher>().HasBaseType<Launcher>();
+            builder.Entity<ShellCodeLauncher>().HasBaseType<Launcher>();
 
-            builder.Entity<CapturedPasswordCredential>();
-            builder.Entity<CapturedHashCredential>();
-            builder.Entity<CapturedTicketCredential>();
+            builder.Entity<CapturedPasswordCredential>().HasBaseType<CapturedCredential>();
+            builder.Entity<CapturedHashCredential>().HasBaseType<CapturedCredential>();
+            builder.Entity<CapturedTicketCredential>().HasBaseType<CapturedCredential>();
 
-            builder.Entity<DownloadEvent>();
-            builder.Entity<ScreenshotEvent>();
+            builder.Entity<DownloadEvent>().HasBaseType<Event>();
+            builder.Entity<ScreenshotEvent>().HasBaseType<DownloadEvent>();
 
-            builder.Entity<FileIndicator>();
-            builder.Entity<NetworkIndicator>();
-            builder.Entity<TargetIndicator>();
+            builder.Entity<FileIndicator>().HasBaseType<Indicator>();
+            builder.Entity<NetworkIndicator>().HasBaseType<Indicator>();
+            builder.Entity<TargetIndicator>().HasBaseType<Indicator>();
 
             builder.Entity<Theme>();
 

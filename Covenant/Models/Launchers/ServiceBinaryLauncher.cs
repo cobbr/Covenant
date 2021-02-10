@@ -16,14 +16,13 @@ namespace Covenant.Models.Launchers
     {
         public ServiceBinaryLauncher()
         {
-            this.Name = "ServiceBinary";
             this.Type = LauncherType.ServiceBinary;
             this.Description = "Uses a generated .NET Framework Service binary to launch a Grunt.";
             this.OutputKind = OutputKind.ConsoleApplication;
             this.CompressStager = true;
         }
 
-        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
+        public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
             string stager = Convert.ToBase64String(StagerAssembly);
@@ -51,7 +50,7 @@ namespace Covenant.Models.Launchers
             return this.LauncherString;
         }
 
-        public override string GetHostedLauncher(Listener listener, HostedFile hostedFile)
+        public override string GetHostedLauncherString(Listener listener, HostedFile hostedFile)
         {
             var httpListener = listener as HttpListener;
 

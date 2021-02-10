@@ -312,51 +312,41 @@ namespace Covenant.Core
     public interface ILauncherService
     {
         Task<IEnumerable<Launcher>> GetLaunchers();
+        Task<IEnumerable<BinaryLauncher>> GetBinaryLaunchers();
+        Task<IEnumerable<ServiceBinaryLauncher>> GetServiceBinaryLaunchers();
+        Task<IEnumerable<ShellCodeLauncher>> GetShellCodeLaunchers();
+        Task<IEnumerable<PowerShellLauncher>> GetPowerShellLaunchers();
+        Task<IEnumerable<MSBuildLauncher>> GetMSBuildLaunchers();
+        Task<IEnumerable<InstallUtilLauncher>> GetInstallUtilLaunchers();
+        Task<IEnumerable<Regsvr32Launcher>> GetRegsvr32Launchers();
+        Task<IEnumerable<MshtaLauncher>> GetMshtaLaunchers();
         Task<Launcher> GetLauncher(int id);
-        Task<BinaryLauncher> GetBinaryLauncher();
-        Task<BinaryLauncher> GenerateBinaryLauncher();
-        Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file);
+        Task<BinaryLauncher> GetBinaryLauncher(int id);
+        Task<ServiceBinaryLauncher> GetServiceBinaryLauncher(int id);
+        Task<ShellCodeLauncher> GetShellCodeLauncher(int id);
+        Task<PowerShellLauncher> GetPowerShellLauncher(int id);
+        Task<MSBuildLauncher> GetMSBuildLauncher(int id);
+        Task<InstallUtilLauncher> GetInstallUtilLauncher(int id);
+        Task<Regsvr32Launcher> GetRegsvr32Launcher(int id);
+        Task<MshtaLauncher> GetMshtaLauncher(int id);
+        Task<BinaryLauncher> CreateBinaryLauncher(BinaryLauncher launcher);
+        Task<ServiceBinaryLauncher> CreateServiceBinaryLauncher(ServiceBinaryLauncher launcher);
+        Task<ShellCodeLauncher> CreateShellCodeLauncher(ShellCodeLauncher launcher);
+        Task<PowerShellLauncher> CreatePowerShellLauncher(PowerShellLauncher launcher);
+        Task<MSBuildLauncher> CreateMSBuildLauncher(MSBuildLauncher launcher);
+        Task<InstallUtilLauncher> CreateInstallUtilLauncher(InstallUtilLauncher launcher);
+        Task<Regsvr32Launcher> CreateRegsvr32Launcher(Regsvr32Launcher launcher);
+        Task<MshtaLauncher> CreateMshtaLauncher(MshtaLauncher launcher);
+        Task<Launcher> CreateHostedLauncher(int id, HostedFile file);
         Task<BinaryLauncher> EditBinaryLauncher(BinaryLauncher launcher);
-        Task<ServiceBinaryLauncher> GetServiceBinaryLauncher();
-        Task<ServiceBinaryLauncher> GenerateServiceBinaryLauncher();
-        Task<ServiceBinaryLauncher> GenerateServiceBinaryHostedLauncher(HostedFile file);
         Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher);
-        Task<ShellCodeLauncher> GetShellCodeLauncher();
-        Task<ShellCodeLauncher> GenerateShellCodeLauncher();
-        Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file);
         Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher);
-        Task<PowerShellLauncher> GetPowerShellLauncher();
-        Task<PowerShellLauncher> GeneratePowerShellLauncher();
-        Task<PowerShellLauncher> GeneratePowerShellHostedLauncher(HostedFile file);
         Task<PowerShellLauncher> EditPowerShellLauncher(PowerShellLauncher launcher);
-        Task<MSBuildLauncher> GetMSBuildLauncher();
-        Task<MSBuildLauncher> GenerateMSBuildLauncher();
-        Task<MSBuildLauncher> GenerateMSBuildHostedLauncher(HostedFile file);
         Task<MSBuildLauncher> EditMSBuildLauncher(MSBuildLauncher launcher);
-        Task<InstallUtilLauncher> GetInstallUtilLauncher();
-        Task<InstallUtilLauncher> GenerateInstallUtilLauncher();
-        Task<InstallUtilLauncher> GenerateInstallUtilHostedLauncher(HostedFile file);
         Task<InstallUtilLauncher> EditInstallUtilLauncher(InstallUtilLauncher launcher);
-        Task<WmicLauncher> GetWmicLauncher();
-        Task<WmicLauncher> GenerateWmicLauncher();
-        Task<WmicLauncher> GenerateWmicHostedLauncher(HostedFile file);
-        Task<WmicLauncher> EditWmicLauncher(WmicLauncher launcher);
-        Task<Regsvr32Launcher> GetRegsvr32Launcher();
-        Task<Regsvr32Launcher> GenerateRegsvr32Launcher();
-        Task<Regsvr32Launcher> GenerateRegsvr32HostedLauncher(HostedFile file);
         Task<Regsvr32Launcher> EditRegsvr32Launcher(Regsvr32Launcher launcher);
-        Task<MshtaLauncher> GetMshtaLauncher();
-        Task<MshtaLauncher> GenerateMshtaLauncher();
-        Task<MshtaLauncher> GenerateMshtaHostedLauncher(HostedFile file);
         Task<MshtaLauncher> EditMshtaLauncher(MshtaLauncher launcher);
-        Task<CscriptLauncher> GetCscriptLauncher();
-        Task<CscriptLauncher> GenerateCscriptLauncher();
-        Task<CscriptLauncher> GenerateCscriptHostedLauncher(HostedFile file);
-        Task<CscriptLauncher> EditCscriptLauncher(CscriptLauncher launcher);
-        Task<WscriptLauncher> GetWscriptLauncher();
-        Task<WscriptLauncher> GenerateWscriptLauncher();
-        Task<WscriptLauncher> GenerateWscriptHostedLauncher(HostedFile file);
-        Task<WscriptLauncher> EditWscriptLauncher(WscriptLauncher launcher);
+        Task DeleteLauncher(int id);
     }
 
     public interface ICovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
@@ -1470,10 +1460,35 @@ namespace Covenant.Core
         public async Task DeleteGrunt(int gruntId)
         {
             Grunt grunt = await this.GetGrunt(gruntId);
+            Listener listener = await this.GetListener(grunt.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(grunt.ImplantTemplateId);
+
             _context.Grunts.Remove(grunt);
+            // Necessary so Launcher doesn't become invalidated
+            Grunt replacement = new Grunt
+            {
+                ListenerId = listener.Id,
+                Listener = listener,
+                ImplantTemplateId = template.Id,
+                ImplantTemplate = template,
+                SMBPipeName = grunt.SMBPipeName,
+                ValidateCert = grunt.ValidateCert,
+                UseCertPinning = grunt.UseCertPinning,
+                Delay = grunt.Delay,
+                JitterPercent = grunt.JitterPercent,
+                ConnectAttempts = grunt.ConnectAttempts,
+                KillDate = grunt.KillDate,
+                DotNetVersion = grunt.DotNetVersion,
+                RuntimeIdentifier = grunt.RuntimeIdentifier,
+                OriginalServerGuid = grunt.OriginalServerGuid,
+                GruntSharedSecretPassword = grunt.GruntSharedSecretPassword
+            };
+            await _context.Grunts.AddAsync(replacement);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateGrunt(this, replacement);
             await _context.SaveChangesAsync();
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, grunt);
-            // _notifier.OnDeleteGrunt(this, grunt.Id);
+            await _notifier.NotifyDeleteGrunt(this, grunt.Id);
         }
 
         public async Task<List<string>> GetCommandSuggestionsForGrunt(Grunt grunt)
@@ -4304,6 +4319,62 @@ public static class Task
             return await _context.Launchers.ToListAsync();
         }
 
+        public async Task<IEnumerable<BinaryLauncher>> GetBinaryLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.Binary)
+                .Select(L => (BinaryLauncher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ServiceBinaryLauncher>> GetServiceBinaryLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.ServiceBinary)
+                .Select(L => (ServiceBinaryLauncher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ShellCodeLauncher>> GetShellCodeLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.ShellCode)
+                .Select(L => (ShellCodeLauncher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<PowerShellLauncher>> GetPowerShellLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.PowerShell)
+                .Select(L => (PowerShellLauncher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<MSBuildLauncher>> GetMSBuildLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.MSBuild)
+                .Select(L => (MSBuildLauncher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<InstallUtilLauncher>> GetInstallUtilLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.InstallUtil)
+                .Select(L => (InstallUtilLauncher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Regsvr32Launcher>> GetRegsvr32Launchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.Regsvr32)
+                .Select(L => (Regsvr32Launcher)L)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<MshtaLauncher>> GetMshtaLaunchers()
+        {
+            return await _context.Launchers.Where(L => L.Type == LauncherType.Mshta)
+                .Select(L => (MshtaLauncher)L)
+                .ToListAsync();
+        }
+
         public async Task<Launcher> GetLauncher(int id)
         {
             Launcher launcher = await _context.Launchers.FirstOrDefaultAsync(L => L.Id == id);
@@ -4314,19 +4385,88 @@ public static class Task
             return launcher;
         }
 
-        public async Task<BinaryLauncher> GetBinaryLauncher()
+        public async Task<BinaryLauncher> GetBinaryLauncher(int id)
         {
-            BinaryLauncher launcher = (BinaryLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Binary);
-            if (launcher == null)
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.Binary)
             {
-                throw new ControllerNotFoundException($"NotFound - BinaryLauncher");
+                throw new ControllerNotFoundException($"NotFound - BinaryLauncher with id: {id}");
             }
-            return launcher;
+            return (BinaryLauncher) launcher;
         }
 
-        public async Task<BinaryLauncher> GenerateBinaryLauncher()
+        public async Task<ServiceBinaryLauncher> GetServiceBinaryLauncher(int id)
         {
-            BinaryLauncher launcher = await this.GetBinaryLauncher();
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.ServiceBinary)
+            {
+                throw new ControllerNotFoundException($"NotFound - ServiceBinaryLauncher with id: {id}");
+            }
+            return (ServiceBinaryLauncher)launcher;
+        }
+
+        public async Task<ShellCodeLauncher> GetShellCodeLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.ShellCode)
+            {
+                throw new ControllerNotFoundException($"NotFound - ShellCodeLauncher with id: {id}");
+            }
+            return (ShellCodeLauncher)launcher;
+        }
+
+        public async Task<PowerShellLauncher> GetPowerShellLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.PowerShell)
+            {
+                throw new ControllerNotFoundException($"NotFound - PowerShellLauncher with id: {id}");
+            }
+            return (PowerShellLauncher)launcher;
+        }
+
+        public async Task<MSBuildLauncher> GetMSBuildLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.MSBuild)
+            {
+                throw new ControllerNotFoundException($"NotFound - MSBuildLauncher with id: {id}");
+            }
+            return (MSBuildLauncher)launcher;
+        }
+
+        public async Task<InstallUtilLauncher> GetInstallUtilLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.InstallUtil)
+            {
+                throw new ControllerNotFoundException($"NotFound - InstallUtilLauncher with id: {id}");
+            }
+            return (InstallUtilLauncher)launcher;
+        }
+
+        public async Task<Regsvr32Launcher> GetRegsvr32Launcher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.Regsvr32)
+            {
+                throw new ControllerNotFoundException($"NotFound - Regsvr32Launcher with id: {id}");
+            }
+            return (Regsvr32Launcher)launcher;
+        }
+
+        public async Task<MshtaLauncher> GetMshtaLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.Mshta)
+            {
+                throw new ControllerNotFoundException($"NotFound - MshtaLauncher with id: {id}");
+            }
+            return (MshtaLauncher)launcher;
+        }
+
+        private async Task<Launcher> GenerateLauncher(Launcher launcher)
+        {
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             Profile profile = await this.GetProfile(listener.ProfileId);
@@ -4357,33 +4497,79 @@ public static class Task
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGrunt(this, grunt);
 
-            launcher.GetLauncher(
+            launcher.GetLauncherString(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetBinaryLauncher();
+            return launcher;
         }
 
-        public async Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file)
+        private async Task<Launcher> CreateLauncher(Launcher launcher)
         {
-            BinaryLauncher launcher = await this.GetBinaryLauncher();
+            Launcher generatedLauncher = await this.GenerateLauncher(launcher); 
+            await _context.Launchers.AddAsync(generatedLauncher);
+            await _context.SaveChangesAsync();
+            // _notifier.OnEditLauncher(this, launcher);
+            return await this.GetLauncher(generatedLauncher.Id);
+        }
+
+        public async Task<BinaryLauncher> CreateBinaryLauncher(BinaryLauncher launcher)
+        {
+            return await this.GetBinaryLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<ServiceBinaryLauncher> CreateServiceBinaryLauncher(ServiceBinaryLauncher launcher)
+        {
+            return await this.GetServiceBinaryLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<ShellCodeLauncher> CreateShellCodeLauncher(ShellCodeLauncher launcher)
+        {
+            return await this.GetShellCodeLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<PowerShellLauncher> CreatePowerShellLauncher(PowerShellLauncher launcher)
+        {
+            return await this.GetPowerShellLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<MSBuildLauncher> CreateMSBuildLauncher(MSBuildLauncher launcher)
+        {
+            return await this.GetMSBuildLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<InstallUtilLauncher> CreateInstallUtilLauncher(InstallUtilLauncher launcher)
+        {
+            return await this.GetInstallUtilLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<Regsvr32Launcher> CreateRegsvr32Launcher(Regsvr32Launcher launcher)
+        {
+            return await this.GetRegsvr32Launcher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<MshtaLauncher> CreateMshtaLauncher(MshtaLauncher launcher)
+        {
+            return await this.GetMshtaLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<Launcher> CreateHostedLauncher(int id, HostedFile file)
+        {
+            Launcher launcher = await this.GetLauncher(id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
+            launcher.GetHostedLauncherString(listener, savedFile);
             _context.Launchers.Update(launcher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetBinaryLauncher();
+            return await this.GetLauncher(id);
         }
 
         public async Task<BinaryLauncher> EditBinaryLauncher(BinaryLauncher launcher)
         {
-            BinaryLauncher matchingLauncher = await this.GetBinaryLauncher();
+            BinaryLauncher matchingLauncher = await this.GetBinaryLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4398,82 +4584,16 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (BinaryLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetBinaryLauncher();
-        }
-
-        public async Task<ServiceBinaryLauncher> GetServiceBinaryLauncher()
-        {
-            ServiceBinaryLauncher launcher = (ServiceBinaryLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.ServiceBinary);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - ServiceBinaryLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<ServiceBinaryLauncher> GenerateServiceBinaryLauncher()
-        {
-            ServiceBinaryLauncher launcher = await this.GetServiceBinaryLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-
-            if (!template.CompatibleListenerTypes.Select(LT => LT.Id).Contains(listener.ListenerTypeId))
-            {
-                throw new ControllerBadRequestException($"BadRequest - ListenerType not compatible with chosen ImplantTemplate");
-            }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetServiceBinaryLauncher();
-        }
-
-        public async Task<ServiceBinaryLauncher> GenerateServiceBinaryHostedLauncher(HostedFile file)
-        {
-            ServiceBinaryLauncher launcher = await this.GetServiceBinaryLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetServiceBinaryLauncher();
+            return await this.GetBinaryLauncher(matchingLauncher.Id);
         }
 
         public async Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher)
         {
-            ServiceBinaryLauncher matchingLauncher = await this.GetServiceBinaryLauncher();
+            ServiceBinaryLauncher matchingLauncher = await this.GetServiceBinaryLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4488,82 +4608,16 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (ServiceBinaryLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetServiceBinaryLauncher();
-        }
-
-        public async Task<ShellCodeLauncher> GetShellCodeLauncher()
-        {
-            ShellCodeLauncher launcher = (ShellCodeLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.ShellCode);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - ShellCodeLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<ShellCodeLauncher> GenerateShellCodeLauncher()
-        {
-            ShellCodeLauncher launcher = await this.GetShellCodeLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-
-            if (!template.CompatibleListenerTypes.Select(LT => LT.Id).Contains(listener.ListenerTypeId))
-            {
-                throw new ControllerBadRequestException($"BadRequest - ListenerType not compatible with chosen ImplantTemplate");
-            }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetShellCodeLauncher();
-        }
-
-        public async Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file)
-        {
-            ShellCodeLauncher launcher = await this.GetShellCodeLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetShellCodeLauncher();
+            return await this.GetServiceBinaryLauncher(matchingLauncher.Id);
         }
 
         public async Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher)
         {
-            ShellCodeLauncher matchingLauncher = await this.GetShellCodeLauncher();
+            ShellCodeLauncher matchingLauncher = await this.GetShellCodeLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4578,76 +4632,16 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (ShellCodeLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetShellCodeLauncher();
-        }
-
-        public async Task<PowerShellLauncher> GetPowerShellLauncher()
-        {
-            PowerShellLauncher launcher = (PowerShellLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.PowerShell);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - PowerShellLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<PowerShellLauncher> GeneratePowerShellLauncher()
-        {
-            PowerShellLauncher launcher = await this.GetPowerShellLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetPowerShellLauncher();
-        }
-
-        public async Task<PowerShellLauncher> GeneratePowerShellHostedLauncher(HostedFile file)
-        {
-            PowerShellLauncher launcher = await this.GetPowerShellLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetPowerShellLauncher();
+            return await this.GetShellCodeLauncher(matchingLauncher.Id);
         }
 
         public async Task<PowerShellLauncher> EditPowerShellLauncher(PowerShellLauncher launcher)
         {
-            PowerShellLauncher matchingLauncher = await this.GetPowerShellLauncher();
+            PowerShellLauncher matchingLauncher = await this.GetPowerShellLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4665,76 +4659,16 @@ public static class Task
             matchingLauncher.ParameterString = launcher.ParameterString;
             matchingLauncher.PowerShellCode = launcher.PowerShellCode;
             matchingLauncher.EncodedLauncherString = launcher.EncodedLauncherString;
+            matchingLauncher = (PowerShellLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetPowerShellLauncher();
-        }
-
-        public async Task<MSBuildLauncher> GetMSBuildLauncher()
-        {
-            MSBuildLauncher launcher = (MSBuildLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.MSBuild);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - MSBuildLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<MSBuildLauncher> GenerateMSBuildLauncher()
-        {
-            MSBuildLauncher launcher = await this.GetMSBuildLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMSBuildLauncher();
-        }
-
-        public async Task<MSBuildLauncher> GenerateMSBuildHostedLauncher(HostedFile file)
-        {
-            MSBuildLauncher launcher = await this.GetMSBuildLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMSBuildLauncher();
+            return await this.GetPowerShellLauncher(matchingLauncher.Id);
         }
 
         public async Task<MSBuildLauncher> EditMSBuildLauncher(MSBuildLauncher launcher)
         {
-            MSBuildLauncher matchingLauncher = await this.GetMSBuildLauncher();
+            MSBuildLauncher matchingLauncher = await this.GetMSBuildLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4752,76 +4686,16 @@ public static class Task
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.TargetName = launcher.TargetName;
             matchingLauncher.TaskName = launcher.TaskName;
+            matchingLauncher = (MSBuildLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetMSBuildLauncher();
-        }
-
-        public async Task<InstallUtilLauncher> GetInstallUtilLauncher()
-        {
-            InstallUtilLauncher launcher = (InstallUtilLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.InstallUtil);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - InstallUtilLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<InstallUtilLauncher> GenerateInstallUtilLauncher()
-        {
-            InstallUtilLauncher launcher = await this.GetInstallUtilLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetInstallUtilLauncher();
-        }
-
-        public async Task<InstallUtilLauncher> GenerateInstallUtilHostedLauncher(HostedFile file)
-        {
-            InstallUtilLauncher launcher = await this.GetInstallUtilLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetInstallUtilLauncher();
+            return await this.GetMSBuildLauncher(matchingLauncher.Id);
         }
 
         public async Task<InstallUtilLauncher> EditInstallUtilLauncher(InstallUtilLauncher launcher)
         {
-            InstallUtilLauncher matchingLauncher = await this.GetInstallUtilLauncher();
+            InstallUtilLauncher matchingLauncher = await this.GetInstallUtilLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4837,164 +4711,16 @@ public static class Task
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (InstallUtilLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetInstallUtilLauncher();
-        }
-
-        public async Task<WmicLauncher> GetWmicLauncher()
-        {
-            WmicLauncher launcher = (WmicLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Wmic);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - WmicLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<WmicLauncher> GenerateWmicLauncher()
-        {
-            WmicLauncher launcher = await this.GetWmicLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWmicLauncher();
-        }
-
-        public async Task<WmicLauncher> GenerateWmicHostedLauncher(HostedFile file)
-        {
-            WmicLauncher launcher = await this.GetWmicLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWmicLauncher();
-        }
-
-        public async Task<WmicLauncher> EditWmicLauncher(WmicLauncher launcher)
-        {
-            WmicLauncher matchingLauncher = await this.GetWmicLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
-            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
-            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
-            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
-            matchingLauncher.ValidateCert = launcher.ValidateCert;
-            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
-            matchingLauncher.Delay = launcher.Delay;
-            matchingLauncher.JitterPercent = launcher.JitterPercent;
-            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
-            matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.StagerCode = launcher.StagerCode;
-            matchingLauncher.DiskCode = launcher.DiskCode;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.ProgId = launcher.ProgId;
-            _context.Launchers.Update(matchingLauncher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetWmicLauncher();
-        }
-
-        public async Task<Regsvr32Launcher> GetRegsvr32Launcher()
-        {
-            Regsvr32Launcher launcher = (Regsvr32Launcher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Regsvr32);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Regsvr32Launcher");
-            }
-            return launcher;
-        }
-
-        public async Task<Regsvr32Launcher> GenerateRegsvr32Launcher()
-        {
-            Regsvr32Launcher launcher = await this.GetRegsvr32Launcher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetRegsvr32Launcher();
-        }
-
-        public async Task<Regsvr32Launcher> GenerateRegsvr32HostedLauncher(HostedFile file)
-        {
-            Regsvr32Launcher launcher = await this.GetRegsvr32Launcher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetRegsvr32Launcher();
+            return await this.GetInstallUtilLauncher(matchingLauncher.Id);
         }
 
         public async Task<Regsvr32Launcher> EditRegsvr32Launcher(Regsvr32Launcher launcher)
         {
-            Regsvr32Launcher matchingLauncher = await this.GetRegsvr32Launcher();
+            Regsvr32Launcher matchingLauncher = await this.GetRegsvr32Launcher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -5017,76 +4743,16 @@ public static class Task
             matchingLauncher.ProgId = launcher.ProgId;
             matchingLauncher.ParameterString = launcher.ParameterString;
             matchingLauncher.DllName = launcher.DllName;
+            matchingLauncher = (Regsvr32Launcher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetRegsvr32Launcher();
-        }
-
-        public async Task<MshtaLauncher> GetMshtaLauncher()
-        {
-            MshtaLauncher launcher = (MshtaLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Mshta);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - MshtaLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<MshtaLauncher> GenerateMshtaLauncher()
-        {
-            MshtaLauncher launcher = await this.GetMshtaLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMshtaLauncher();
-        }
-
-        public async Task<MshtaLauncher> GenerateMshtaHostedLauncher(HostedFile file)
-        {
-            MshtaLauncher launcher = await this.GetMshtaLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMshtaLauncher();
+            return await this.GetRegsvr32Launcher(matchingLauncher.Id);
         }
 
         public async Task<MshtaLauncher> EditMshtaLauncher(MshtaLauncher launcher)
         {
-            MshtaLauncher matchingLauncher = await this.GetMshtaLauncher();
+            MshtaLauncher matchingLauncher = await this.GetMshtaLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -5105,186 +4771,19 @@ public static class Task
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.ProgId = launcher.ProgId;
+            matchingLauncher = (MshtaLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
             // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetMshtaLauncher();
+            return await this.GetMshtaLauncher(matchingLauncher.Id);
         }
 
-        public async Task<CscriptLauncher> GetCscriptLauncher()
+        public async Task DeleteLauncher(int id)
         {
-            CscriptLauncher launcher = (CscriptLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Cscript);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - CscriptLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<CscriptLauncher> GenerateCscriptLauncher()
-        {
-            CscriptLauncher launcher = await this.GetCscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
+            Launcher launcher = await this.GetLauncher(id);
+            _context.Launchers.Remove(launcher);
             await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetCscriptLauncher();
-        }
-
-        public async Task<CscriptLauncher> GenerateCscriptHostedLauncher(HostedFile file)
-        {
-            CscriptLauncher launcher = await this.GetCscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetCscriptLauncher();
-        }
-
-        public async Task<CscriptLauncher> EditCscriptLauncher(CscriptLauncher launcher)
-        {
-            CscriptLauncher matchingLauncher = await this.GetCscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
-            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
-            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
-            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
-            matchingLauncher.ValidateCert = launcher.ValidateCert;
-            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
-            matchingLauncher.Delay = launcher.Delay;
-            matchingLauncher.JitterPercent = launcher.JitterPercent;
-            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
-            matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.StagerCode = launcher.StagerCode;
-            matchingLauncher.DiskCode = launcher.DiskCode;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.ProgId = launcher.ProgId;
-            _context.Launchers.Update(matchingLauncher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetCscriptLauncher();
-        }
-
-        public async Task<WscriptLauncher> GetWscriptLauncher()
-        {
-            WscriptLauncher launcher = (WscriptLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Wscript);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - WscriptLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<WscriptLauncher> GenerateWscriptLauncher()
-        {
-            WscriptLauncher launcher = await this.GetWscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWscriptLauncher();
-        }
-
-        public async Task<WscriptLauncher> GenerateWscriptHostedLauncher(HostedFile file)
-        {
-            WscriptLauncher launcher = await this.GetWscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWscriptLauncher();
-        }
-
-        public async Task<WscriptLauncher> EditWscriptLauncher(WscriptLauncher launcher)
-        {
-            WscriptLauncher matchingLauncher = await this.GetWscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
-            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
-            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
-            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
-            matchingLauncher.ValidateCert = launcher.ValidateCert;
-            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
-            matchingLauncher.Delay = launcher.Delay;
-            matchingLauncher.JitterPercent = launcher.JitterPercent;
-            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
-            matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.StagerCode = launcher.StagerCode;
-            matchingLauncher.DiskCode = launcher.DiskCode;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.ProgId = launcher.ProgId;
-            _context.Launchers.Update(matchingLauncher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetWscriptLauncher();
+            // _notifier.OnDeleteLauncher(this, launcher.Id);
         }
         #endregion
     }

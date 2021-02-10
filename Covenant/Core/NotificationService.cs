@@ -70,6 +70,7 @@ namespace Covenant.Core
         event EventHandler<int> OnDeleteGrunt;
         Task NotifyCreateGrunt(object sender, Grunt grunt);
         Task NotifyEditGrunt(object sender, Grunt grunt);
+        Task NotifyDeleteGrunt(object sender, int id);
     }
 
     public interface IReferenceAssemblyNotificationService
@@ -294,6 +295,7 @@ namespace Covenant.Core
 
         public async Task NotifyCreateGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnCreateGrunt(sender, grunt)); }
         public async Task NotifyEditGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnEditGrunt(sender, grunt)); }
+        public async Task NotifyDeleteGrunt(object sender, int id) { await Task.Run(() => this.OnDeleteGrunt(sender, id)); }
 
         public async Task NotifyCreateGruntCommand(object sender, GruntCommand command) { await Task.Run(() => this.OnCreateGruntCommand(sender, command)); }
         public async Task NotifyEditGruntCommand(object sender, GruntCommand command) { await Task.Run(() => this.OnEditGruntCommand(sender, command)); }

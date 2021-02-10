@@ -17,7 +17,6 @@ namespace Covenant.Models.Launchers
 
         public Regsvr32Launcher()
         {
-            this.Name = "Regsvr32";
             this.Type = LauncherType.Regsvr32;
             this.Description = "Uses regsvr32.exe to launch a Grunt using a COM activated Delegate and ActiveXObjects (ala DotNetToJScript). Please note that DotNetToJScript-based launchers may not work on Windows 10 and Windows Server 2016.";
             this.ScriptType = ScriptletType.Scriptlet;
@@ -33,7 +32,7 @@ namespace Covenant.Models.Launchers
             return this.LauncherString;
         }
 
-        public override string GetHostedLauncher(Listener listener, HostedFile hostedFile)
+        public override string GetHostedLauncherString(Listener listener, HostedFile hostedFile)
         {
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)

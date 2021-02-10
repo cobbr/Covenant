@@ -335,6 +335,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync("DeleteIndicator", indicatorId);
         }
 
+        public Task DeleteLauncher(int id)
+        {
+            return _connection.InvokeAsync("DeleteLauncher", id);
+        }
+
         public Task DeleteListener(int listenerId)
         {
             return _connection.InvokeAsync("DeleteListener", listenerId);
@@ -388,11 +393,6 @@ namespace Covenant.Core
         public Task<CommandOutput> EditCommandOutput(CommandOutput output)
         {
             return _connection.InvokeAsync<CommandOutput>("EditCommandOutput", output);
-        }
-
-        public Task<CscriptLauncher> EditCscriptLauncher(CscriptLauncher launcher)
-        {
-            return _connection.InvokeAsync<CscriptLauncher>("EditCscriptLauncher", launcher);
         }
 
         public Task<EmbeddedResource> EditEmbeddedResource(EmbeddedResource resource)
@@ -530,114 +530,49 @@ namespace Covenant.Core
             return _connection.InvokeAsync<CovenantUser>("EditUserPassword", currentUser, user);
         }
 
-        public Task<WmicLauncher> EditWmicLauncher(WmicLauncher launcher)
+        public Task<Launcher> CreateHostedLauncher(int id, HostedFile file)
         {
-            return _connection.InvokeAsync<WmicLauncher>("EditWmicLauncher", launcher);
+            return _connection.InvokeAsync<Launcher>("CreateHostedLauncher", id, file);
         }
 
-        public Task<WscriptLauncher> EditWscriptLauncher(WscriptLauncher launcher)
+        public Task<BinaryLauncher> CreateBinaryLauncher(BinaryLauncher launcher)
         {
-            return _connection.InvokeAsync<WscriptLauncher>("EditWscriptLauncher", launcher);
+            return _connection.InvokeAsync<BinaryLauncher>("CreateBinaryLauncher", launcher);
         }
 
-        public Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file)
+        public Task<InstallUtilLauncher> CreateInstallUtilLauncher(InstallUtilLauncher launcher)
         {
-            return _connection.InvokeAsync<BinaryLauncher>("GenerateBinaryHostedLauncher", file);
+            return _connection.InvokeAsync<InstallUtilLauncher>("CreateInstallUtilLauncher", launcher);
         }
 
-        public Task<BinaryLauncher> GenerateBinaryLauncher()
+        public Task<MSBuildLauncher> CreateMSBuildLauncher(MSBuildLauncher launcher)
         {
-            return _connection.InvokeAsync<BinaryLauncher>("GenerateBinaryLauncher");
+            return _connection.InvokeAsync<MSBuildLauncher>("CreateMSBuildLauncher", launcher);
         }
 
-        public Task<CscriptLauncher> GenerateCscriptHostedLauncher(HostedFile file)
+        public Task<MshtaLauncher> CreateMshtaLauncher(MshtaLauncher launcher)
         {
-            return _connection.InvokeAsync<CscriptLauncher>("GenerateCscriptHostedLauncher", file);
+            return _connection.InvokeAsync<MshtaLauncher>("CreateMshtaLauncher", launcher);
         }
 
-        public Task<CscriptLauncher> GenerateCscriptLauncher()
+        public Task<PowerShellLauncher> CreatePowerShellLauncher(PowerShellLauncher launcher)
         {
-            return _connection.InvokeAsync<CscriptLauncher>("GenerateCscriptLauncher");
+            return _connection.InvokeAsync<PowerShellLauncher>("CreatePowerShellLauncher", launcher);
         }
 
-        public Task<InstallUtilLauncher> GenerateInstallUtilHostedLauncher(HostedFile file)
+        public Task<Regsvr32Launcher> CreateRegsvr32Launcher(Regsvr32Launcher launcher)
         {
-            return _connection.InvokeAsync<InstallUtilLauncher>("GenerateInstallUtilHostedLauncher", file);
+            return _connection.InvokeAsync<Regsvr32Launcher>("CreateRegsvr32Launcher", launcher);
         }
 
-        public Task<InstallUtilLauncher> GenerateInstallUtilLauncher()
+        public Task<ShellCodeLauncher> CreateShellCodeLauncher(ShellCodeLauncher launcher)
         {
-            return _connection.InvokeAsync<InstallUtilLauncher>("GenerateInstallUtilLauncher");
+            return _connection.InvokeAsync<ShellCodeLauncher>("CreateShellCodeLauncher", launcher);
         }
 
-        public Task<MSBuildLauncher> GenerateMSBuildHostedLauncher(HostedFile file)
+        public Task<ServiceBinaryLauncher> CreateServiceBinaryLauncher(ServiceBinaryLauncher launcher)
         {
-            return _connection.InvokeAsync<MSBuildLauncher>("GenerateMSBuildHostedLauncher", file);
-        }
-
-        public Task<MSBuildLauncher> GenerateMSBuildLauncher()
-        {
-            return _connection.InvokeAsync<MSBuildLauncher>("GenerateMSBuildLauncher");
-        }
-
-        public Task<MshtaLauncher> GenerateMshtaHostedLauncher(HostedFile file)
-        {
-            return _connection.InvokeAsync<MshtaLauncher>("GenerateMshtaHostedLauncher", file);
-        }
-
-        public Task<MshtaLauncher> GenerateMshtaLauncher()
-        {
-            return _connection.InvokeAsync<MshtaLauncher>("GenerateMshtaLauncher");
-        }
-
-        public Task<PowerShellLauncher> GeneratePowerShellHostedLauncher(HostedFile file)
-        {
-            return _connection.InvokeAsync<PowerShellLauncher>("GeneratePowerShellHostedLauncher", file);
-        }
-
-        public Task<PowerShellLauncher> GeneratePowerShellLauncher()
-        {
-            return _connection.InvokeAsync<PowerShellLauncher>("GeneratePowerShellLauncher");
-        }
-
-        public Task<Regsvr32Launcher> GenerateRegsvr32HostedLauncher(HostedFile file)
-        {
-            return _connection.InvokeAsync<Regsvr32Launcher>("GenerateRegsvr32HostedLauncher", file);
-        }
-
-        public Task<Regsvr32Launcher> GenerateRegsvr32Launcher()
-        {
-            return _connection.InvokeAsync<Regsvr32Launcher>("GenerateRegsvr32Launcher");
-        }
-
-        public Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file)
-        {
-            return _connection.InvokeAsync<ShellCodeLauncher>("GenerateShellCodeHostedLauncher", file);
-        }
-
-        public Task<ShellCodeLauncher> GenerateShellCodeLauncher()
-        {
-            return _connection.InvokeAsync<ShellCodeLauncher>("GenerateShellCodeLauncher");
-        }
-
-        public Task<WmicLauncher> GenerateWmicHostedLauncher(HostedFile file)
-        {
-            return _connection.InvokeAsync<WmicLauncher>("GenerateWmicHostedLauncher", file);
-        }
-
-        public Task<WmicLauncher> GenerateWmicLauncher()
-        {
-            return _connection.InvokeAsync<WmicLauncher>("GenerateWmicLauncher");
-        }
-
-        public Task<WscriptLauncher> GenerateWscriptHostedLauncher(HostedFile file)
-        {
-            return _connection.InvokeAsync<WscriptLauncher>("GenerateWscriptHostedLauncher", file);
-        }
-
-        public Task<WscriptLauncher> GenerateWscriptLauncher()
-        {
-            return _connection.InvokeAsync<WscriptLauncher>("GenerateWscriptLauncher");
+            return _connection.InvokeAsync<ServiceBinaryLauncher>("CreateServiceBinaryLauncher", launcher);
         }
 
         public Task<BinaryLauncher> GetBinaryLauncher()
@@ -688,11 +623,6 @@ namespace Covenant.Core
         public Task<IEnumerable<CapturedCredential>> GetCredentials()
         {
             return _connection.InvokeAsync<IEnumerable<CapturedCredential>>("GetCredentials");
-        }
-
-        public Task<CscriptLauncher> GetCscriptLauncher()
-        {
-            return _connection.InvokeAsync<CscriptLauncher>("GetCscriptLauncher");
         }
 
         public Task<CovenantUser> GetCurrentUser(ClaimsPrincipal principal)
@@ -945,9 +875,89 @@ namespace Covenant.Core
             return _connection.InvokeAsync<Launcher>("GetLauncher", id);
         }
 
+        public Task<BinaryLauncher> GetBinaryLauncher(int id)
+        {
+            return _connection.InvokeAsync<BinaryLauncher>("GetBinaryLauncher", id);
+        }
+
+        public Task<ServiceBinaryLauncher> GetServiceBinaryLauncher(int id)
+        {
+            return _connection.InvokeAsync<ServiceBinaryLauncher>("GetServiceBinaryLauncher", id);
+        }
+
+        public Task<ShellCodeLauncher> GetShellCodeLauncher(int id)
+        {
+            return _connection.InvokeAsync<ShellCodeLauncher>("GetShellCodeLauncher", id);
+        }
+
+        public Task<PowerShellLauncher> GetPowerShellLauncher(int id)
+        {
+            return _connection.InvokeAsync<PowerShellLauncher>("GetPowerShellLauncher", id);
+        }
+
+        public Task<MSBuildLauncher> GetMSBuildLauncher(int id)
+        {
+            return _connection.InvokeAsync<MSBuildLauncher>("GetMSBuildLauncher", id);
+        }
+
+        public Task<InstallUtilLauncher> GetInstallUtilLauncher(int id)
+        {
+            return _connection.InvokeAsync<InstallUtilLauncher>("GetInstallUtilLauncher", id);
+        }
+
+        public Task<Regsvr32Launcher> GetRegsvr32Launcher(int id)
+        {
+            return _connection.InvokeAsync<Regsvr32Launcher>("GetRegsvr32Launcher", id);
+        }
+
+        public Task<MshtaLauncher> GetMshtaLauncher(int id)
+        {
+            return _connection.InvokeAsync<MshtaLauncher>("GetMshtaLauncher", id);
+        }
+
         public Task<IEnumerable<Launcher>> GetLaunchers()
         {
             return _connection.InvokeAsync<IEnumerable<Launcher>>("GetLaunchers");
+        }
+
+        public Task<IEnumerable<BinaryLauncher>> GetBinaryLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<BinaryLauncher>>("GetBinaryLaunchers");
+        }
+
+        public Task<IEnumerable<ServiceBinaryLauncher>> GetServiceBinaryLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<ServiceBinaryLauncher>>("GetServiceBinaryLaunchers");
+        }
+
+        public Task<IEnumerable<ShellCodeLauncher>> GetShellCodeLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<ShellCodeLauncher>>("GetShellCodeLaunchers");
+        }
+
+        public Task<IEnumerable<PowerShellLauncher>> GetPowerShellLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<PowerShellLauncher>>("GetPowerShellLaunchers");
+        }
+
+        public Task<IEnumerable<MSBuildLauncher>> GetMSBuildLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<MSBuildLauncher>>("GetMSBuildLaunchers");
+        }
+
+        public Task<IEnumerable<InstallUtilLauncher>> GetInstallUtilLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<InstallUtilLauncher>>("GetInstallUtilLaunchers");
+        }
+
+        public Task<IEnumerable<Regsvr32Launcher>> GetRegsvr32Launchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<Regsvr32Launcher>>("GetRegsvr32Launchers");
+        }
+
+        public Task<IEnumerable<MshtaLauncher>> GetMshtaLaunchers()
+        {
+            return _connection.InvokeAsync<IEnumerable<MshtaLauncher>>("GetMshtaLaunchers");
         }
 
         public Task<Listener> GetListener(int listenerId)
@@ -1163,16 +1173,6 @@ namespace Covenant.Core
         public Task<IEnumerable<CovenantUser>> GetUsers()
         {
             return _connection.InvokeAsync<IEnumerable<CovenantUser>>("GetUsers");
-        }
-
-        public Task<WmicLauncher> GetWmicLauncher()
-        {
-            return _connection.InvokeAsync<WmicLauncher>("GetWmicLauncher");
-        }
-
-        public Task<WscriptLauncher> GetWscriptLauncher()
-        {
-            return _connection.InvokeAsync<WscriptLauncher>("GetWscriptLauncher");
         }
 
         public Task<GruntCommand> InteractGrunt(int GruntId, string UserId, string UserInput)

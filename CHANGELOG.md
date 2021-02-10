@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update HttpListenerForm SSLCertificate upload, use InputFile component
 - Update HttpListener to allow all TLS versions
 - Updated Seatbelt,SharpDPAPI,SharpWMI,SharpSploit ReferenceSourceLibraries
+- Updated Launchers to use tracked payloads
+- Removed CScriptLauncher, WScriptLauncher, WmicLauncher
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

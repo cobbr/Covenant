@@ -22,12 +22,11 @@ namespace Covenant.Models.Launchers
         {
             this.Type = LauncherType.ShellCode;
             this.Description = "Converts a Grunt to ShellCode using Donut.";
-            this.Name = "ShellCode";
             this.OutputKind = OutputKind.ConsoleApplication;
             this.CompressStager = false;
         }
 
-        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
+        public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
             string inputf = Common.CovenantTempDirectory + Utilities.GetSanitizedFilename(template.Name + ".exe");
@@ -52,7 +51,7 @@ namespace Covenant.Models.Launchers
             return this.LauncherString;
         }
 
-        public override string GetHostedLauncher(Listener listener, HostedFile hostedFile)
+        public override string GetHostedLauncherString(Listener listener, HostedFile hostedFile)
         {
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)

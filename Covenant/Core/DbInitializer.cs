@@ -16,7 +16,6 @@ using YamlDotNet.Serialization;
 
 using Covenant.Models;
 using Covenant.Models.Covenant;
-using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
 
@@ -28,7 +27,6 @@ namespace Covenant.Core
         {
             await InitializeListeners(service, context, ListenerCancellationTokens);
             await InitializeImplantTemplates(service, context);
-            await InitializeLaunchers(service, context);
             await InitializeTasks(service, context);
             await InitializeRoles(roleManager);
             await InitializeThemes(context);
@@ -137,28 +135,6 @@ namespace Covenant.Core
             {
                 l.Profile = await service.GetProfile(l.ProfileId);
                 await service.StartListener(l.Id);
-            }
-        }
-
-        public async static Task InitializeLaunchers(ICovenantService service, CovenantContext context)
-        {
-            if (!context.Launchers.Any())
-            {
-                var launchers = new Launcher[]
-                {
-                    new BinaryLauncher(),
-                    new ServiceBinaryLauncher(),
-                    new ShellCodeLauncher(),
-                    new PowerShellLauncher(),
-                    new MSBuildLauncher(),
-                    new InstallUtilLauncher(),
-                    new WmicLauncher(),
-                    new Regsvr32Launcher(),
-                    new MshtaLauncher(),
-                    new CscriptLauncher(),
-                    new WscriptLauncher()
-                };
-                await service.CreateEntities(launchers);
             }
         }
 

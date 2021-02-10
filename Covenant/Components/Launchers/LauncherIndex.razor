@@ -10,7 +10,20 @@
     <h1 class="h2">Launchers</h1>
 </div>
 
-<LauncherTable Launchers="Launchers" />
+<LauncherTable Launchers="Launchers.ToList()" />
+
+<div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownCreateLauncher" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="fe fe-plus"></span>
+        Create
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownCreateLauncher">
+        @foreach (LauncherType t in Enum.GetValues(typeof(LauncherType)))
+        {
+            <a class="dropdown-item" href="/launcher/create/@((int)t)">Create @(Enum.GetName<LauncherType>(t))Launcher</a>
+        }
+    </div>
+</div>
 
 @code {
     [Parameter]
