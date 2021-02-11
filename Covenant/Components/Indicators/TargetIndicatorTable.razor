@@ -1,4 +1,7 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Indicators
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -12,18 +15,37 @@
         <SortableTableHeader TItem="TargetIndicator" TItem2="string" GetSortableProperty="(indicator) => indicator.UserName">
             <HeaderContent>UserName</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="indicator">
         <tr>
             <td>@indicator.ComputerName</td>
             <td>@indicator.UserName</td>
+            <td style="text-align: right;">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionTargetIndicator" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownActionTargetIndicator">
+                        <a class="dropdown-item" type="button" href="/indicator/edit/@indicator.Id">
+                            <span class="fe fe-edit"></span>
+                            Edit
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteIndicator(indicator))">
+                            <span class="fe fe-x"></span>
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
 
 @code {
     [Parameter]
-    public IEnumerable<TargetIndicator> TargetIndicators { get; set; }
+    public List<TargetIndicator> TargetIndicators { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -42,5 +64,11 @@
         return SearchTerm == string.Empty ||
             indicator.ComputerName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             indicator.UserName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnDeleteIndicator(Indicator indicator)
+    {
+        await Service.DeleteIndicator(indicator.Id);
+        this.TargetIndicators.RemoveAt(this.TargetIndicators.FindIndex(I => I.Id == indicator.Id));
     }
 }

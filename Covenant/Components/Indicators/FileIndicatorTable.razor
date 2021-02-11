@@ -1,4 +1,7 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Indicators
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -21,6 +24,7 @@
         <SortableTableHeader TItem="FileIndicator" TItem2="string" GetSortableProperty="(indicator) => indicator.MD5">
             <HeaderContent>MD5</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="indicator">
         <tr>
@@ -29,13 +33,31 @@
             <td>@indicator.SHA2</td>
             <td>@indicator.SHA1</td>
             <td>@indicator.MD5</td>
+            <td style="text-align: right;">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionFileIndicator" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownActionFileIndicator">
+                        <a class="dropdown-item" type="button" href="/indicator/edit/@indicator.Id">
+                            <span class="fe fe-edit"></span>
+                            Edit
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteIndicator(indicator))">
+                            <span class="fe fe-x"></span>
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
 
 @code {
     [Parameter]
-    public IEnumerable<FileIndicator> FileIndicators { get; set; }
+    public List<FileIndicator> FileIndicators { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -57,5 +79,11 @@
             indicator.SHA2.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             indicator.SHA1.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             indicator.MD5.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnDeleteIndicator(Indicator indicator)
+    {
+        await Service.DeleteIndicator(indicator.Id);
+        this.FileIndicators.RemoveAt(this.FileIndicators.FindIndex(I => I.Id == indicator.Id));
     }
 }

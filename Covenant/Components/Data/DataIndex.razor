@@ -19,7 +19,7 @@
 <ul class="nav nav-tabs mb-3" id="data-tab" role="tablist">
     <li class="nav-item">
         <a class="nav-link" id="credentials-tab" data-toggle="tab" href="#credentials" role="tab" aria-controls="credentials" aria-selected="false">
-            <span class="fe fe-key"></span>
+            <span class="fe fe-unlock"></span>
             Credentials
         </a>
     </li>
@@ -60,13 +60,13 @@
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
             <h4 class="h5">Downloads</h4>
         </div>
-        <DownloadEventTable DownloadEvents="DownloadEvents" />
+        <DownloadEventTable DownloadEvents="DownloadEvents.ToList()" />
     </div>
     <div class="tab-pane fade" id="screenshots" role="tabpanel" aria-labelledby="screenshots-tab">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
             <h4 class="h5">Screenshots</h4>
         </div>
-        <ScreenshotEventTable ScreenshotEvents="ScreenshotEvents" />
+        <ScreenshotEventTable ScreenshotEvents="ScreenshotEvents.ToList()" />
     </div>
 </div>
 

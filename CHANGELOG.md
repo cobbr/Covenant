@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added BypassETW task
 - Added Action button for ListenerTable, GruntTable
 - Added Listener WebLog
+- Added ability to edit and delete Indicators, Credentials
+- Added ability to delete Screenshots and Downloads
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

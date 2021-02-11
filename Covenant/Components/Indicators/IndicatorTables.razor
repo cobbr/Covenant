@@ -4,19 +4,19 @@
     <h4 class="h5">Target Indicators</h4>
 </div>
 
-<TargetIndicatorTable TargetIndicators="TargetIndicators" />
+<TargetIndicatorTable TargetIndicators="TargetIndicators.ToList()" />
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
     <h4 class="h5">Network Indicators</h4>
 </div>
 
-<NetworkIndicatorTable NetworkIndicators="NetworkIndicators" />
+<NetworkIndicatorTable NetworkIndicators="NetworkIndicators.ToList()" />
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
     <h4 class="h5">File Indicators</h4>
 </div>
 
-<FileIndicatorTable FileIndicators="FileIndicators" />
+<FileIndicatorTable FileIndicators="FileIndicators.ToList()" />
 
 @code {
     [Parameter]

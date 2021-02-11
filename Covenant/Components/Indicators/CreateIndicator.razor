@@ -10,7 +10,12 @@
     <h1 class="h2">Create Indicator</h1>
 </div>
 
-<IndicatorForm Indicator="Indicator" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+<IndicatorForm Indicator="Indicator" OnSubmit="OnCreate">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-plus"></span>
+        Create
+    </button>
+</IndicatorForm>
 
 @code {
     [Parameter]

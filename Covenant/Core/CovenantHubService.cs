@@ -300,6 +300,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync("DeleteEmbeddedResource", id);
         }
 
+        public Task DeleteEvent(int id)
+        {
+            return _connection.InvokeAsync("DeleteEvent", id);
+        }
+
         public Task DeleteGrunt(int gruntId)
         {
             return _connection.InvokeAsync("DeleteGrunt", gruntId);

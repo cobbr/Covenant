@@ -1,5 +1,9 @@
-﻿@using System
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System
+@using System.IO
 @using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Covenant
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -13,15 +17,17 @@
         <SortableTableHeader TItem="ScreenshotEvent" TItem2="int" GetSortableProperty="(screenshot) => Convert.FromBase64String(screenshot.FileContents).Length">
             <HeaderContent>Size</HeaderContent>
         </SortableTableHeader>
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="DateTime" GetSortableProperty="(screenshot) => screenshot.Time">
+            <HeaderContent>ScreenshotTime</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => string.Empty">
             <HeaderContent>Image</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="screenshot">
         <tr>
-            <td>
-                @screenshot.FileName
-            </td>
+            <td>@screenshot.FileName</td>
             <td>
                 @{
                     int len = 0;
@@ -33,8 +39,27 @@
                 }
                 @len
             </td>
+            <td>@screenshot.Time</td>
             <td>
                 <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
+            </td>
+            <td style="text-align: right;">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionScreenshot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownActionScreenshot">
+                        <a class="dropdown-item" type="button" @onclick="(e => OnDownload(screenshot))">
+                            <span class="fe fe-download"></span>
+                            Download
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteEvent(screenshot))">
+                            <span class="fe fe-x"></span>
+                            Delete
+                        </a>
+                    </div>
+                </div>
             </td>
         </tr>
     </TableRow>
@@ -42,7 +67,7 @@
 
 @code {
     [Parameter]
-    public IEnumerable<ScreenshotEvent> ScreenshotEvents { get; set; }
+    public List<ScreenshotEvent> ScreenshotEvents { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -61,5 +86,25 @@
         return SearchTerm == string.Empty ||
             screenshot.FileName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             Convert.FromBase64String(screenshot.FileContents).Length.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnDownload(ScreenshotEvent ev)
+    {
+        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(ev.FileName), out string contentType))
+        {
+            contentType = Common.DefaultContentTypeMapping;
+        }
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            Path.GetFileName(ev.FileName),
+            contentType,
+            ev.FileContents
+        );
+    }
+
+    private async Task OnDeleteEvent(Event e)
+    {
+        await Service.DeleteEvent(e.Id);
+        this.ScreenshotEvents.RemoveAt(this.ScreenshotEvents.FindIndex(E => E.Id == e.Id));
     }
 }
