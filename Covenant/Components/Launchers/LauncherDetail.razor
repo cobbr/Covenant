@@ -6,6 +6,7 @@
 @using Covenant.Models.Listeners
 @using Covenant.Models.Launchers
 
+@using System.Net.Mime
 @using Microsoft.JSInterop
 @inject IJSRuntime IJSRuntime
 @inject INotificationService INotificationService
@@ -34,7 +35,27 @@
 
 <div class="tab-content" id="launcher-tab-content">
     <div class="tab-pane fade" id="generate" role="tabpanel" aria-labelledby="generate-tab">
-        <LauncherForm Launcher="Launcher" OnGenerate="OnGenerate" />
+        <LauncherForm Launcher="Launcher" OnGenerate="OnGenerate">
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary mr-3" id="generate">
+                        <span class="fe fe-zap"></span>
+                        Generate
+                    </button>
+                    @if (this.GenerateInProgress)
+                    {
+                        <span class="fe fe-loader spin"></span>
+                    }
+                </div>
+                <div class="col-md-3">
+                    <button type="button" @onclick="OnDownload" class="btn btn-outline-primary" id="download">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </button>
+                </div>
+            </div>
+            @ChildContent
+        </LauncherForm>
     </div>
     <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
         <LauncherHost Launcher="Launcher" OnHost="OnHost" />
@@ -90,10 +111,14 @@
     [Parameter]
     public EventCallback<Launcher> OnSubmit { get; set; }
 
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
     [CascadingParameter]
     public Theme Theme { get; set; }
 
     private const int MAX_LAUNCHER_LENGTH = 30000;
+    private bool GenerateInProgress { get; set; } = false;
 
     private string PowerShellEncodedLauncherString
     {
@@ -155,7 +180,11 @@
 
     private async Task OnGenerate(Launcher aLauncher)
     {
+        this.GenerateInProgress = true;
+        this.StateHasChanged();
         await this.OnSubmit.InvokeAsync(aLauncher);
+        this.GenerateInProgress = false;
+        this.StateHasChanged();
     }
 
     private async Task OnHost(string Path)
@@ -201,5 +230,58 @@
             content = string.IsNullOrEmpty(code) ? "" : Convert.ToBase64String(Common.CovenantEncoding.GetBytes(code));
         }
         return content == null ? "" : content;
+    }
+
+    private async Task OnDownload()
+    {
+        string filename = this.Launcher.Name ?? "GruntStager";
+        string fileext = ".exe";
+        string mediatype = "";
+        string content = "";
+
+        switch (this.Launcher.Type)
+        {
+            case LauncherType.Binary:
+                fileext = ".exe";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = ((BinaryLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.ServiceBinary:
+                fileext = "SVC.exe";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = Convert.ToBase64String(Convert.FromBase64String(((ServiceBinaryLauncher)this.Launcher).Base64ILByteString));
+                break;
+            case LauncherType.ShellCode:
+                fileext = ".bin";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = ((ShellCodeLauncher)this.Launcher).Base64ILByteString;
+                break;
+            case LauncherType.InstallUtil:
+                fileext = ".dll";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = Convert.ToBase64String(Convert.FromBase64String(((InstallUtilLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.MSBuild:
+                fileext = ".xml";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((MSBuildLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.Mshta:
+                fileext = ".hta";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((MshtaLauncher)this.Launcher).DiskCode));
+                break;
+            case LauncherType.PowerShell:
+                fileext = ".ps1";
+                mediatype = MediaTypeNames.Text.Plain;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((PowerShellLauncher)this.Launcher).PowerShellCode));
+                break;
+            case LauncherType.Regsvr32:
+                fileext = ".sct";
+                mediatype = MediaTypeNames.Application.Octet;
+                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((Regsvr32Launcher)this.Launcher).DiskCode));
+                break;
+        }
+        await IJSRuntime.InvokeAsync<string>("DownloadFile", filename + fileext, mediatype, content);
     }
 }

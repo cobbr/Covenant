@@ -15,7 +15,12 @@
     <h1 class="h2">Launcher: <span id="task-name" class="primary-color">@Launcher.Name</span></h1>
 </div>
 
-<LauncherDetail Launcher="Launcher" OnSubmit="OnEditLauncher" />
+<LauncherDetail Launcher="Launcher" OnSubmit="OnEditLauncher">
+    @if (!string.IsNullOrEmpty(this.DisplayError))
+    {
+        <div class="text-danger">@DisplayError</div>
+    }
+</LauncherDetail>
 
 @code {
     [Parameter]
@@ -23,6 +28,8 @@
 
     [Parameter]
     public Launcher Launcher { get; set; }
+
+    private string DisplayError { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -72,8 +79,7 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            this.DisplayError = e.Message;
         }
     }
 }

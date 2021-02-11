@@ -19,11 +19,29 @@
 
 @if (Profile.Type == ProfileType.HTTP)
 {
-    <HttpProfileForm Profile=@((HttpProfile)Profile) OnSubmit="OnEditHttpProfile"></HttpProfileForm>
+    <HttpProfileForm Profile=@((HttpProfile)Profile) OnSubmit="OnEditHttpProfile">
+        @if (!string.IsNullOrEmpty(this.DisplayError))
+        {
+            <div class="text-danger">@DisplayError</div>
+        }
+        <button type="submit" class="btn btn-primary">
+            <span class="fe fe-edit"></span>
+            Edit
+        </button>
+    </HttpProfileForm>
 }
 else if (Profile.Type == ProfileType.Bridge)
 {
-    <BridgeProfileForm Profile=@((BridgeProfile)Profile) OnSubmit="OnEditBridgeProfile"></BridgeProfileForm>
+    <BridgeProfileForm Profile=@((BridgeProfile)Profile) OnSubmit="OnEditBridgeProfile">
+        @if (!string.IsNullOrEmpty(this.DisplayError))
+        {
+            <div class="text-danger">@DisplayError</div>
+        }
+        <button type="submit" class="btn btn-primary">
+            <span class="fe fe-edit"></span>
+            Edit
+        </button>
+    </BridgeProfileForm>
 }
 
 @code {
@@ -33,9 +51,12 @@ else if (Profile.Type == ProfileType.Bridge)
     [Parameter]
     public Profile Profile { get; set; }
 
+    private string DisplayError { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         this.Profile = this.Profile ?? await Service.GetProfile(this.ProfileId);
+        Service.DisposeContext();
     }
 
     private async Task OnEditHttpProfile(HttpProfile profile)
@@ -48,8 +69,7 @@ else if (Profile.Type == ProfileType.Bridge)
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            this.DisplayError = e.Message;
         }
     }
 

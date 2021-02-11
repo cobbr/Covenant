@@ -56,10 +56,20 @@
                 }
             };
         }
-        <HttpProfileForm Profile="@createdProfile" OnSubmit="OnCreateHttpProfile" SubmitIcon="plus" SubmitLabel="Create"></HttpProfileForm>
+        <HttpProfileForm Profile="@createdProfile" OnSubmit="OnCreateHttpProfile">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+        </HttpProfileForm>
     </div>
     <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
-        <BridgeProfileForm Profile="@(new BridgeProfile())" OnSubmit="OnCreateBridgeProfile" SubmitIcon="plus" SubmitLabel="Create"></BridgeProfileForm>
+        <BridgeProfileForm Profile="@(new BridgeProfile())" OnSubmit="OnCreateBridgeProfile">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+        </BridgeProfileForm>
     </div>
 </div>
 

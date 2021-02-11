@@ -48,9 +48,8 @@
             <HttpListenerForm Listener="@((HttpListener)Listener)"
                               Profiles="new List<Profile> { Listener.Profile }"
                               OnSubmit="OnSubmitHttpListener"
-                              SubmitIcon="edit"
-                              SubmitLabel="Edit"
-                              Disabled="true" />
+                              Disabled="true">
+            </HttpListenerForm>
             <div class="btn-group" role="group">
                 @if (Listener.Status == ListenerStatus.Active)
                 {
@@ -68,6 +67,10 @@
                     <span class="fe fe-x"></span> Delete
                 </button>
             </div>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
         </div>
         <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
             <HostedFileIndex ListenerId="ListenerId" HostedFiles="GetHostedFiles()" />
@@ -93,9 +96,8 @@ else if (Listener.ListenerType.Name == "Bridge")
             <BridgeListenerForm Listener="@((BridgeListener)Listener)"
                                 Profiles="new List<Profile> { Listener.Profile }"
                                 OnSubmit="OnSubmitBridgeListener"
-                                SubmitIcon="edit"
-                                SubmitLabel="Edit"
-                                Disabled="true" />
+                                Disabled="true">
+            </BridgeListenerForm>
             <div class="btn-group" role="group">
                 @if (Listener.Status == ListenerStatus.Active)
                 {
@@ -113,12 +115,11 @@ else if (Listener.ListenerType.Name == "Bridge")
                     <span class="fe fe-x"></span> Delete
                 </button>
             </div>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
         </div>
-        @*
-        <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
-            <HostedFileIndex />
-        </div>
-        *@
     </div>
 }
 
@@ -129,6 +130,7 @@ else if (Listener.ListenerType.Name == "Bridge")
     [Parameter]
     public Listener Listener { get; set; }
 
+    private string DisplayError { get; set; }
     private bool IsDeleted { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
@@ -151,8 +153,8 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
+            Service.DisposeContext();
         }
     }
 
@@ -165,8 +167,8 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
+            Service.DisposeContext();
         }
     }
 
@@ -183,8 +185,9 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Index));
+            Service.DisposeContext();
+            Listener.Status = ListenerStatus.Stopped;
+            this.DisplayError = e.Message;
         }
     }
 
@@ -201,8 +204,9 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Index));
+            Service.DisposeContext();
+            Listener.Status = ListenerStatus.Active;
+            this.DisplayError = e.Message;
         }
     }
 
@@ -216,8 +220,8 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Index));
+            Service.DisposeContext();
+            this.DisplayError = e.Message;
         }
     }
 

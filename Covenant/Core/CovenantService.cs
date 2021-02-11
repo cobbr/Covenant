@@ -85,6 +85,7 @@ namespace Covenant.Core
         Task<ScreenshotEvent> GetScreenshotEvent(int eventId);
         Task<string> GetScreenshotContent(int eventId);
         Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent);
+        Task DeleteEvent(int id);
     }
 
     public interface IImplantTemplateService
@@ -927,6 +928,14 @@ namespace Covenant.Core
             await _notifier.NotifyCreateEvent(this, screenshotEvent);
             return await this.GetScreenshotEvent(screenshotEvent.Id);
         }
+
+        public async Task DeleteEvent(int id)
+        {
+            Event e = await this.GetEvent(id);
+            _context.Events.Remove(e);
+            // await _notifier.NotifyDeleteEvent(this, id);
+            await _context.SaveChangesAsync();
+        }
         #endregion
 
         #region ImplantTemplate Actions
@@ -1563,14 +1572,21 @@ namespace Covenant.Core
                         references = Common.DefaultNet40References;
                         break;
                 }
-                ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                try
                 {
-                    Language = template.Language,
-                    Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
-                    TargetDotNetVersion = grunt.DotNetVersion,
-                    OutputKind = outputKind,
-                    References = references
-                });
+                    ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = template.Language,
+                        Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
+                        TargetDotNetVersion = grunt.DotNetVersion,
+                        OutputKind = outputKind,
+                        References = references
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
+                }
             }
             else if (grunt.DotNetVersion == Common.DotNetVersion.NetCore31)
             {
@@ -3629,9 +3645,32 @@ public static class Task
         public async Task<Profile> EditProfile(Profile profile, CovenantUser currentUser)
         {
             Profile matchingProfile = await this.GetProfile(profile.Id);
-            matchingProfile.Description = profile.Description;
             matchingProfile.Name = profile.Name;
+            matchingProfile.Description = profile.Description;
             matchingProfile.Type = profile.Type;
+            if (matchingProfile.MessageTransform != profile.MessageTransform)
+            {
+                if (!await this.IsAdmin(currentUser))
+                {
+                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot edit the MessageTransform");
+                }
+                try
+                {
+                    byte[] bytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = ImplantLanguage.CSharp,
+                        Source = profile.MessageTransform,
+                        TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                        References = Common.DefaultReferencesNetCore,
+                        UseSubprocess = false
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
+                }
+                matchingProfile.MessageTransform = profile.MessageTransform;
+            }
             _context.Profiles.Update(matchingProfile);
             await _context.SaveChangesAsync();
             // _notifier.OnEditProfile(this, matchingProfile);
@@ -3721,7 +3760,22 @@ public static class Task
             {
                 if (!await this.IsAdmin(currentUser))
                 {
-                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot edit the MessageTransform");
+                }
+                try
+                {
+                    byte[] bytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = ImplantLanguage.CSharp,
+                        Source = profile.MessageTransform,
+                        TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                        References = Common.DefaultReferencesNetCore,
+                        UseSubprocess = false
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
                 }
                 matchingProfile.MessageTransform = profile.MessageTransform;
             }
@@ -3750,6 +3804,21 @@ public static class Task
                 if (!await this.IsAdmin(currentUser))
                 {
                     throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+                }
+                try
+                {
+                    byte[] bytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = ImplantLanguage.CSharp,
+                        Source = profile.MessageTransform,
+                        TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                        References = Common.DefaultReferencesNetCore,
+                        UseSubprocess = false
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
                 }
                 matchingProfile.MessageTransform = profile.MessageTransform;
             }
@@ -3799,7 +3868,7 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                Event listenerEvent = await this.CreateEvent(new Event
+                await this.CreateEvent(new Event
                 {
                     Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
@@ -3807,24 +3876,13 @@ public static class Task
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
-                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
-                matchingListener.StartTime = DateTime.UtcNow;
-                Profile profile = await this.GetProfile(matchingListener.ProfileId);
-                CancellationTokenSource listenerCancellationToken = null;
-                try
-                {
-                    listenerCancellationToken = matchingListener.Start();
-                    matchingListener.Status = ListenerStatus.Active;
-                }
-                catch (ListenerStartException e)
-                {
-                    throw new ControllerBadRequestException($"BadRequest - Listener with id: {matchingListener.Id} did not start due to exception: {e.Message}");
-                }
-                _cancellationTokens[matchingListener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {matchingListener.Id} did not start properly");
-                Event listenerEvent = await this.CreateEvent(new Event
+                _context.Listeners.Update(matchingListener);
+                await _context.SaveChangesAsync();
+                await this.StartListenerVerify(matchingListener);
+                await this.CreateEvent(new Event
                 {
                     Time = matchingListener.StartTime,
                     MessageHeader = "Started Listener",
@@ -3832,7 +3890,6 @@ public static class Task
                     Level = EventLevel.Highlight,
                     Context = "*"
                 });
-                await _context.SaveChangesAsync();
             }
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
@@ -3847,11 +3904,11 @@ public static class Task
             try
             {
                 CancellationTokenSource listenerCancellationToken = listener.Start();
+                _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
+                listener.StartTime = DateTime.UtcNow;
+                listener.Status = ListenerStatus.Active;
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
-                await _notifier.NotifyEditListener(this, listener);
-                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
-                _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
             }
             catch (ListenerStartException e)
             {
@@ -3921,13 +3978,22 @@ public static class Task
             return (BridgeListener)listener;
         }
 
-        private async Task<HttpListener> StartInitialHttpListener(HttpListener listener)
+        private async Task<Listener> StartListenerVerify(Listener listener)
         {
-            listener.StartTime = DateTime.UtcNow;
-            if (listener.UseSSL && string.IsNullOrWhiteSpace(listener.SSLCertificate))
+            if (listener.ListenerType.Name == "HTTP")
             {
-                throw new ControllerBadRequestException($"HttpListener: {listener.Name} missing SSLCertificate");
+                HttpListener httpListener = (HttpListener)listener;
+                return await this.StartListenerVerify(listener, "http", (i) => httpListener.Urls[i]);
             }
+            else if (listener.ListenerType.Name == "Bridge")
+            {
+                return await this.StartListenerVerify(listener, "bridge", (i) => "");
+            }
+            return null;
+        }
+
+        private async Task<Listener> StartListenerVerify(Listener listener, string protocol, Func<int, string> GetUri)
+        {
             if (_context.Listeners.Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
             {
                 throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
@@ -3938,11 +4004,11 @@ public static class Task
             {
                 NetworkIndicator httpIndicator = new NetworkIndicator
                 {
-                    Protocol = "http",
+                    Protocol = protocol,
                     Domain = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? "" : listener.ConnectAddresses[i],
                     IPAddress = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? listener.ConnectAddresses[i] : "",
-                    Port = listener.BindPort,
-                    URI = listener.Urls[i]
+                    Port = listener.ConnectPort,
+                    URI = GetUri(i)
                 };
                 IEnumerable<NetworkIndicator> indicators = await this.GetNetworkIndicators();
                 if (indicators.FirstOrDefault(I => I.IPAddress == httpIndicator.IPAddress && I.Domain == httpIndicator.Domain) == null)
@@ -3964,53 +4030,9 @@ public static class Task
             return listener;
         }
 
-        private async Task<BridgeListener> StartInitialBridgeListener(BridgeListener listener)
-        {
-            listener.StartTime = DateTime.UtcNow;
-            if (_context.Listeners.Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
-            {
-                throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
-            }
-            CancellationTokenSource listenerCancellationToken = null;
-            try
-            {
-                listenerCancellationToken = listener.Start();
-            }
-            catch (ListenerStartException e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start due to exception: {e.Message}");
-            }
-            _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
+        private async Task<HttpListener> StartHttpListenerVerify(HttpListener listener) => (HttpListener)await this.StartListenerVerify(listener);
 
-            for (int i = 0; i < listener.ConnectAddresses.Count; i++)
-            {
-                NetworkIndicator bridgeIndicator = new NetworkIndicator
-                {
-                    Protocol = "bridge",
-                    Domain = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? "" : listener.ConnectAddresses[i],
-                    IPAddress = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? listener.ConnectAddresses[i] : "",
-                    Port = listener.BindPort
-                };
-                IEnumerable<NetworkIndicator> indicators = await this.GetNetworkIndicators();
-                if (indicators.FirstOrDefault(I => I.IPAddress == bridgeIndicator.IPAddress && I.Domain == bridgeIndicator.Domain) == null)
-                {
-                    await _context.Indicators.AddAsync(bridgeIndicator);
-                    // _notifier.OnCreateIndicator(this, bridgeIndicator);
-                }
-            }
-
-            _cancellationTokens[listener.Id] = listenerCancellationToken;
-            Event listenerEvent = await this.CreateEvent(new Event
-            {
-                Time = listener.StartTime,
-                MessageHeader = "Started Listener",
-                MessageBody = "Started Listener: " + listener.Name,
-                Level = EventLevel.Highlight,
-                Context = "*"
-            });
-            await _context.SaveChangesAsync();
-            return listener;
-        }
+        private async Task<BridgeListener> StartBridgeListenerVerify(BridgeListener listener) => (BridgeListener) await this.StartListenerVerify(listener);
 
         public async Task<HttpListener> CreateHttpListener(HttpListener listener)
         {
@@ -4038,7 +4060,7 @@ public static class Task
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
                 await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
-                listener = await this.StartInitialHttpListener(listener);
+                listener = await this.StartHttpListenerVerify(listener);
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditListener(this, listener);
@@ -4080,8 +4102,7 @@ public static class Task
                 await _notifier.NotifyCreateListener(this, listener);
                 await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
 
-                listener.Status = ListenerStatus.Active;
-                listener = await this.StartInitialBridgeListener(listener);
+                listener = await this.StartBridgeListenerVerify(listener);
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditListener(this, listener);
@@ -4099,11 +4120,16 @@ public static class Task
 
         public async Task<IEnumerable<Listener>> CreateListeners(params Listener[] listeners)
         {
-            await _context.Listeners.AddRangeAsync(listeners);
-            await _context.SaveChangesAsync();
             foreach (Listener l in listeners)
             {
-                await _notifier.NotifyCreateListener(this, l);
+                if (l.ListenerType.Name == "HTTP")
+                {
+                    await this.CreateHttpListener((HttpListener)l);
+                }
+                else if (l.ListenerType.Name == "Bridge")
+                {
+                    await this.CreateBridgeListener((BridgeListener)l);
+                }
             }
             return listeners;
         }
@@ -4129,21 +4155,18 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                DateTime eventTime = DateTime.UtcNow;
-                Event listenerEvent = await this.CreateEvent(new Event
+                await this.CreateEvent(new Event
                 {
-                    Time = eventTime,
+                    Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
                     MessageBody = "Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.Urls,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
-                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
-                matchingListener.Status = ListenerStatus.Active;
-                matchingListener = await this.StartInitialHttpListener(matchingListener);
+                matchingListener = await this.StartHttpListenerVerify(matchingListener);
             }
 
             _context.Listeners.Update(matchingListener);
@@ -4171,21 +4194,18 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                DateTime eventTime = DateTime.UtcNow;
-                Event listenerEvent = await this.CreateEvent(new Event
+                await this.CreateEvent(new Event
                 {
-                    Time = eventTime,
+                    Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
                     MessageBody = "Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.ConnectAddresses,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
-                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
-                matchingListener.Status = ListenerStatus.Active;
-                matchingListener = await this.StartInitialBridgeListener(matchingListener);
+                matchingListener = await this.StartBridgeListenerVerify(matchingListener);
             }
 
             _context.Listeners.Update(matchingListener);

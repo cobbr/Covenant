@@ -15,7 +15,12 @@
     <h1 class="h2">Create Launcher</h1>
 </div>
 
-<LauncherDetail Launcher="Launcher" OnSubmit="OnCreateLauncher"/>
+<LauncherDetail Launcher="Launcher" OnSubmit="OnCreateLauncher">
+    @if (!string.IsNullOrEmpty(this.DisplayError))
+    {
+        <div class="text-danger">@DisplayError</div>
+    }
+</LauncherDetail>
 
 @code {
     [Parameter]
@@ -27,6 +32,8 @@
     public LauncherType _LauncherType;
 
     public Launcher Launcher { get; set; }
+
+    private string DisplayError { get; set; }
 
     protected override void OnInitialized()
     {
@@ -105,8 +112,7 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            this.DisplayError = e.Message;
         }
     }
 }

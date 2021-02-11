@@ -1,10 +1,8 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
-@using System.IO
-@using System.Linq
+﻿@using System.IO
 @using System.Threading
-@using Covenant.Models.Listeners
+@using Microsoft.AspNetCore.Components.Forms
 
-@using System.ComponentModel.DataAnnotations
+@using Covenant.Models.Listeners
 
 <EditForm Model="Listener" OnValidSubmit="OnFormSubmit">
     <DataAnnotationsValidator />
@@ -122,12 +120,7 @@
         </select>
         <div class="text-danger"><ValidationMessage For="() => Listener.ProfileId" /></div>
     </div>
-    @if (!Disabled)
-    {
-        <button type="submit" class="btn btn-primary">
-            <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-        </button>
-    }
+    @ChildContent
 </EditForm>
 
 @code {
@@ -138,16 +131,13 @@
     public IEnumerable<Profile> Profiles { get; set; }
 
     [Parameter]
-    public string SubmitIcon { get; set; } = "edit";
-
-    [Parameter]
-    public string SubmitLabel { get; set; } = "Edit";
-
-    [Parameter]
     public EventCallback<HttpListener> OnSubmit { get; set; }
 
     [Parameter]
     public bool Disabled { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
 
     private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
     private bool UploadInProgress { get; set; } = false;

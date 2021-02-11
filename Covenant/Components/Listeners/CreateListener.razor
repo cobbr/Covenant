@@ -46,82 +46,97 @@
 
 <div class="tab-content" id="listener-tab-content">
     <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab">
-        <HttpListenerForm Listener="@(new HttpListener(GetHttpListenerType(), GetHttpProfiles().FirstOrDefault()))"
-                          Profiles="@(GetHttpProfiles())"
-                          OnSubmit="OnSubmitHttpListener"
-                          SubmitIcon="plus"
-                          SubmitLabel="Create" />
+        <HttpListenerForm Listener="@HttpListener"
+                          Profiles="@HttpProfiles"
+                          OnSubmit="OnSubmitHttpListener">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
+        </HttpListenerForm>
     </div>
     <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
-        <BridgeListenerForm Listener="@(new BridgeListener(GetBridgeListenerType(), GetHttpProfiles().FirstOrDefault()))"
-                            Profiles="@(GetBridgeProfiles())"
-                            OnSubmit="OnSubmitBridgeListener"
-                            SubmitIcon="plus"
-                            SubmitLabel="Create" />
+        <BridgeListenerForm Listener="@BridgeListener"
+                            Profiles="@BridgeProfiles"
+                            OnSubmit="OnSubmitBridgeListener">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
+        </BridgeListenerForm>
     </div>
 </div>
 
 @code {
+    private HttpListener HttpListener { get; set; }
+    private BridgeListener BridgeListener { get; set; }
+    private IEnumerable<Profile> HttpProfiles { get; set; }
+    private IEnumerable<Profile> BridgeProfiles { get; set; }
+    private string DisplayError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.HttpProfiles = this.HttpProfiles ?? await Service.GetHttpProfiles();
+        this.BridgeProfiles = this.BridgeProfiles ?? await Service.GetBridgeProfiles();
+        this.HttpListener = this.HttpListener ?? new HttpListener(await Service.GetListenerTypeByName("HTTP"), this.HttpProfiles.FirstOrDefault());
+        this.BridgeListener = this.BridgeListener ?? new BridgeListener(await Service.GetListenerTypeByName("Bridge"), this.BridgeProfiles.FirstOrDefault());
+        Service.DisposeContext();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
     }
 
-    private IEnumerable<Profile> GetHttpProfiles()
-    {
-        IEnumerable<HttpProfile> profiles = Service.GetHttpProfiles().WaitResult();
-        Service.DisposeContext();
-        return profiles;
-    }
-
-    private IEnumerable<Profile> GetBridgeProfiles()
-    {
-        IEnumerable<BridgeProfile> profiles = Service.GetBridgeProfiles().WaitResult();
-        Service.DisposeContext();
-        return profiles;
-    }
-
-    private ListenerType GetHttpListenerType()
-    {
-        ListenerType type = Service.GetListenerTypeByName("HTTP").WaitResult();
-        Service.DisposeContext();
-        return type;
-    }
-
-    private ListenerType GetBridgeListenerType()
-    {
-        ListenerType type = Service.GetListenerTypeByName("Bridge").WaitResult();
-        Service.DisposeContext();
-        return type;
-    }
-
-    private void OnSubmitHttpListener(HttpListener listener)
+    private async Task OnSubmitHttpListener(HttpListener listener)
     {
         try
         {
-            listener.Status = ListenerStatus.Active;
-            _ = this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener));
-            NavigationManager.NavigateTo("/listener");
+            if ((await Service.GetListeners()).Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
+            {
+                Service.DisposeContext();
+                throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
+            }
+            else
+            {
+                listener.Status = ListenerStatus.Active;
+                _ = this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener));
+                NavigationManager.NavigateTo("/listener");
+            }
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
         }
     }
 
-    private void OnSubmitBridgeListener(BridgeListener listener)
+    private async Task OnSubmitBridgeListener(BridgeListener listener)
     {
         try
         {
-            listener.Status = ListenerStatus.Active;
-            _ = this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener));
-            NavigationManager.NavigateTo("/listener");
+            if ((await Service.GetListeners()).Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
+            {
+                Service.DisposeContext();
+                throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
+            }
+            else
+            {
+                listener.Status = ListenerStatus.Active;
+                _ = this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener));
+                NavigationManager.NavigateTo("/listener");
+            }
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
         }
     }
 
