@@ -55,9 +55,16 @@
         <div class="form-group col-md-3">
             <label for="DotNetVersion">DotNetVersion</label><br />
             <select id="DotNetVersion" name="DotNetVersion" @bind="Launcher.DotNetVersion" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
-                @foreach (var n in GetApplicableDotNetVersions())
+                @foreach (string n in GetApplicableDotNetVersions())
                 {
-                    <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    if (Enum.GetName(this.Launcher.DotNetVersion) == n)
+                    {
+                        <option selected value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
                 }
             </select>
             <div class="text-danger"><ValidationMessage For="() => Launcher.DotNetVersion" /></div>
@@ -247,7 +254,7 @@
     {
         if (this.CurrentImplantTemplate != null)
         {
-            this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+            this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).First();
         }
     }
 
@@ -268,8 +275,8 @@
     {
         if (this.CurrentImplantTemplate != null)
         {
-            IEnumerable<string> names = this.CurrentImplantTemplate.CompatibleDotNetVersions.Select(CDN => CDN.ToString());
-            return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s));
+            IEnumerable<string> names = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).Select(CDN => CDN.ToString());
+            return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s)).ToList();
         }
         return new List<string>();
     }
@@ -293,7 +300,7 @@
             this.Launcher.ImplantTemplateId = id;
             if (this.CurrentImplantTemplate != null)
             {
-                this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+                this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).First();
             }
             this.RefreshNeeded = true;
         }

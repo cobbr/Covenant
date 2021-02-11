@@ -22,6 +22,7 @@ namespace Covenant.Models.Launchers
             this.Description = "Uses msbuild.exe to launch a Grunt using an in-line task.";
             this.OutputKind = OutputKind.WindowsApplication;
             this.CompressStager = true;
+            this.DotNetVersion = Core.Common.DotNetVersion.Net40;
         }
 
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)

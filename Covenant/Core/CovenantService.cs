@@ -4556,6 +4556,10 @@ public static class Task
 
         public async Task<MSBuildLauncher> CreateMSBuildLauncher(MSBuildLauncher launcher)
         {
+            if (launcher.DotNetVersion == Common.DotNetVersion.Net35)
+            {
+                throw new ControllerBadRequestException($"BadRequest - MSBuildLauncher not compatible with DotNetVersion: {launcher.DotNetVersion}");
+            }
             return await this.GetMSBuildLauncher((await this.CreateLauncher(launcher)).Id);
         }
 

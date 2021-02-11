@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated enter key on command completion to select command but not submit
 - Improved error handling on Listener and Launcher creation/edit pages, display errors in UI
 - Added compilation checks for Profile MessageTransforms
+- Updated to restrict MSBuildLauncher from using Net35 DotNetVersion
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
