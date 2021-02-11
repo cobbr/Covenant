@@ -212,7 +212,10 @@
                 {
                     this.InteractInput = val;
                 }
-                await this.OnSubmit();
+                else
+                {
+                    await this.OnSubmit();
+                }
                 break;
         }
     }

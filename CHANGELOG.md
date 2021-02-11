@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed CScriptLauncher, WScriptLauncher, WmicLauncher
 - Updated Action dropdowns to right align inside table, use empty table header
 - Updated table pagination to only display when multiple pages available
+- Updated enter key on command completion to select command but not submit
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
