@@ -29,11 +29,7 @@
         <SortableTableHeader TItem="Listener" TItem2="int" GetSortableProperty="(listener) => listener.ConnectPort">
             <HeaderContent>ConnectPort</HeaderContent>
         </SortableTableHeader>
-        <th class="pl-1 pr-1">
-            <div class="d-flex flex-nowrap">
-                Action
-            </div>
-        </th>
+        <th></th>
     </TableHeader>
     <TableRow Context="listener">
         <tr>
@@ -45,7 +41,7 @@
             <td>@listener.StartTime</td>
             <td>@ToString(listener.ConnectAddresses)</td>
             <td>@listener.ConnectPort</td>
-            <td>
+            <td style="text-align: right;">
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionListener" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Action

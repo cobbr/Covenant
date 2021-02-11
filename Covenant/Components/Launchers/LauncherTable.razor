@@ -26,11 +26,7 @@
         <SortableTableHeader TItem="Launcher" TItem2="string" GetSortableProperty="(launcher) => launcher.Description">
             <HeaderContent>Description</HeaderContent>
         </SortableTableHeader>
-        <th class="pl-1 pr-1">
-            <div class="d-flex flex-nowrap">
-                Action
-            </div>
-        </th>
+        <th></th>
     </TableHeader>
     <TableRow Context="launcher">
         <tr>
@@ -43,7 +39,7 @@
             <td>@launcher.DotNetVersion</td>
             <td>@launcher.KillDate</td>
             <td>@launcher.Description</td>
-            <td>
+            <td style="text-align: right;">
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionLauncher" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Action

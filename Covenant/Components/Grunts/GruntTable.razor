@@ -46,11 +46,7 @@
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate?.Name">
             <HeaderContent>Template</HeaderContent>
         </SortableTableHeader>
-        <th class="pl-1 pr-1">
-            <div class="d-flex flex-nowrap">
-                Action
-            </div>
-        </th>
+        <th></th>
     </TableHeader>
     <TableRow Context="grunt">
         <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
@@ -74,7 +70,7 @@
             <td @attributes="InputAttributes">@grunt.Status</td>
             <td @attributes="InputAttributes">@grunt.Note</td>
             <td @attributes="InputAttributes">@grunt.ImplantTemplate?.Name</td>
-            <td>
+            <td style="text-align: right;">
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
                             type="button" id="dropdownActionGrunt" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

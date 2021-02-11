@@ -31,7 +31,7 @@
             @TableBottom
         </table>
     </div>
-    @if (this.IsPaginated)
+    @if (this.IsPaginated && this.TotalPages > 1)
     {
         <div class="d-flex flex-nowrap float-right">
             <span class="text-muted mt-2 mr-2">Page @(CurrentPage + 1) of @TotalPages</span>
