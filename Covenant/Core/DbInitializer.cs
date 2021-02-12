@@ -25,6 +25,7 @@ namespace Covenant.Core
     {
         public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager)
         {
+            context.Database.EnsureCreated();
             await InitializeListeners(service, context);
             await InitializeImplantTemplates(service, context);
             await InitializeTasks(service, context);
@@ -467,9 +468,11 @@ namespace Covenant.Core
                         CodeMirrorTheme = CodeMirrorTheme.night,
                     }
                 };
-
-                await context.Themes.AddRangeAsync(themes);
-                await context.SaveChangesAsync();
+                foreach (Theme t in themes)
+                {
+                    await context.Themes.AddAsync(t);
+                    await context.SaveChangesAsync();
+                }
             }
         }
     }

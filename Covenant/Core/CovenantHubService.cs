@@ -1160,6 +1160,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync<CovenantUser>("GetUserByUsername", username);
         }
 
+        public Task<CovenantUserLoginResult> GetUserToken(ClaimsPrincipal principal)
+        {
+            return _connection.InvokeAsync<CovenantUserLoginResult>("GetUserToken", principal);
+        }
+
         public Task<IdentityUserRole<string>> GetUserRole(string userId, string roleId)
         {
             return _connection.InvokeAsync<IdentityUserRole<string>>("GetUserRole", userId, roleId);
@@ -1248,6 +1253,11 @@ namespace Covenant.Core
         public Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher)
         {
             return _connection.InvokeAsync<ServiceBinaryLauncher>("EditServiceBinaryLauncher", launcher);
+        }
+
+        public Task ResetCovenantToFactoryDefault(ClaimsPrincipal principal)
+        {
+            return _connection.InvokeAsync("ResetCovenantToFactoryDefault", principal);
         }
     }
 }

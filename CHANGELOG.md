@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ability to edit and delete Indicators, Credentials
 - Added ability to delete Screenshots and Downloads
 - Added ReferenceSourceLibrary, ReferenceAssembly, and EmbeddedResource options for ImplantTemplates
+- Added global settings page, added functionality to reset Covenant to factory defaults
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -45,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated GruntTaskTable format, ImplantTemplateTable format
 - Changed all BlazorInputFile components to InputFile components
 - Updated all nuget dependencies
+- Removed ServiceUser for starting/stopping listeners
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

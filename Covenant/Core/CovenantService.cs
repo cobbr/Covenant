@@ -35,6 +35,7 @@ namespace Covenant.Core
         Task<CovenantUser> GetUser(string userId);
         Task<CovenantUser> GetUserByUsername(string username);
         Task<CovenantUser> GetCurrentUser(ClaimsPrincipal principal);
+        Task<CovenantUserLoginResult> GetUserToken(ClaimsPrincipal principal);
         Task<CovenantUserLoginResult> Login(CovenantUserLogin login);
         Task<CovenantUser> CreateUserVerify(ClaimsPrincipal principal, CovenantUserRegister register);
         Task<CovenantUser> CreateUser(CovenantUserLogin login);
@@ -350,10 +351,16 @@ namespace Covenant.Core
         Task DeleteLauncher(int id);
     }
 
+    public interface ISettingsService
+    {
+        Task ResetCovenantToFactoryDefault(ClaimsPrincipal principal);
+    }
+
     public interface ICovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
         IGruntCommandService, ICommandOutputService, IGruntTaskingService,
-        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService
+        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService,
+        ISettingsService
     {
         Task<IEnumerable<T>> CreateEntities<T>(params T[] entities);
         void DisposeContext();
@@ -362,7 +369,8 @@ namespace Covenant.Core
     public interface IRemoteCovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
         IGruntCommandService, ICommandOutputService, IGruntTaskingService,
-        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService
+        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService,
+        ISettingsService
     {
 
     }
@@ -375,12 +383,13 @@ namespace Covenant.Core
         protected readonly INotificationService _notifier;
         protected readonly UserManager<CovenantUser> _userManager;
         protected readonly SignInManager<CovenantUser> _signInManager;
+        protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly IConfiguration _configuration;
         protected readonly ConcurrentDictionary<int, CancellationTokenSource> _cancellationTokens;
 
 
         public CovenantService(DbContextOptions<CovenantContext> options, CovenantContext context, INotificationService notifier,
-            UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager,
+            UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, RoleManager<IdentityRole> roleManager,
             IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> cancellationTokens)
         {
             _options = options;
@@ -388,6 +397,7 @@ namespace Covenant.Core
             _notifier = notifier;
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _configuration = configuration;
             _cancellationTokens = cancellationTokens;
         }
@@ -448,6 +458,26 @@ namespace Covenant.Core
                 throw new ControllerNotFoundException($"NotFound - Could not identify current username");
             }
             return await this.GetUser(user.Id);
+        }
+
+        public async Task<CovenantUserLoginResult> GetUserToken(ClaimsPrincipal principal)
+        {
+            try
+            {
+                CovenantUser user = await this.GetCurrentUser(principal);
+                List<string> userRoles = await _context.UserRoles.Where(UR => UR.UserId == user.Id).Select(UR => UR.RoleId).ToListAsync();
+                List<string> roles = await _context.Roles.Where(R => userRoles.Contains(R.Id)).Select(R => R.Name).ToListAsync();
+                string token = Utilities.GenerateJwtToken(
+                    user.UserName, user.Id, roles.ToArray(),
+                    _configuration["JwtKey"], _configuration["JwtIssuer"],
+                    _configuration["JwtAudience"], _configuration["JwtExpireDays"]
+                );
+                return new CovenantUserLoginResult { Success = true, CovenantToken = token };
+            }
+            catch
+            {
+                return new CovenantUserLoginResult { Success = false, CovenantToken = "" };
+            }
         }
 
         public async Task<CovenantUserLoginResult> Login(CovenantUserLogin login)
@@ -3905,7 +3935,7 @@ public static class Task
                     Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
                     MessageBody = "Stopped Listener: " + matchingListener.Name,
-                    Level = EventLevel.Warning,
+                    Level = EventLevel.Highlight,
                     Context = "*"
                 });
             }
@@ -3914,14 +3944,6 @@ public static class Task
                 _context.Listeners.Update(matchingListener);
                 await _context.SaveChangesAsync();
                 await this.StartListenerVerify(matchingListener);
-                await this.CreateEvent(new Event
-                {
-                    Time = matchingListener.StartTime,
-                    MessageHeader = "Started Listener",
-                    MessageBody = "Started Listener: " + matchingListener.Name,
-                    Level = EventLevel.Highlight,
-                    Context = "*"
-                });
             }
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
@@ -4839,6 +4861,30 @@ public static class Task
             _context.Launchers.Remove(launcher);
             await _context.SaveChangesAsync();
             // _notifier.OnDeleteLauncher(this, launcher.Id);
+        }
+        #endregion
+
+        #region Settings Actions
+        public async Task ResetCovenantToFactoryDefault(ClaimsPrincipal principal)
+        {
+            if (_userManager.Users.Any() && !principal.Identity.IsAuthenticated)
+            {
+                throw new ControllerUnauthorizedException($"Unauthorized - Must be signed in to register a new user.");
+            }
+            if (_userManager.Users.Any() && !principal.IsInRole("Administrator"))
+            {
+                throw new ControllerUnauthorizedException($"Unauthorized - Must be signed in as an Administrator to reset Covenant.");
+            }
+            IEnumerable<Listener> listeners = await this.GetListeners();
+            this.DisposeContext();
+            foreach (Listener l in listeners.Where(L => L.Status == ListenerStatus.Active))
+            {
+                l.Status = ListenerStatus.Stopped;
+                await this.EditListener(l);
+                this.DisposeContext();
+            }
+            await _context.Database.EnsureDeletedAsync();
+            await DbInitializer.Initialize(this, _context, _roleManager);
         }
         #endregion
     }

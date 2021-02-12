@@ -117,14 +117,9 @@ namespace Covenant
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     configuration["CovenantPort"] = CovenantPort.ToString();
-                    context.Database.EnsureCreated();
                     DbInitializer.Initialize(service, context, roleManager).Wait();
-                    CovenantUser serviceUser = new CovenantUser { UserName = "ServiceUser" };
                     if (!context.Users.Any())
                     {
-                        string serviceUserPassword = Utilities.CreateSecretPassword() + "A";
-                        userManager.CreateAsync(serviceUser, serviceUserPassword).Wait();
-                        userManager.AddToRoleAsync(serviceUser, "ServiceUser").Wait();
                         if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                         {
                             CovenantUser user = new CovenantUser { UserName = username };
@@ -143,11 +138,6 @@ namespace Covenant
                             }
                         }
                     }
-                    configuration["ServiceUserToken"] = Utilities.GenerateJwtToken(
-                        serviceUser.UserName, serviceUser.Id, new string[] { "ServiceUser" },
-                        configuration["JwtKey"], configuration["JwtIssuer"],
-                        configuration["JwtAudience"], configuration["JwtExpireDays"]
-                    );
                 }
 
                 try

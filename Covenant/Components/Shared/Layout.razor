@@ -17,7 +17,7 @@
     </NotAuthorized>
     <Authorized>
         <div class="page">
-            @if (UserManager.Users.Count() <= 1)
+            @if (!UserManager.Users.Any())
             {
                 <RedirectToLogin />
             }
@@ -101,6 +101,12 @@
                                             <NavLink href="/covenantuser" id="nav-users" class="nav-link" Match="NavLinkMatch.Prefix">
                                                 <span class="fe fe-users"></span>
                                                 Users
+                                            </NavLink>
+                                        </li>
+                                        <li class="nav-item">
+                                            <NavLink href="/settings" id="nav-settings" class="nav-link" Match="NavLinkMatch.Prefix">
+                                                <span class="fe fe-settings"></span>
+                                                Settings
                                             </NavLink>
                                         </li>
                                     </ul>

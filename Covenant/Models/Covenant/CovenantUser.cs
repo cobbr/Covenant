@@ -4,10 +4,7 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
-using Covenant.Core;
 using Microsoft.AspNetCore.Identity;
-using NLog;
 
 namespace Covenant.Models.Covenant
 {
