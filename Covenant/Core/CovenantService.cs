@@ -942,14 +942,26 @@ namespace Covenant.Core
         public async Task<IEnumerable<ImplantTemplate>> GetImplantTemplates()
         {
             return await _context.ImplantTemplates
-                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .Include(IT => IT.CompatibleListenerTypes)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(IT => IT.ReferenceAssemblies)
+                .Include(IT => IT.EmbeddedResources)
                 .ToListAsync();
         }
 
         public async Task<ImplantTemplate> GetImplantTemplate(int id)
         {
             ImplantTemplate template = await _context.ImplantTemplates
-                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .Include(IT => IT.CompatibleListenerTypes)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(IT => IT.ReferenceAssemblies)
+                .Include(IT => IT.EmbeddedResources)
                 .FirstOrDefaultAsync(IT => IT.Id == id);
             if (template == null)
             {
@@ -961,7 +973,13 @@ namespace Covenant.Core
         public async Task<ImplantTemplate> GetImplantTemplateByName(string name)
         {
             ImplantTemplate template = await _context.ImplantTemplates
-                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .Include(IT => IT.CompatibleListenerTypes)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(IT => IT.ReferenceAssemblies)
+                .Include(IT => IT.EmbeddedResources)
                 .FirstOrDefaultAsync(IT => IT.Name == name);
             if (template == null)
             {
@@ -972,22 +990,23 @@ namespace Covenant.Core
 
         public async Task<ImplantTemplate> CreateImplantTemplate(ImplantTemplate template)
         {
-            List<ListenerType> types = template.CompatibleListenerTypes.ToList();
-            template.SetListenerTypeImplantTemplates(new List<ListenerTypeImplantTemplate>());
-
-            await _context.ImplantTemplates.AddAsync(template);
-            await _context.SaveChangesAsync();
-
-            foreach (ListenerType type in types)
+            for (int i = 0; i < template.CompatibleListenerTypes.Count; i++)
             {
-                await this.CreateEntities(
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await this.GetListenerType(type.Id),
-                        ImplantTemplate = template
-                    }
-                );
+                template.CompatibleListenerTypes[i] = await this.GetListenerType(template.CompatibleListenerTypes[i].Id);
             }
+            for (int i = 0; i < template.ReferenceSourceLibraries.Count; i++)
+            {
+                template.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibrary(template.ReferenceSourceLibraries[i].Id);
+            }
+            for (int i = 0; i < template.ReferenceAssemblies.Count; i++)
+            {
+                template.ReferenceAssemblies[i] = await this.GetReferenceAssembly(template.ReferenceAssemblies[i].Id);
+            }
+            for (int i = 0; i < template.EmbeddedResources.Count; i++)
+            {
+                template.EmbeddedResources[i] = await this.GetEmbeddedResource(template.EmbeddedResources[i].Id);
+            }
+            await _context.ImplantTemplates.AddAsync(template);
             await _context.SaveChangesAsync();
             // _notifier.OnCreateImplantTemplate(this, template);
             await LoggingService.Log(LogAction.Create, LogLevel.Trace, template);
@@ -1014,23 +1033,27 @@ namespace Covenant.Core
             matchingTemplate.ImplantDirection = template.ImplantDirection;
             matchingTemplate.StagerCode = template.StagerCode;
             matchingTemplate.ExecutorCode = template.ExecutorCode;
+            matchingTemplate.ReferenceSourceLibraries = template.ReferenceSourceLibraries;
+            matchingTemplate.ReferenceAssemblies = template.ReferenceAssemblies;
+            matchingTemplate.EmbeddedResources = template.EmbeddedResources;
             matchingTemplate.CompatibleDotNetVersions = template.CompatibleDotNetVersions;
-
-            IEnumerable<ListenerType> typesToAdd = template.CompatibleListenerTypes.Where(CLT => !matchingTemplate.CompatibleListenerTypes.Select(Two => Two.Id).Contains(CLT.Id));
-            IEnumerable<ListenerType> typesToRemove = matchingTemplate.CompatibleListenerTypes.Where(CLT => !template.CompatibleListenerTypes.Select(Two => Two.Id).Contains(CLT.Id));
-            foreach (ListenerType type in typesToAdd)
+            matchingTemplate.CompatibleListenerTypes = template.CompatibleListenerTypes;
+            for (int i = 0; i < matchingTemplate.CompatibleListenerTypes.Count; i++)
             {
-                _context.Add(new ListenerTypeImplantTemplate
-                {
-                    ImplantTemplateId = matchingTemplate.Id,
-                    ListenerTypeId = type.Id
-                });
+                matchingTemplate.CompatibleListenerTypes[i] = await this.GetListenerType(matchingTemplate.CompatibleListenerTypes[i].Id);
             }
-            foreach (ListenerType type in typesToRemove)
+            for (int i = 0; i < template.ReferenceSourceLibraries.Count; i++)
             {
-                _context.Remove(await _context.FindAsync<ListenerTypeImplantTemplate>(type.Id, matchingTemplate.Id));
+                matchingTemplate.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibrary(matchingTemplate.ReferenceSourceLibraries[i].Id);
             }
-
+            for (int i = 0; i < template.ReferenceAssemblies.Count; i++)
+            {
+                matchingTemplate.ReferenceAssemblies[i] = await this.GetReferenceAssembly(matchingTemplate.ReferenceAssemblies[i].Id);
+            }
+            for (int i = 0; i < template.EmbeddedResources.Count; i++)
+            {
+                matchingTemplate.EmbeddedResources[i] = await this.GetEmbeddedResource(matchingTemplate.EmbeddedResources[i].Id);
+            }
             _context.ImplantTemplates.Update(matchingTemplate);
             await _context.SaveChangesAsync();
             // _notifier.OnEditImplantTemplate(this, matchingTemplate);
@@ -1572,15 +1595,49 @@ namespace Covenant.Core
                         references = Common.DefaultNet40References;
                         break;
                 }
+                references.AddRange(template.ReferenceAssemblies.Select(RA => new Compiler.Reference
+                {
+                    File = Common.CovenantAssemblyReferenceDirectory + RA.Location,
+                    Framework = RA.DotNetVersion,
+                    Enabled = true
+                }));
+                template.ReferenceSourceLibraries.ForEach(RSL =>
+                {
+                    references.AddRange(RSL.ReferenceAssemblies.Select(RA => new Compiler.Reference
+                    {
+                        File = Common.CovenantAssemblyReferenceDirectory + RA.Location,
+                        Framework = RA.DotNetVersion,
+                        Enabled = true
+                    }));
+                });
+                List<Compiler.EmbeddedResource> resources = template.EmbeddedResources.Select(ER => new Compiler.EmbeddedResource
+                {
+                    Name = ER.Name,
+                    File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
+                    Platform = Platform.X64,
+                    Enabled = true
+                }).ToList();
+                template.ReferenceSourceLibraries.ForEach(RSL =>
+                {
+                    resources.AddRange(RSL.EmbeddedResources.Select(ER => new Compiler.EmbeddedResource
+                    {
+                        Name = ER.Name,
+                        File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
+                        Platform = Platform.X64,
+                        Enabled = true
+                    }));
+                });
                 try
                 {
                     ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
                     {
                         Language = template.Language,
                         Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
+                        SourceDirectories = template.ReferenceSourceLibraries.Select(RSL => Common.CovenantReferenceSourceLibraries + RSL.Location).ToList(),
                         TargetDotNetVersion = grunt.DotNetVersion,
                         OutputKind = outputKind,
-                        References = references
+                        References = references,
+                        EmbeddedResources = resources
                     });
                 }
                 catch (CompilerException e)
@@ -1988,8 +2045,8 @@ namespace Covenant.Core
         public async Task<IEnumerable<ReferenceSourceLibrary>> GetReferenceSourceLibraries()
         {
             return await _context.ReferenceSourceLibraries
-                .Include("ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
+                .Include(RSL => RSL.ReferenceAssemblies)
+                .Include(RSL => RSL.EmbeddedResources)
                 .ToListAsync();
         }
 
@@ -1997,8 +2054,8 @@ namespace Covenant.Core
         {
             ReferenceSourceLibrary library = await _context.ReferenceSourceLibraries
                 .Where(RSL => RSL.Id == id)
-                .Include("ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
+                .Include(RSL => RSL.ReferenceAssemblies)
+                .Include(RSL => RSL.EmbeddedResources)
                 .FirstOrDefaultAsync();
             if (library == null)
             {
@@ -2011,8 +2068,8 @@ namespace Covenant.Core
         {
             ReferenceSourceLibrary library = await _context.ReferenceSourceLibraries
                 .Where(RSL => RSL.Name == name)
-                .Include("ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
+                .Include(RSL => RSL.ReferenceAssemblies)
+                .Include(RSL => RSL.EmbeddedResources)
                 .FirstOrDefaultAsync();
             if (library == null)
             {
@@ -2042,17 +2099,8 @@ namespace Covenant.Core
             matchingLibrary.Name = library.Name;
             matchingLibrary.Description = library.Description;
             matchingLibrary.Location = library.Location;
-
-            var removeAssemblies = matchingLibrary.ReferenceAssemblies.Select(MRA => MRA.Id).Except(library.ReferenceAssemblies.Select(RA => RA.Id));
-            var addAssemblies = library.ReferenceAssemblies.Select(MRA => MRA.Id).Except(matchingLibrary.ReferenceAssemblies.Select(MRA => MRA.Id));
-            removeAssemblies.ToList().ForEach(async RA => matchingLibrary.Remove(await this.GetReferenceAssembly(RA)));
-            addAssemblies.ToList().ForEach(async AA => matchingLibrary.Add(await this.GetReferenceAssembly(AA)));
-
-            var removeResources = matchingLibrary.EmbeddedResources.Select(MER => MER.Id).Except(library.EmbeddedResources.Select(ER => ER.Id));
-            var addResources = library.EmbeddedResources.Select(MER => MER.Id).Except(matchingLibrary.EmbeddedResources.Select(MER => MER.Id));
-            removeResources.ToList().ForEach(async RR => matchingLibrary.Remove(await this.GetEmbeddedResource(RR)));
-            addResources.ToList().ForEach(async AR => matchingLibrary.Add(await this.GetEmbeddedResource(AR)));
-
+            matchingLibrary.ReferenceAssemblies = library.ReferenceAssemblies;
+            matchingLibrary.EmbeddedResources = library.EmbeddedResources;
             _context.ReferenceSourceLibraries.Update(matchingLibrary);
             await _context.SaveChangesAsync();
             // _notifier.OnEditReferenceSourceLibrary(this, library);
@@ -2140,11 +2188,12 @@ namespace Covenant.Core
             return await _context.GruntTasks
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .ToListAsync();
         }
 
@@ -2155,11 +2204,12 @@ namespace Covenant.Core
                 // .Where(T => T.SupportedDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .AsEnumerable()
                 .Where(T => T.CompatibleDotNetVersions.Contains(grunt.DotNetVersion));
         }
@@ -2170,11 +2220,12 @@ namespace Covenant.Core
                 .Where(T => T.Id == id)
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .FirstOrDefaultAsync();
             if (task == null)
             {
@@ -2192,11 +2243,12 @@ namespace Covenant.Core
                 // .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .AsEnumerable()
                 .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .FirstOrDefault();
@@ -2206,11 +2258,12 @@ namespace Covenant.Core
                 task = _context.GruntTasks
                     .Include(T => T.Options)
                     .Include(T => T.Author)
-                    .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                    .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                    .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                    .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                    .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                    .Include(T => T.ReferenceSourceLibraries)
+                        .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                    .Include(T => T.ReferenceSourceLibraries)
+                        .ThenInclude(RSL => RSL.EmbeddedResources)
+                    .Include(T => T.ReferenceAssemblies)
+                    .Include(T => T.EmbeddedResources)
                     .AsEnumerable()
                     .Where(T => T.Aliases.Any(A => A.Equals(lower, StringComparison.CurrentCultureIgnoreCase)))
                     .Where(T => T.CompatibleDotNetVersions.Contains(version))
@@ -2252,9 +2305,6 @@ namespace Covenant.Core
             List<ReferenceAssembly> assemblies = task.ReferenceAssemblies.ToList();
             List<ReferenceSourceLibrary> libraries = task.ReferenceSourceLibraries.ToList();
             task.Options = new List<GruntTaskOption>();
-            task.EmbeddedResources.ForEach(ER => task.Remove(ER));
-            task.ReferenceAssemblies.ForEach(RA => task.Remove(RA));
-            task.ReferenceSourceLibraries.ForEach(RSL => task.Remove(RSL));
 
             GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
             if (author != null)
@@ -2268,6 +2318,18 @@ namespace Covenant.Core
                 await _context.SaveChangesAsync();
                 task.AuthorId = task.Author.Id;
             }
+            for (int i = 0; i < task.EmbeddedResources.Count; i++)
+            {
+                task.EmbeddedResources[i] = await this.GetEmbeddedResourceByName(task.EmbeddedResources[i].Name);
+            }
+            for (int i = 0; i < task.ReferenceAssemblies.Count; i++)
+            {
+                task.ReferenceAssemblies[i] = await this.GetReferenceAssemblyByName(task.ReferenceAssemblies[i].Name, task.ReferenceAssemblies[i].DotNetVersion);
+            }
+            for (int i = 0; i < task.ReferenceSourceLibraries.Count; i++)
+            {
+                task.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibraryByName(task.ReferenceSourceLibraries[i].Name);
+            }
 
             await _context.GruntTasks.AddAsync(task);
             await _context.SaveChangesAsync();
@@ -2277,36 +2339,6 @@ namespace Covenant.Core
                 option.GruntTaskId = task.Id;
                 await _context.AddAsync(option);
                 await _context.SaveChangesAsync();
-            }
-            foreach (EmbeddedResource resource in resources)
-            {
-                await this.CreateEntities(
-                    new GruntTaskEmbeddedResource
-                    {
-                        EmbeddedResource = await this.GetEmbeddedResourceByName(resource.Name),
-                        GruntTask = task
-                    }
-                );
-            }
-            foreach (ReferenceAssembly assembly in assemblies)
-            {
-                await this.CreateEntities(
-                    new GruntTaskReferenceAssembly
-                    {
-                        ReferenceAssembly = await this.GetReferenceAssemblyByName(assembly.Name, assembly.DotNetVersion),
-                        GruntTask = task
-                    }
-                );
-            }
-            foreach (ReferenceSourceLibrary library in libraries)
-            {
-                await this.CreateEntities(
-                    new GruntTaskReferenceSourceLibrary
-                    {
-                        ReferenceSourceLibrary = await this.GetReferenceSourceLibraryByName(library.Name),
-                        GruntTask = task
-                    }
-                );
             }
             await _context.SaveChangesAsync();
             // _notifier.OnCreateGruntTask(this, task);
@@ -2359,21 +2391,21 @@ namespace Covenant.Core
                     option.DisplayInCommand = newOption.DisplayInCommand;
                 }
             }
-
-            var removeAssemblies = updatingTask.ReferenceAssemblies.Select(MRA => MRA.Id).Except(task.ReferenceAssemblies.Select(RA => RA.Id));
-            var addAssemblies = task.ReferenceAssemblies.Select(MRA => MRA.Id).Except(updatingTask.ReferenceAssemblies.Select(MRA => MRA.Id));
-            removeAssemblies.ToList().ForEach(async RA => updatingTask.Remove(await this.GetReferenceAssembly(RA)));
-            addAssemblies.ToList().ForEach(async AA => updatingTask.Add(await this.GetReferenceAssembly(AA)));
-
-            var removeResources = updatingTask.EmbeddedResources.Select(MER => MER.Id).Except(task.EmbeddedResources.Select(ER => ER.Id));
-            var addResources = task.EmbeddedResources.Select(MER => MER.Id).Except(updatingTask.EmbeddedResources.Select(MER => MER.Id));
-            removeResources.ToList().ForEach(async RR => updatingTask.Remove(await this.GetEmbeddedResource(RR)));
-            addResources.ToList().ForEach(async AR => updatingTask.Add(await this.GetEmbeddedResource(AR)));
-
-            var removeLibraries = updatingTask.ReferenceSourceLibraries.Select(MRSL => MRSL.Id).Except(task.ReferenceSourceLibraries.Select(RSL => RSL.Id));
-            var addLibraries = task.ReferenceSourceLibraries.Select(RSL => RSL.Id).Except(updatingTask.ReferenceSourceLibraries.Select(MRSL => MRSL.Id));
-            removeLibraries.ToList().ForEach(async RL => updatingTask.Remove(await this.GetReferenceSourceLibrary(RL)));
-            addLibraries.ToList().ForEach(async AL => updatingTask.Add(await this.GetReferenceSourceLibrary(AL)));
+            updatingTask.ReferenceAssemblies = task.ReferenceAssemblies;
+            updatingTask.EmbeddedResources = task.EmbeddedResources;
+            updatingTask.ReferenceSourceLibraries = task.ReferenceSourceLibraries;
+            for (int i = 0; i < updatingTask.EmbeddedResources.Count; i++)
+            {
+                updatingTask.EmbeddedResources[i] = await this.GetEmbeddedResource(updatingTask.EmbeddedResources[i].Id);
+            }
+            for (int i = 0; i < updatingTask.ReferenceAssemblies.Count; i++)
+            {
+                updatingTask.ReferenceAssemblies[i] = await this.GetReferenceAssembly(updatingTask.ReferenceAssemblies[i].Id);
+            }
+            for (int i = 0; i < task.ReferenceSourceLibraries.Count; i++)
+            {
+                updatingTask.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibrary(updatingTask.ReferenceSourceLibraries[i].Id);
+            }
 
             GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
             if (author != null)

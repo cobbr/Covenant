@@ -5,9 +5,10 @@
 @implements IDisposable
 
 @using System.IO
+@using System.Threading
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
 
-@using BlazorInputFile
 @using YamlDotNet.Serialization
 
 @using Covenant.Core
@@ -18,7 +19,6 @@
 @using Covenant.Components.ReferenceSourceLibraries
 @inject INotificationService INotificationService
 @inject IJSRuntime IJSRuntime
-
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Tasks</h1>
@@ -53,8 +53,12 @@
             </ButtonContent>
             <TitleContent>Import GruntTask(s)</TitleContent>
             <ModalBody>
-                <InputFile OnChange="OnUploadImport"></InputFile>
-                @if (string.IsNullOrEmpty(this.ErrorMessage))
+                <InputFile OnChange="OnUploadImport" />
+                @if (this.UploadInProgress)
+                {
+                    <span class="fe fe-loader spin"></span>
+                }
+                @if (!string.IsNullOrEmpty(this.ErrorMessage))
                 {
                     <span class="text-danger">@ErrorMessage</span>
                 }
@@ -111,7 +115,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasks = this.GruntTasks ?? (await Service.GetGruntTasks()).ToList();
+        this.GruntTasks = this.GruntTasks ?? (await Service.GetGruntTasks()).OrderBy(GT => GT.Name).ToList();
         this.ReferenceSourceLibraries = this.ReferenceSourceLibraries ?? (await Service.GetReferenceSourceLibraries()).ToList();
         this.ReferenceAssemblies = this.ReferenceAssemblies ?? (await Service.GetReferenceAssemblies()).ToList();
         this.EmbeddedResources = this.EmbeddedResources ?? (await Service.GetEmbeddedResources()).ToList();
@@ -138,27 +142,32 @@
     }
 
     private string ErrorMessage { get; set; }
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
     private List<GruntTask> ImportedTasks { get; set; } = null;
-    private async Task OnUploadImport(IFileListEntry[] files)
+    private async Task OnUploadImport(InputFileChangeEventArgs e)
     {
         try
         {
-            IFileListEntry file = files.FirstOrDefault();
-            if (file != null)
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
+            using (MemoryStream ms = new MemoryStream())
             {
-                MemoryStream ms = new MemoryStream();
-                await file.Data.CopyToAsync(ms);
+                await e.File.OpenReadStream().CopyToAsync(ms);
                 string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
                 IDeserializer deserializer = new DeserializerBuilder().Build();
                 List<SerializedGruntTask> serialized = deserializer.Deserialize<List<SerializedGruntTask>>(yaml);
                 this.ImportedTasks = serialized.Select(S => new GruntTask().FromSerializedGruntTask(S)).ToList();
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            this.ErrorMessage = e.Message;
-            this.StateHasChanged();
+            this.ErrorMessage = ex.Message;
         }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
     }
 
     private async Task OnImport()

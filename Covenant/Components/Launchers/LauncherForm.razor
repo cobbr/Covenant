@@ -203,14 +203,14 @@
 </EditForm>
 
 @code {
-    [Parameter]
-    public Launcher Launcher { get; set; }
+        [Parameter]
+        public Launcher Launcher { get; set; }
 
-    [Parameter]
-    public EventCallback<Launcher> OnGenerate { get; set; }
+        [Parameter]
+        public EventCallback<Launcher> OnGenerate { get; set; }
 
-    [Parameter]
-    public RenderFragment ChildContent { get; set; }
+        [Parameter]
+        public RenderFragment ChildContent { get; set; }
 
     private IEnumerable<Listener> _ActiveListeners;
     private IEnumerable<Listener> ActiveListeners

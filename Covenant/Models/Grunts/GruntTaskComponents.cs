@@ -18,14 +18,13 @@ namespace Covenant.Models.Grunts
         public string Location { get; set; }
         public Common.DotNetVersion DotNetVersion { get; set; }
 
-        private List<ReferenceSourceLibraryReferenceAssembly> ReferenceSourceLibraryReferenceAssemblies { get; set; } = new List<ReferenceSourceLibraryReferenceAssembly>();
-        private List<GruntTaskReferenceAssembly> GruntTaskReferenceAssemblies { get; set; } = new List<GruntTaskReferenceAssembly>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<GruntTask> GruntTasks { get; set; } = new List<GruntTask>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<ImplantTemplate> ImplantTemplates { get; set; } = new List<ImplantTemplate>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<ReferenceSourceLibrary>();
 
-        [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public List<ReferenceSourceLibrary> ReferenceSourceLibraries => ReferenceSourceLibraryReferenceAssemblies.Select(e => e.ReferenceSourceLibrary).ToList();
-        [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public List<GruntTask> GruntTasks => GruntTaskReferenceAssemblies.Select(e => e.GruntTask).ToList();
-        
         internal SerializedReferenceAssembly ToSerializedReferenceAssembly()
         {
             return new SerializedReferenceAssembly
@@ -75,13 +74,12 @@ namespace Covenant.Models.Grunts
         public string Name { get; set; }
         public string Location { get; set; }
 
-        private List<ReferenceSourceLibraryEmbeddedResource> ReferenceSourceLibraryEmbeddedResources { get; set; } = new List<ReferenceSourceLibraryEmbeddedResource>();
-        private List<GruntTaskEmbeddedResource> GruntTaskEmbeddedResources { get; set; } = new List<GruntTaskEmbeddedResource>();
-
-        [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public List<ReferenceSourceLibrary> ReferenceSourceLibraries => ReferenceSourceLibraryEmbeddedResources.Select(e => e.ReferenceSourceLibrary).ToList();
-        [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public List<GruntTask> GruntTasks => GruntTaskEmbeddedResources.Select(e => e.GruntTask).ToList();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<GruntTask> GruntTasks { get; set; } = new List<GruntTask>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<ImplantTemplate> ImplantTemplates { get; set; } = new List<ImplantTemplate>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<ReferenceSourceLibrary>();
 
         internal SerializedEmbeddedResource ToSerializedEmbeddedResource()
         {
@@ -133,50 +131,12 @@ namespace Covenant.Models.Grunts
         public ImplantLanguage Language { get; set; } = ImplantLanguage.CSharp;
         public List<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 };
 
-        private List<ReferenceSourceLibraryReferenceAssembly> ReferenceSourceLibraryReferenceAssemblies { get; set; } = new List<ReferenceSourceLibraryReferenceAssembly>();
-        private List<ReferenceSourceLibraryEmbeddedResource> ReferenceSourceLibraryEmbeddedResources { get; set; } = new List<ReferenceSourceLibraryEmbeddedResource>();
-        private List<GruntTaskReferenceSourceLibrary> GruntTaskReferenceSourceLibraries { get; set; } = new List<GruntTaskReferenceSourceLibrary>();
-
-        public void Add(ReferenceAssembly assembly)
-        {
-            ReferenceSourceLibraryReferenceAssemblies.Add(new ReferenceSourceLibraryReferenceAssembly
-            {
-                ReferenceSourceLibraryId = this.Id, ReferenceSourceLibrary = this,
-                ReferenceAssemblyId = assembly.Id, ReferenceAssembly = assembly
-            });
-        }
-
-        public void Remove(ReferenceAssembly assembly)
-        {
-            ReferenceSourceLibraryReferenceAssemblies.Remove(
-                ReferenceSourceLibraryReferenceAssemblies
-                    .FirstOrDefault(RSLRA => RSLRA.ReferenceSourceLibraryId == this.Id && RSLRA.ReferenceAssemblyId == assembly.Id)
-            );
-        }
-
-        public void Add(EmbeddedResource resource)
-        {
-            ReferenceSourceLibraryEmbeddedResources.Add(new ReferenceSourceLibraryEmbeddedResource
-            {
-                ReferenceSourceLibraryId = this.Id, ReferenceSourceLibrary = this,
-                EmbeddedResourceId = resource.Id, EmbeddedResource = resource
-            });
-        }
-
-        public void Remove(EmbeddedResource resource)
-        {
-            ReferenceSourceLibraryEmbeddedResources.Remove(
-                ReferenceSourceLibraryEmbeddedResources
-                    .FirstOrDefault(RSLER => RSLER.ReferenceSourceLibraryId == this.Id && RSLER.EmbeddedResourceId == resource.Id)
-            );
-        }
-
-        [NotMapped]
-        public List<ReferenceAssembly> ReferenceAssemblies => ReferenceSourceLibraryReferenceAssemblies.Select(e => e.ReferenceAssembly).ToList();
-        [NotMapped]
-        public List<EmbeddedResource> EmbeddedResources => ReferenceSourceLibraryEmbeddedResources.Select(e => e.EmbeddedResource).ToList();
-        [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public List<GruntTask> GruntTasks => GruntTaskReferenceSourceLibraries.Select(e => e.GruntTask).ToList();
+        public List<ReferenceAssembly> ReferenceAssemblies { get; set; } = new List<ReferenceAssembly>();
+        public List<EmbeddedResource> EmbeddedResources { get; set; } = new List<EmbeddedResource>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<GruntTask> GruntTasks { get; set; } = new List<GruntTask>();
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<ImplantTemplate> ImplantTemplates { get; set; } = new List<ImplantTemplate>();
 
         internal SerializedReferenceSourceLibrary ToSerializedReferenceSourceLibrary()
         {
@@ -199,8 +159,8 @@ namespace Covenant.Models.Grunts
             this.Location = library.Location;
             this.Language = library.Language;
             this.CompatibleDotNetVersions = library.CompatibleDotNetVersions;
-            library.ReferenceAssemblies.ForEach(A => this.Add(new ReferenceAssembly().FromSerializedReferenceAssembly(A)));
-            library.EmbeddedResources.ForEach(R => this.Add(new EmbeddedResource().FromSerializedEmbeddedResource(R)));
+            this.ReferenceAssemblies = library.ReferenceAssemblies.Select(RA => new ReferenceAssembly().FromSerializedReferenceAssembly(RA)).ToList();
+            this.EmbeddedResources = library.EmbeddedResources.Select(ER => new EmbeddedResource().FromSerializedEmbeddedResource(ER)).ToList();
             return this;
         }
 
@@ -227,51 +187,6 @@ namespace Covenant.Models.Grunts
             SerializedReferenceSourceLibrary library = JsonConvert.DeserializeObject<SerializedReferenceSourceLibrary>(json);
             return this.FromSerializedReferenceSourceLibrary(library);
         }
-    }
-
-    public class ReferenceSourceLibraryReferenceAssembly
-    {
-        public int ReferenceSourceLibraryId { get; set; }
-        public ReferenceSourceLibrary ReferenceSourceLibrary { get; set; }
-
-        public int ReferenceAssemblyId { get; set; }
-        public ReferenceAssembly ReferenceAssembly { get; set; }
-    }
-
-    public class ReferenceSourceLibraryEmbeddedResource
-    {
-        public int ReferenceSourceLibraryId { get; set; }
-        public ReferenceSourceLibrary ReferenceSourceLibrary { get; set; }
-
-        public int EmbeddedResourceId { get; set; }
-        public EmbeddedResource EmbeddedResource { get; set; }
-    }
-
-    public class GruntTaskReferenceSourceLibrary
-    {
-        public int GruntTaskId { get; set; }
-        public GruntTask GruntTask { get; set; }
-
-        public int ReferenceSourceLibraryId { get; set; }
-        public ReferenceSourceLibrary ReferenceSourceLibrary { get; set; }
-    }
-
-    public class GruntTaskReferenceAssembly
-    {
-        public int GruntTaskId { get; set; }
-        public GruntTask GruntTask { get; set; }
-
-        public int ReferenceAssemblyId { get; set; }
-        public ReferenceAssembly ReferenceAssembly { get; set; }
-    }
-
-    public class GruntTaskEmbeddedResource
-    {
-        public int GruntTaskId { get; set; }
-        public GruntTask GruntTask { get; set; }
-
-        public int EmbeddedResourceId { get; set; }
-        public EmbeddedResource EmbeddedResource { get; set; }
     }
 
     internal class SerializedReferenceAssembly

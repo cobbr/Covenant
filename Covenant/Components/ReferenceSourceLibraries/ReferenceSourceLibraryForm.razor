@@ -170,11 +170,11 @@
         IEnumerable<int> removes = this.ReferenceSourceLibrary.ReferenceAssemblies.Select(RA => RA.Id).Where(id => !ids.Contains(id));
         foreach (int id in adds)
         {
-            this.ReferenceSourceLibrary.Add(await Service.GetReferenceAssembly(id));
+            this.ReferenceSourceLibrary.ReferenceAssemblies.Add(await Service.GetReferenceAssembly(id));
         }
         foreach (int id in removes)
         {
-            this.ReferenceSourceLibrary.Remove(this.ReferenceSourceLibrary.ReferenceAssemblies.Find(RA => RA.Id == id));
+            this.ReferenceSourceLibrary.ReferenceAssemblies.Remove(this.ReferenceSourceLibrary.ReferenceAssemblies.Find(RA => RA.Id == id));
         }
     }
 
@@ -186,11 +186,11 @@
         IEnumerable<int> removes = this.ReferenceSourceLibrary.EmbeddedResources.Select(ER => ER.Id).Where(id => !ids.Contains(id));
         foreach (int id in adds)
         {
-            this.ReferenceSourceLibrary.Add(await Service.GetEmbeddedResource(id));
+            this.ReferenceSourceLibrary.EmbeddedResources.Add(await Service.GetEmbeddedResource(id));
         }
         foreach (int id in removes)
         {
-            this.ReferenceSourceLibrary.Remove(this.ReferenceSourceLibrary.EmbeddedResources.Find(ER => ER.Id == id));
+            this.ReferenceSourceLibrary.EmbeddedResources.Remove(this.ReferenceSourceLibrary.EmbeddedResources.Find(ER => ER.Id == id));
         }
     }
 

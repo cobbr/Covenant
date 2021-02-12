@@ -12,14 +12,17 @@
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Name">
             <HeaderContent>Name</HeaderContent>
         </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetAliases(task)">
+            <HeaderContent>Aliases</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="ImplantLanguage" GetSortableProperty="(task) => task.Language">
+            <HeaderContent>Language</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetCompatibleDotNetVersions(task)">
             <HeaderContent>CompatibleDotNetVersions</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetReferenceSourceLibraries(task)">
-            <HeaderContent>ReferenceSourceLibraries</HeaderContent>
-        </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Description">
-            <HeaderContent>Description</HeaderContent>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Author.Name">
+            <HeaderContent>Author</HeaderContent>
         </SortableTableHeader>
     </TableHeader>
     <TableRow Context="task">
@@ -29,9 +32,10 @@
                     @task.Name
                 </a>
             </td>
+            <td>@GetAliases(task)</td>
+            <td>@task.Language</td>
             <td>@GetCompatibleDotNetVersions(task)</td>
-            <td>@GetReferenceSourceLibraries(task)</td>
-            <td>@task.Description</td>
+            <td>@task.Author.Name</td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -50,11 +54,11 @@
     public bool IsPaginated { get; set; } = true;
 
     [Parameter]
-    public int PageLength { get; set; } = 10;
+    public int PageLength { get; set; } = 25;
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasks = await Service.GetGruntTasks();
+        this.GruntTasks = this.GruntTasks ?? await Service.GetGruntTasks();
     }
 
     private string GetCompatibleDotNetVersions(GruntTask task)
@@ -62,17 +66,18 @@
         return string.Join(", ", task.CompatibleDotNetVersions.Select(DN => DN.ToString()));
     }
 
-    private string GetReferenceSourceLibraries(GruntTask task)
+    private string GetAliases(GruntTask task)
     {
-        return string.Join(",", task.ReferenceSourceLibraries.Select(RSL => RSL.Name));
+        return string.Join(",", task.Aliases);
     }
 
     private bool IsRowDisplayed(GruntTask task, string SearchTerm)
     {
         return SearchTerm == string.Empty ||
             task.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            task.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetAliases(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            task.Language.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             GetCompatibleDotNetVersions(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            GetReferenceSourceLibraries(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+            task.Author.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
     }
 }

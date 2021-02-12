@@ -110,60 +110,6 @@ namespace Covenant.Models
                 .WithOne(CO => CO.GruntCommand)
                 .HasForeignKey<GruntCommand>(GC => GC.CommandOutputId);
 
-            builder.Entity<ListenerTypeImplantTemplate>()
-                .HasKey(ltit => new { ltit.ListenerTypeId, ltit.ImplantTemplateId });
-            builder.Entity<ListenerTypeImplantTemplate>()
-                .HasOne(ltit => ltit.ImplantTemplate)
-                .WithMany("ListenerTypeImplantTemplates");
-            builder.Entity<ListenerTypeImplantTemplate>()
-                .HasOne(ltit => ltit.ListenerType);
-
-            builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
-                .HasKey(t => new { t.ReferenceSourceLibraryId, t.ReferenceAssemblyId });
-            builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
-                .HasOne(rslra => rslra.ReferenceSourceLibrary)
-                .WithMany("ReferenceSourceLibraryReferenceAssemblies");
-            builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
-                .HasOne(rslra => rslra.ReferenceAssembly)
-                .WithMany("ReferenceSourceLibraryReferenceAssemblies");
-                
-            builder.Entity<ReferenceSourceLibraryEmbeddedResource>()
-                .HasKey(t => new { t.ReferenceSourceLibraryId, t.EmbeddedResourceId });
-            builder.Entity<ReferenceSourceLibraryEmbeddedResource>()
-                .HasOne(rslra => rslra.ReferenceSourceLibrary)
-                .WithMany("ReferenceSourceLibraryEmbeddedResources");
-            builder.Entity<ReferenceSourceLibraryEmbeddedResource>()
-                .HasOne(rslra => rslra.EmbeddedResource)
-                .WithMany("ReferenceSourceLibraryEmbeddedResources");
-
-
-            builder.Entity<GruntTaskReferenceAssembly>()
-                .HasKey(t => new { t.GruntTaskId, t.ReferenceAssemblyId });
-            builder.Entity<GruntTaskReferenceAssembly>()
-                .HasOne(gtra => gtra.GruntTask)
-                .WithMany("GruntTaskReferenceAssemblies");
-            builder.Entity<GruntTaskReferenceAssembly>()
-                .HasOne(gtra => gtra.ReferenceAssembly)
-                .WithMany("GruntTaskReferenceAssemblies");
-
-            builder.Entity<GruntTaskEmbeddedResource>()
-                .HasKey(t => new { t.GruntTaskId, t.EmbeddedResourceId });
-            builder.Entity<GruntTaskEmbeddedResource>()
-                .HasOne(gter => gter.GruntTask)
-                .WithMany("GruntTaskEmbeddedResources");
-            builder.Entity<GruntTaskEmbeddedResource>()
-                .HasOne(gter => gter.EmbeddedResource)
-                .WithMany("GruntTaskEmbeddedResources");
-
-            builder.Entity<GruntTaskReferenceSourceLibrary>()
-                .HasKey(t => new { t.GruntTaskId, t.ReferenceSourceLibraryId });
-            builder.Entity<GruntTaskReferenceSourceLibrary>()
-                .HasOne(gtrsl => gtrsl.GruntTask)
-                .WithMany("GruntTaskReferenceSourceLibraries");
-            builder.Entity<GruntTaskReferenceSourceLibrary>()
-                .HasOne(gtrsl => gtrsl.ReferenceSourceLibrary)
-                .WithMany("GruntTaskReferenceSourceLibraries");
-
             ValueComparer<List<string>> stringListComparer = new ValueComparer<List<string>>(
                 (c1, c2) => c1.SequenceEqual(c1),
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),

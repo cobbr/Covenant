@@ -12,6 +12,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
 using Covenant.Core;
+using Covenant.Models.Grunts;
 
 namespace Covenant.Models.Listeners
 {
@@ -24,6 +25,8 @@ namespace Covenant.Models.Listeners
 
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<Listener> Listeners { get; set; }
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<ImplantTemplate> ImplantTemplates { get; set; }
     }
 
     public enum ListenerStatus

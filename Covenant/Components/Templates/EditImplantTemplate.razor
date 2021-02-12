@@ -12,7 +12,16 @@
     <h1 class="h2">Implant Template: <span id="implant-name" class="primary-color">@ImplantTemplate.Name</span></h1>
 </div>
 
-<ImplantTemplateForm ImplantTemplate="ImplantTemplate" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit" />
+<ImplantTemplateForm ImplantTemplate="ImplantTemplate" OnSubmit="OnEdit">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-edit"></span>
+        Edit
+    </button>
+    @if (!string.IsNullOrEmpty(this.DisplayError))
+    {
+        <div class="text-danger">@DisplayError</div>
+    }
+</ImplantTemplateForm>
 
 @code {
     [Parameter]
@@ -20,6 +29,8 @@
 
     [Parameter]
     public ImplantTemplate ImplantTemplate { get; set; }
+
+    private string DisplayError { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -35,7 +46,8 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // return RedirectToAction(nameof(Index));
+            this.DisplayError = e.Message;
+            Service.DisposeContext();
         }
     }
 }

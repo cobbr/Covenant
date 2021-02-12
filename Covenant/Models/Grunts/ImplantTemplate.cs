@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
@@ -30,15 +28,6 @@ namespace Covenant.Models.Grunts
         Pull
     }
 
-    public class ListenerTypeImplantTemplate
-    {
-        public int ListenerTypeId { get; set; }
-        public ListenerType ListenerType { get; set; }
-
-        public int ImplantTemplateId { get; set; }
-        public ImplantTemplate ImplantTemplate { get; set; }
-    }
-
     public class ImplantTemplate : ILoggable
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -49,14 +38,10 @@ namespace Covenant.Models.Grunts
         public CommunicationType CommType { get; set; }
         public ImplantDirection ImplantDirection { get; set; }
 
-        private List<ListenerTypeImplantTemplate> ListenerTypeImplantTemplates { get; set; } = new List<ListenerTypeImplantTemplate>();
-        public void SetListenerTypeImplantTemplates(List<ListenerTypeImplantTemplate> templates)
-        {
-            this.ListenerTypeImplantTemplates = templates;
-        }
-        [NotMapped]
-        public List<ListenerType> CompatibleListenerTypes => ListenerTypeImplantTemplates.Select(l => l.ListenerType).ToList();
-
+        public List<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<ReferenceSourceLibrary>();
+        public List<ReferenceAssembly> ReferenceAssemblies { get; set; } = new List<ReferenceAssembly>();
+        public List<EmbeddedResource> EmbeddedResources { get; set; } = new List<EmbeddedResource>();
+        public List<ListenerType> CompatibleListenerTypes { get; set; } = new List<ListenerType>();
         public List<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion>();
 
         public string StagerCode { get; set; } = "";

@@ -15,8 +15,6 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Covenant.Core;
-using NLog;
-using System.Threading.Tasks;
 
 namespace Covenant.Models.Grunts
 {
@@ -40,71 +38,14 @@ namespace Covenant.Models.Grunts
         public bool Compiled { get; set; } = false;
         public GruntTaskingType TaskingType { get; set; } = GruntTaskingType.Assembly;
 
-        private List<GruntTaskReferenceSourceLibrary> GruntTaskReferenceSourceLibraries { get; set; } = new List<GruntTaskReferenceSourceLibrary>();
-        private List<GruntTaskReferenceAssembly> GruntTaskReferenceAssemblies { get; set; } = new List<GruntTaskReferenceAssembly>();
-        private List<GruntTaskEmbeddedResource> GruntTaskEmbeddedResources { get; set; } = new List<GruntTaskEmbeddedResource>();
-        [NotMapped]
-        public List<ReferenceSourceLibrary> ReferenceSourceLibraries => GruntTaskReferenceSourceLibraries.Select(e => e.ReferenceSourceLibrary).ToList();
-        [NotMapped]
-        public List<ReferenceAssembly> ReferenceAssemblies => GruntTaskReferenceAssemblies.Select(e => e.ReferenceAssembly).ToList();
-        [NotMapped]
-        public List<EmbeddedResource> EmbeddedResources => GruntTaskEmbeddedResources.Select(e => e.EmbeddedResource).ToList();
+        public List<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<ReferenceSourceLibrary>();
+        public List<ReferenceAssembly> ReferenceAssemblies { get; set; } = new List<ReferenceAssembly>();
+        public List<EmbeddedResource> EmbeddedResources { get; set; } = new List<EmbeddedResource>();
 
         public bool UnsafeCompile { get; set; } = false;
         public bool TokenTask { get; set; } = false;
 
         public List<GruntTaskOption> Options { get; set; } = new List<GruntTaskOption>();
-
-        public void Add(ReferenceSourceLibrary library)
-        {
-            GruntTaskReferenceSourceLibraries.Add(new GruntTaskReferenceSourceLibrary
-            {
-                GruntTaskId = this.Id, GruntTask = this,
-                ReferenceSourceLibraryId = library.Id, ReferenceSourceLibrary = library
-            });
-        }
-
-        public void Remove(ReferenceSourceLibrary library)
-        {
-            GruntTaskReferenceSourceLibraries.Remove(
-                GruntTaskReferenceSourceLibraries
-                    .FirstOrDefault(GTRSL => GTRSL.GruntTaskId == this.Id && GTRSL.ReferenceSourceLibraryId == library.Id)
-            );
-        }
-
-        public void Add(ReferenceAssembly assembly)
-        {
-            GruntTaskReferenceAssemblies.Add(new GruntTaskReferenceAssembly
-            {
-                GruntTaskId = this.Id, GruntTask = this,
-                ReferenceAssemblyId = assembly.Id, ReferenceAssembly = assembly
-            });
-        }
-
-        public void Remove(ReferenceAssembly assembly)
-        {
-            GruntTaskReferenceAssemblies.Remove(
-                GruntTaskReferenceAssemblies
-                    .FirstOrDefault(GTRA => GTRA.GruntTaskId == this.Id && GTRA.ReferenceAssemblyId == assembly.Id)
-            );
-        }
-
-        public void Add(EmbeddedResource resource)
-        {
-            GruntTaskEmbeddedResources.Add(new GruntTaskEmbeddedResource
-            {
-                GruntTaskId = this.Id, GruntTask = this,
-                EmbeddedResourceId = resource.Id, EmbeddedResource = resource
-            });
-        }
-
-        public void Remove(EmbeddedResource resource)
-        {
-            GruntTaskEmbeddedResources.Remove(
-                GruntTaskEmbeddedResources
-                    .FirstOrDefault(GTER => GTER.GruntTaskId == this.Id && GTER.EmbeddedResourceId == resource.Id)
-            );
-        }
 
         public string GetVerboseCommand(bool includeNotForDisplay = false)
         {
@@ -157,9 +98,10 @@ namespace Covenant.Models.Grunts
             this.TokenTask = task.TokenTask;
             this.Options = task.Options.Select(O => new GruntTaskOption().FromSerializedGruntTaskOption(O)).ToList();
             this.Options.ForEach(O => O.GruntTaskId = this.Id);
-            task.ReferenceSourceLibraries.ForEach(RSL => this.Add(new ReferenceSourceLibrary().FromSerializedReferenceSourceLibrary(RSL)));
-            task.ReferenceAssemblies.ForEach(RA => this.Add(new ReferenceAssembly().FromSerializedReferenceAssembly(RA)));
-            task.EmbeddedResources.ForEach(ER => this.Add(new EmbeddedResource().FromSerializedEmbeddedResource(ER)));
+            this.ReferenceSourceLibraries = task.ReferenceSourceLibraries.Select(RSL => new ReferenceSourceLibrary().FromSerializedReferenceSourceLibrary(RSL)).ToList();
+            this.ReferenceAssemblies = task.ReferenceAssemblies.Select(RA => new ReferenceAssembly().FromSerializedReferenceAssembly(RA)).ToList();
+            this.ReferenceAssemblies = task.ReferenceAssemblies.Select(RA => new ReferenceAssembly().FromSerializedReferenceAssembly(RA)).ToList();
+            this.EmbeddedResources = task.EmbeddedResources.Select(ER => new EmbeddedResource().FromSerializedEmbeddedResource(ER)).ToList();
             return this;
         }
 
