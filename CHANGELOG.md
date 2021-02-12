@@ -72,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Covenant fails on 'bin' in working directory path
 - Fixed InternalListener HubConnection reconnect causes uninitialized Tasks bug
 - Fixed InternalListener issue causing uninitialized Tasks when starting/stopping after creation without reboot
+- Fixed unhandled exception creating Listeners with bad ConnectAddresses
 
 ## [v0.6] - 2020-08-04
 ### Added

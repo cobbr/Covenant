@@ -90,10 +90,14 @@ namespace Covenant.Models.Listeners
                 List<string> addresses = new List<string>();
                 foreach (string url in value)
                 {
-                    Uri uri = new Uri(url);
-                    this.UseSSL = uri.Scheme == "https";
-                    addresses.Add(uri.Host);
-                    this.ConnectPort = uri.Port;
+                    try
+                    {
+                        Uri uri = new Uri(url);
+                        this.UseSSL = uri.Scheme == "https";
+                        addresses.Add(uri.Host);
+                        this.ConnectPort = uri.Port;
+                    }
+                    catch { }
                 }
                 this.ConnectAddresses = addresses;
             }
