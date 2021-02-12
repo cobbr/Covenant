@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Listener WebLog
 - Added ability to edit and delete Indicators, Credentials
 - Added ability to delete Screenshots and Downloads
+- Added ReferenceSourceLibrary, ReferenceAssembly, and EmbeddedResource options for ImplantTemplates
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -39,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling on Listener and Launcher creation/edit pages, display errors in UI
 - Added compilation checks for Profile MessageTransforms
 - Updated to restrict MSBuildLauncher from using Net35 DotNetVersion
+- Updated to use efcore many-to-many relationships
+- Updated Task Import to use new InputFile component
+- Updated GruntTaskTable format, ImplantTemplateTable format
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
