@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Task Import to use new InputFile component
 - Updated GruntTaskTable format, ImplantTemplateTable format
 - Changed all BlazorInputFile components to InputFile components
+- Updated all nuget dependencies
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
