@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed ServiceUser for starting/stopping listeners
 - Updated Dockerfile for .NET 5
 - Updated DownloadEvent and ScreenshotEvent models and downloads, better handle UI large file downloads
+- Updated feather icons, switch Tasks and Credentials icons
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
