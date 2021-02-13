@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed all BlazorInputFile components to InputFile components
 - Updated all nuget dependencies
 - Removed ServiceUser for starting/stopping listeners
+- Updated Dockerfile for .NET 5
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
