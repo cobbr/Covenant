@@ -797,23 +797,25 @@ namespace GruntExecutor
         {
             byte[] size = new byte[4];
             int totalReadBytes = 0;
+            int readBytes = 0;
             do
             {
-                totalReadBytes += this.Pipe.Read(size, 0, size.Length);
-            } while (totalReadBytes < size.Length);
+                readBytes = this.Pipe.Read(size, 0, Math.Min(size.Length - totalReadBytes, size.Length));
+                totalReadBytes += readBytes;
+            } while (totalReadBytes < size.Length && readBytes != 0);
             int len = (size[0] << 24) + (size[1] << 16) + (size[2] << 8) + size[3];
 
             byte[] buffer = new byte[1024];
             using (var ms = new MemoryStream())
             {
                 totalReadBytes = 0;
-                int readBytes = 0;
+                readBytes = 0;
                 do
                 {
                     readBytes = this.Pipe.Read(buffer, 0, Math.Min(len - totalReadBytes, buffer.Length));
                     ms.Write(buffer, 0, readBytes);
                     totalReadBytes += readBytes;
-                } while (totalReadBytes < len);
+                } while (totalReadBytes < len && readBytes != 0);
                 return Utilities.Decompress(ms.ToArray());
             }
         }

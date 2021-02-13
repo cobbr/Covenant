@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed unhandled exception creating Listeners with bad ConnectAddresses
 - Fixed HostedFile remains on disk after model deletion
 - Fixed WMICommand and WMIGrunt tasks from double execution
+- Fixed implants reading too many bytes from PipeStream
 
 ## [v0.6] - 2020-08-04
 ### Added
