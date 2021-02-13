@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -379,13 +378,14 @@ namespace Covenant.Core
     public class CovenantService : ICovenantService
     {
         protected readonly DbContextOptions<CovenantContext> _options;
-        protected CovenantContext _context;
         protected readonly INotificationService _notifier;
         protected readonly UserManager<CovenantUser> _userManager;
         protected readonly SignInManager<CovenantUser> _signInManager;
         protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly IConfiguration _configuration;
         protected readonly ConcurrentDictionary<int, CancellationTokenSource> _cancellationTokens;
+
+        protected CovenantContext _context;
 
 
         public CovenantService(DbContextOptions<CovenantContext> options, CovenantContext context, INotificationService notifier,
@@ -1327,6 +1327,7 @@ namespace Covenant.Core
                 });
             }
             grunt.ImplantTemplate = await this.GetImplantTemplate(grunt.ImplantTemplateId);
+            grunt.Listener = await this.GetListener(grunt.ListenerId);
             await _context.Grunts.AddAsync(grunt);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGrunt(this, grunt);

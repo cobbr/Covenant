@@ -1,8 +1,6 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 
-@using System.IO
-@using System.Linq
 @using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Grunts
@@ -77,11 +75,16 @@
     [Parameter]
     public bool IsMinimized { get; set; } = true;
 
+    private object _serviceLock = new object();
+
     protected override async Task OnInitializedAsync()
     {
-        this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
-        this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
-        Service.DisposeContext();
+        lock (_serviceLock)
+        {
+            this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
+            this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
+            Service.DisposeContext();
+        }
         this.INotificationService.OnEditGruntCommand += OnEditGruntCommand;
         this.INotificationService.OnEditCommandOutput += OnEditCommandOutput;
         this.INotificationService.OnEditGruntTasking += OnEditGruntTasking;
@@ -98,10 +101,13 @@
     {
         if (this.GruntCommand.CommandOutput != null && this.GruntCommand.CommandOutput.Id == commandOutput.Id)
         {
-            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
-            Service.DisposeContext();
-            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
-            Service.DisposeContext();
+            lock (_serviceLock)
+            {
+                this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
+                Service.DisposeContext();
+                this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
+                Service.DisposeContext();
+            }
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
@@ -110,10 +116,13 @@
     {
         if (this.GruntCommandId == gruntCommand.Id)
         {
-            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
-            Service.DisposeContext();
-            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
-            Service.DisposeContext();
+            lock (_serviceLock)
+            {
+                this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
+                Service.DisposeContext();
+                this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
+                Service.DisposeContext();
+            }
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
@@ -122,9 +131,13 @@
     {
         if (this.GruntCommand.GruntTasking != null && this.GruntCommand.GruntTasking.Id == gruntTasking.Id)
         {
-            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
-            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
-            Service.DisposeContext();
+            lock (_serviceLock)
+            {
+                this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
+                Service.DisposeContext();
+                this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
+                Service.DisposeContext();
+            }
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
@@ -133,8 +146,11 @@
     {
         if (this.IsMinimized && this.GruntCommand.CommandOutput == null)
         {
-            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommand.Id);
-            Service.DisposeContext();
+            lock (_serviceLock)
+            {
+                this.GruntCommand = Service.GetGruntCommand(this.GruntCommand.Id).WaitResult();
+                Service.DisposeContext();
+            }
         }
         this.IsMinimized = !IsMinimized;
     }
@@ -143,7 +159,12 @@
     {
         try
         {
-            return await Service.GetDownloadEventByGruntCommand(command.Id);
+            lock (_serviceLock)
+            {
+                DownloadEvent ev = Service.GetDownloadEventByGruntCommand(command.Id).WaitResult();
+                Service.DisposeContext();
+                return ev;
+            }
         }
         catch
         {

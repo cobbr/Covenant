@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed WMICommand and WMIGrunt tasks from double execution
 - Fixed implants reading too many bytes from PipeStream
 - Fixed create BridgeListener via BridgeListenerForm
+- Fixed GruntInteractTerminal,GruntCommandCard service/dbcontext conflict issues
 
 ## [v0.6] - 2020-08-04
 ### Added
