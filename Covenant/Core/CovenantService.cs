@@ -4148,6 +4148,7 @@ public static class Task
 
         public async Task<BridgeListener> CreateBridgeListener(BridgeListener listener)
         {
+            listener.ListenerType = await this.GetListenerType(listener.ListenerTypeId);
             listener.Profile = await this.GetBridgeProfile(listener.ProfileId);
             // Append capital letter to appease Password complexity requirements, get rid of warning output
             string password = Utilities.CreateSecureGuid().ToString() + "A";

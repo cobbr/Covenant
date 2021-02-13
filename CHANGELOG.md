@@ -78,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed HostedFile remains on disk after model deletion
 - Fixed WMICommand and WMIGrunt tasks from double execution
 - Fixed implants reading too many bytes from PipeStream
+- Fixed create BridgeListener via BridgeListenerForm
 
 ## [v0.6] - 2020-08-04
 ### Added
