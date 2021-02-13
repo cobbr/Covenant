@@ -382,7 +382,7 @@ namespace Covenant.Models.Listeners
                 RequestPath = "",
                 ContentTypeProvider = new FileExtensionContentTypeProvider(Common.ContentTypeMappings),
                 ServeUnknownFileTypes = true,
-                DefaultContentType = "text/plain",
+                DefaultContentType = Common.DefaultContentTypeMapping,
                 OnPrepareResponse = ctx => this._logContext(ctx.Context)
             });
         }

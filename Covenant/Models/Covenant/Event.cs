@@ -4,6 +4,8 @@
 
 using System;
 using System.IO;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 using Covenant.Core;
 
@@ -27,7 +29,10 @@ namespace Covenant.Models.Covenant
 
     public class Event : ILoggable
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        [Required]
+        public string Name { get; set; } = Utilities.CreateShortGuid();
         public DateTime Time { get; set; } = DateTime.UtcNow;
         public string MessageHeader { get; set; }
         public string MessageBody { get; set; }
@@ -47,40 +52,50 @@ namespace Covenant.Models.Covenant
             Complete
         }
 
-        public string FileName { get; set; } = "";
-        public string FileContents { get; set; } = "";
+        public int GruntCommandId { get; set; }
         public DownloadProgress Progress { get; set; } = DownloadProgress.Portion;
+        public string FileName { get; set; } = "";
+        public long FileLength
+        {
+            get
+            {
+                return File.Exists(FileLocation) ? new FileInfo(this.FileLocation).Length : 0;
+            }
+        }
+        private string FileLocation
+        {
+            get
+            {
+                return Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.Name));
+            }
+        }
 
         public DownloadEvent()
         {
             this.Type = EventType.Download;
         }
 
-        public bool WriteToDisk()
+        public bool WriteDownload(byte[] contents)
         {
             try
             {
-                byte[] contents = Convert.FromBase64String(this.FileContents);
-                if (this.Progress == DownloadProgress.Complete)
-                {
-                    File.WriteAllBytes(
-                        Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.FileName)),
-                        contents
-                    );
-                }
-                else
-                {
-                    using (var stream = new FileStream(Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.FileName)), FileMode.Append))
-                    {
-                        stream.Write(contents, 0, contents.Length);
-                    }
-                }
+                using FileStream stream = new FileStream(this.FileLocation, FileMode.Append);
+                stream.Write(contents, 0, contents.Length);
                 return true;
             }
-            catch (FormatException)
+            catch
             {
                 return false;
             }
+        }
+
+        public FileStream ReadDownload()
+        {
+            if (File.Exists(this.FileLocation))
+            {
+                return new FileStream(this.FileLocation, FileMode.Open);
+            }
+            return null;
         }
     }
 
@@ -90,5 +105,15 @@ namespace Covenant.Models.Covenant
         {
             this.Type = EventType.Screenshot;
         }
+    }
+
+    public class DownloadEventContent : DownloadEvent
+    {
+        public byte[] FileContents { get; set; }
+    }
+
+    public class ScreenshotEventContent : ScreenshotEvent
+    {
+        public byte[] FileContents { get; set; }
     }
 }

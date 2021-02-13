@@ -95,7 +95,7 @@ namespace Covenant.Core
             return _connection.InvokeAsync<IEnumerable<CapturedCredential>>("CreateCredentials", credentials);
         }
 
-        public Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent)
+        public Task<DownloadEvent> CreateDownloadEvent(DownloadEventContent downloadEvent)
         {
             return _connection.InvokeAsync<DownloadEvent>("CreateDownloadEvent", downloadEvent);
         }
@@ -255,7 +255,7 @@ namespace Covenant.Core
             return _connection.InvokeAsync<ReferenceSourceLibrary>("CreateReferenceSourceLibrary", library);
         }
 
-        public Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent)
+        public Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent)
         {
             return _connection.InvokeAsync<ScreenshotEvent>("CreateScreenshotEvent", screenshotEvent);
         }
@@ -645,14 +645,14 @@ namespace Covenant.Core
             return _connection.InvokeAsync<IEnumerable<ReferenceAssembly>>("GetDefaultNet40ReferenceAssemblies");
         }
 
-        public Task<string> GetDownloadContent(int eventId)
-        {
-            return _connection.InvokeAsync<string>("GetDownloadContent", eventId);
-        }
-
         public Task<DownloadEvent> GetDownloadEvent(int eventId)
         {
             return _connection.InvokeAsync<DownloadEvent>("GetDownloadEvent", eventId);
+        }
+
+        public Task<DownloadEvent> GetDownloadEventByGruntCommand(int id)
+        {
+            return _connection.InvokeAsync<DownloadEvent>("GetDownloadEventByGruntCommand", id);
         }
 
         public Task<IEnumerable<DownloadEvent>> GetDownloadEvents()
@@ -1095,14 +1095,14 @@ namespace Covenant.Core
             return _connection.InvokeAsync<IEnumerable<IdentityRole>>("GetRoles");
         }
 
-        public Task<string> GetScreenshotContent(int eventId)
-        {
-            return _connection.InvokeAsync<string>("GetScreenshotContent", eventId);
-        }
-
         public Task<ScreenshotEvent> GetScreenshotEvent(int eventId)
         {
             return _connection.InvokeAsync<ScreenshotEvent>("GetScreenshotEvent", eventId);
+        }
+
+        public Task<ScreenshotEvent> GetScreenshotEventByGruntCommand(int id)
+        {
+            return _connection.InvokeAsync<ScreenshotEvent>("GetScreenshotEventByGruntCommand", id);
         }
 
         public Task<IEnumerable<ScreenshotEvent>> GetScreenshotEvents()

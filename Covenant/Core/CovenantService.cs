@@ -80,12 +80,12 @@ namespace Covenant.Core
         Task<IEnumerable<Event>> CreateEvents(params Event[] events);
         Task<IEnumerable<DownloadEvent>> GetDownloadEvents();
         Task<DownloadEvent> GetDownloadEvent(int eventId);
-        Task<string> GetDownloadContent(int eventId);
-        Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent);
+        Task<DownloadEvent> GetDownloadEventByGruntCommand(int id);
+        Task<DownloadEvent> CreateDownloadEvent(DownloadEventContent downloadEvent);
         Task<IEnumerable<ScreenshotEvent>> GetScreenshotEvents();
         Task<ScreenshotEvent> GetScreenshotEvent(int eventId);
-        Task<string> GetScreenshotContent(int eventId);
-        Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent);
+        Task<ScreenshotEvent> GetScreenshotEventByGruntCommand(int id);
+        Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent);
         Task DeleteEvent(int id);
     }
 
@@ -888,28 +888,39 @@ namespace Covenant.Core
             return anEvent;
         }
 
-        public async Task<string> GetDownloadContent(int eventId)
+        public async Task<DownloadEvent> GetDownloadEventByGruntCommand(int id)
         {
-            DownloadEvent theEvent = await this.GetDownloadEvent(eventId);
-            string filename = Path.Combine(Common.CovenantDownloadDirectory, theEvent.FileName);
-            if (!File.Exists(filename))
+            DownloadEvent anEvent = await _context.Events
+                .Where(E => E.Type == EventType.Download)
+                .Select(E => (DownloadEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (anEvent == null)
             {
-                throw new ControllerBadRequestException($"BadRequest - Path does not exist on disk: {filename}");
+                throw new ControllerNotFoundException($"NotFound - DownloadEvent with GruntCommandId: {id}");
             }
-            try
-            {
-                return Convert.ToBase64String(File.ReadAllBytes(filename));
-            }
-            catch (Exception e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Unable to read download content from: {filename}{Environment.NewLine}{e.Message}");
-            }
+            return anEvent;
         }
 
-        public async Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent)
+        private async Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent, byte[] contents)
         {
-            downloadEvent.Time = DateTime.UtcNow;
-            downloadEvent.WriteToDisk();
+            return await this.CreateDownloadEvent(new DownloadEventContent
+            {
+                Name = downloadEvent.Name,
+                GruntCommandId = downloadEvent.GruntCommandId,
+                Time = downloadEvent.Time,
+                MessageHeader = downloadEvent.MessageHeader,
+                MessageBody = downloadEvent.MessageBody,
+                Level = downloadEvent.Level,
+                Context = downloadEvent.Context,
+                FileName = downloadEvent.FileName,
+                Progress = downloadEvent.Progress,
+                FileContents = contents
+            });
+        }
+
+        public async Task<DownloadEvent> CreateDownloadEvent(DownloadEventContent downloadEvent)
+        {
+            downloadEvent.WriteDownload(downloadEvent.FileContents);
             await _context.Events.AddAsync(downloadEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, downloadEvent);
@@ -931,28 +942,39 @@ namespace Covenant.Core
             return anEvent;
         }
 
-        public async Task<string> GetScreenshotContent(int eventId)
+        public async Task<ScreenshotEvent> GetScreenshotEventByGruntCommand(int id)
         {
-            ScreenshotEvent theEvent = await this.GetScreenshotEvent(eventId);
-            string filename = System.IO.Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(theEvent.FileName));
-            if (!System.IO.File.Exists(filename))
+            ScreenshotEvent anEvent = await _context.Events
+                .Where(E => E.Type == EventType.Screenshot)
+                .Select(E => (ScreenshotEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (anEvent == null)
             {
-                throw new ControllerBadRequestException($"BadRequest - Path does not exist on disk: {filename}");
+                throw new ControllerNotFoundException($"NotFound - ScreenshotEvent with GruntCommandId: {id}");
             }
-            try
-            {
-                return Convert.ToBase64String(System.IO.File.ReadAllBytes(filename));
-            }
-            catch (Exception e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Unable to read download content from: {filename}{Environment.NewLine}{e.Message}");
-            }
+            return anEvent;
         }
 
-        public async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent)
+        private async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent, byte[] contents)
         {
-            screenshotEvent.Time = DateTime.UtcNow;
-            screenshotEvent.WriteToDisk();
+            return await this.CreateScreenshotEvent(new ScreenshotEventContent
+            {
+                Name = screenshotEvent.Name,
+                GruntCommandId = screenshotEvent.GruntCommandId,
+                Time = screenshotEvent.Time,
+                MessageHeader = screenshotEvent.MessageHeader,
+                MessageBody = screenshotEvent.MessageBody,
+                Level = screenshotEvent.Level,
+                Context = screenshotEvent.Context,
+                FileName = screenshotEvent.FileName,
+                Progress = screenshotEvent.Progress,
+                FileContents = contents
+            });
+        }
+
+        public async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent)
+        {
+            screenshotEvent.WriteDownload(screenshotEvent.FileContents);
             await _context.Events.AddAsync(screenshotEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, screenshotEvent);
@@ -3186,38 +3208,32 @@ public static class Task
                 if (DownloadTask != null && tasking.GruntTaskId == DownloadTask.Id && newStatus == GruntTaskingStatus.Completed)
                 {
                     string FileName = tasking.Parameters[0];
-                    DownloadEvent downloadEvent = new DownloadEvent
+                    DownloadEvent downloadEvent = await this.CreateDownloadEvent(new DownloadEvent
                     {
+                        GruntCommandId = updatingGruntTasking.GruntCommandId,
                         Time = updatingGruntTasking.CompletionTime,
                         MessageHeader = "Download Completed",
                         MessageBody = "Downloaded: " + FileName,
                         Level = EventLevel.Info,
                         Context = grunt.Name,
                         FileName = FileName,
-                        FileContents = updatingGruntTasking.GruntCommand.CommandOutput.Output,
                         Progress = DownloadEvent.DownloadProgress.Complete
-                    };
-                    downloadEvent.WriteToDisk();
-                    await _context.Events.AddAsync(downloadEvent);
-                    await _notifier.NotifyCreateEvent(this, downloadEvent);
+                    }, Convert.FromBase64String(updatingGruntTasking.GruntCommand.CommandOutput.Output));
                 }
                 else if (ScreenshotTask != null && tasking.GruntTaskId == ScreenshotTask.Id && newStatus == GruntTaskingStatus.Completed)
                 {
                     string FileName = tasking.Name + ".png";
-                    ScreenshotEvent screenshotEvent = new ScreenshotEvent
+                    ScreenshotEvent screenshotEvent = await this.CreateScreenshotEvent(new ScreenshotEvent
                     {
+                        GruntCommandId = updatingGruntTasking.GruntCommandId,
                         Time = updatingGruntTasking.CompletionTime,
                         MessageHeader = "Download ScreenShot Completed",
                         MessageBody = "Downloaded screenshot: " + FileName,
                         Level = EventLevel.Info,
                         Context = grunt.Name,
                         FileName = FileName,
-                        FileContents = updatingGruntTasking.GruntCommand.CommandOutput.Output,
                         Progress = DownloadEvent.DownloadProgress.Complete
-                    };
-                    screenshotEvent.WriteToDisk();
-                    await _context.Events.AddAsync(screenshotEvent);
-                    await _notifier.NotifyCreateEvent(this, screenshotEvent);
+                    }, Convert.FromBase64String(updatingGruntTasking.GruntCommand.CommandOutput.Output));
                 }
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;

@@ -1,7 +1,6 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
 @using System
-@using System.IO
 @using Microsoft.JSInterop
 @using Covenant.Core
 @using Covenant.Models.Covenant
@@ -11,10 +10,13 @@
 <CovenantTable TItem="DownloadEvent" Items="DownloadEvents.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
+        <SortableTableHeader TItem="DownloadEvent" TItem2="string" GetSortableProperty="(download) => download.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="DownloadEvent" TItem2="string" GetSortableProperty="(download) => download.FileName">
             <HeaderContent>FileName</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="DownloadEvent" TItem2="int" GetSortableProperty="(download) => Convert.FromBase64String(download.FileContents).Length">
+        <SortableTableHeader TItem="DownloadEvent" TItem2="long" GetSortableProperty="(download) => download.FileLength">
             <HeaderContent>Size</HeaderContent>
         </SortableTableHeader>
         <SortableTableHeader TItem="DownloadEvent" TItem2="DateTime" GetSortableProperty="(download) => download.Time">
@@ -24,8 +26,9 @@
     </TableHeader>
     <TableRow Context="download">
         <tr>
+            <td>@download.Name</td>
             <td>@download.FileName</td>
-            <td>@Convert.FromBase64String(download.FileContents).Length</td>
+            <td>@download.FileLength</td>
             <td>@download.Time</td>
             <td style="text-align: right;">
                 <div class="dropdown">
@@ -33,7 +36,7 @@
                         Action
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownActionDownload">
-                        <a class="dropdown-item" type="button" @onclick="(e => OnDownload(download))">
+                        <a class="dropdown-item" type="button" download href="/api/events/download/@download.Id/download">
                             <span class="fe fe-download"></span>
                             Download
                         </a>
@@ -68,22 +71,9 @@
     private bool IsRowDisplayed(DownloadEvent download, string SearchTerm)
     {
         return SearchTerm == string.Empty ||
+            download.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             download.FileName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            Convert.FromBase64String(download.FileContents).Length.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
-    }
-
-    private async Task OnDownload(DownloadEvent ev)
-    {
-        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(ev.FileName), out string contentType))
-        {
-            contentType = Common.DefaultContentTypeMapping;
-        }
-        await IJSRuntime.InvokeAsync<string>(
-            "DownloadFile",
-            Path.GetFileName(ev.FileName),
-            contentType,
-            ev.FileContents
-        );
+            download.FileLength.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
     }
 
     private async Task OnDeleteEvent(Event e)
