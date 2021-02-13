@@ -176,7 +176,7 @@ namespace GruntStager
                 int readBytes = 0;
                 do
                 {
-                    readBytes = pipe.Read(buffer, 0, buffer.Length);
+                    readBytes = pipe.Read(buffer, 0, Math.Min(len - totalReadBytes, buffer.Length));
                     ms.Write(buffer, 0, readBytes);
                     totalReadBytes += readBytes;
                 } while (totalReadBytes < len);
