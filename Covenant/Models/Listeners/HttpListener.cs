@@ -246,9 +246,12 @@ namespace Covenant.Models.Listeners
 
         public void UnhostFile(HostedFile hostFileRequest)
         {
+            hostFileRequest.Path = hostFileRequest.Path.TrimStart('/').TrimStart('\\');
             string FullPath = Path.GetFullPath(Path.Combine(this.ListenerStaticHostDirectory, hostFileRequest.Path));
             if (!FullPath.StartsWith(this.ListenerStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
-            FileInfo file = new FileInfo(FullPath);
+            FileInfo file1 = new FileInfo(FullPath);
+            string filename = Utilities.GetSanitizedFilename(file1.Name);
+            FileInfo file = new FileInfo(file1.DirectoryName + Path.DirectorySeparatorChar + filename);
             if (file.Exists)
             {
                 file.Delete();

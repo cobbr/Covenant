@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed InternalListener HubConnection reconnect causes uninitialized Tasks bug
 - Fixed InternalListener issue causing uninitialized Tasks when starting/stopping after creation without reboot
 - Fixed unhandled exception creating Listeners with bad ConnectAddresses
+- Fixed HostedFile remains on disk after model deletion
 
 ## [v0.6] - 2020-08-04
 ### Added

@@ -4349,8 +4349,11 @@ public static class Task
 
         public async Task<IEnumerable<HostedFile>> CreateHostedFiles(params HostedFile[] files)
         {
-            await _context.HostedFiles.AddRangeAsync(files);
-            await _context.SaveChangesAsync();
+            foreach (HostedFile file in files)
+            {
+                await this.CreateHostedFile(file);
+                await _context.SaveChangesAsync();
+            }
             return files;
         }
 
@@ -4379,6 +4382,7 @@ public static class Task
         {
             HttpListener listener = await this.GetHttpListener(listenerId);
             HostedFile file = await this.GetHostedFileForListener(listenerId, hostedFileId);
+            listener.UnhostFile(file);
             _context.HostedFiles.Remove(file);
             await _context.SaveChangesAsync();
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, file);
