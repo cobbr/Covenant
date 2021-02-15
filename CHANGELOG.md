@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed create BridgeListener via BridgeListenerForm
 - Fixed GruntInteractTerminal,GruntCommandCard service/dbcontext conflict issues
 - Fixed decouple GruntBridge template from TCPC2Bridge
+- Fixed GruntCommandCard async warning messages
 
 ## [v0.6] - 2020-08-04
 ### Added
