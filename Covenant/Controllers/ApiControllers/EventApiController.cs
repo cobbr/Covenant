@@ -214,7 +214,7 @@ namespace Covenant.Controllers
         // <summary>
         // Get a ScreenshotEvent
         // </summary>
-        [HttpGet("download/{id}", Name = "GetScreenshotEvent")]
+        [HttpGet("screenshot/{id}", Name = "GetScreenshotEvent")]
         public async Task<ActionResult<ScreenshotEvent>> GetScreenshotEvent(int id)
         {
             try
