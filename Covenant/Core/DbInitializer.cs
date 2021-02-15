@@ -373,12 +373,8 @@ namespace Covenant.Core
                 foreach (string file in files)
                 {
                     string yaml = File.ReadAllText(file);
-                    List<SerializedGruntTask> serialized = deserializer.Deserialize<List<SerializedGruntTask>>(yaml);
-                    List<GruntTask> tasks = serialized.Select(S => new GruntTask().FromSerializedGruntTask(S)).ToList();
-                    foreach (GruntTask task in tasks)
-                    {
-                        await service.CreateGruntTask(task);
-                    }
+                    List<GruntTask> tasks = YamlUtilities.FromYaml<GruntTask>(yaml).ToList();
+                    await service.CreateGruntTasks(tasks.ToArray());
                 }
             }
         }

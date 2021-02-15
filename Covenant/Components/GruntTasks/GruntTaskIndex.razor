@@ -9,8 +9,6 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
 
-@using YamlDotNet.Serialization
-
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
@@ -156,9 +154,7 @@
             {
                 await e.File.OpenReadStream().CopyToAsync(ms);
                 string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
-                IDeserializer deserializer = new DeserializerBuilder().Build();
-                List<SerializedGruntTask> serialized = deserializer.Deserialize<List<SerializedGruntTask>>(yaml);
-                this.ImportedTasks = serialized.Select(S => new GruntTask().FromSerializedGruntTask(S)).ToList();
+                this.ImportedTasks = YamlUtilities.FromYaml<GruntTask>(yaml).ToList();
             }
         }
         catch (Exception ex)
@@ -196,10 +192,7 @@
     {
         try
         {
-            List<SerializedGruntTask> tasks = this.GruntTasks.Select(GT => GT.ToSerializedGruntTask()).ToList();
-            ISerializer serializer = new SerializerBuilder().Build();
-            string yaml = serializer.Serialize(tasks);
-            await IJSRuntime.InvokeAsync<string>("DownloadFile", "GruntTasks.yaml", "application/x-yaml", Convert.ToBase64String(Common.CovenantEncoding.GetBytes(yaml)));
+            await IJSRuntime.InvokeAsync<string>("DownloadFile", "GruntTasks.yaml", Common.ContentTypeMappings[".yaml"], Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.GruntTasks.ToYaml())));
         }
         catch (Exception)
         {

@@ -703,6 +703,8 @@ namespace Covenant.Core
                 {".xspf", "application/xspf+xml"},
                 {".xtp", "application/octet-stream"},
                 {".xwd", "image/x-xwindowdump"},
+                {".yml", "application/x-yaml" },
+                {".yaml", "application/x-yaml" },
                 {".z", "application/x-compress"},
                 {".zip", "application/zip"},
                 {"application/fsharp-script", ".fsx"},

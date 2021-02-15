@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using NLog;
 
 using Covenant.Core;
+using YamlDotNet.Serialization;
 
 namespace Covenant.Models
 {
@@ -23,17 +22,17 @@ namespace Covenant.Models
 
     public interface IYamlSerializable<T>
     {
-        public string ToYaml();
-        public T FromYaml(string yaml);
+        public string ToYaml() => new SerializerBuilder().Build().Serialize(this);
+        public static T FromYaml(string yaml) => new DeserializerBuilder().Build().Deserialize<T>(yaml);
     }
 
-    public interface IJsonSerializable<T>
+    public static class YamlUtilities
     {
-        public string ToJson();
-        public T FromJson(string json);
+        public static string ToYaml<T>(this IYamlSerializable<T> myInterface) => myInterface.ToYaml();
+        public static T FromYaml<T>(this IYamlSerializable<T> myInterface, string yaml) => myInterface.FromYaml(yaml);
+        public static string ToYaml<T>(this IEnumerable<IYamlSerializable<T>> myInterface) => new SerializerBuilder().Build().Serialize(myInterface);
+        public static IEnumerable<T> FromYaml<T>(string yaml) => new DeserializerBuilder().Build().Deserialize<IEnumerable<T>>(yaml);
     }
-
-    public interface ISerializable<T> : IYamlSerializable<T>, IJsonSerializable<T> { }
 
     public class ParsedParameter
     {

@@ -18,11 +18,12 @@ using Covenant.Core;
 
 namespace Covenant.Models.Grunts
 {
-    public class GruntTask : ISerializable<GruntTask>, ILoggable
+    public class GruntTask : IYamlSerializable<GruntTask>, ILoggable
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), YamlIgnore]
         public int Id { get; set; }
 
+        [YamlIgnore]
         public int AuthorId { get; set; }
         public GruntTaskAuthor Author { get; set; } = new GruntTaskAuthor();
 
@@ -58,75 +59,6 @@ namespace Covenant.Models.Grunts
                 }
             }
             return command;
-        }
-
-        internal SerializedGruntTask ToSerializedGruntTask()
-        {
-            return new SerializedGruntTask
-            {
-                Name = this.Name,
-                Author = this.Author.ToSerializedGruntTaskAuthor(),
-                Aliases = this.Aliases,
-                Description = this.Description,
-                Help = this.Help,
-                Language = this.Language,
-                CompatibleDotNetVersions = this.CompatibleDotNetVersions,
-                Code = this.Code,
-                TaskingType = this.TaskingType,
-                UnsafeCompile = this.UnsafeCompile,
-                TokenTask = this.TokenTask,
-                Options = this.Options.OrderBy(O => O.Id).Select(O => O.ToSerializedGruntTaskOption()).ToList(),
-                ReferenceSourceLibraries = this.ReferenceSourceLibraries.Select(RSL => RSL.ToSerializedReferenceSourceLibrary()).ToList(),
-                ReferenceAssemblies = this.ReferenceAssemblies.Select(RA => RA.ToSerializedReferenceAssembly()).ToList(),
-                EmbeddedResources = this.EmbeddedResources.Select(ER => ER.ToSerializedEmbeddedResource()).ToList()
-            };
-        }
-
-        internal GruntTask FromSerializedGruntTask(SerializedGruntTask task)
-        {
-            this.Name = task.Name;
-            this.Author = new GruntTaskAuthor().FromSerializedGruntTaskAuthor(task.Author);
-            this.Aliases = task.Aliases;
-            this.Description = task.Description;
-            this.Help = task.Help;
-            this.Language = task.Language;
-            this.CompatibleDotNetVersions = task.CompatibleDotNetVersions;
-            this.Code = task.Code;
-            this.Compiled = false;
-            this.TaskingType = task.TaskingType;
-            this.UnsafeCompile = task.UnsafeCompile;
-            this.TokenTask = task.TokenTask;
-            this.Options = task.Options.Select(O => new GruntTaskOption().FromSerializedGruntTaskOption(O)).ToList();
-            this.Options.ForEach(O => O.GruntTaskId = this.Id);
-            this.ReferenceSourceLibraries = task.ReferenceSourceLibraries.Select(RSL => new ReferenceSourceLibrary().FromSerializedReferenceSourceLibrary(RSL)).ToList();
-            this.ReferenceAssemblies = task.ReferenceAssemblies.Select(RA => new ReferenceAssembly().FromSerializedReferenceAssembly(RA)).ToList();
-            this.ReferenceAssemblies = task.ReferenceAssemblies.Select(RA => new ReferenceAssembly().FromSerializedReferenceAssembly(RA)).ToList();
-            this.EmbeddedResources = task.EmbeddedResources.Select(ER => new EmbeddedResource().FromSerializedEmbeddedResource(ER)).ToList();
-            return this;
-        }
-
-        public string ToYaml()
-        {
-            ISerializer serializer = new SerializerBuilder().Build();
-            return serializer.Serialize(new List<SerializedGruntTask> { this.ToSerializedGruntTask() });
-        }
-
-        public GruntTask FromYaml(string yaml)
-        {
-            IDeserializer deserializer = new DeserializerBuilder().Build();
-            SerializedGruntTask task = deserializer.Deserialize<SerializedGruntTask>(yaml);
-            return this.FromSerializedGruntTask(task);
-        }
-
-        public string ToJson()
-        {
-            return JsonConvert.SerializeObject(this.ToSerializedGruntTask());
-        }
-
-        public GruntTask FromJson(string json)
-        {
-            SerializedGruntTask task = JsonConvert.DeserializeObject<SerializedGruntTask>(json);
-            return this.FromSerializedGruntTask(task);
         }
 
         public byte[] GetCompressedILAssembly35()
@@ -345,24 +277,5 @@ namespace Covenant.Models.Grunts
 
         // GruntTask|Action|ID|Name|Author|Aliases|Description|TaskingType|UnsafeCompile
         public string ToLog(LogAction action) => $"GruntTask|{action}|{this.Id}|{this.Name}|{this.Author}|{this.Aliases}|{this.Description}|{this.TaskingType}|{this.UnsafeCompile}";
-    }
-
-    internal class SerializedGruntTask
-    {
-        public string Name { get; set; } = "";
-        public List<string> Aliases { get; set; } = new List<string>();
-        public SerializedGruntTaskAuthor Author { get; set; }
-        public string Description { get; set; } = "";
-        public string Help { get; set; } = "";
-        public ImplantLanguage Language { get; set; }
-        public IList<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion>();
-        public string Code { get; set; } = "";
-        public GruntTaskingType TaskingType { get; set; } = GruntTaskingType.Assembly;
-        public bool UnsafeCompile { get; set; } = false;
-        public bool TokenTask { get; set; } = false;
-        public List<SerializedGruntTaskOption> Options { get; set; } = new List<SerializedGruntTaskOption>();
-        public List<SerializedReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<SerializedReferenceSourceLibrary>();
-        public List<SerializedReferenceAssembly> ReferenceAssemblies { get; set; } = new List<SerializedReferenceAssembly>();
-        public List<SerializedEmbeddedResource> EmbeddedResources { get; set; } = new List<SerializedEmbeddedResource>();
     }
 }
