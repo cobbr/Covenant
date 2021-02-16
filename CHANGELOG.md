@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated feather icons, switch Tasks and Credentials icons
 - Updated to simplify GruntTask YAML serialization
 - Updated to improve GruntTask import/export
+- Updated Listener deletion to use ListenerStatus.Deleted
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

@@ -3936,6 +3936,7 @@ public static class Task
             return await _context.Listeners
                 .Include(L => L.ListenerType)
                 .Include(L => L.Profile)
+                .Where(L => L.Status != ListenerStatus.Deleted)
                 .ToListAsync();
         }
 
@@ -4016,14 +4017,8 @@ public static class Task
             {
                 listener.Stop(_cancellationTokens[listener.Id]);
             }
-            _context.Launchers.Where(L => L.ListenerId == listener.Id).ToList().ForEach(L =>
-            {
-                L.LauncherString = "";
-                L.StagerCode = "";
-                L.Base64ILByteString = "";
-                _context.Launchers.Update(L);
-            });
-            _context.Listeners.Remove(listener);
+            listener.Status = ListenerStatus.Deleted;
+            await this.EditListener(listener);
             await _context.SaveChangesAsync();
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, listener);
             // _notifier.OnDeleteListener(this, listener.Id);
@@ -4034,7 +4029,7 @@ public static class Task
             return await _context.Listeners
                 .Include(L => L.ListenerType)
                 .Include(L => L.Profile)
-                .Where(L => L.ListenerType.Name == "HTTP")
+                .Where(L => L.ListenerType.Name == "HTTP" && L.Status != ListenerStatus.Deleted)
                 .Select(L => (HttpListener)L)
                 .ToListAsync();
         }
@@ -4044,7 +4039,7 @@ public static class Task
             return await _context.Listeners
                 .Include(L => L.ListenerType)
                 .Include(L => L.Profile)
-                .Where(L => L.ListenerType.Name == "Bridge")
+                .Where(L => L.ListenerType.Name == "Bridge" && L.Status != ListenerStatus.Deleted)
                 .Select(L => (BridgeListener)L)
                 .ToListAsync();
         }

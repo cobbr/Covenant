@@ -34,7 +34,8 @@ namespace Covenant.Models.Listeners
     {
         Uninitialized,
         Active,
-        Stopped
+        Stopped,
+        Deleted
     }
 
     public class Listener : ILoggable
