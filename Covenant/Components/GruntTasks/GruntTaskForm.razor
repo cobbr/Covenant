@@ -290,9 +290,6 @@
         <textarea id="Code" name="Code" @ref="CodeMirrorElement" @bind="GruntTask.Code" rows="20" class="form-control code-mirror-csharp"></textarea>
         <div class="text-danger"><ValidationMessage For="() => GruntTask.Code" /></div>
     </div>
-    <button type="submit" class="btn btn-primary">
-        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-    </button>
     @ChildContent
 </EditForm>
 

@@ -10,6 +10,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Covenant.Core;
 using Covenant.Models.Grunts;
@@ -18,14 +19,14 @@ namespace Covenant.Models.Listeners
 {
     public class ListenerType
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), YamlIgnore]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
-        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore, YamlIgnore]
         public List<Listener> Listeners { get; set; }
-        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore, YamlIgnore]
         public List<ImplantTemplate> ImplantTemplates { get; set; }
     }
 

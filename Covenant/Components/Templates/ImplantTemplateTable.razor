@@ -1,5 +1,7 @@
-﻿@using Microsoft.JSInterop
-@using Covenant.Core 
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -25,6 +27,7 @@
         <SortableTableHeader TItem="ImplantTemplate" TItem2="string" GetSortableProperty="(template) => template.Description">
             <HeaderContent>Description</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="template">
         <tr>
@@ -38,6 +41,25 @@
             <td>@GetCompatibleDotNetVersions(template)</td>
             <td>@template.ImplantDirection</td>
             <td>@template.Description</td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
+                            type="button" id="dropdownActionTemplate" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownActionTemplate">
+                        <a class="dropdown-item" type="button" @onclick="(e => OnExportTemplate(template))">
+                            <span class="fe fe-share"></span>
+                            Export
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteTemplate(template))">
+                            <span class="fe fe-x"></span>
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -72,5 +94,35 @@
             GetCompatibleDotNetVersions(template).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             template.ImplantDirection.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             template.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnExportTemplate(ImplantTemplate template)
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                template.Name + ".yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(new List<ImplantTemplate> { template }.ToYaml()))
+            );
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnDeleteTemplate(ImplantTemplate template)
+    {
+        try
+        {
+            await Service.DeleteImplantTemplate(template.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
     }
 }

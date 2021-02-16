@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ability to delete Screenshots and Downloads
 - Added ReferenceSourceLibrary, ReferenceAssembly, and EmbeddedResource options for ImplantTemplates
 - Added global settings page, added functionality to reset Covenant to factory defaults
+- Added ability to import/export ImplantTemplates
+- Added Action bar to ImplantTemplateTable, GruntTaskTable
+- Added use of NotificationService to ImplantTemplateIndex, GruntTaskIndex
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -51,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated DownloadEvent and ScreenshotEvent models and downloads, better handle UI large file downloads
 - Updated feather icons, switch Tasks and Credentials icons
 - Updated to simplify GruntTask YAML serialization
+- Updated to improve GruntTask import/export
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
@@ -85,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed decouple GruntBridge template from TCPC2Bridge
 - Fixed GruntCommandCard async warning messages
 - Fixed EventApiController screenshot download route
+- Fixed ButtonActivatedModal dismiss too early
 
 ## [v0.6] - 2020-08-04
 ### Added

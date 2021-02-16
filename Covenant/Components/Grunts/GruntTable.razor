@@ -202,7 +202,6 @@
         try
         {
             await Service.DeleteGrunt(grunt.Id);
-            grunt.Status = GruntStatus.Active;
             Service.DisposeContext();
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)

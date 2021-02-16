@@ -49,6 +49,6 @@
 
     public async Task DismissModal()
     {
-        await IJSRuntime.InvokeAsync<string>("ModalCommand", GuidId, "hide");
+        await IJSRuntime.InvokeAsync<string>("ModalCommand", "#" + GuidId, "hide");
     }
 }

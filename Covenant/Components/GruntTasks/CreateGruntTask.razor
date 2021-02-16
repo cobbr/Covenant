@@ -12,8 +12,12 @@
     <h1 class="h2">Create GruntTask</h1>
 </div>
 
-<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
-
+<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnCreate">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-plus"></span>
+        Create
+    </button>
+</GruntTaskForm>
 @code {
     [Parameter]
     public GruntTask GruntTask { get; set; }

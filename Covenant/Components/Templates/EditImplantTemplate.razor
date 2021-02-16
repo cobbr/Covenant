@@ -17,6 +17,10 @@
         <span class="fe fe-edit"></span>
         Edit
     </button>
+    <button type="button" @onclick="OnExport" class="btn btn-secondary">
+        <span class="fe fe-share"></span>
+        Export
+    </button>
     @if (!string.IsNullOrEmpty(this.DisplayError))
     {
         <div class="text-danger">@DisplayError</div>
@@ -49,5 +53,15 @@
             this.DisplayError = e.Message;
             Service.DisposeContext();
         }
+    }
+
+    private async Task OnExport()
+    {
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            this.ImplantTemplate.Name + ".yaml",
+            Common.ContentTypeMappings[".yaml"],
+            Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.ImplantTemplate.ToYaml()))
+        );
     }
 }

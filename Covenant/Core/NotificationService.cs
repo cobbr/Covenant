@@ -61,6 +61,9 @@ namespace Covenant.Core
         event EventHandler<ImplantTemplate> OnCreateImplantTemplate;
         event EventHandler<ImplantTemplate> OnEditImplantTemplate;
         event EventHandler<int> OnDeleteImplantTemplate;
+        Task NotifyCreateImplantTemplate(object sender, ImplantTemplate template);
+        Task NotifyEditImplantTemplate(object sender, ImplantTemplate template);
+        Task NotifyDeleteImplantTemplate(object sender, int id);
     }
 
     public interface IGruntNotificationService
@@ -107,6 +110,9 @@ namespace Covenant.Core
         event EventHandler<GruntTask> OnCreateGruntTask;
         event EventHandler<GruntTask> OnEditGruntTask;
         event EventHandler<int> OnDeleteGruntTask;
+        Task NotifyCreateGruntTask(object sender, GruntTask gruntTask);
+        Task NotifyEditGruntTask(object sender, GruntTask gruntTask);
+        Task NotifyDeleteGruntTask(object sender, int id);
     }
 
     public interface IGruntCommandNotificationService
@@ -293,9 +299,17 @@ namespace Covenant.Core
 
         public async Task NotifyCreateEvent(object sender, Event anEvent) { await Task.Run(() => this.OnCreateEvent(sender, anEvent)); }
 
+        public async Task NotifyCreateImplantTemplate(object sender, ImplantTemplate template) { await Task.Run(() => this.OnCreateImplantTemplate(sender, template)); }
+        public async Task NotifyEditImplantTemplate(object sender, ImplantTemplate template) { await Task.Run(() => this.OnEditImplantTemplate(sender, template)); }
+        public async Task NotifyDeleteImplantTemplate(object sender, int id) { await Task.Run(() => this.OnDeleteImplantTemplate(sender, id)); }
+
         public async Task NotifyCreateGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnCreateGrunt(sender, grunt)); }
         public async Task NotifyEditGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnEditGrunt(sender, grunt)); }
         public async Task NotifyDeleteGrunt(object sender, int id) { await Task.Run(() => this.OnDeleteGrunt(sender, id)); }
+
+        public async Task NotifyCreateGruntTask(object sender, GruntTask gruntTask) { await Task.Run(() => this.OnCreateGruntTask(sender, gruntTask)); }
+        public async Task NotifyEditGruntTask(object sender, GruntTask gruntTask) { await Task.Run(() => this.OnEditGruntTask(sender, gruntTask)); }
+        public async Task NotifyDeleteGruntTask(object sender, int id) { await Task.Run(() => this.OnDeleteGruntTask(sender, id)); } 
 
         public async Task NotifyCreateGruntCommand(object sender, GruntCommand command) { await Task.Run(() => this.OnCreateGruntCommand(sender, command)); }
         public async Task NotifyEditGruntCommand(object sender, GruntCommand command) { await Task.Run(() => this.OnEditGruntCommand(sender, command)); }

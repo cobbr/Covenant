@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Covenant.Core;
 using Covenant.Models.Listeners;
@@ -28,9 +29,9 @@ namespace Covenant.Models.Grunts
         Pull
     }
 
-    public class ImplantTemplate : ILoggable
+    public class ImplantTemplate : ILoggable, IYamlSerializable<ImplantTemplate>
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), YamlIgnore]
         public int Id { get; set; }
         public string Name { get; set; } = "";
         public string Description { get; set; }
@@ -47,7 +48,7 @@ namespace Covenant.Models.Grunts
         public string StagerCode { get; set; } = "";
         public string ExecutorCode { get; set; } = "";
 
-        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore, YamlIgnore]
         public List<Grunt> Grunts { get; set; } = new List<Grunt>();
 
         private string StagerLocation

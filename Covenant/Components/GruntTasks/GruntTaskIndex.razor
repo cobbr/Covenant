@@ -6,8 +6,8 @@
 
 @using System.IO
 @using System.Threading
-@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
@@ -62,7 +62,11 @@
                 }
             </ModalBody>
             <ModalFooter>
-                <button type="button" class="btn btn-primary" @onclick="OnImport" data-dismiss="modal">
+                @if (this.ImportInProgress)
+                {
+                    <span class="fe fe-loader spin"></span>
+                }
+                <button type="button" class="btn btn-primary" @onclick="OnImport">
                     <span class="fe fe-download"></span>
                     Import
                 </button>
@@ -98,7 +102,7 @@
 
 @code {
     [Parameter]
-    public IList<GruntTask> GruntTasks { get; set; }
+    public List<GruntTask> GruntTasks { get; set; }
 
     [Parameter]
     public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
@@ -118,6 +122,7 @@
         this.ReferenceAssemblies = this.ReferenceAssemblies ?? (await Service.GetReferenceAssemblies()).ToList();
         this.EmbeddedResources = this.EmbeddedResources ?? (await Service.GetEmbeddedResources()).ToList();
         this.INotificationService.OnCreateGruntTask += OnCreateGruntTask;
+        this.INotificationService.OnDeleteGruntTask += OnDeleteGruntTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -136,6 +141,12 @@
     private void OnCreateGruntTask(object sender, GruntTask task)
     {
         this.GruntTasks.Add(task);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteGruntTask(object sender, int id)
+    {
+        this.GruntTasks.RemoveAt(this.GruntTasks.FindIndex(GT => GT.Id == id));
         this.InvokeAsync(() => this.StateHasChanged());
     }
 
@@ -162,29 +173,38 @@
             this.ErrorMessage = ex.Message;
         }
         this.UploadInProgress = false;
-        this.StateHasChanged();
         UploadSemaphore.Release();
+        this.StateHasChanged();
     }
 
+    private SemaphoreSlim ImportSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool ImportInProgress { get; set; } = false;
     private async Task OnImport()
     {
         if (this.ImportedTasks != null)
         {
             this.ErrorMessage = "";
-            foreach (GruntTask importedTask in this.ImportedTasks)
+            try
             {
-                try
+                await ImportSemaphore.WaitAsync();
+                this.ImportInProgress = true;
+                this.StateHasChanged();
+                using (FileStream fs = new FileStream(Common.CovenantAppSettingsFile, FileMode.Open))
                 {
-                    await Service.CreateGruntTask(importedTask);
+                    string sr = new StreamReader(fs).ReadToEnd();
+                    Console.WriteLine(sr);
                 }
-                catch (Exception e)
-                {
-                    this.ErrorMessage += e.Message + Environment.NewLine;
-                    this.StateHasChanged();
-                }
+                await Service.CreateGruntTasks(this.ImportedTasks.ToArray());
+                this.ImportedTasks = null;
+                await _ImportModal.DismissModal();
             }
-            this.ImportedTasks = null;
-            await _ImportModal.DismissModal();
+            catch (Exception e)
+            {
+                this.ErrorMessage += e.Message + Environment.NewLine;
+            }
+            this.ImportInProgress = false;
+            ImportSemaphore.Release();
+            this.StateHasChanged();
         }
     }
 
@@ -192,7 +212,12 @@
     {
         try
         {
-            await IJSRuntime.InvokeAsync<string>("DownloadFile", "GruntTasks.yaml", Common.ContentTypeMappings[".yaml"], Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.GruntTasks.ToYaml())));
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                "GruntTasks.yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.GruntTasks.ToYaml()))
+            );
         }
         catch (Exception)
         {

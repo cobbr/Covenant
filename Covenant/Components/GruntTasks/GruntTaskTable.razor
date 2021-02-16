@@ -24,6 +24,7 @@
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Author.Name">
             <HeaderContent>Author</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="task">
         <tr>
@@ -36,6 +37,25 @@
             <td>@task.Language</td>
             <td>@GetCompatibleDotNetVersions(task)</td>
             <td>@task.Author.Name</td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
+                            type="button" id="dropdownActionGruntTask" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Action
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownActionGruntTask">
+                        <a class="dropdown-item" type="button" @onclick="(e => OnExportGruntTask(task))">
+                            <span class="fe fe-share"></span>
+                            Export
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteGruntTask(task))">
+                            <span class="fe fe-x"></span>
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -79,5 +99,35 @@
             task.Language.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             GetCompatibleDotNetVersions(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             task.Author.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnExportGruntTask(GruntTask task)
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                task.Name + ".yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(new List<GruntTask> { task }.ToYaml()))
+            );
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnDeleteGruntTask(GruntTask task)
+    {
+        try
+        {
+            await Service.DeleteGruntTask(task.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
     }
 }

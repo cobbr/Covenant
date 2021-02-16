@@ -1044,23 +1044,31 @@ namespace Covenant.Core
         {
             for (int i = 0; i < template.CompatibleListenerTypes.Count; i++)
             {
-                template.CompatibleListenerTypes[i] = await this.GetListenerType(template.CompatibleListenerTypes[i].Id);
+                template.CompatibleListenerTypes[i] = template.CompatibleListenerTypes[i].Id != 0 ?
+                    await this.GetListenerType(template.CompatibleListenerTypes[i].Id) :
+                    await this.GetListenerTypeByName(template.CompatibleListenerTypes[i].Name);
             }
             for (int i = 0; i < template.ReferenceSourceLibraries.Count; i++)
             {
-                template.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibrary(template.ReferenceSourceLibraries[i].Id);
+                template.ReferenceSourceLibraries[i] = template.ReferenceSourceLibraries[i].Id != 0 ?
+                    await this.GetReferenceSourceLibrary(template.ReferenceSourceLibraries[i].Id) :
+                    await this.GetReferenceSourceLibraryByName(template.ReferenceSourceLibraries[i].Name);
             }
             for (int i = 0; i < template.ReferenceAssemblies.Count; i++)
             {
-                template.ReferenceAssemblies[i] = await this.GetReferenceAssembly(template.ReferenceAssemblies[i].Id);
+                template.ReferenceAssemblies[i] = template.ReferenceAssemblies[i].Id != 0 ?
+                    await this.GetReferenceAssembly(template.ReferenceAssemblies[i].Id) :
+                    await this.GetReferenceAssemblyByName(template.ReferenceAssemblies[i].Name, template.ReferenceAssemblies[i].DotNetVersion);
             }
             for (int i = 0; i < template.EmbeddedResources.Count; i++)
             {
-                template.EmbeddedResources[i] = await this.GetEmbeddedResource(template.EmbeddedResources[i].Id);
+                template.EmbeddedResources[i] = template.ReferenceAssemblies[i].Id != 0 ?
+                    await this.GetEmbeddedResource(template.EmbeddedResources[i].Id) :
+                    await this.GetEmbeddedResourceByName(template.EmbeddedResources[i].Name);
             }
             await _context.ImplantTemplates.AddAsync(template);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateImplantTemplate(this, template);
+            await _notifier.NotifyCreateImplantTemplate(this, template);
             await LoggingService.Log(LogAction.Create, LogLevel.Trace, template);
             return await this.GetImplantTemplate(template.Id);
         }
@@ -1108,7 +1116,7 @@ namespace Covenant.Core
             }
             _context.ImplantTemplates.Update(matchingTemplate);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditImplantTemplate(this, matchingTemplate);
+            await _notifier.NotifyEditImplantTemplate(this, matchingTemplate);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingTemplate);
             return await this.GetImplantTemplate(matchingTemplate.Id);
         }
@@ -1118,8 +1126,8 @@ namespace Covenant.Core
             ImplantTemplate matchingTemplate = await this.GetImplantTemplate(id);
             _context.ImplantTemplates.Remove(matchingTemplate);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteImplantTemplate(this, matchingTemplate.Id);
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, matchingTemplate);
-            // _notifier.OnDeleteImplantTemplate(this, matchingTemplate.Id);
         }
         #endregion
 
@@ -2359,7 +2367,9 @@ namespace Covenant.Core
             List<ReferenceSourceLibrary> libraries = task.ReferenceSourceLibraries.ToList();
             task.Options = new List<GruntTaskOption>();
 
-            GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
+            GruntTaskAuthor author = task.AuthorId != 0 ?
+                await this.GetGruntTaskAuthor(task.AuthorId) :
+                await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
             if (author != null)
             {
                 task.AuthorId = author.Id;
@@ -2373,15 +2383,21 @@ namespace Covenant.Core
             }
             for (int i = 0; i < task.EmbeddedResources.Count; i++)
             {
-                task.EmbeddedResources[i] = await this.GetEmbeddedResourceByName(task.EmbeddedResources[i].Name);
+                task.EmbeddedResources[i] = task.EmbeddedResources[i].Id != 0 ?
+                    await this.GetEmbeddedResource(task.EmbeddedResources[i].Id) :
+                    await this.GetEmbeddedResourceByName(task.EmbeddedResources[i].Name);
             }
             for (int i = 0; i < task.ReferenceAssemblies.Count; i++)
             {
-                task.ReferenceAssemblies[i] = await this.GetReferenceAssemblyByName(task.ReferenceAssemblies[i].Name, task.ReferenceAssemblies[i].DotNetVersion);
+                task.ReferenceAssemblies[i] = task.ReferenceAssemblies[i].Id != 0 ?
+                    await this.GetReferenceAssembly(task.ReferenceAssemblies[i].Id) :
+                    await this.GetReferenceAssemblyByName(task.ReferenceAssemblies[i].Name, task.ReferenceAssemblies[i].DotNetVersion);
             }
             for (int i = 0; i < task.ReferenceSourceLibraries.Count; i++)
             {
-                task.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibraryByName(task.ReferenceSourceLibraries[i].Name);
+                task.ReferenceSourceLibraries[i] = task.ReferenceSourceLibraries[i].Id != 0 ?
+                    await this.GetReferenceSourceLibrary(task.ReferenceSourceLibraries[i].Id) :
+                    await this.GetReferenceSourceLibraryByName(task.ReferenceSourceLibraries[i].Name);
             }
 
             await _context.GruntTasks.AddAsync(task);
@@ -2394,7 +2410,7 @@ namespace Covenant.Core
                 await _context.SaveChangesAsync();
             }
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateGruntTask(this, task);
+            await _notifier.NotifyCreateGruntTask(this, task);
             return await this.GetGruntTask(task.Id);
         }
 
@@ -2476,8 +2492,7 @@ namespace Covenant.Core
 
             _context.GruntTasks.Update(updatingTask);
             await _context.SaveChangesAsync();
-
-            // _notifier.OnEditGruntTask(this, updatingTask);
+            await _notifier.NotifyEditGruntTask(this, updatingTask);
             return updatingTask;
         }
 
@@ -2490,7 +2505,7 @@ namespace Covenant.Core
             }
             _context.GruntTasks.Remove(removingTask);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteGruntTask(this, removingTask.Id);
+            await _notifier.NotifyDeleteGruntTask(this, removingTask.Id);
         }
         #endregion
 
