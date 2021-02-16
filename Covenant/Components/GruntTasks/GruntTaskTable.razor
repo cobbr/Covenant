@@ -65,6 +65,9 @@
     public IEnumerable<GruntTask> GruntTasks { get; set; }
 
     [Parameter]
+    public EventCallback<string> OnError { get; set; }
+
+    [Parameter]
     public bool IsSearchable { get; set; } = true;
 
     [Parameter]
@@ -114,7 +117,7 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+            await this.OnError.InvokeAsync(e.Message);
         }
     }
 
@@ -127,7 +130,7 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+            await this.OnError.InvokeAsync(e.Message);
         }
     }
 }

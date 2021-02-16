@@ -39,7 +39,7 @@
 
 <div class="tab-content" id="grunt-tab-content">
     <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
-        <GruntTaskTable GruntTasks="GruntTasks" />
+        <GruntTaskTable GruntTasks="GruntTasks" OnError="OnError" />
         <a href="/grunttask/create" class="btn btn-primary">
             <span class="fe fe-plus"></span>
             Create
@@ -56,9 +56,9 @@
                 {
                     <span class="fe fe-loader spin"></span>
                 }
-                @if (!string.IsNullOrEmpty(this.ErrorMessage))
+                @if (!string.IsNullOrEmpty(this.ImportErrorMessage))
                 {
-                    <span class="text-danger">@ErrorMessage</span>
+                    <span class="text-danger">@ImportErrorMessage</span>
                 }
             </ModalBody>
             <ModalFooter>
@@ -99,6 +99,10 @@
         </a>
     </div>
 </div>
+@if (!string.IsNullOrEmpty(this.ErrorMessage))
+{
+    <span class="text-danger">@ErrorMessage</span>
+}
 
 @code {
     [Parameter]
@@ -151,6 +155,12 @@
     }
 
     private string ErrorMessage { get; set; }
+    private void OnError(string error)
+    {
+        this.ErrorMessage = error;
+    }
+
+    private string ImportErrorMessage { get; set; }
     private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
     private bool UploadInProgress { get; set; } = false;
     private List<GruntTask> ImportedTasks { get; set; } = null;
@@ -170,7 +180,7 @@
         }
         catch (Exception ex)
         {
-            this.ErrorMessage = ex.Message;
+            this.ImportErrorMessage = ex.Message;
         }
         this.UploadInProgress = false;
         UploadSemaphore.Release();
@@ -183,7 +193,7 @@
     {
         if (this.ImportedTasks != null)
         {
-            this.ErrorMessage = "";
+            this.ImportErrorMessage = "";
             try
             {
                 await ImportSemaphore.WaitAsync();
@@ -200,7 +210,7 @@
             }
             catch (Exception e)
             {
-                this.ErrorMessage += e.Message + Environment.NewLine;
+                this.ImportErrorMessage += e.Message + Environment.NewLine;
             }
             this.ImportInProgress = false;
             ImportSemaphore.Release();

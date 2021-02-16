@@ -90,11 +90,15 @@
             <textarea asp-for="GruntCommand.CommandOutput.Output" @bind="GruntTasking.GruntCommand.CommandOutput.Output" rows="20" class="form-control" readonly></textarea>
         }
     </div>
+    @ChildContent
 </form>
 
 @code {
     [Parameter]
     public GruntTasking GruntTasking { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

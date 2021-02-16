@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ability to import/export ImplantTemplates
 - Added Action bar to ImplantTemplateTable, GruntTaskTable
 - Added use of NotificationService to ImplantTemplateIndex, GruntTaskIndex
+- Added ability to delete GruntTask/GruntTaskings in UI
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

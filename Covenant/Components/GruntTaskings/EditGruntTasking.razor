@@ -4,12 +4,22 @@
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
+@inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
     <h1 class="h2">GruntTasking: <span id="tasking-name" class="primary-color">@GruntTasking.Name</span></h1>
 </div>
 
-<GruntTaskingForm GruntTasking="GruntTasking" />
+<GruntTaskingForm GruntTasking="GruntTasking">
+    <button type="button" @onclick="DeleteGruntTasking" class="btn btn-danger">
+        <span class="fe fe-x"></span>
+        Delete
+    </button>
+    @if (!string.IsNullOrEmpty(this.ErrorMessage))
+    {
+        <div class="text-danger">@ErrorMessage</div>
+    }
+</GruntTaskingForm>
 
 @code {
     [Parameter]
@@ -18,8 +28,24 @@
     [Parameter]
     public GruntTasking GruntTasking { get; set; }
 
+    private string ErrorMessage { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         this.GruntTasking = this.GruntTasking ?? await Service.GetGruntTasking(this.GruntTaskingId);
+    }
+
+    private async Task DeleteGruntTasking()
+    {
+        try
+        {
+            await Service.DeleteGruntTasking(this.GruntTasking.Id);
+            NavigationManager.NavigateTo("/grunttasking");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            Service.DisposeContext();
+            this.ErrorMessage = e.Message;
+        }
     }
 }

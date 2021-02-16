@@ -2503,6 +2503,13 @@ namespace Covenant.Core
             {
                 throw new ControllerNotFoundException($"NotFound - GruntTask with id: {taskId}");
             }
+            if (_context.GruntTaskings.Any(GT => GT.GruntTaskId == taskId))
+            {
+                throw new ControllerBadRequestException(
+                    $@"BadRequest - Can't delete GruntTask with id: {taskId} that has been used by existing GruntTaskings." +
+                    " Delete the corresponding GruntTaskings first to delete this GruntTask."
+                );
+            }
             _context.GruntTasks.Remove(removingTask);
             await _context.SaveChangesAsync();
             await _notifier.NotifyDeleteGruntTask(this, removingTask.Id);
