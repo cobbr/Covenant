@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ability to delete GruntTask/GruntTaskings in UI
 - Added ability to import/export Profiles
 - Added Action bar to ProfileTable
+- Added ability to import/export Themes
+- Added Action bar to ThemeTable
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

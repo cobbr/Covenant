@@ -64,6 +64,7 @@ namespace Covenant.Core
         Task<IEnumerable<Theme>> GetThemes();
         Task<Theme> GetTheme(int id);
         Task<Theme> CreateTheme(Theme theme);
+        Task<IEnumerable<Theme>> CreateThemes(params Theme[] themes);
         Task<Theme> EditTheme(Theme theme);
         Task DeleteTheme(int id);
     }
@@ -776,6 +777,16 @@ namespace Covenant.Core
             return await this.GetTheme(theme.Id);
         }
 
+        public async Task<IEnumerable<Theme>> CreateThemes(params Theme[] themes)
+        {
+            List<Theme> createdThemes = new List<Theme>();
+            foreach (Theme theme in themes)
+            {
+                createdThemes.Add(await this.CreateTheme(theme));
+            }
+            return createdThemes;
+        }
+
         public async Task<Theme> EditTheme(Theme theme)
         {
             Theme matchingTheme = await this.GetTheme(theme.Id);
@@ -818,6 +829,10 @@ namespace Covenant.Core
         public async Task DeleteTheme(int id)
         {
             Theme theme = await this.GetTheme(id);
+            if ((await this.GetUsers()).Any(U => U.ThemeId == id))
+            {
+                throw new ControllerBadRequestException(@$"BadRequest - Theme is being used by a User and cannot be deleted");
+            }
             _context.Themes.Remove(theme);
             await _notifier.NotifyDeleteTheme(this, id);
             await _context.SaveChangesAsync();
@@ -3792,7 +3807,7 @@ public static class Task
             Profile profile = await this.GetProfile(id);
             if ((await this.GetListeners()).Any(L => L.ProfileId == id))
             {
-                throw new ControllerBadRequestException(@$"Bad Request - Profile is being used by a Listener and cannot be deleted");
+                throw new ControllerBadRequestException(@$"BadRequest - Profile is being used by a Listener and cannot be deleted");
             }
             _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();

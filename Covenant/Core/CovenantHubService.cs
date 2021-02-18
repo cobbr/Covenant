@@ -270,6 +270,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync<Theme>("CreateTheme", theme);
         }
 
+        public Task<IEnumerable<Theme>> CreateThemes(params Theme[] themes)
+        {
+            return _connection.InvokeAsync<IEnumerable<Theme>>("CreateThemes", themes);
+        }
+
         public Task<CovenantUser> CreateUser(CovenantUserLogin login)
         {
             return _connection.InvokeAsync<CovenantUser>("CreateUser", login);
