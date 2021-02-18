@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Action bar to ProfileTable
 - Added ability to import/export Themes
 - Added Action bar to ThemeTable
+- Added systemd service file template
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
