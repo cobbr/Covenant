@@ -99,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ButtonActivatedModal dismiss too early
 - Fixed GraphBox preventing further user input bug
 - Fixed missing PowerShell launcher "encodedlauncher" box
+- Fixed Profile HttpPostRequest not handling curly braces correctly
 
 ## [v0.6] - 2020-08-04
 ### Added

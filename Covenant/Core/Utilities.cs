@@ -195,15 +195,10 @@ namespace Covenant.Core
             }
         }
 
-        public static bool TryExtract(this string data, string format, out string[] values)
-        {
-            return TryParseExact(data, format, out values, false);
-        }
-
         public static bool TryParseExact(this string data, string format, out string[] values, bool ignoreCase)
         {
             int tokenCount = 0;
-            format = Regex.Escape(format).Replace("\\{", "{");
+            format = Regex.Escape(format).Replace("\\{", "{").Replace("\\}", "}");
 
             for (tokenCount = 0; ; tokenCount++)
             {

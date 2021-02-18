@@ -44,11 +44,10 @@ namespace Covenant.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<string>> Route()
         {
-            string guid = "";
             try
             {
                 this.SetHeaders();
-                guid = GetGuid(HttpContext);
+                string guid = GetGuid(HttpContext);
                 if (HttpContext.Request.Method == "GET")
                 {
                     string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}"), await _internalListener.Read(guid), guid);
@@ -62,7 +61,7 @@ namespace Covenant.Controllers
                 {
                     using StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8);
                     string body = await reader.ReadToEndAsync();
-                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}")).FirstOrDefault();
+                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")).FirstOrDefault();
                     string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
                     string postRead = await _internalListener.Read(guidToRead);
                     string response = String.Format(_context.HttpProfiles.First().HttpPostResponse.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}"), postRead, guid);
@@ -73,15 +72,9 @@ namespace Covenant.Controllers
                     return NotFound();
                 }
             }
-            catch (ControllerNotFoundException e)
+            catch (Exception)
             {
-                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
-                return NotFound(response);
-            }
-            catch (Exception e)
-            {
-                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
-                return NotFound(response);
+                return NotFound();
             }
         }
 
