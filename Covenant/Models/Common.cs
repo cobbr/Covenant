@@ -24,14 +24,16 @@ namespace Covenant.Models
     {
         public string ToYaml() => new SerializerBuilder().Build().Serialize(this);
         public static T FromYaml(string yaml) => new DeserializerBuilder().Build().Deserialize<T>(yaml);
+        public static IEnumerable<T> FromYamlEnumerable(string yaml) => new DeserializerBuilder().Build().Deserialize<IEnumerable<T>>(yaml);
+        public static string ToYamlEnumerable(IEnumerable<T> enumerable) => new SerializerBuilder().Build().Serialize(enumerable);
     }
 
     public static class YamlUtilities
     {
         public static string ToYaml<T>(this IYamlSerializable<T> myInterface) => myInterface.ToYaml();
         public static T FromYaml<T>(this IYamlSerializable<T> myInterface, string yaml) => myInterface.FromYaml(yaml);
-        public static string ToYaml<T>(this IEnumerable<IYamlSerializable<T>> myInterface) => new SerializerBuilder().Build().Serialize(myInterface);
-        public static IEnumerable<T> FromYaml<T>(string yaml) => new DeserializerBuilder().Build().Deserialize<IEnumerable<T>>(yaml);
+        public static string ToYaml<T>(this IEnumerable<T> myEnumerable) => IYamlSerializable<T>.ToYamlEnumerable(myEnumerable);
+        public static IEnumerable<T> FromYaml<T>(string yaml) => IYamlSerializable<T>.FromYamlEnumerable(yaml);
     }
 
     public class ParsedParameter

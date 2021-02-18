@@ -117,27 +117,7 @@ namespace Covenant
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     configuration["CovenantPort"] = CovenantPort.ToString();
-                    DbInitializer.Initialize(service, context, roleManager).Wait();
-                    if (!context.Users.Any())
-                    {
-                        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-                        {
-                            CovenantUser user = new CovenantUser { UserName = username };
-                            Task<IdentityResult> task = userManager.CreateAsync(user, password);
-                            task.Wait();
-                            IdentityResult userResult = task.Result;
-                            if (userResult.Succeeded)
-                            {
-                                userManager.AddToRoleAsync(user, "User").Wait();
-                                userManager.AddToRoleAsync(user, "Administrator").Wait();
-                            }
-                            else
-                            {
-                                Console.Error.WriteLine($"Error creating user: {user.UserName}");
-                                return -1;
-                            }
-                        }
-                    }
+                    DbInitializer.Initialize(service, context, roleManager, userManager, username, password).Wait();
                 }
 
                 try

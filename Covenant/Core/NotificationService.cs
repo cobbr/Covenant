@@ -179,6 +179,9 @@ namespace Covenant.Core
         event EventHandler<Profile> OnCreateProfile;
         event EventHandler<Profile> OnEditProfile;
         event EventHandler<int> OnDeleteProfile;
+        Task NotifyCreateProfile(object sender, Profile profile);
+        Task NotifyEditProfile(object sender, Profile profile);
+        Task NotifyDeleteProfile(object sender, int id);
     }
 
     public interface IHostedFileNotificationService
@@ -324,5 +327,9 @@ namespace Covenant.Core
 
         public async Task NotifyCreateListener(object sender, Listener listener) { await Task.Run(() => this.OnCreateListener(sender, listener)); }
         public async Task NotifyEditListener(object sender, Listener listener) { await Task.Run(() => this.OnEditListener(sender, listener)); }
+
+        public async Task NotifyCreateProfile(object sender, Profile profile) { await Task.Run(() => this.OnCreateProfile(sender, profile)); }
+        public async Task NotifyEditProfile(object sender, Profile profile) { await Task.Run(() => this.OnEditProfile(sender, profile)); }
+        public async Task NotifyDeleteProfile(object sender, int id) { await Task.Run(() => this.OnDeleteProfile(sender, id)); }
     }
 }

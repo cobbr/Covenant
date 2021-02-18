@@ -3732,7 +3732,7 @@ public static class Task
             }
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateProfile(this, profile);
+            await _notifier.NotifyCreateProfile(this, profile);
             return await this.GetProfile(profile.Id);
         }
 
@@ -3740,12 +3740,21 @@ public static class Task
         {
             await _context.Profiles.AddRangeAsync(profiles);
             await _context.SaveChangesAsync();
-            return profiles;
+            foreach (Profile profile in profiles)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
+                await _notifier.NotifyCreateProfile(this, profile);
+            }
+            return await this.GetProfiles();
         }
 
         public async Task<Profile> EditProfile(Profile profile, CovenantUser currentUser)
         {
             Profile matchingProfile = await this.GetProfile(profile.Id);
+            if ((await this.GetListeners()).Any(L => L.ProfileId == matchingProfile.Id))
+            {
+                throw new ControllerBadRequestException(@$"BadRequest - Profile is being used by a Listener and cannot be edited.");
+            }
             matchingProfile.Name = profile.Name;
             matchingProfile.Description = profile.Description;
             matchingProfile.Type = profile.Type;
@@ -3774,16 +3783,20 @@ public static class Task
             }
             _context.Profiles.Update(matchingProfile);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditProfile(this, matchingProfile);
+            await _notifier.NotifyEditProfile(this, matchingProfile);
             return await this.GetProfile(profile.Id);
         }
 
         public async Task DeleteProfile(int id)
         {
             Profile profile = await this.GetProfile(id);
+            if ((await this.GetListeners()).Any(L => L.ProfileId == id))
+            {
+                throw new ControllerBadRequestException(@$"Bad Request - Profile is being used by a Listener and cannot be deleted");
+            }
             _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteProfile(this, profile.Id);
+            await _notifier.NotifyDeleteProfile(this, profile.Id);
         }
 
         public async Task<IEnumerable<HttpProfile>> GetHttpProfiles()
@@ -4923,7 +4936,7 @@ public static class Task
                 this.DisposeContext();
             }
             await _context.Database.EnsureDeletedAsync();
-            await DbInitializer.Initialize(this, _context, _roleManager);
+            await DbInitializer.Initialize(this, _context, _roleManager, _userManager);
         }
         #endregion
     }

@@ -23,14 +23,32 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager)
+        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager, UserManager<CovenantUser> userManager, string username = "", string password = "")
         {
             context.Database.EnsureCreated();
-            await InitializeListeners(service, context);
+            CovenantUser user = await InitializeInitialUser(service, context, userManager, username, password);
+            await InitializeListeners(service, context, user);
             await InitializeImplantTemplates(service, context);
             await InitializeTasks(service, context);
             await InitializeRoles(roleManager);
             await InitializeThemes(context);
+        }
+
+        public async static Task<CovenantUser> InitializeInitialUser(ICovenantService service, CovenantContext context, UserManager<CovenantUser> userManager, string username, string password)
+        {
+            if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+            {
+                CovenantUser user = new CovenantUser { UserName = username };
+                IdentityResult userResult = await userManager.CreateAsync(user, password);
+                if (userResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "User");
+                    await userManager.AddToRoleAsync(user, "Administrator");
+                    return await service.GetUserByUsername(user.UserName);
+                }
+                Console.Error.WriteLine($"Error creating user: {user.UserName}");
+            }
+            return null;
         }
 
         public async static Task InitializeImplantTemplates(ICovenantService service, CovenantContext context)
@@ -98,7 +116,7 @@ namespace Covenant.Core
             }
         }
 
-        public async static Task InitializeListeners(ICovenantService service, CovenantContext context)
+        public async static Task InitializeListeners(ICovenantService service, CovenantContext context, CovenantUser user)
         {
             if (!context.ListenerTypes.Any())
             {
@@ -110,14 +128,21 @@ namespace Covenant.Core
             if (!context.Profiles.Any())
             {
                 string[] files = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories);
-                HttpProfile[] httpProfiles = files.Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
-                    .Select(F => HttpProfile.Create(F))
-                    .ToArray();
-                BridgeProfile[] bridgeProfiles = files.Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
-                    .Select(F => BridgeProfile.Create(F))
-                    .ToArray();
-                await service.CreateProfiles(httpProfiles);
-                await service.CreateProfiles(bridgeProfiles);
+                List<Profile> profiles = new List<Profile>();
+                Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
+                    .ToList()
+                    .ForEach(F => profiles.AddRange(Profile.FromYamlEnumerable(File.ReadAllText(F))));
+                if (user == null)
+                {
+                    await service.CreateProfiles(profiles.ToArray());
+                }
+                else
+                {
+                    foreach (Profile p in profiles)
+                    {
+                        await service.CreateProfile(p, user);
+                    }
+                }
             }
             var listeners = (await service.GetListeners()).Where(L => L.Status == ListenerStatus.Active);
 
