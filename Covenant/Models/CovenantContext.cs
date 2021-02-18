@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -56,7 +57,10 @@ namespace Covenant.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             => optionsBuilder
-                .UseSqlite("Data Source=" + Common.CovenantDatabaseFile);
+                .UseSqlite(
+                    "Data Source=" + Common.CovenantDatabaseFile,
+                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                );
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
