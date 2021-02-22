@@ -203,7 +203,8 @@ namespace Covenant.Core
             {
                 // Find all Types used by the generated compilation
                 HashSet<ITypeSymbol> usedTypes = new HashSet<ITypeSymbol>();
-                GetUsedTypesRecursively(compilation, sourceTree, ref usedTypes, ref sourceSyntaxTrees);
+                List<SyntaxTree> searchedTrees = new List<SyntaxTree>();
+                GetUsedTypesRecursively(compilation, sourceTree, ref usedTypes, ref sourceSyntaxTrees, ref searchedTrees);
                 List<string> usedTypeNames = usedTypes.Select(T => GetFullyQualifiedTypeName(T)).ToList();
 
                 // Filter SyntaxTrees to trees that define a used Type, otherwise the tree is not needed in this compilation
@@ -344,16 +345,27 @@ namespace Covenant.Core
             SemanticModel model = compilation.GetSemanticModel(tree);
             return null != tree.GetRoot().DescendantNodes().FirstOrDefault(SN =>
             {
-                if (SN.Kind() != SyntaxKind.ClassDeclaration)
+                if (SN.Kind() == SyntaxKind.ClassDeclaration)
                 {
-                    return false;
+                    ITypeSymbol symbol = model.GetDeclaredSymbol((ClassDeclarationSyntax)SN);
+                    return typeNames.Contains(GetFullyQualifiedTypeName(symbol));
                 }
-                ITypeSymbol symbol = model.GetDeclaredSymbol(((ClassDeclarationSyntax)SN));
-                if (symbol == null)
+                else if (SN.Kind() == SyntaxKind.InterfaceDeclaration)
                 {
-                    return false;
+                    ITypeSymbol symbol = model.GetDeclaredSymbol((InterfaceDeclarationSyntax)SN);
+                    return typeNames.Contains(GetFullyQualifiedTypeName(symbol));
                 }
-                return typeNames.Contains(GetFullyQualifiedTypeName(symbol));
+                else if (SN.Kind() == SyntaxKind.StructDeclaration)
+                {
+                    ITypeSymbol symbol = model.GetDeclaredSymbol((StructDeclarationSyntax)SN);
+                    return typeNames.Contains(GetFullyQualifiedTypeName(symbol));
+                }
+                else if (SN.Kind() == SyntaxKind.EnumDeclaration)
+                {
+                    ITypeSymbol symbol = model.GetDeclaredSymbol((EnumDeclarationSyntax)SN);
+                    return typeNames.Contains(GetFullyQualifiedTypeName(symbol));
+                }
+                return false;
             });
         }
 
@@ -361,14 +373,19 @@ namespace Covenant.Core
         private static HashSet<ITypeSymbol> GetUsedTypes(CSharpCompilation compilation, SyntaxTree sourceTree)
         {
             SemanticModel sm = compilation.GetSemanticModel(sourceTree);
-
-            return sourceTree.GetRoot().DescendantNodes().Select(N => sm.GetSymbolInfo(N).Symbol).Where(S =>
+            List<ITypeSymbol> types = new List<ITypeSymbol>();
+            sourceTree.GetRoot().DescendantNodes().Select(N => sm.GetSymbolInfo(N).Symbol).ToList().ForEach(Symbol =>
             {
-                return S != null && typeKinds.Contains(S.Kind);
-            }).Select(T => (ITypeSymbol)T).ToHashSet();
+                if (Symbol != null && typeKinds.Contains(Symbol.Kind))
+                {
+                    ITypeSymbol typeSymbol = (ITypeSymbol)Symbol;
+                    types.Add(typeSymbol);
+                }
+            });
+            return types.ToHashSet();
         }
 
-        private static HashSet<ITypeSymbol> GetUsedTypesRecursively(CSharpCompilation compilation, SyntaxTree sourceTree, ref HashSet<ITypeSymbol> currentUsedTypes, ref List<SourceSyntaxTree> sourceSyntaxTrees)
+        private static HashSet<ITypeSymbol> GetUsedTypesRecursively(CSharpCompilation compilation, SyntaxTree sourceTree, ref HashSet<ITypeSymbol> currentUsedTypes, ref List<SourceSyntaxTree> sourceSyntaxTrees, ref List<SyntaxTree> searchedTrees)
         {
             HashSet<string> copyCurrentUsedTypes = currentUsedTypes.Select(CT => GetFullyQualifiedTypeName(CT)).ToHashSet();
 
@@ -391,8 +408,12 @@ namespace Covenant.Core
             searchTrees.Remove(sourceTree);
             foreach (SyntaxTree tree in searchTrees)
             {
-                HashSet<ITypeSymbol> newTypes = GetUsedTypesRecursively(compilation, tree, ref currentUsedTypes, ref sourceSyntaxTrees);
-                currentUsedTypes.UnionWith(newTypes);
+                if (!searchedTrees.Contains(tree))
+                {
+                    searchedTrees.Add(tree);
+                    HashSet<ITypeSymbol> newTypes = GetUsedTypesRecursively(compilation, tree, ref currentUsedTypes, ref sourceSyntaxTrees, ref searchedTrees);
+                    currentUsedTypes.UnionWith(newTypes);
+                }
             }
             return currentUsedTypes;
         }

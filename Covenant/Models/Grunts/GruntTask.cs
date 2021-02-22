@@ -148,15 +148,8 @@ namespace Covenant.Models.Grunts
                     EmbeddedResources = resources,
                     UnsafeCompile = this.UnsafeCompile,
                     Confuse = true,
-                    // TODO: Fix optimization to work with GhostPack
-                    Optimize = !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("Rubeus") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("Seatbelt") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDPAPI") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDump") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpUp") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpSC") &&
-                           !this.Name.Contains("inject", StringComparison.CurrentCultureIgnoreCase)
+                    // TODO: Fix optimization to work with Seatbelt
+                    Optimize = !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("Seatbelt")
                 }))
             );
         }
@@ -215,15 +208,8 @@ namespace Covenant.Models.Grunts
                     EmbeddedResources = resources,
                     UnsafeCompile = this.UnsafeCompile,
                     Confuse = true,
-                    // TODO: Fix optimization to work with GhostPack
-                    Optimize = !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("Rubeus") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("Seatbelt") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDPAPI") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpDump") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpUp") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpWMI") &&
-                           !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("SharpSC") &&
-                           !this.Name.Contains("inject", StringComparison.CurrentCultureIgnoreCase)
+                    // TODO: Fix optimization to work with Seatbelt
+                    Optimize = !this.ReferenceSourceLibraries.Select(RSL => RSL.Name).Contains("Seatbelt")
                 }))
             );
         }

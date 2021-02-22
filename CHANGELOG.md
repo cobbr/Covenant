@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated to improve GruntTask import/export
 - Updated Listener deletion to use ListenerStatus.Deleted
 - Updated EFCore to use UseQuerySplittingBehavior to avoid warnings
+- Updated GhostPack and injection tasks to use compiler optimization, with the exception of Seatbelt
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
@@ -101,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed GraphBox preventing further user input bug
 - Fixed missing PowerShell launcher "encodedlauncher" box
 - Fixed Profile HttpPostRequest not handling curly braces correctly
+- Fixed compiler optimization to avoid unnecessary recursion, and correctly identify used interfaces, structs, and enums
 
 ## [v0.6] - 2020-08-04
 ### Added
