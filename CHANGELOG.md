@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Listener deletion to use ListenerStatus.Deleted
 - Updated EFCore to use UseQuerySplittingBehavior to avoid warnings
 - Updated GhostPack and injection tasks to use compiler optimization, with the exception of Seatbelt
+- Updated SharpSploit ReferenceSourceLibrary
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
