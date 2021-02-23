@@ -66,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated GhostPack and injection tasks to use compiler optimization, with the exception of Seatbelt
 - Updated SharpSploit ReferenceSourceLibrary
 - Updated Mimikatz EmbeddedResources
+- Updated ClipboardMonitor task to use streaming output
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

