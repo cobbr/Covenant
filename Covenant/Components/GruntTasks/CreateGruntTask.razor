@@ -24,7 +24,10 @@
 
     protected override void OnInitialized()
     {
-        this.GruntTask = this.GruntTask ?? new GruntTask();
+        this.GruntTask = this.GruntTask ?? new GruntTask
+        {
+            Author = new GruntTaskAuthor()
+        };
     }
 
     private async Task OnCreate(GruntTask task)

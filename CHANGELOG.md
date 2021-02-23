@@ -110,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing author for GruntTasks
 - Fixed unhandled exception in implant TaskExecute
 - Fixed compilation errors for Tasks with multiple ReferenceSourceLibraries
+- Fixed GruntTaskAuthor error on EditGruntTask
 
 ## [v0.6] - 2020-08-04
 ### Added
