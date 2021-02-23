@@ -25,7 +25,7 @@ namespace Covenant.Models.Grunts
 
         [YamlIgnore]
         public int AuthorId { get; set; }
-        public GruntTaskAuthor Author { get; set; } = new GruntTaskAuthor();
+        public GruntTaskAuthor Author { get; set; }
 
         [Required]
         public string Name { get; set; } = "GenericTask";
