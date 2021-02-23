@@ -173,10 +173,11 @@ namespace Covenant.Core
             {
                 foreach (var sourceDirectory in request.SourceDirectories)
                 {
-                    sourceSyntaxTrees.AddRange(Directory.GetFiles(sourceDirectory, "*.cs", SearchOption.AllDirectories)
+                    List<SourceSyntaxTree> ssts = Directory.GetFiles(sourceDirectory, "*.cs", SearchOption.AllDirectories)
                         .Select(F => new SourceSyntaxTree { FileName = F, SyntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(F), new CSharpParseOptions()) })
-                        .ToList());
-                    compilationTrees.AddRange(sourceSyntaxTrees.Select(S => S.SyntaxTree).ToList());
+                        .ToList();
+                    sourceSyntaxTrees.AddRange(ssts);
+                    compilationTrees.AddRange(ssts.Select(S => S.SyntaxTree).ToList());
                 }
             }
             SyntaxTree sourceTree = CSharpSyntaxTree.ParseText(request.Source, new CSharpParseOptions());
