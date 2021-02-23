@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated SharpSploit ReferenceSourceLibrary
 - Updated Mimikatz EmbeddedResources
 - Updated ClipboardMonitor task to use streaming output
+- Removed unnecessary debugging console output on GruntTaskIndex
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

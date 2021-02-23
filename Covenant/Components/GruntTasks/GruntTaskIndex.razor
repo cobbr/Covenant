@@ -199,11 +199,6 @@
                 await ImportSemaphore.WaitAsync();
                 this.ImportInProgress = true;
                 this.StateHasChanged();
-                using (FileStream fs = new FileStream(Common.CovenantAppSettingsFile, FileMode.Open))
-                {
-                    string sr = new StreamReader(fs).ReadToEnd();
-                    Console.WriteLine(sr);
-                }
                 await Service.CreateGruntTasks(this.ImportedTasks.ToArray());
                 this.ImportedTasks = null;
                 await _ImportModal.DismissModal();
