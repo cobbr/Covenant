@@ -179,7 +179,14 @@ namespace GruntExecutor
                                     impersonationContext.Undo();
                                 }
                                 IntPtr impersonatedToken = IntPtr.Zero;
-                                Thread t = new Thread(() => impersonatedToken = TaskExecute(messenger, message, Delay));
+                                Thread t = new Thread(() =>
+                                {
+                                    try
+                                    {
+                                        impersonatedToken = TaskExecute(messenger, message, Delay);
+                                    }
+                                    catch {}
+                                });
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                                 bool completed = t.Join(5000);
@@ -199,7 +206,14 @@ namespace GruntExecutor
                             }
                             else
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
+                                Thread t = new Thread(() =>
+                                {
+                                    try
+                                    {
+                                        TaskExecute(messenger, message, Delay);
+                                    }
+                                    catch {}
+                                });
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }

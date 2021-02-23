@@ -165,14 +165,28 @@ namespace BruteExecutor
                             }
                             else if (message.Token)
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
+                                Thread t = new Thread(() =>
+                                {
+                                    try
+                                    {
+                                        TaskExecute(messenger, message, Delay);
+                                    }
+                                    catch {}
+                                });
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                                 bool completed = t.Join(5000);
                             }
                             else
                             {
-                                Thread t = new Thread(() => TaskExecute(messenger, message, Delay));
+                                Thread t = new Thread(() =>
+                                {
+                                    try
+                                    {
+                                        TaskExecute(messenger, message, Delay);
+                                    }
+                                    catch {}
+                                });
                                 t.Start();
                                 Tasks.Add(new KeyValuePair<string, Thread>(message.Name, t));
                             }

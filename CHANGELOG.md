@@ -108,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Profile HttpPostRequest not handling curly braces correctly
 - Fixed compiler optimization to avoid unnecessary recursion, and correctly identify used interfaces, structs, and enums
 - Fixed missing author for GruntTasks
+- Fixed unhandled exception in implant TaskExecute
 
 ## [v0.6] - 2020-08-04
 ### Added
