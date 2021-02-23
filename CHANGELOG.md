@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Action bar to ThemeTable
 - Added systemd service file template
 - Added CreateProcessMinidump and CreateProcessSnapshotDump tasks
+- Added Inject task
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -70,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated ClipboardMonitor task to use streaming output
 - Removed unnecessary debugging console output on GruntTaskIndex
 - Updated GetDomainGroup, GetDomainUser, GetDomainComputer tasks with addtional options
+- Updated GruntTaskAssignForm and GruntTaskOptionsModal to autofill DefaultValues for options if none specified
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

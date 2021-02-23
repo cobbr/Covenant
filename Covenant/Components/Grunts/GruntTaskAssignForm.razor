@@ -99,6 +99,13 @@ else
         if (int.TryParse((string)e.Value, out int GruntTaskId))
         {
             this.GruntTask = this.GruntTasks.FirstOrDefault(GT => GT.Id == GruntTaskId);
+            foreach (GruntTaskOption option in this.GruntTask.Options)
+            {
+                if (!string.IsNullOrWhiteSpace(option.DefaultValue) && string.IsNullOrWhiteSpace(option.Value))
+                {
+                    option.Value = option.DefaultValue;
+                }
+            }
             this.StateHasChanged();
         }
     }

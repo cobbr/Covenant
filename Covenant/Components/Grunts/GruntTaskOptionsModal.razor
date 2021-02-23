@@ -68,6 +68,13 @@
     public async Task Show(GruntTask task)
     {
         this.GruntTask = task;
+        foreach (GruntTaskOption option in this.GruntTask.Options)
+        {
+            if (!string.IsNullOrWhiteSpace(option.DefaultValue) && string.IsNullOrWhiteSpace(option.Value))
+            {
+                option.Value = option.DefaultValue;
+            }
+        }
         this.StateHasChanged();
         await IJSRuntime.InvokeAsync<string>("ActivateModal", "#file-modal");
     }
