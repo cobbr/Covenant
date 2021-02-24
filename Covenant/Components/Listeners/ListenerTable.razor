@@ -44,32 +44,27 @@
             <td>@ToString(listener.ConnectAddresses)</td>
             <td>@listener.ConnectPort</td>
             <td style="text-align: right;">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionListener" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionListener">
-                        @if (listener.Status != ListenerStatus.Active)
-                        {
-                            <a class="dropdown-item" type="button" @onclick="(e => OnStartListener(listener))">
-                                <span class="fe fe-play"></span>
-                                Start
-                            </a>
-                        }
-                        else
-                        {
-                            <a class="dropdown-item text-warning" type="button" @onclick="(e => OnStopListener(listener))">
-                                <span class="fe fe-stop-circle"></span>
-                                Stop
-                            </a>
-                        }
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteListener(listener))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+                <ActionDropdown Name="dropdownActionListener">
+                    @if (listener.Status != ListenerStatus.Active)
+                    {
+                        <DropdownActionItem Item="listener" OnAction="(async item => await OnStartListener(item))">
+                            <span class="fe fe-play"></span>
+                            Start
+                        </DropdownActionItem>
+                    }
+                    else
+                    {
+                        <DropdownActionItem Item="listener" OnAction="(async item => await OnStopListener(item))" class="text-warning">
+                            <span class="fe fe-stop-circle"></span>
+                            Stop
+                        </DropdownActionItem>
+                    }
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="listener" OnAction="(async item => await OnDeleteListener(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added systemd service file template
 - Added CreateProcessMinidump and CreateProcessSnapshotDump tasks
 - Added Inject task
+- Added ActionDropdown, DropdownActionItem components, converted tables to use
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

@@ -1,7 +1,10 @@
-﻿@using System
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System
 @using System.IO
 @using System.Collections.Generic
 @using Microsoft.JSInterop
+
 @using Covenant.Core
 @using Covenant.Models.Listeners
 @using Covenant.Components.Shared
@@ -19,6 +22,7 @@
         <SortableTableHeader TItem="HostedFile" TItem2="string" GetSortableProperty="(file) => string.Empty">
             <HeaderContent>Download</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="file">
         <tr>
@@ -26,7 +30,11 @@
                 <a href="/listener/@file.ListenerId/hostedfile/edit/@file.Id">@file.Path</a>
             </td>
             <td>
-                @Convert.FromBase64String(file.Content).Length
+                @try
+                {
+                    @Convert.FromBase64String(file.Content).Length
+                }
+                catch { }
             </td>
             <td>
                 <button type="button" class="btn btn-primary" @onclick="e => OnDownload(file)">
@@ -34,13 +42,26 @@
                     Download
                 </button>
             </td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionHostedFile">
+                    <a class="dropdown-item btn btn-primary" type="button" @onclick="e => OnDownload(file)">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="file" OnAction="(async item => await OnDeleteHostedFile(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
 
 @code {
     [Parameter]
-    public IEnumerable<HostedFile> HostedFiles { get; set; }
+    public List<HostedFile> HostedFiles { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -72,5 +93,12 @@
     {
         return SearchTerm == string.Empty ||
             file.Path.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnDeleteHostedFile(HostedFile file)
+    {
+        await Service.DeleteHostedFile(file.ListenerId, file.Id);
+        Service.DisposeContext();
+        this.HostedFiles.RemoveAt(this.HostedFiles.FindIndex(F => F.Id == file.Id));
     }
 }

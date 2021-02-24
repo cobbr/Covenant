@@ -260,3 +260,12 @@ main {
     box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
     transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
 }
+
+.dropdown-menu > .dropdown-item,
+.dropdown-menu > .dropdown-item > div > span {
+    font-size: 12px;
+}
+
+.dropdown-menu > a:hover {
+    background-color: rgba(0,0,0,0.1);
+}

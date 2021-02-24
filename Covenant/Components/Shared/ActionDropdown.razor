@@ -1,0 +1,17 @@
+﻿<div class="dropdown">
+    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
+            type="button" id="@Name" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Action
+    </button>
+    <div class="dropdown-menu" aria-labelledby="@Name">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Name { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

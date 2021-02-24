@@ -1000,7 +1000,7 @@ namespace Covenant.Core
         {
             Event e = await this.GetEvent(id);
             _context.Events.Remove(e);
-            // await _notifier.NotifyDeleteEvent(this, id);
+            await _notifier.NotifyDeleteEvent(this, id);
             await _context.SaveChangesAsync();
         }
         #endregion
@@ -3469,8 +3469,8 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateCapturedCredential(this, credential);
             await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
-            // _notifier.OnCreateCapturedCredential(this, credential);
             return await GetPasswordCredential(credential.Id);
         }
 
@@ -3478,7 +3478,7 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateCapturedCredential(this, credential);
+            await _notifier.NotifyCreateCapturedCredential(this, credential);
             await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             return await GetHashCredential(credential.Id);
         }
@@ -3487,20 +3487,29 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateCapturedCredential(this, credential);
             await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
-            // _notifier.OnCreateCapturedCredential(this, credential);
             return await GetTicketCredential(credential.Id);
         }
 
         public async Task<IEnumerable<CapturedCredential>> CreateCredentials(params CapturedCredential[] credentials)
         {
-            await _context.Credentials.AddRangeAsync(credentials);
-            foreach(var credential in credentials)
+            foreach(CapturedCredential credential in credentials)
             {
-                await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
+                if (credential.Type == CredentialType.Password)
+                {
+                    await this.CreatePasswordCredential((CapturedPasswordCredential)credential);
+                }
+                else if (credential.Type == CredentialType.Hash)
+                {
+                    await this.CreateHashCredential((CapturedHashCredential)credential);
+                }
+                else if (credential.Type == CredentialType.Ticket)
+                {
+                    await this.CreateTicketCredential((CapturedTicketCredential)credential);
+                }
             }
-            await _context.SaveChangesAsync();
-            return credentials;
+            return await this.GetCredentials();
         }
 
         public async Task<CapturedPasswordCredential> EditPasswordCredential(CapturedPasswordCredential credential)
@@ -3512,7 +3521,7 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditCapturedCredential(this, matchingCredential);
+            await _notifier.NotifyEditCapturedCredential(this, matchingCredential);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingCredential);
             return await GetPasswordCredential(matchingCredential.Id);
         }
@@ -3527,8 +3536,8 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyEditCapturedCredential(this, matchingCredential);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingCredential);
-            // _notifier.OnEditCapturedCredential(this, matchingCredential);
             return await GetHashCredential(matchingCredential.Id);
         }
 
@@ -3542,7 +3551,7 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditCapturedCredential(this, matchingCredential);
+            await _notifier.NotifyEditCapturedCredential(this, matchingCredential);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingCredential);
             return await GetTicketCredential(matchingCredential.Id);
         }
@@ -3556,8 +3565,8 @@ public static class Task
             }
             _context.Credentials.Remove(credential);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteCapturedCredential(this, credential.Id);
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, credential);
-            // _notifier.OnDeleteCapturedCredential(this, credential.Id);
         }
         #endregion
 
@@ -3629,15 +3638,17 @@ public static class Task
         {
             await _context.Indicators.AddAsync(indicator);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateIndicator(this, indicator);
+            await _notifier.NotifyCreateIndicator(this, indicator);
             return await GetIndicator(indicator.Id);
         }
 
         public async Task<IEnumerable<Indicator>> CreateIndicators(params Indicator[] indicators)
         {
-            await _context.Indicators.AddRangeAsync(indicators);
-            await _context.SaveChangesAsync();
-            return indicators;
+            foreach (Indicator indicator in indicators)
+            {
+                await this.CreateIndicator(indicator);
+            }
+            return await this.GetIndicators();
         }
 
         public async Task<Indicator> EditIndicator(Indicator indicator)
@@ -3679,7 +3690,7 @@ public static class Task
                     break;
             }
             await _context.SaveChangesAsync();
-            // _notifier.OnEditIndicator(this, indicator);
+            await _notifier.NotifyEditIndicator(this, indicator);
             return await this.GetIndicator(indicator.Id);
         }
 
@@ -3692,7 +3703,7 @@ public static class Task
             }
             _context.Indicators.Remove(indicator);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteIndicator(this, indicator.Id);
+            await _notifier.NotifyDeleteIndicator(this, indicator.Id);
         }
         #endregion
 

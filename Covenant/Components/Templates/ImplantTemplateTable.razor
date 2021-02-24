@@ -41,24 +41,18 @@
             <td>@GetCompatibleDotNetVersions(template)</td>
             <td>@template.ImplantDirection</td>
             <td>@template.Description</td>
-            <td>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
-                            type="button" id="dropdownActionTemplate" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionTemplate">
-                        <a class="dropdown-item" type="button" @onclick="(e => OnExportTemplate(template))">
-                            <span class="fe fe-share"></span>
-                            Export
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteTemplate(template))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionTemplate">
+                    <DropdownActionItem Item="template" OnAction="(async item => await OnExportTemplate(item))">
+                        <span class="fe fe-share"></span>
+                        Export
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="template" OnAction="(async item => await OnDeleteTemplate(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>

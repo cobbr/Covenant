@@ -31,22 +31,17 @@
             <td>@screenshot.FileLength</td>
             <td>@screenshot.Time</td>
             <td style="text-align: right;">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionScreenshot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionScreenshot">
-                        <a class="dropdown-item" type="button" download href="/api/events/screenshot/@screenshot.Id/download">
-                            <span class="fe fe-download"></span>
-                            Download
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteEvent(screenshot))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+                <ActionDropdown Name="dropdownActionScreenshot">
+                    <a class="dropdown-item" type="button" download href="/api/events/screenshot/@screenshot.Id/download">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="screenshot" OnAction="(async item => await OnDeleteEvent(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>
@@ -76,9 +71,16 @@
             screenshot.FileLength.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
     }
 
-    private async Task OnDeleteEvent(Event e)
+    private async Task OnDeleteEvent(Event ev)
     {
-        await Service.DeleteEvent(e.Id);
-        this.ScreenshotEvents.RemoveAt(this.ScreenshotEvents.FindIndex(E => E.Id == e.Id));
+        try
+        {
+            await Service.DeleteEvent(ev.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+
+        }
     }
 }

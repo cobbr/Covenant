@@ -37,24 +37,18 @@
             <td>@task.Language</td>
             <td>@GetCompatibleDotNetVersions(task)</td>
             <td>@task.Author.Name</td>
-            <td>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
-                            type="button" id="dropdownActionGruntTask" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionGruntTask">
-                        <a class="dropdown-item" type="button" @onclick="(e => OnExportGruntTask(task))">
-                            <span class="fe fe-share"></span>
-                            Export
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteGruntTask(task))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionGruntTask">
+                    <DropdownActionItem Item="task" OnAction="(async item => await OnExportGruntTask(item))">
+                        <span class="fe fe-share"></span>
+                        Export
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="task" OnAction="(async item => await OnDeleteGruntTask(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>

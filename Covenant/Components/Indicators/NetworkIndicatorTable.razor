@@ -5,6 +5,7 @@
 @using Covenant.Models.Indicators
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
+@inject NavigationManager NavigationManager
 
 <CovenantTable TItem="NetworkIndicator" Items="NetworkIndicators.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -34,22 +35,17 @@
             <td>@indicator.Port</td>
             <td>@indicator.URI</td>
             <td style="text-align: right;">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionNetworkIndicator" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionNetworkIndicator">
-                        <a class="dropdown-item" type="button" href="/indicator/edit/@indicator.Id">
-                            <span class="fe fe-edit"></span>
-                            Edit
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteIndicator(indicator))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+                <ActionDropdown Name="dropdownActionNetworkIndicator">
+                    <DropdownActionItem Item="indicator" OnAction='(item => NavigationManager.NavigateTo($"/indicator/edit/{item.Id}"))'>
+                        <span class="fe fe-edit"></span>
+                        Edit
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="indicator" OnAction="(async item => await OnDeleteIndicator(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>
@@ -83,7 +79,14 @@
 
     private async Task OnDeleteIndicator(Indicator indicator)
     {
-        await Service.DeleteIndicator(indicator.Id);
-        this.NetworkIndicators.RemoveAt(this.NetworkIndicators.FindIndex(I => I.Id == indicator.Id));
+        try
+        {
+            await Service.DeleteIndicator(indicator.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+
+        }
     }
 }

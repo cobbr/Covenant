@@ -40,30 +40,25 @@
             <td>@launcher.KillDate</td>
             <td>@launcher.Description</td>
             <td style="text-align: right;">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2" type="button" id="dropdownActionLauncher" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionLauncher">
-                        <a class="dropdown-item" type="button" @onclick="(e => OnGenerate(launcher))">
-                            <span class="fe fe-zap"></span>
-                            Generate
-                        </a>
-                        <a class="dropdown-item" type="button" @onclick="(e => OnDownload(launcher))">
-                            <span class="fe fe-download"></span>
-                            Download
-                        </a>
-                        <a class="dropdown-item" type="button" @onclick="(e => OnCopyLauncher(launcher))">
-                            <span class="fe fe-clipboard"></span>
-                            Copy LauncherString
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteLauncher(launcher))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+                <ActionDropdown Name="dropdownActionLauncher">
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnGenerate(item))">
+                        <span class="fe fe-zap"></span>
+                        Generate
+                    </DropdownActionItem>
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnDownload(item))">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </DropdownActionItem>
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnCopyLauncher(item))">
+                        <span class="fe fe-clipboard"></span>
+                        Copy LauncherString
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnDeleteLauncher(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>

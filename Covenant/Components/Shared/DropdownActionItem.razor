@@ -1,0 +1,19 @@
+﻿@typeparam TItem
+
+<a class="dropdown-item" type="button" @onclick="(e => OnAction(Item))">
+    <div @attributes="InputAttributes">@ChildContent</div>
+</a>
+
+@code {
+    [Parameter]
+    public TItem Item { get; set; }
+
+    [Parameter]
+    public Action<TItem> OnAction { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> InputAttributes { get; set; }
+}

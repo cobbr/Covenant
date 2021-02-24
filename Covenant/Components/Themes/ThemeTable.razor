@@ -39,24 +39,18 @@
                     <div class="border-right border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.NavbarColor"></div>
                 </div>
             </td>
-            <td>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle pt-0 pb-0 mt-n2"
-                            type="button" id="dropdownActionTheme" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Action
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownActionTheme">
-                        <a class="dropdown-item" type="button" @onclick="(e => OnExportTheme(theme))">
-                            <span class="fe fe-share"></span>
-                            Export
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" type="button" @onclick="(e => OnDeleteTheme(theme))">
-                            <span class="fe fe-x"></span>
-                            Delete
-                        </a>
-                    </div>
-                </div>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionTheme">
+                    <DropdownActionItem Item="theme" OnAction="(async item => await OnExportTheme(item))">
+                        <span class="fe fe-share"></span>
+                        Export
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="theme" OnAction="(async item => await OnDeleteTheme(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>
