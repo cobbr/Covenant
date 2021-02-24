@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +28,9 @@ namespace Covenant.Core
         event EventHandler<IdentityRole> OnCreateIdentityRole;
         event EventHandler<IdentityRole> OnEditIdentityRole;
         event EventHandler<string> OnDeleteIdentityRole;
+        Task NotifyCreateIdentityRole(object sender, IdentityRole role);
+        Task NotifyEditIdentityRole(object sender, IdentityRole role);
+        Task NotifyDeleteIdentityRole(object sender, string id);
     }
 
     public interface IIdentityUserRoleNotificationService
@@ -36,6 +38,9 @@ namespace Covenant.Core
         event EventHandler<IdentityUserRole<string>> OnCreateIdentityUserRole;
         event EventHandler<IdentityUserRole<string>> OnEditIdentityUserRole;
         event EventHandler<Tuple<string, string>> OnDeleteIdentityUserRole;
+        Task NotifyCreateIdentityUserRole(object sender, IdentityUserRole<string> userRole);
+        Task NotifyEditIdentityRole(object sender, IdentityUserRole<string> userRole);
+        Task NotifyDeleteIdentityRole(object sender, Tuple<string, string> ids);
     }
 
     public interface IThemeNotificationService
@@ -54,6 +59,8 @@ namespace Covenant.Core
         event EventHandler<Event> OnEditEvent;
         event EventHandler<int> OnDeleteEvent;
         Task NotifyCreateEvent(object sender, Event anEvent);
+        Task NotifyEditEvent(object sender, Event anEvent);
+        Task NotifyDeleteEvent(object sender, int id);
     }
 
     public interface IImplantTemplateNotificationService
@@ -81,6 +88,9 @@ namespace Covenant.Core
         event EventHandler<ReferenceAssembly> OnCreateReferenceAssembly;
         event EventHandler<ReferenceAssembly> OnEditReferenceAssembly;
         event EventHandler<int> OnDeleteReferenceAssembly;
+        Task NotifyCreateReferenceAssembly(object sender, ReferenceAssembly assembly);
+        Task NotifyEditReferenceAssembly(object sender, ReferenceAssembly assembly);
+        Task NotifyDeleteReferenceAssembly(object sender, int id);
     }
 
     public interface IEmbeddedResourceNotificationService
@@ -88,6 +98,9 @@ namespace Covenant.Core
         event EventHandler<EmbeddedResource> OnCreateEmbeddedResource;
         event EventHandler<EmbeddedResource> OnEditEmbeddedResource;
         event EventHandler<int> OnDeleteEmbeddedResource;
+        Task NotifyCreateEmbeddedResource(object sender, EmbeddedResource resource);
+        Task NotifyEditEmbeddedResource(object sender, EmbeddedResource resource);
+        Task NotifyDeleteEmbeddedResource(object sender, int id);
     }
 
     public interface IReferenceSourceLibraryNotificationService
@@ -95,6 +108,9 @@ namespace Covenant.Core
         event EventHandler<ReferenceSourceLibrary> OnCreateReferenceSourceLibrary;
         event EventHandler<ReferenceSourceLibrary> OnEditReferenceSourceLibrary;
         event EventHandler<int> OnDeleteReferenceSourceLibrary;
+        Task NotifyCreateReferenceSourceLibrary(object sender, ReferenceSourceLibrary library);
+        Task NotifyEditReferenceSourceLibrary(object sender, ReferenceSourceLibrary library);
+        Task NotifyDeleteReferenceSourceLibrary(object sender, int id);
     }
 
     public interface IGruntTaskOptionNotificationService
@@ -102,6 +118,9 @@ namespace Covenant.Core
         event EventHandler<GruntTaskOption> OnCreateGruntTaskOption;
         event EventHandler<GruntTaskOption> OnEditGruntTaskOption;
         event EventHandler<int> OnDeleteGruntTaskOption;
+        Task NotifyCreateGruntTaskOption(object sender, GruntTaskOption option);
+        Task NotifyEditGruntTaskOption(object sender, GruntTaskOption option);
+        Task NotifyDeleteGruntTaskOption(object sender, int id);
     }
 
     public interface IGruntTaskNotificationService : IReferenceAssemblyNotificationService, IEmbeddedResourceNotificationService,
@@ -122,6 +141,7 @@ namespace Covenant.Core
         event EventHandler<int> OnDeleteGruntCommand;
         Task NotifyCreateGruntCommand(object sender, GruntCommand command);
         Task NotifyEditGruntCommand(object sender, GruntCommand command);
+        Task NotifyDeleteGruntCommand(object sender, int id);
     }
 
     public interface ICommandOutputNotificationService
@@ -131,6 +151,7 @@ namespace Covenant.Core
         event EventHandler<int> OnDeleteCommandOutput;
         Task NotifyEditCommandOutput(object sender, CommandOutput output);
         Task NotifyCreateCommandOutput(object sender, CommandOutput output);
+        Task NotifyDeleteCommandOutput(object sender, int id);
     }
 
     public interface IGruntTaskingNotificationService
@@ -140,6 +161,7 @@ namespace Covenant.Core
         event EventHandler<int> OnDeleteGruntTasking;
         Task NotifyCreateGruntTasking(object sender, GruntTasking tasking);
         Task NotifyEditGruntTasking(object sender, GruntTasking tasking);
+        Task NotifyDeleteGruntTasking(object sender, int id);
     }
 
     public interface ICredentialNotificationService
@@ -147,6 +169,9 @@ namespace Covenant.Core
         event EventHandler<CapturedCredential> OnCreateCapturedCredential;
         event EventHandler<CapturedCredential> OnEditCapturedCredential;
         event EventHandler<int> OnDeleteCapturedCredential;
+        Task NotifyCreateCapturedCredential(object sender, CapturedCredential credential);
+        Task NotifyEditCapturedCredential(object sender, CapturedCredential credential);
+        Task NotifyDeleteCapturedCredential(object sender, int id);
     }
 
     public interface IIndicatorNotificationService
@@ -154,6 +179,9 @@ namespace Covenant.Core
         event EventHandler<Indicator> OnCreateIndicator;
         event EventHandler<Indicator> OnEditIndicator;
         event EventHandler<int> OnDeleteIndicator;
+        Task NotifyCreateIndicator(object sender, Indicator indicator);
+        Task NotifyEditIndicator(object sender, Indicator indicator);
+        Task NotifyDeleteIndicator(object sender, int id);
     }
 
     public interface IListenerTypeNotificationService
@@ -161,6 +189,9 @@ namespace Covenant.Core
         event EventHandler<ListenerType> OnCreateListenerType;
         event EventHandler<ListenerType> OnEditListenerType;
         event EventHandler<int> OnDeleteListenerType;
+        Task NotifyCreateListenerType(object sender, ListenerType type);
+        Task NotifyEditListenerType(object sender, ListenerType type);
+        Task NotifyDeleteListenerType(object sender, int id);
     }
 
     public interface IListenerNotificationService : IListenerTypeNotificationService
@@ -189,6 +220,9 @@ namespace Covenant.Core
         event EventHandler<HostedFile> OnCreateHostedFile;
         event EventHandler<HostedFile> OnEditHostedFile;
         event EventHandler<int> OnDeleteHostedFile;
+        Task NotifyCreateHostedFile(object sender, HostedFile file);
+        Task NotifyEditHostedFile(object sender, HostedFile file);
+        Task NotifyDeleteHostedFile(object sender, int id);
     }
 
     public interface ILauncherNotificationService
@@ -196,6 +230,9 @@ namespace Covenant.Core
         event EventHandler<Launcher> OnCreateLauncher;
         event EventHandler<Launcher> OnEditLauncher;
         event EventHandler<int> OnDeleteLauncher;
+        Task NotifyCreateLauncher(object sender, Launcher launcher);
+        Task NotifyEditLauncher(object sender, Launcher launcher);
+        Task NotifyDeleteLauncher(object sender, int id);
     }
 
     public interface INotificationService : ICovenantUserNotificationService, IIdentityRoleNotificationService, IIdentityUserRoleNotificationService, IThemeNotificationService,
@@ -236,7 +273,6 @@ namespace Covenant.Core
         public event EventHandler<Theme> OnCreateTheme = delegate { };
         public event EventHandler<Theme> OnEditTheme = delegate { };
         public event EventHandler<int> OnDeleteTheme = delegate { };
-
         public event EventHandler<Event> OnCreateEvent = delegate { };
         public event EventHandler<Event> OnEditEvent = delegate { };
         public event EventHandler<int> OnDeleteEvent = delegate { };
@@ -292,44 +328,94 @@ namespace Covenant.Core
         public event EventHandler<Launcher> OnCreateLauncher = delegate { };
         public event EventHandler<Launcher> OnEditLauncher = delegate { };
         public event EventHandler<int> OnDeleteLauncher = delegate { };
-        public async Task NotifyCreateCovenantUser(object sender, CovenantUser user) { await Task.Run(() => this.OnCreateCovenantUser(sender, user)); }
-        public async Task NotifyEditCovenantUser(object sender, CovenantUser user) { await Task.Run(() => this.OnEditCovenantUser(sender, user)); }
-        public async Task NotifyDeleteCovenantUser(object sender, string id) { await Task.Run(() => this.OnDeleteCovenantUser(sender, id)); }
 
-        public async Task NotifyCreateTheme(object sender, Theme theme) { await Task.Run(() => this.OnCreateTheme(sender, theme)); }
-        public async Task NotifyEditTheme(object sender, Theme theme) { await Task.Run(() => this.OnEditTheme(sender, theme)); }
-        public async Task NotifyDeleteTheme(object sender, int id) { await Task.Run(() => this.OnDeleteTheme(sender, id)); }
+        public async Task NotifyCreateCovenantUser(object sender, CovenantUser user) => await Task.Run(() => this.OnCreateCovenantUser(sender, user));
+        public async Task NotifyEditCovenantUser(object sender, CovenantUser user) => await Task.Run(() => this.OnEditCovenantUser(sender, user));
+        public async Task NotifyDeleteCovenantUser(object sender, string id) => await Task.Run(() => this.OnDeleteCovenantUser(sender, id));
 
-        public async Task NotifyCreateEvent(object sender, Event anEvent) { await Task.Run(() => this.OnCreateEvent(sender, anEvent)); }
+        public async Task NotifyCreateIdentityRole(object sender, IdentityRole role) => await Task.Run(() => this.OnCreateIdentityRole(sender, role));
+        public async Task NotifyEditIdentityRole(object sender, IdentityRole role) => await Task.Run(() => this.OnEditIdentityRole(sender, role));
+        public async Task NotifyDeleteIdentityRole(object sender, string id) => await Task.Run(() => this.OnDeleteCovenantUser(sender, id));
 
-        public async Task NotifyCreateImplantTemplate(object sender, ImplantTemplate template) { await Task.Run(() => this.OnCreateImplantTemplate(sender, template)); }
-        public async Task NotifyEditImplantTemplate(object sender, ImplantTemplate template) { await Task.Run(() => this.OnEditImplantTemplate(sender, template)); }
-        public async Task NotifyDeleteImplantTemplate(object sender, int id) { await Task.Run(() => this.OnDeleteImplantTemplate(sender, id)); }
+        public async Task NotifyCreateIdentityUserRole(object sender, IdentityUserRole<string> userRole) => await Task.Run(() => this.OnCreateIdentityUserRole(sender, userRole));
+        public async Task NotifyEditIdentityRole(object sender, IdentityUserRole<string> userRole) => await Task.Run(() => this.OnEditIdentityUserRole(sender, userRole));
+        public async Task NotifyDeleteIdentityRole(object sender, Tuple<string, string> ids) => await Task.Run(() => this.OnDeleteIdentityUserRole(sender, ids));
 
-        public async Task NotifyCreateGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnCreateGrunt(sender, grunt)); }
-        public async Task NotifyEditGrunt(object sender, Grunt grunt) { await Task.Run(() => this.OnEditGrunt(sender, grunt)); }
-        public async Task NotifyDeleteGrunt(object sender, int id) { await Task.Run(() => this.OnDeleteGrunt(sender, id)); }
+        public async Task NotifyCreateTheme(object sender, Theme theme) => await Task.Run(() => this.OnCreateTheme(sender, theme));
+        public async Task NotifyEditTheme(object sender, Theme theme) => await Task.Run(() => this.OnEditTheme(sender, theme));
+        public async Task NotifyDeleteTheme(object sender, int id) => await Task.Run(() => this.OnDeleteTheme(sender, id));
 
-        public async Task NotifyCreateGruntTask(object sender, GruntTask gruntTask) { await Task.Run(() => this.OnCreateGruntTask(sender, gruntTask)); }
-        public async Task NotifyEditGruntTask(object sender, GruntTask gruntTask) { await Task.Run(() => this.OnEditGruntTask(sender, gruntTask)); }
-        public async Task NotifyDeleteGruntTask(object sender, int id) { await Task.Run(() => this.OnDeleteGruntTask(sender, id)); } 
+        public async Task NotifyCreateEvent(object sender, Event anEvent) => await Task.Run(() => this.OnCreateEvent(sender, anEvent));
+        public async Task NotifyEditEvent(object sender, Event anEvent) => await Task.Run(() => this.OnEditEvent(sender, anEvent));
+        public async Task NotifyDeleteEvent(object sender, int id) => await Task.Run(() => this.OnDeleteEvent(sender, id));
 
-        public async Task NotifyCreateGruntCommand(object sender, GruntCommand command) { await Task.Run(() => this.OnCreateGruntCommand(sender, command)); }
-        public async Task NotifyEditGruntCommand(object sender, GruntCommand command) { await Task.Run(() => this.OnEditGruntCommand(sender, command)); }
+        public async Task NotifyCreateImplantTemplate(object sender, ImplantTemplate template) => await Task.Run(() => this.OnCreateImplantTemplate(sender, template));
+        public async Task NotifyEditImplantTemplate(object sender, ImplantTemplate template) => await Task.Run(() => this.OnEditImplantTemplate(sender, template));
+        public async Task NotifyDeleteImplantTemplate(object sender, int id) => await Task.Run(() => this.OnDeleteImplantTemplate(sender, id));
 
-        public async Task NotifyCreateCommandOutput(object sender, CommandOutput output) { await Task.Run(() => this.OnCreateCommandOutput(sender, output)); }
-        public async Task NotifyEditCommandOutput(object sender, CommandOutput output) { await Task.Run(() => this.OnEditCommandOutput(sender, output)); }
+        public async Task NotifyCreateGrunt(object sender, Grunt grunt) => await Task.Run(() => this.OnCreateGrunt(sender, grunt));
+        public async Task NotifyEditGrunt(object sender, Grunt grunt) => await Task.Run(() => this.OnEditGrunt(sender, grunt));
+        public async Task NotifyDeleteGrunt(object sender, int id) => await Task.Run(() => this.OnDeleteGrunt(sender, id));
 
-        public async Task NotifyCreateGruntTasking(object sender, GruntTasking tasking) { await Task.Run(() => this.OnCreateGruntTasking(sender, tasking)); }
-        public async Task NotifyEditGruntTasking(object sender, GruntTasking tasking) { await Task.Run(() => this.OnEditGruntTasking(sender, tasking)); }
+        public async Task NotifyCreateReferenceAssembly(object sender, ReferenceAssembly assembly) => await Task.Run(() => this.OnCreateReferenceAssembly(sender, assembly));
+        public async Task NotifyEditReferenceAssembly(object sender, ReferenceAssembly assembly) => await Task.Run(() => this.OnEditReferenceAssembly(sender, assembly));
+        public async Task NotifyDeleteReferenceAssembly(object sender, int id) => await Task.Run(() => this.OnDeleteReferenceAssembly(sender, id));
 
-        public async Task NotifyNotifyListener(object sender, Grunt grunt) { await Task.Run(() => this.OnNotifyListener(sender, grunt)); }
+        public async Task NotifyCreateEmbeddedResource(object sender, EmbeddedResource resource) => await Task.Run(() => this.OnCreateEmbeddedResource(sender, resource));
+        public async Task NotifyEditEmbeddedResource(object sender, EmbeddedResource resource) => await Task.Run(() => this.OnEditEmbeddedResource(sender, resource));
+        public async Task NotifyDeleteEmbeddedResource(object sender, int id) => await Task.Run(() => this.OnDeleteEmbeddedResource(sender, id));
 
-        public async Task NotifyCreateListener(object sender, Listener listener) { await Task.Run(() => this.OnCreateListener(sender, listener)); }
-        public async Task NotifyEditListener(object sender, Listener listener) { await Task.Run(() => this.OnEditListener(sender, listener)); }
+        public async Task NotifyCreateReferenceSourceLibrary(object sender, ReferenceSourceLibrary library) => await Task.Run(() => this.OnCreateReferenceSourceLibrary(sender, library));
+        public async Task NotifyEditReferenceSourceLibrary(object sender, ReferenceSourceLibrary library) => await Task.Run(() => this.OnEditReferenceSourceLibrary(sender, library));
+        public async Task NotifyDeleteReferenceSourceLibrary(object sender, int id) => await Task.Run(() => this.OnDeleteReferenceSourceLibrary(sender, id));
 
-        public async Task NotifyCreateProfile(object sender, Profile profile) { await Task.Run(() => this.OnCreateProfile(sender, profile)); }
-        public async Task NotifyEditProfile(object sender, Profile profile) { await Task.Run(() => this.OnEditProfile(sender, profile)); }
-        public async Task NotifyDeleteProfile(object sender, int id) { await Task.Run(() => this.OnDeleteProfile(sender, id)); }
+        public async Task NotifyCreateGruntTaskOption(object sender, GruntTaskOption option) => await Task.Run(() => this.OnCreateGruntTaskOption(sender, option));
+        public async Task NotifyEditGruntTaskOption(object sender, GruntTaskOption option) => await Task.Run(() => this.OnEditGruntTaskOption(sender, option));
+        public async Task NotifyDeleteGruntTaskOption(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTaskOption(sender, id));
+
+        public async Task NotifyCreateGruntTask(object sender, GruntTask gruntTask) => await Task.Run(() => this.OnCreateGruntTask(sender, gruntTask));
+        public async Task NotifyEditGruntTask(object sender, GruntTask gruntTask) => await Task.Run(() => this.OnEditGruntTask(sender, gruntTask));
+        public async Task NotifyDeleteGruntTask(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTask(sender, id)); 
+
+        public async Task NotifyCreateGruntCommand(object sender, GruntCommand command) => await Task.Run(() => this.OnCreateGruntCommand(sender, command));
+        public async Task NotifyEditGruntCommand(object sender, GruntCommand command) => await Task.Run(() => this.OnEditGruntCommand(sender, command));
+        public async Task NotifyDeleteGruntCommand(object sender, int id) => await Task.Run(() => this.OnDeleteGruntCommand(sender, id));
+
+        public async Task NotifyCreateCommandOutput(object sender, CommandOutput output) => await Task.Run(() => this.OnCreateCommandOutput(sender, output));
+        public async Task NotifyEditCommandOutput(object sender, CommandOutput output) => await Task.Run(() => this.OnEditCommandOutput(sender, output));
+        public async Task NotifyDeleteCommandOutput(object sender, int id) => await Task.Run(() => this.OnDeleteCommandOutput(sender, id));
+
+        public async Task NotifyCreateGruntTasking(object sender, GruntTasking tasking) => await Task.Run(() => this.OnCreateGruntTasking(sender, tasking));
+        public async Task NotifyEditGruntTasking(object sender, GruntTasking tasking) => await Task.Run(() => this.OnEditGruntTasking(sender, tasking));
+        public async Task NotifyDeleteGruntTasking(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTasking(sender, id));
+
+        public async Task NotifyCreateCapturedCredential(object sender, CapturedCredential credential) => await Task.Run(() => this.OnCreateCapturedCredential(sender, credential));
+        public async Task NotifyEditCapturedCredential(object sender, CapturedCredential credential) => await Task.Run(() => this.OnEditCapturedCredential(sender, credential));
+        public async Task NotifyDeleteCapturedCredential(object sender, int id) => await Task.Run(() => this.OnDeleteCapturedCredential(sender, id));
+
+        public async Task NotifyCreateIndicator(object sender, Indicator indicator) => await Task.Run(() => this.OnCreateIndicator(sender, indicator));
+        public async Task NotifyEditIndicator(object sender, Indicator indicator) => await Task.Run(() => this.OnEditIndicator(sender, indicator));
+        public async Task NotifyDeleteIndicator(object sender, int id) => await Task.Run(() => this.OnDeleteIndicator(sender, id));
+
+        public async Task NotifyCreateListenerType(object sender, ListenerType type) => await Task.Run(() => this.OnCreateListenerType(sender, type));
+        public async Task NotifyEditListenerType(object sender, ListenerType type) => await Task.Run(() => this.OnEditListenerType(sender, type));
+        public async Task NotifyDeleteListenerType(object sender, int id) => await Task.Run(() => this.OnDeleteListenerType(sender, id));
+
+        public async Task NotifyNotifyListener(object sender, Grunt grunt) => await Task.Run(() => this.OnNotifyListener(sender, grunt));
+
+        public async Task NotifyCreateListener(object sender, Listener listener) => await Task.Run(() => this.OnCreateListener(sender, listener));
+        public async Task NotifyEditListener(object sender, Listener listener) => await Task.Run(() => this.OnEditListener(sender, listener));
+
+        public async Task NotifyCreateProfile(object sender, Profile profile) => await Task.Run(() => this.OnCreateProfile(sender, profile));
+        public async Task NotifyEditProfile(object sender, Profile profile) => await Task.Run(() => this.OnEditProfile(sender, profile));
+        public async Task NotifyDeleteProfile(object sender, int id) => await Task.Run(() => this.OnDeleteProfile(sender, id));
+
+        public async Task NotifyCreateHostedFile(object sender, HostedFile file) => await Task.Run(() => this.OnCreateHostedFile(sender, file));
+        public async Task NotifyEditHostedFile(object sender, HostedFile file) => await Task.Run(() => this.OnEditHostedFile(sender, file));
+        public async Task NotifyDeleteHostedFile(object sender, int id) => await Task.Run(() => this.OnDeleteHostedFile(sender, id));
+
+        public async Task NotifyCreateLauncher(object sender, Launcher launcher) => await Task.Run(() => this.OnCreateLauncher(sender, launcher));
+        public async Task NotifyEditLauncher(object sender, Launcher launcher) => await Task.Run(() => this.OnEditLauncher(sender, launcher));
+        public async Task NotifyDeleteLauncher(object sender, int id) => await Task.Run(() => this.OnDeleteLauncher(sender, id));
     }
 }
