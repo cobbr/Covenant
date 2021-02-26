@@ -24,12 +24,14 @@ namespace Covenant.Controllers
     {
         private readonly Covenant.Models.Listeners.HttpListenerContext _context;
         private readonly Covenant.Models.Listeners.InternalListener _internalListener;
-        private Action<HttpContext> _logContext;
+        private readonly IConfiguration _configuration;
+        private readonly Action<HttpContext> _logContext;
 
-        public HttpListenerController(Covenant.Models.Listeners.HttpListenerContext context, Covenant.Models.Listeners.InternalListener internalListener, Action<HttpContext> logContext)
+        public HttpListenerController(Covenant.Models.Listeners.HttpListenerContext context, Covenant.Models.Listeners.InternalListener internalListener, IConfiguration configuration, Action<HttpContext> logContext)
         {
             _context = context;
             _internalListener = internalListener;
+            _configuration = configuration;
             _logContext = logContext;
         }
 
@@ -79,8 +81,23 @@ namespace Covenant.Controllers
         }
 
         [AllowAnonymous]
-        public ActionResult<string> Fallback()
+        public ActionResult Fallback()
         {
+            try
+            {
+                string fileDir = _configuration["ListenerStaticHostDirectory"];
+                string filename = Utilities.GetSanitizedFilename(HttpContext.Request.Path.ToString().TrimStart('/'));
+                string file = Path.Combine(fileDir, filename);
+                FileInfo fInfo = new FileInfo(file);
+                if (fInfo.Exists)
+                {
+                    string ext = Common.ContentTypeMappings.ContainsKey(fInfo.Extension) ?
+                        Common.ContentTypeMappings[fInfo.Extension] : Common.DefaultContentTypeMapping;
+                    _logContext(HttpContext);
+                    return PhysicalFile(file, ext);
+                }
+            }
+            catch { }
             return NotFound();
         }
 
