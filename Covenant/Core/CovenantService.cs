@@ -520,13 +520,12 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Password does not match ConfirmPassword.");
             }
-            CovenantUser created = await CreateUser(new CovenantUserLogin { UserName = register.UserName, Password = register.Password });
+            CovenantUser created = await this.CreateUser(new CovenantUserLogin { UserName = register.UserName, Password = register.Password });
             await _userManager.AddToRoleAsync(created, "User");
             if (!_userManager.Users.Any())
             {
                 await _signInManager.PasswordSignInAsync(register.UserName, register.Password, true, lockoutOnFailure: false);
             }
-            // _notifier.OnCreateCovenantUser?.Invoke(this, created);
             return created;
         }
 
@@ -568,9 +567,10 @@ namespace Covenant.Core
                 Context = "Users"
             };
             await _context.Events.AddAsync(userEvent);
-            // _notifier.OnCreateCovenantUser(this, savedUser);
+            await _notifier.NotifyCreateCovenantUser(this, savedUser);
             await _notifier.NotifyCreateEvent(this, userEvent);
             await LoggingService.Log(LogAction.Create, LogLevel.Trace, savedUser);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, userEvent);
             return savedUser;
         }
 
@@ -587,10 +587,8 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Could not edit CovenantUser with id: {user.Id}");
             }
-            // await _context.SaveChangesAsync();
             await _notifier.NotifyEditCovenantUser(this, matching_user);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matching_user);
-
             return matching_user;
         }
 
@@ -611,7 +609,6 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Could not set new password for CovenantUser with username: {user.UserName}");
             }
-            // await _context.SaveChangesAsync();
             await _notifier.NotifyEditCovenantUser(this, matching_user);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matching_user);
             return matching_user;
@@ -723,7 +720,7 @@ namespace Covenant.Core
                 }
                 throw new ControllerBadRequestException(Errors);
             }
-            // _notifier.OnCreateIdentityUserRole(this, userRole);
+            await _notifier.NotifyCreateIdentityUserRole(this, userRole);
             return userRole;
         }
 
@@ -749,7 +746,7 @@ namespace Covenant.Core
                 throw new ControllerBadRequestException($"BadRequest - Could not remove role: {role.Name} from CovenantUser: {user.UserName}");
             }
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteIdentityUserRole(this, new Tuple<string, string>(user.Id, role.Id));
+            await _notifier.NotifyDeleteIdentityUserRole(this, new Tuple<string, string>(user.Id, role.Id));
         }
         #endregion
 
@@ -878,14 +875,18 @@ namespace Covenant.Core
             await _context.Events.AddAsync(anEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, anEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, anEvent);
             return await this.GetEvent(anEvent.Id);
         }
 
         public async Task<IEnumerable<Event>> CreateEvents(params Event[] events)
         {
-            await _context.Events.AddRangeAsync(events);
-            await _context.SaveChangesAsync();
-            return events;
+            List<Event> createdEvents = new List<Event>();
+            foreach (Event ev in events)
+            {
+                createdEvents.Add(await this.CreateEvent(ev));
+            }
+            return createdEvents;
         }
 
         public async Task<IEnumerable<DownloadEvent>> GetDownloadEvents()
@@ -939,6 +940,7 @@ namespace Covenant.Core
             await _context.Events.AddAsync(downloadEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, downloadEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, downloadEvent);
             return await this.GetDownloadEvent(downloadEvent.Id);
         }
 
@@ -993,6 +995,7 @@ namespace Covenant.Core
             await _context.Events.AddAsync(screenshotEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, screenshotEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, screenshotEvent);
             return await this.GetScreenshotEvent(screenshotEvent.Id);
         }
 
@@ -1001,6 +1004,7 @@ namespace Covenant.Core
             Event e = await this.GetEvent(id);
             _context.Events.Remove(e);
             await _notifier.NotifyDeleteEvent(this, id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, e);
             await _context.SaveChangesAsync();
         }
         #endregion
@@ -1360,11 +1364,12 @@ namespace Covenant.Core
 
         public async Task<IEnumerable<Grunt>> CreateGrunts(params Grunt[] grunts)
         {
-            foreach (Grunt g in grunts)
+            List<Grunt> createdGrunts = new List<Grunt>();
+            foreach (Grunt grunt in grunts)
             {
-                await this.CreateGrunt(g);
+                createdGrunts.Add(await this.CreateGrunt(grunt));
             }
-            return grunts;
+            return createdGrunts;
         }
 
         public async Task<Grunt> EditGrunt(Grunt grunt, CovenantUser user = null)
@@ -2022,15 +2027,18 @@ namespace Covenant.Core
         {
             await _context.ReferenceAssemblies.AddAsync(assembly);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateReferenceAssembly(this, assembly);
+            await _notifier.NotifyCreateReferenceAssembly(this, assembly);
             return await this.GetReferenceAssembly(assembly.Id);
         }
 
         public async Task<IEnumerable<ReferenceAssembly>> CreateReferenceAssemblies(params ReferenceAssembly[] assemblies)
         {
-            await _context.ReferenceAssemblies.AddRangeAsync(assemblies);
-            await _context.SaveChangesAsync();
-            return assemblies;
+            List<ReferenceAssembly> createdAssemblies = new List<ReferenceAssembly>();
+            foreach (ReferenceAssembly assembly in assemblies)
+            {
+                createdAssemblies.Add(await this.CreateReferenceAssembly(assembly));
+            }
+            return createdAssemblies;
         }
 
         public async Task<ReferenceAssembly> EditReferenceAssembly(ReferenceAssembly assembly)
@@ -2041,7 +2049,7 @@ namespace Covenant.Core
             matchingAssembly.DotNetVersion = assembly.DotNetVersion;
             _context.ReferenceAssemblies.Update(matchingAssembly);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditReferenceAssembly(this, matchingAssembly);
+            await _notifier.NotifyEditReferenceAssembly(this, matchingAssembly);
             return await this.GetReferenceAssembly(matchingAssembly.Id);
         }
 
@@ -2050,7 +2058,7 @@ namespace Covenant.Core
             ReferenceAssembly matchingAssembly = await this.GetReferenceAssembly(id);
             _context.ReferenceAssemblies.Remove(matchingAssembly);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteReferenceAssembly(this, matchingAssembly.Id);
+            await _notifier.NotifyDeleteReferenceAssembly(this, matchingAssembly.Id);
         }
         #endregion
 
@@ -2086,15 +2094,18 @@ namespace Covenant.Core
         {
             await _context.EmbeddedResources.AddAsync(resource);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateEmbeddedResource(this, resource);
+            await _notifier.NotifyCreateEmbeddedResource(this, resource);
             return await this.GetEmbeddedResource(resource.Id);
         }
 
         public async Task<IEnumerable<EmbeddedResource>> CreateEmbeddedResources(params EmbeddedResource[] resources)
         {
-            await _context.EmbeddedResources.AddRangeAsync(resources);
-            await _context.SaveChangesAsync();
-            return resources;
+            List<EmbeddedResource> createdResources = new List<EmbeddedResource>();
+            foreach (EmbeddedResource resource in resources)
+            {
+                createdResources.Add(await this.CreateEmbeddedResource(resource));
+            }
+            return createdResources;
         }
 
         public async Task<EmbeddedResource> EditEmbeddedResource(EmbeddedResource resource)
@@ -2104,7 +2115,7 @@ namespace Covenant.Core
             matchingResource.Location = resource.Location;
             _context.EmbeddedResources.Update(matchingResource);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditEmbeddedResource(this, resource);
+            await _notifier.NotifyEditEmbeddedResource(this, resource);
             return await this.GetEmbeddedResource(matchingResource.Id);
         }
 
@@ -2112,7 +2123,7 @@ namespace Covenant.Core
         {
             EmbeddedResource matchingResource = await this.GetEmbeddedResource(id);
             _context.EmbeddedResources.Remove(matchingResource);
-            // _notifier.OnDeleteEmbeddedResource(this, matchingResource.Id);
+            await _notifier.NotifyDeleteEmbeddedResource(this, matchingResource.Id);
             await _context.SaveChangesAsync();
         }
         #endregion
@@ -2158,15 +2169,18 @@ namespace Covenant.Core
         {
             await _context.ReferenceSourceLibraries.AddAsync(library);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateReferenceSourceLibrary(this, library);
+            await _notifier.NotifyCreateReferenceSourceLibrary(this, library);
             return await this.GetReferenceSourceLibrary(library.Id);
         }
 
         public async Task<IEnumerable<ReferenceSourceLibrary>> CreateReferenceSourceLibraries(params ReferenceSourceLibrary[] libraries)
         {
-            await _context.ReferenceSourceLibraries.AddRangeAsync(libraries);
-            await _context.SaveChangesAsync();
-            return libraries;
+            List<ReferenceSourceLibrary> createdLibraries = new List<ReferenceSourceLibrary>();
+            foreach (ReferenceSourceLibrary library in libraries)
+            {
+                createdLibraries.Add(await this.CreateReferenceSourceLibrary(library));
+            }
+            return createdLibraries;
         }
 
         public async Task<ReferenceSourceLibrary> EditReferenceSourceLibrary(ReferenceSourceLibrary library)
@@ -2179,7 +2193,7 @@ namespace Covenant.Core
             matchingLibrary.EmbeddedResources = library.EmbeddedResources;
             _context.ReferenceSourceLibraries.Update(matchingLibrary);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditReferenceSourceLibrary(this, library);
+            await _notifier.NotifyEditReferenceSourceLibrary(this, library);
             return await this.GetReferenceSourceLibrary(matchingLibrary.Id);
         }
 
@@ -2188,7 +2202,7 @@ namespace Covenant.Core
             ReferenceSourceLibrary referenceSourceLibrary = await this.GetReferenceSourceLibrary(id);
             _context.ReferenceSourceLibraries.Remove(referenceSourceLibrary);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteReferenceSourceLibrary(this, referenceSourceLibrary.Id);
+            await _notifier.NotifyDeleteReferenceSourceLibrary(this, referenceSourceLibrary.Id);
         }
         #endregion
 
@@ -2197,6 +2211,7 @@ namespace Covenant.Core
         {
             _context.Entry(option).State = EntityState.Modified;
             await _context.SaveChangesAsync();
+            await _notifier.NotifyEditGruntTaskOption(this, option);
             return option;
         }
 
@@ -2204,15 +2219,18 @@ namespace Covenant.Core
         {
             await _context.AddAsync(option);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateGruntTaskOption(this, option);
+            await _notifier.NotifyCreateGruntTaskOption(this, option);
             return option;
         }
 
         public async Task<IEnumerable<GruntTaskOption>> CreateGruntTaskOptions(params GruntTaskOption[] options)
         {
-            await _context.AddRangeAsync(options);
-            await _context.SaveChangesAsync();
-            return options;
+            List<GruntTaskOption> createdOptions = new List<GruntTaskOption>();
+            foreach (GruntTaskOption option in options)
+            {
+                createdOptions.Add(await this.CreateGruntTaskOption(option));
+            }
+            return createdOptions;
         }
         #endregion
 
@@ -2246,7 +2264,7 @@ namespace Covenant.Core
         {
             await _context.AddAsync(author);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateGruntTaskOption(this, option);
+            await _notifier.NotifyCreateGruntTaskAuthor(this, author);
             return author;
         }
 
@@ -2423,6 +2441,7 @@ namespace Covenant.Core
                 option.GruntTaskId = task.Id;
                 await _context.AddAsync(option);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyCreateGruntTaskOption(this, option);
             }
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGruntTask(this, task);
@@ -2605,7 +2624,7 @@ namespace Covenant.Core
                     {
                         await _context.Credentials.AddAsync(cred);
                         await _context.SaveChangesAsync();
-                        // _notifier.OnCreateCapturedCredential(this, cred);
+                        await _notifier.NotifyCreateCapturedCredential(this, cred);
                     }
                 }
             }
@@ -2627,7 +2646,7 @@ namespace Covenant.Core
             GruntCommand command = await this.GetGruntCommand(id);
             _context.GruntCommands.Remove(command);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteGruntCommand(this, command.Id);
+            await _notifier.NotifyDeleteGruntCommand(this, command.Id);
         }
 
         private string GetCommandFromInput(string UserInput, List<ParsedParameter> parameters, GruntTask task = null)
@@ -2789,16 +2808,18 @@ namespace Covenant.Core
             await _context.CommandOutputs.AddAsync(output);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateCommandOutput(this, output);
-            // _notifier.OnCreateCommandOutput(this, output);
             // await LoggingService.Log(LogAction.Create, LogLevel.Trace, output);
             return output;
         }
 
         public async Task<IEnumerable<CommandOutput>> CreateCommandOutputs(params CommandOutput[] outputs)
         {
-            await _context.CommandOutputs.AddRangeAsync(outputs);
-            await _context.SaveChangesAsync();
-            return outputs;
+            List<CommandOutput> createdOutputs = new List<CommandOutput>();
+            foreach (CommandOutput output in outputs)
+            {
+                createdOutputs.Add(await this.CreateCommandOutput(output));
+            }
+            return createdOutputs;
         }
 
         public async Task<CommandOutput> EditCommandOutput(CommandOutput output)
@@ -2815,7 +2836,7 @@ namespace Covenant.Core
                 {
                     await _context.Credentials.AddAsync(cred);
                     await _context.SaveChangesAsync();
-                    // _notifier.OnCreateCapturedCredential(this, cred);
+                    await _notifier.NotifyCreateCapturedCredential(this, cred);
                 }
             }
             return updatingOutput;
@@ -2826,7 +2847,7 @@ namespace Covenant.Core
             CommandOutput output = await this.GetCommandOutput(id);
             _context.CommandOutputs.Remove(output);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteCommandOutput(this, output.Id);
+            await _notifier.NotifyDeleteCommandOutput(this, output.Id);
         }
         #endregion
 
@@ -3100,9 +3121,12 @@ public static class Task
 
         public async Task<IEnumerable<GruntTasking>> CreateGruntTaskings(params GruntTasking[] taskings)
         {
-            await _context.GruntTaskings.AddRangeAsync(taskings);
-            await _context.SaveChangesAsync();
-            return taskings;
+            List<GruntTasking> createdTaskings = new List<GruntTasking>();
+            foreach (GruntTasking tasking in taskings)
+            {
+                createdTaskings.Add(await this.CreateGruntTasking(tasking));
+            }
+            return createdTaskings;
         }
 
         public async Task<GruntTasking> EditGruntTasking(GruntTasking tasking)
@@ -3307,13 +3331,12 @@ public static class Task
             }
             _context.GruntTaskings.Remove(removingGruntTasking);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteGruntTasking(this, removingGruntTasking.Id);
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, removingGruntTasking);
-            // _notifier.OnDeleteGruntTasking(this, removingGruntTasking.Id);
         }
 
         private async Task<Grunt> GetParentGrunt(Grunt child)
         {
-            // var parent = child.ImplantTemplate.CommType != CommunicationType.SMB ? child : await _context.Grunts.Include(G => G.ImplantTemplate).FirstOrDefaultAsync(G => G.Children.Contains(child.GUID));
             Grunt parent;
             if (child.ImplantTemplate.CommType != CommunicationType.SMB)
             {
@@ -3494,22 +3517,23 @@ public static class Task
 
         public async Task<IEnumerable<CapturedCredential>> CreateCredentials(params CapturedCredential[] credentials)
         {
+            List<CapturedCredential> createdCredentials = new List<CapturedCredential>();
             foreach(CapturedCredential credential in credentials)
             {
                 if (credential.Type == CredentialType.Password)
                 {
-                    await this.CreatePasswordCredential((CapturedPasswordCredential)credential);
+                    createdCredentials.Add(await this.CreatePasswordCredential((CapturedPasswordCredential)credential));
                 }
                 else if (credential.Type == CredentialType.Hash)
                 {
-                    await this.CreateHashCredential((CapturedHashCredential)credential);
+                    createdCredentials.Add(await this.CreateHashCredential((CapturedHashCredential)credential));
                 }
                 else if (credential.Type == CredentialType.Ticket)
                 {
-                    await this.CreateTicketCredential((CapturedTicketCredential)credential);
+                    createdCredentials.Add(await this.CreateTicketCredential((CapturedTicketCredential)credential));
                 }
             }
-            return await this.GetCredentials();
+            return createdCredentials;
         }
 
         public async Task<CapturedPasswordCredential> EditPasswordCredential(CapturedPasswordCredential credential)
@@ -3639,16 +3663,29 @@ public static class Task
             await _context.Indicators.AddAsync(indicator);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateIndicator(this, indicator);
+            if (indicator.Type == IndicatorType.FileIndicator)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, (FileIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.NetworkIndicator)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, (NetworkIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.TargetIndicator)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, (TargetIndicator)indicator);
+            }
             return await GetIndicator(indicator.Id);
         }
 
         public async Task<IEnumerable<Indicator>> CreateIndicators(params Indicator[] indicators)
         {
+            List<Indicator> createdIndicators = new List<Indicator>();
             foreach (Indicator indicator in indicators)
             {
-                await this.CreateIndicator(indicator);
+                createdIndicators.Add(await this.CreateIndicator(indicator));
             }
-            return await this.GetIndicators();
+            return createdIndicators;
         }
 
         public async Task<Indicator> EditIndicator(Indicator indicator)
@@ -3670,6 +3707,9 @@ public static class Task
                     matchingFileIndicator.SHA1 = fileIndicator.SHA1;
                     matchingFileIndicator.MD5 = fileIndicator.MD5;
                     _context.Indicators.Update(matchingFileIndicator);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditIndicator(this, matchingFileIndicator);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingFileIndicator);
                     break;
                 case IndicatorType.NetworkIndicator:
                     NetworkIndicator matchingNetworkIndicator = (NetworkIndicator)matchingIndicator;
@@ -3680,6 +3720,9 @@ public static class Task
                     matchingNetworkIndicator.Port = networkIndicator.Port;
                     matchingNetworkIndicator.URI = networkIndicator.URI;
                     _context.Indicators.Update(matchingNetworkIndicator);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditIndicator(this, matchingNetworkIndicator);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingNetworkIndicator);
                     break;
                 case IndicatorType.TargetIndicator:
                     TargetIndicator matchingTargetIndicator = (TargetIndicator)matchingIndicator;
@@ -3687,10 +3730,11 @@ public static class Task
                     matchingTargetIndicator.ComputerName = targetIndicator.ComputerName;
                     matchingTargetIndicator.UserName = targetIndicator.UserName;
                     _context.Indicators.Update(matchingTargetIndicator);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditIndicator(this, matchingTargetIndicator);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingTargetIndicator);
                     break;
             }
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyEditIndicator(this, indicator);
             return await this.GetIndicator(indicator.Id);
         }
 
@@ -3704,6 +3748,18 @@ public static class Task
             _context.Indicators.Remove(indicator);
             await _context.SaveChangesAsync();
             await _notifier.NotifyDeleteIndicator(this, indicator.Id);
+            if (indicator.Type == IndicatorType.FileIndicator)
+            {
+                await LoggingService.Log(LogAction.Delete, LogLevel.Trace, (FileIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.NetworkIndicator)
+            {
+                await LoggingService.Log(LogAction.Delete, LogLevel.Trace, (NetworkIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.TargetIndicator)
+            {
+                await LoggingService.Log(LogAction.Delete, LogLevel.Trace, (TargetIndicator)indicator);
+            }
         }
         #endregion
 
@@ -3759,6 +3815,7 @@ public static class Task
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateProfile(this, profile);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             return await this.GetProfile(profile.Id);
         }
 
@@ -3768,8 +3825,8 @@ public static class Task
             await _context.SaveChangesAsync();
             foreach (Profile profile in profiles)
             {
-                await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
                 await _notifier.NotifyCreateProfile(this, profile);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             }
             return await this.GetProfiles();
         }
@@ -3810,6 +3867,7 @@ public static class Task
             _context.Profiles.Update(matchingProfile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditProfile(this, matchingProfile);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingProfile);
             return await this.GetProfile(profile.Id);
         }
 
@@ -3823,6 +3881,7 @@ public static class Task
             _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyDeleteProfile(this, profile.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, profile);
         }
 
         public async Task<IEnumerable<HttpProfile>> GetHttpProfiles()
@@ -3863,7 +3922,8 @@ public static class Task
             }
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateProfile(this, profile);
+            await _notifier.NotifyCreateProfile(this, profile);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             return await this.GetHttpProfile(profile.Id);
         }
 
@@ -3875,7 +3935,8 @@ public static class Task
             }
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateProfile(this, profile);
+            await _notifier.NotifyCreateProfile(this, profile);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             return await this.GetBridgeProfile(profile.Id);
         }
 
@@ -3921,7 +3982,8 @@ public static class Task
             }
             _context.Update(matchingProfile);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditProfile(this, matchingProfile);
+            await _notifier.NotifyEditProfile(this, matchingProfile);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingProfile);
             return await this.GetHttpProfile(profile.Id);
         }
 
@@ -3964,7 +4026,8 @@ public static class Task
             }
             _context.Update(matchingProfile);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditProfile(this, matchingProfile);
+            await _notifier.NotifyEditProfile(this, matchingProfile);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingProfile);
             return await this.GetBridgeProfile(profile.Id);
         }
         #endregion
@@ -4060,7 +4123,7 @@ public static class Task
             await this.EditListener(listener);
             await _context.SaveChangesAsync();
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, listener);
-            // _notifier.OnDeleteListener(this, listener.Id);
+            await _notifier.NotifyDeleteListener(this, listener.Id);
         }
 
         public async Task<IEnumerable<HttpListener>> GetHttpListeners()
@@ -4140,8 +4203,7 @@ public static class Task
                 IEnumerable<NetworkIndicator> indicators = await this.GetNetworkIndicators();
                 if (indicators.FirstOrDefault(I => I.IPAddress == httpIndicator.IPAddress && I.Domain == httpIndicator.Domain) == null)
                 {
-                    await _context.Indicators.AddAsync(httpIndicator);
-                    // _notifier.OnCreateIndicator(this, httpIndicator);
+                    await this.CreateIndicator(httpIndicator);
                 }
             }
 
@@ -4248,15 +4310,16 @@ public static class Task
 
         public async Task<IEnumerable<Listener>> CreateListeners(params Listener[] listeners)
         {
+            List<Listener> createdListeners = new List<Listener>();
             foreach (Listener l in listeners)
             {
                 if (l.ListenerType.Name == "HTTP")
                 {
-                    await this.CreateHttpListener((HttpListener)l);
+                    createdListeners.Add(await this.CreateHttpListener((HttpListener)l));
                 }
                 else if (l.ListenerType.Name == "Bridge")
                 {
-                    await this.CreateBridgeListener((BridgeListener)l);
+                    createdListeners.Add(await this.CreateBridgeListener((BridgeListener)l));
                 }
             }
             return listeners;
@@ -4399,20 +4462,18 @@ public static class Task
                 {
                     throw new ControllerBadRequestException($"BadRequest - HostedFile already exists at: {hostedFile.Path}");
                 }
-                FileIndicator indicator = new FileIndicator
+                Indicator indicator = await this.CreateIndicator(new FileIndicator
                 {
                     FileName = hostedFile.Path.Split("/").Last(),
                     FilePath = listener.Urls + hostedFile.Path,
                     MD5 = Encrypt.Utilities.GetMD5(Convert.FromBase64String(hostedFile.Content)),
                     SHA1 = Encrypt.Utilities.GetSHA1(Convert.FromBase64String(hostedFile.Content)),
                     SHA2 = Encrypt.Utilities.GetSHA256(Convert.FromBase64String(hostedFile.Content))
-                };
-                await _context.Indicators.AddAsync(indicator);
+                });
                 await _context.HostedFiles.AddAsync(hostedFile);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyCreateHostedFile(this, hostedFile);
                 await LoggingService.Log(LogAction.Create, LogLevel.Trace, hostedFile);
-                // _notifier.OnCreateIndicator(this, indicator);
-                // _notifier.OnCreateHostedFile(this, hostedFile);
                 return await this.GetHostedFile(hostedFile.Id);
             }
             catch (Exception)
@@ -4423,12 +4484,12 @@ public static class Task
 
         public async Task<IEnumerable<HostedFile>> CreateHostedFiles(params HostedFile[] files)
         {
+            List<HostedFile> createdFiles = new List<HostedFile>();
             foreach (HostedFile file in files)
             {
-                await this.CreateHostedFile(file);
-                await _context.SaveChangesAsync();
+                createdFiles.Add(await this.CreateHostedFile(file));
             }
-            return files;
+            return createdFiles;
         }
 
         public async Task<HostedFile> EditHostedFile(int listenerId, HostedFile file)
@@ -4442,8 +4503,8 @@ public static class Task
                 HostedFile updatedFile = listener.HostFile(matchingFile);
                 _context.HostedFiles.Update(updatedFile);
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyEditHostedFile(this, updatedFile);
                 await LoggingService.Log(LogAction.Edit, LogLevel.Trace, updatedFile);
-                // _notifier.OnEditHostedFile(this, updatedFile);
                 return await this.GetHostedFile(updatedFile.Id);
             }
             catch
@@ -4459,8 +4520,8 @@ public static class Task
             listener.UnhostFile(file);
             _context.HostedFiles.Remove(file);
             await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteHostedFile(this, hostedFileId);
             await LoggingService.Log(LogAction.Delete, LogLevel.Trace, file);
-            // _notifier.OnDeleteHostedFile(this, file.Id);
         }
         #endregion
 
@@ -4662,7 +4723,8 @@ public static class Task
             Launcher generatedLauncher = await this.GenerateLauncher(launcher); 
             await _context.Launchers.AddAsync(generatedLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
+            await _notifier.NotifyCreateLauncher(this, launcher);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, launcher);
             return await this.GetLauncher(generatedLauncher.Id);
         }
 
@@ -4718,7 +4780,8 @@ public static class Task
             launcher.GetHostedLauncherString(listener, savedFile);
             _context.Launchers.Update(launcher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
+            await _notifier.NotifyEditLauncher(this, launcher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, launcher);
             return await this.GetLauncher(id);
         }
 
@@ -4742,7 +4805,8 @@ public static class Task
             matchingLauncher = (BinaryLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetBinaryLauncher(matchingLauncher.Id);
         }
 
@@ -4766,7 +4830,8 @@ public static class Task
             matchingLauncher = (ServiceBinaryLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetServiceBinaryLauncher(matchingLauncher.Id);
         }
 
@@ -4790,7 +4855,8 @@ public static class Task
             matchingLauncher = (ShellCodeLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetShellCodeLauncher(matchingLauncher.Id);
         }
 
@@ -4817,7 +4883,8 @@ public static class Task
             matchingLauncher = (PowerShellLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetPowerShellLauncher(matchingLauncher.Id);
         }
 
@@ -4844,7 +4911,8 @@ public static class Task
             matchingLauncher = (MSBuildLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetMSBuildLauncher(matchingLauncher.Id);
         }
 
@@ -4869,7 +4937,8 @@ public static class Task
             matchingLauncher = (InstallUtilLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetInstallUtilLauncher(matchingLauncher.Id);
         }
 
@@ -4901,7 +4970,8 @@ public static class Task
             matchingLauncher = (Regsvr32Launcher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetRegsvr32Launcher(matchingLauncher.Id);
         }
 
@@ -4929,7 +4999,8 @@ public static class Task
             matchingLauncher = (MshtaLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
             return await this.GetMshtaLauncher(matchingLauncher.Id);
         }
 
@@ -4938,7 +5009,8 @@ public static class Task
             Launcher launcher = await this.GetLauncher(id);
             _context.Launchers.Remove(launcher);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteLauncher(this, launcher.Id);
+            await _notifier.NotifyDeleteLauncher(this, id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, launcher);
         }
         #endregion
 

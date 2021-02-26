@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated GetDomainGroup, GetDomainUser, GetDomainComputer tasks with addtional options
 - Updated GruntTaskAssignForm and GruntTaskOptionsModal to autofill DefaultValues for options if none specified
 - Updated NotificationService to complete model actions
+- Updated NotificationService to add missing model actions, updated CovenantService to utilize all notifications
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

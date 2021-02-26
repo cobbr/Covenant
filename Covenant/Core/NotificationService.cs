@@ -39,8 +39,8 @@ namespace Covenant.Core
         event EventHandler<IdentityUserRole<string>> OnEditIdentityUserRole;
         event EventHandler<Tuple<string, string>> OnDeleteIdentityUserRole;
         Task NotifyCreateIdentityUserRole(object sender, IdentityUserRole<string> userRole);
-        Task NotifyEditIdentityRole(object sender, IdentityUserRole<string> userRole);
-        Task NotifyDeleteIdentityRole(object sender, Tuple<string, string> ids);
+        Task NotifyEditIdentityUserRole(object sender, IdentityUserRole<string> userRole);
+        Task NotifyDeleteIdentityUserRole(object sender, Tuple<string, string> ids);
     }
 
     public interface IThemeNotificationService
@@ -123,8 +123,18 @@ namespace Covenant.Core
         Task NotifyDeleteGruntTaskOption(object sender, int id);
     }
 
+    public interface IGruntTaskAuthorNotificationService
+    {
+        event EventHandler<GruntTaskAuthor> OnCreateGruntTaskAuthor;
+        event EventHandler<GruntTaskAuthor> OnEditGruntTaskAuthor;
+        event EventHandler<int> OnDeleteGruntTaskAuthor;
+        Task NotifyCreateGruntTaskAuthor(object sender, GruntTaskAuthor author);
+        Task NotifyEditGruntTaskAuthor(object sender, GruntTaskAuthor author);
+        Task NotifyDeleteGruntTaskAuthor(object sender, int id);
+    }
+
     public interface IGruntTaskNotificationService : IReferenceAssemblyNotificationService, IEmbeddedResourceNotificationService,
-        IReferenceSourceLibraryNotificationService, IGruntTaskOptionNotificationService
+        IReferenceSourceLibraryNotificationService, IGruntTaskOptionNotificationService, IGruntTaskAuthorNotificationService
     {
         event EventHandler<GruntTask> OnCreateGruntTask;
         event EventHandler<GruntTask> OnEditGruntTask;
@@ -203,6 +213,7 @@ namespace Covenant.Core
         Task NotifyNotifyListener(object sender, Grunt grunt);
         Task NotifyCreateListener(object sender, Listener listener);
         Task NotifyEditListener(object sender, Listener listener);
+        Task NotifyDeleteListener(object sender, int id);
     }
 
     public interface IProfileNotificationService
@@ -294,6 +305,9 @@ namespace Covenant.Core
         public event EventHandler<GruntTaskOption> OnCreateGruntTaskOption = delegate { };
         public event EventHandler<GruntTaskOption> OnEditGruntTaskOption = delegate { };
         public event EventHandler<int> OnDeleteGruntTaskOption = delegate { };
+        public event EventHandler<GruntTaskAuthor> OnCreateGruntTaskAuthor;
+        public event EventHandler<GruntTaskAuthor> OnEditGruntTaskAuthor;
+        public event EventHandler<int> OnDeleteGruntTaskAuthor;
         public event EventHandler<GruntTask> OnCreateGruntTask = delegate { };
         public event EventHandler<GruntTask> OnEditGruntTask = delegate { };
         public event EventHandler<int> OnDeleteGruntTask = delegate { };
@@ -338,8 +352,8 @@ namespace Covenant.Core
         public async Task NotifyDeleteIdentityRole(object sender, string id) => await Task.Run(() => this.OnDeleteCovenantUser(sender, id));
 
         public async Task NotifyCreateIdentityUserRole(object sender, IdentityUserRole<string> userRole) => await Task.Run(() => this.OnCreateIdentityUserRole(sender, userRole));
-        public async Task NotifyEditIdentityRole(object sender, IdentityUserRole<string> userRole) => await Task.Run(() => this.OnEditIdentityUserRole(sender, userRole));
-        public async Task NotifyDeleteIdentityRole(object sender, Tuple<string, string> ids) => await Task.Run(() => this.OnDeleteIdentityUserRole(sender, ids));
+        public async Task NotifyEditIdentityUserRole(object sender, IdentityUserRole<string> userRole) => await Task.Run(() => this.OnEditIdentityUserRole(sender, userRole));
+        public async Task NotifyDeleteIdentityUserRole(object sender, Tuple<string, string> ids) => await Task.Run(() => this.OnDeleteIdentityUserRole(sender, ids));
 
         public async Task NotifyCreateTheme(object sender, Theme theme) => await Task.Run(() => this.OnCreateTheme(sender, theme));
         public async Task NotifyEditTheme(object sender, Theme theme) => await Task.Run(() => this.OnEditTheme(sender, theme));
@@ -373,6 +387,10 @@ namespace Covenant.Core
         public async Task NotifyEditGruntTaskOption(object sender, GruntTaskOption option) => await Task.Run(() => this.OnEditGruntTaskOption(sender, option));
         public async Task NotifyDeleteGruntTaskOption(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTaskOption(sender, id));
 
+        public async Task NotifyCreateGruntTaskAuthor(object sender, GruntTaskAuthor author) => await Task.Run(() => this.OnCreateGruntTaskAuthor(sender, author));
+        public async Task NotifyEditGruntTaskAuthor(object sender, GruntTaskAuthor author) => await Task.Run(() => this.OnEditGruntTaskAuthor(sender, author));
+        public async Task NotifyDeleteGruntTaskAuthor(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTaskAuthor(sender, id));
+
         public async Task NotifyCreateGruntTask(object sender, GruntTask gruntTask) => await Task.Run(() => this.OnCreateGruntTask(sender, gruntTask));
         public async Task NotifyEditGruntTask(object sender, GruntTask gruntTask) => await Task.Run(() => this.OnEditGruntTask(sender, gruntTask));
         public async Task NotifyDeleteGruntTask(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTask(sender, id)); 
@@ -402,9 +420,9 @@ namespace Covenant.Core
         public async Task NotifyDeleteListenerType(object sender, int id) => await Task.Run(() => this.OnDeleteListenerType(sender, id));
 
         public async Task NotifyNotifyListener(object sender, Grunt grunt) => await Task.Run(() => this.OnNotifyListener(sender, grunt));
-
         public async Task NotifyCreateListener(object sender, Listener listener) => await Task.Run(() => this.OnCreateListener(sender, listener));
         public async Task NotifyEditListener(object sender, Listener listener) => await Task.Run(() => this.OnEditListener(sender, listener));
+        public async Task NotifyDeleteListener(object sender, int id) => await Task.Run(() => this.OnDeleteListener(sender, id));
 
         public async Task NotifyCreateProfile(object sender, Profile profile) => await Task.Run(() => this.OnCreateProfile(sender, profile));
         public async Task NotifyEditProfile(object sender, Profile profile) => await Task.Run(() => this.OnEditProfile(sender, profile));
