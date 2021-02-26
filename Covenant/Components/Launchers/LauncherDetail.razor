@@ -124,7 +124,7 @@
     {
         get
         {
-            if (Launcher.Name == "PowerShell")
+            if (Launcher.Type == LauncherType.PowerShell)
             {
                 var PSL = ((PowerShellLauncher)Launcher);
                 string esl = PSL.EncodedLauncherString;
