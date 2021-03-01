@@ -3914,12 +3914,70 @@ public static class Task
             return (BridgeProfile)profile;
         }
 
+        private bool ValidateHttpProfile(HttpProfile profile)
+        {
+            bool guidInUrls = true;
+            foreach (string url in profile.HttpUrls)
+            {
+                if (!url.Contains("{GUID}"))
+                {
+                    guidInUrls = false;
+                    break;
+                }
+            }
+            bool guidInHeaders = false;
+            bool tooManyHeaders = false;
+            foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
+            {
+                if (header.Name.Contains("{GUID}") || header.Value.Contains("{GUID}"))
+                {
+                    if (guidInHeaders)
+                    {
+                        tooManyHeaders = true;
+                        break;
+                    }
+                    guidInHeaders = true;
+                }
+            }
+            if (!guidInHeaders && !guidInUrls)
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile must include {GUID} location");
+            }
+            if (guidInHeaders && guidInUrls)
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile should include {GUID} only in HttpUrls or a HttpRequestHeader, not both");
+            }
+            if (tooManyHeaders)
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile should include {GUID} only in a single HttpRequestHeader, not multiple");
+            }
+            if (!profile.HttpGetResponse.Contains("{DATA}") || !profile.HttpPostResponse.Contains("{DATA}") || !profile.HttpPostRequest.Contains("{DATA}"))
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile must include {DATA} location in each request/response body");
+            }
+            return true;
+        }
+
+        private bool ValidateBridgeProfile(BridgeProfile profile)
+        {
+            if (!profile.ReadFormat.Contains("{DATA}") || !profile.ReadFormat.Contains("{GUID}"))
+            {
+                throw new ControllerBadRequestException("BadRequest - BridgeProfile ReadFormat must include {GUID} and {DATA} locations");
+            }
+            if (!profile.WriteFormat.Contains("{DATA}") || !profile.WriteFormat.Contains("{GUID}"))
+            {
+                throw new ControllerBadRequestException("BadRequest - BridgeProfile WriteFormat must include {GUID} and {DATA} locations");
+            }
+            return true;
+        }
+
         public async Task<HttpProfile> CreateHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
             if (!await this.IsAdmin(currentUser))
             {
                 throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
             }
+            this.ValidateHttpProfile(profile);
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateProfile(this, profile);
@@ -3933,6 +3991,7 @@ public static class Task
             {
                 throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
             }
+            this.ValidateBridgeProfile(profile);
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateProfile(this, profile);
@@ -3980,6 +4039,7 @@ public static class Task
                 }
                 matchingProfile.MessageTransform = profile.MessageTransform;
             }
+            this.ValidateHttpProfile(matchingProfile);
             _context.Update(matchingProfile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditProfile(this, matchingProfile);
@@ -4024,6 +4084,7 @@ public static class Task
                 }
                 matchingProfile.MessageTransform = profile.MessageTransform;
             }
+            this.ValidateBridgeProfile(matchingProfile);
             _context.Update(matchingProfile);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditProfile(this, matchingProfile);
@@ -4249,11 +4310,20 @@ public static class Task
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
                 await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
-                listener = await this.StartHttpListenerVerify(listener);
-                _context.Listeners.Update(listener);
-                await _context.SaveChangesAsync();
-                await _notifier.NotifyEditListener(this, listener);
-                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
+                try
+                {
+                    listener = await this.StartHttpListenerVerify(listener);
+                    _context.Listeners.Update(listener);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditListener(this, listener);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
+                }
+                catch (ControllerBadRequestException)
+                {
+                    _context.Listeners.Remove(listener);
+                    _context.SaveChanges();
+                    throw;
+                }
             }
             else
             {
@@ -4292,11 +4362,20 @@ public static class Task
                 await _notifier.NotifyCreateListener(this, listener);
                 await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
 
-                listener = await this.StartBridgeListenerVerify(listener);
-                _context.Listeners.Update(listener);
-                await _context.SaveChangesAsync();
-                await _notifier.NotifyEditListener(this, listener);
-                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
+                try
+                {
+                    listener = await this.StartBridgeListenerVerify(listener);
+                    _context.Listeners.Update(listener);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditListener(this, listener);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
+                }
+                catch (ControllerBadRequestException)
+                {
+                    _context.Listeners.Remove(listener);
+                    _context.SaveChanges();
+                    throw;
+                }
             }
             else
             {

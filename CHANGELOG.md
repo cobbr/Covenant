@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated GruntTaskAssignForm and GruntTaskOptionsModal to autofill DefaultValues for options if none specified
 - Updated NotificationService to complete model actions
 - Updated NotificationService to add missing model actions, updated CovenantService to utilize all notifications
+- Updated and improved error handling for Listeners and Profiles creation/editing
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

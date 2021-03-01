@@ -79,9 +79,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
+        if (firstRender)
         {
-            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
+            foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
+            {
+                await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
+            }
         }
     }
 

@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
+@using Microsoft.Rest
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Authorization
 
@@ -85,28 +86,27 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+        }
     }
 
     private async Task OnSubmitHttpListener(HttpListener listener)
     {
         try
         {
-            if ((await Service.GetListeners()).Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
-            {
-                Service.DisposeContext();
-                throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
-            }
-            else
-            {
-                listener.Status = ListenerStatus.Active;
-                _ = this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener, this.Token));
-                NavigationManager.NavigateTo("/listener");
-            }
+            listener.Status = ListenerStatus.Active;
+            await CovenantAPIService.CreateHttpListener(listener, this.Token);
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
             this.DisplayError = e.Message;
+        }
+        catch (HttpOperationException e)
+        {
+            this.DisplayError = e.Response.Content;
         }
     }
 
@@ -114,21 +114,17 @@
     {
         try
         {
-            if ((await Service.GetListeners()).Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
-            {
-                Service.DisposeContext();
-                throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
-            }
-            else
-            {
-                listener.Status = ListenerStatus.Active;
-                _ = this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener, this.Token));
-                NavigationManager.NavigateTo("/listener");
-            }
+            listener.Status = ListenerStatus.Active;
+            await CovenantAPIService.CreateBridgeListener(listener, this.Token);
+            NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
             this.DisplayError = e.Message;
+        }
+        catch (HttpOperationException e)
+        {
+            this.DisplayError = e.Response.Content;
         }
     }
 }

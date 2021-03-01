@@ -1,6 +1,7 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
 @using System.Collections.Generic
+@using Microsoft.Rest
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Authorization
 
@@ -78,6 +79,9 @@
     public EventCallback<List<Listener>> ListenersChanged { get; set; }
 
     [Parameter]
+    public EventCallback<string> OnError { get; set; }
+
+    [Parameter]
     public bool IsSearchable { get; set; } = false;
 
     [Parameter]
@@ -132,35 +136,51 @@
                 if (listener.ListenerType.Name == "HTTP")
                 {
                     HttpListener httpListener = (HttpListener)listener;
-                    _ = this.InvokeAsync(async () => await CovenantAPIService.EditHttpListener(httpListener, this.Token));
+                    await CovenantAPIService.EditHttpListener(httpListener, this.Token);
                 }
                 else if (listener.ListenerType.Name == "Bridge")
                 {
                     BridgeListener bridgeListener = (BridgeListener)listener;
-                    _ = this.InvokeAsync(async () => await CovenantAPIService.EditBridgeListener(bridgeListener, this.Token));
+                    await CovenantAPIService.EditBridgeListener(bridgeListener, this.Token);
                 }
             }
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // this.DisplayError = e.Message;
             listener.Status = ListenerStatus.Stopped;
+            await this.OnError.InvokeAsync(e.Message);
         }
-        listener = await Service.GetListener(listener.Id);
-        Service.DisposeContext();
-        this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = listener;
+        catch (HttpOperationException e)
+        {
+            await this.OnError.InvokeAsync(e.Response.Content);
+        }
     }
 
     private async Task OnStopListener(Listener listener)
     {
-        listener.Status = ListenerStatus.Stopped;
-        listener = await Service.EditListener(listener);
-        this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = listener;
+        try
+        {
+            listener.Status = ListenerStatus.Stopped;
+            listener = await Service.EditListener(listener);
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            listener.Status = ListenerStatus.Active;
+            await this.OnError.InvokeAsync(e.Message);
+        }
+        Service.DisposeContext();
     }
 
     private async Task OnDeleteListener(Listener listener)
     {
-        await Service.DeleteListener(listener.Id);
-        this.Listeners.RemoveAt(this.Listeners.FindIndex(L => L.Id == listener.Id));
+        try
+        {
+            await Service.DeleteListener(listener.Id);
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
+        Service.DisposeContext();
     }
 }
