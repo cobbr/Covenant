@@ -126,7 +126,7 @@
         {
             if (Launcher.Type == LauncherType.PowerShell)
             {
-                var PSL = ((PowerShellLauncher)Launcher);
+                PowerShellLauncher PSL = ((PowerShellLauncher)Launcher);
                 string esl = PSL.EncodedLauncherString;
                 return esl.Substring(0, Math.Min(esl.Length, MAX_LAUNCHER_LENGTH));
             }
