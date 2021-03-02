@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CreateProcessMinidump and CreateProcessSnapshotDump tasks
 - Added Inject task
 - Added ActionDropdown, DropdownActionItem components, converted tables to use
+- Added GetContent and GetFilename Launcher abstract methods
+- Added GetLauncherDownload API endpoint
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -76,6 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated NotificationService to complete model actions
 - Updated NotificationService to add missing model actions, updated CovenantService to utilize all notifications
 - Updated and improved error handling for Listeners and Profiles creation/editing
+- Updated Covenant.API namespace to a new projectfile
+- Updated GetDownloadFile and GetScreenshotFile API endpoints to return file stream
+- Updated Download/Screenshot task output handling
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
