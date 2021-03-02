@@ -26,6 +26,8 @@ namespace Covenant.Models.Launchers
             this.CompressStager = false;
         }
 
+        public override string GetFilename() => Utilities.GetSanitizedFilename(this.Name) + ".bin";
+
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
@@ -45,8 +47,8 @@ namespace Covenant.Models.Launchers
             int ret = Generator.Donut_Create(ref config);
             if (ret == Constants.DONUT_ERROR_SUCCESS)
             {
-                this.Base64ILByteString = Convert.ToBase64String(File.ReadAllBytes(outputf));
-                this.LauncherString = template.Name + ".bin";
+                this.LauncherILBytes = File.ReadAllBytes(outputf);
+                this.LauncherString = this.GetFilename();
             }
             return this.LauncherString;
         }

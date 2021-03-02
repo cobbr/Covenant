@@ -203,6 +203,7 @@ namespace Covenant.Core
         Task<CommandOutput> CreateCommandOutput(CommandOutput output);
         Task<IEnumerable<CommandOutput>> CreateCommandOutputs(params CommandOutput[] outputs);
         Task<CommandOutput> EditCommandOutput(CommandOutput output);
+        Task<CommandOutput> AppendCommandOutput(int id, string append);
         Task DeleteCommandOutput(int id);
     }
 
@@ -314,14 +315,6 @@ namespace Covenant.Core
     public interface ILauncherService
     {
         Task<IEnumerable<Launcher>> GetLaunchers();
-        Task<IEnumerable<BinaryLauncher>> GetBinaryLaunchers();
-        Task<IEnumerable<ServiceBinaryLauncher>> GetServiceBinaryLaunchers();
-        Task<IEnumerable<ShellCodeLauncher>> GetShellCodeLaunchers();
-        Task<IEnumerable<PowerShellLauncher>> GetPowerShellLaunchers();
-        Task<IEnumerable<MSBuildLauncher>> GetMSBuildLaunchers();
-        Task<IEnumerable<InstallUtilLauncher>> GetInstallUtilLaunchers();
-        Task<IEnumerable<Regsvr32Launcher>> GetRegsvr32Launchers();
-        Task<IEnumerable<MshtaLauncher>> GetMshtaLaunchers();
         Task<Launcher> GetLauncher(int id);
         Task<BinaryLauncher> GetBinaryLauncher(int id);
         Task<ServiceBinaryLauncher> GetServiceBinaryLauncher(int id);
@@ -2842,6 +2835,33 @@ namespace Covenant.Core
             return updatingOutput;
         }
 
+        public async Task<CommandOutput> AppendCommandOutput(int id, string append)
+        {
+            CommandOutput updatingOutput = await this.GetCommandOutput(id);
+
+            DownloadEvent dev = await _context.Events
+                .Where(E => E.Type == EventType.Download)
+                .Select(E => (DownloadEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            ScreenshotEvent sev = await _context.Events
+                .Where(E => E.Type == EventType.Screenshot)
+                .Select(E => (ScreenshotEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (dev != null)
+            {
+                dev.WriteDownload(Convert.FromBase64String(append));
+                return updatingOutput;
+            }
+            else if (sev != null)
+            {
+                sev.WriteDownload(Convert.FromBase64String(append));
+                return updatingOutput;
+            }
+            updatingOutput.Output += append;
+            await this.EditCommandOutput(updatingOutput);
+            return await this.GetCommandOutput(updatingOutput.Id);
+        }
+
         public async Task DeleteCommandOutput(int id)
         {
             CommandOutput output = await this.GetCommandOutput(id);
@@ -3093,6 +3113,37 @@ public static class Task
                 parameters[0] = parameters[0] == "localhost" ? tasking.Grunt.Hostname : parameters[0];
                 parameters[0] = parameters[0] == "127.0.0.1" ? tasking.Grunt.IPAddress : parameters[0];
             }
+            else if (tasking.GruntTask.Name.Equals("Download", StringComparison.CurrentCultureIgnoreCase))
+            {
+                string FileName = parameters[0];
+                DownloadEvent downloadEvent = await this.CreateDownloadEvent(new DownloadEvent
+                {
+                    GruntCommandId = tasking.GruntCommandId,
+                    // Time = updatingGruntTasking.CompletionTime,
+                    MessageHeader = "Download Started",
+                    MessageBody = "Downloading: " + FileName,
+                    Level = EventLevel.Info,
+                    Context = tasking.Grunt.Name,
+                    FileName = FileName,
+                    Progress = DownloadEvent.DownloadProgress.Portion
+                }, new byte[] { });
+            }
+            else if (tasking.GruntTask.Name.Equals("ScreenShot", StringComparison.CurrentCultureIgnoreCase))
+            {
+                string FileName = tasking.Name + ".png";
+                ScreenshotEvent screenshotEvent = await this.CreateScreenshotEvent(new ScreenshotEvent
+                {
+                    GruntCommandId = tasking.GruntCommandId,
+                    // Time = updatingGruntTasking.CompletionTime,
+                    MessageHeader = "Download ScreenShot Started",
+                    MessageBody = "Downloading screenshot: " + FileName,
+                    Level = EventLevel.Info,
+                    Context = tasking.Grunt.Name,
+                    FileName = FileName,
+                    Progress = DownloadEvent.DownloadProgress.Portion
+                }, new byte[] { });
+            }
+
             tasking.Parameters = parameters;
             try
             {
@@ -3256,46 +3307,6 @@ public static class Task
                 if (newStatus == GruntTaskingStatus.Completed)
                 {
                     updatingGruntTasking.CompletionTime = DateTime.UtcNow;
-                }
-                string verb = newStatus == GruntTaskingStatus.Completed ? "completed" : "progressed";
-                GruntTask DownloadTask = null;
-                GruntTask ScreenshotTask = null;
-                try
-                {
-                    DownloadTask = await this.GetGruntTaskByName("Download", grunt.DotNetVersion);
-                    ScreenshotTask = await this.GetGruntTaskByName("ScreenShot", grunt.DotNetVersion);
-                }
-                catch (ControllerNotFoundException) { }
-
-                if (DownloadTask != null && tasking.GruntTaskId == DownloadTask.Id && newStatus == GruntTaskingStatus.Completed)
-                {
-                    string FileName = tasking.Parameters[0];
-                    DownloadEvent downloadEvent = await this.CreateDownloadEvent(new DownloadEvent
-                    {
-                        GruntCommandId = updatingGruntTasking.GruntCommandId,
-                        Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "Download Completed",
-                        MessageBody = "Downloaded: " + FileName,
-                        Level = EventLevel.Info,
-                        Context = grunt.Name,
-                        FileName = FileName,
-                        Progress = DownloadEvent.DownloadProgress.Complete
-                    }, Convert.FromBase64String(updatingGruntTasking.GruntCommand.CommandOutput.Output));
-                }
-                else if (ScreenshotTask != null && tasking.GruntTaskId == ScreenshotTask.Id && newStatus == GruntTaskingStatus.Completed)
-                {
-                    string FileName = tasking.Name + ".png";
-                    ScreenshotEvent screenshotEvent = await this.CreateScreenshotEvent(new ScreenshotEvent
-                    {
-                        GruntCommandId = updatingGruntTasking.GruntCommandId,
-                        Time = updatingGruntTasking.CompletionTime,
-                        MessageHeader = "Download ScreenShot Completed",
-                        MessageBody = "Downloaded screenshot: " + FileName,
-                        Level = EventLevel.Info,
-                        Context = grunt.Name,
-                        FileName = FileName,
-                        Progress = DownloadEvent.DownloadProgress.Complete
-                    }, Convert.FromBase64String(updatingGruntTasking.GruntCommand.CommandOutput.Output));
                 }
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
@@ -4608,62 +4619,6 @@ public static class Task
         public async Task<IEnumerable<Launcher>> GetLaunchers()
         {
             return await _context.Launchers.ToListAsync();
-        }
-
-        public async Task<IEnumerable<BinaryLauncher>> GetBinaryLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.Binary)
-                .Select(L => (BinaryLauncher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<ServiceBinaryLauncher>> GetServiceBinaryLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.ServiceBinary)
-                .Select(L => (ServiceBinaryLauncher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<ShellCodeLauncher>> GetShellCodeLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.ShellCode)
-                .Select(L => (ShellCodeLauncher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<PowerShellLauncher>> GetPowerShellLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.PowerShell)
-                .Select(L => (PowerShellLauncher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<MSBuildLauncher>> GetMSBuildLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.MSBuild)
-                .Select(L => (MSBuildLauncher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<InstallUtilLauncher>> GetInstallUtilLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.InstallUtil)
-                .Select(L => (InstallUtilLauncher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Regsvr32Launcher>> GetRegsvr32Launchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.Regsvr32)
-                .Select(L => (Regsvr32Launcher)L)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<MshtaLauncher>> GetMshtaLaunchers()
-        {
-            return await _context.Launchers.Where(L => L.Type == LauncherType.Mshta)
-                .Select(L => (MshtaLauncher)L)
-                .ToListAsync();
         }
 
         public async Task<Launcher> GetLauncher(int id)

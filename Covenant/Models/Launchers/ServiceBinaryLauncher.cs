@@ -37,16 +37,16 @@ namespace Covenant.Models.Launchers
                 Enabled = true
             });
 
-            this.Base64ILByteString = Convert.ToBase64String(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+            this.LauncherILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
             {
                 Language = template.Language,
                 Source = code,
                 TargetDotNetVersion = grunt.DotNetVersion,
                 OutputKind = OutputKind.ConsoleApplication,
                 References = references
-            }));
+            });
 
-            this.LauncherString = string.Format("{0}{1}.exe", template.Name, "SVC");
+            this.LauncherString = this.GetFilename();
             return this.LauncherString;
         }
 

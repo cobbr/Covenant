@@ -6,9 +6,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Security.Authentication;
@@ -23,9 +20,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 
-using NLog.Web;
-using NLog.Config;
-using NLog.Targets;
 using McMaster.Extensions.CommandLineUtils;
 
 using Covenant.Models;

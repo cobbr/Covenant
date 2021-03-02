@@ -26,8 +26,8 @@ namespace Covenant.Models.Launchers
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
-            string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
+            this.LauncherILBytes = StagerAssembly;
+            string code = CodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", Convert.ToBase64String(this.LauncherILBytes));
 
             List<Compiler.Reference> references = grunt.DotNetVersion == Common.DotNetVersion.Net35 ? Common.DefaultNet35References : Common.DefaultNet40References;
             references.Add(new Compiler.Reference
@@ -37,16 +37,16 @@ namespace Covenant.Models.Launchers
                 Framework = grunt.DotNetVersion,
                 Enabled = true
             });
-            this.DiskCode = Convert.ToBase64String(Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+            this.DiskCode = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
             {
                 Language = template.Language,
                 Source = code,
                 TargetDotNetVersion = grunt.DotNetVersion,
                 OutputKind = OutputKind.DynamicallyLinkedLibrary,
                 References = references
-            }));
+            });
 
-            this.LauncherString = "InstallUtil.exe" + " " + "/U" + " " + template.Name + ".dll";
+            this.LauncherString = $"InstallUtil.exe /U {this.GetFilename()}";
             return this.LauncherString;
         }
 

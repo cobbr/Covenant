@@ -167,15 +167,18 @@ namespace Covenant.Controllers
         // Get a downloaded file
         // </summary>
         [HttpGet("download/{id}/download", Name = "GetDownloadFile")]
+        [Produces(Common.DefaultContentTypeMapping, "text/xml", "text/scriptlet", "text/hta", "text/plain")]
+        [ProducesResponseType(200, Type = typeof(Stream))]
         public async Task<ActionResult> GetDownloadFile(int id)
         {
             try
             {
                 DownloadEvent download = await _service.GetDownloadEvent(id);
-                string ext = Path.GetExtension(download.FileName);
-                string ct = ext == null ? Common.DefaultContentTypeMapping : Common.ContentTypeMappings[ext];
-                ct = string.IsNullOrEmpty(ct) ? Common.DefaultContentTypeMapping : ct;
-                return File(download.ReadDownload(), ct, Utilities.GetSanitizedFilename(download.FileName));
+                string fileext = Path.GetExtension(download.FileName);
+                string mediatype = Common.ContentTypeMappings.ContainsKey(fileext) ?
+                    Common.ContentTypeMappings[fileext] :
+                    Common.DefaultContentTypeMapping;
+                return File(download.ReadDownload(), mediatype, Utilities.GetSanitizedFilename(download.FileName));
             }
             catch (ControllerNotFoundException e)
             {
@@ -236,15 +239,18 @@ namespace Covenant.Controllers
         // Get a screenshot file
         // </summary>
         [HttpGet("screenshot/{id}/download", Name = "GetScreenshotFile")]
+        [Produces(Common.DefaultContentTypeMapping, "text/xml", "text/scriptlet", "text/hta", "text/plain")]
+        [ProducesResponseType(200, Type = typeof(Stream))]
         public async Task<ActionResult> GetScreenshotFile(int id)
         {
             try
             {
                 ScreenshotEvent screenshot = await _service.GetScreenshotEvent(id);
-                string ext = Path.GetExtension(screenshot.FileName);
-                string ct = ext == null ? Common.DefaultContentTypeMapping : Common.ContentTypeMappings[ext];
-                ct = string.IsNullOrEmpty(ct) ? Common.DefaultContentTypeMapping : ct;
-                return File(screenshot.ReadDownload(), ct, Utilities.GetSanitizedFilename(screenshot.FileName));
+                string fileext = Path.GetExtension(screenshot.FileName);
+                string mediatype = Common.ContentTypeMappings.ContainsKey(fileext) ?
+                    Common.ContentTypeMappings[fileext] :
+                    Common.DefaultContentTypeMapping;
+                return File(screenshot.ReadDownload(), mediatype, Utilities.GetSanitizedFilename(screenshot.FileName));
             }
             catch (ControllerNotFoundException e)
             {

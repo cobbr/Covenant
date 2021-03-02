@@ -2,6 +2,7 @@
 // Project: Covenant (https://github.com/cobbr/Covenant)
 // License: GNU GPLv3
 
+using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -34,174 +35,6 @@ namespace Covenant.Controllers
             return Ok(await _service.GetLaunchers());
         }
 
-        // GET api/launchers/binary
-        // <summary>
-        // Get BinaryLaunchers
-        // </summary>
-        [HttpGet("binary", Name = "GetBinaryLaunchers")]
-        public async Task<ActionResult<IEnumerable<BinaryLauncher>>> GetBinaryLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetBinaryLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/servicebinary
-        // <summary>
-        // Get ServiceBinaryLaunchers
-        // </summary>
-        [HttpGet("servicebinary", Name = "GetServiceBinaryLaunchers")]
-        public async Task<ActionResult<IEnumerable<BinaryLauncher>>> GetServiceBinaryLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetServiceBinaryLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/shellcode
-        // <summary>
-        // Get ShellCodeLaunchers
-        // </summary>
-        [HttpGet("shellcode", Name = "GetShellCodeLaunchers")]
-        public async Task<ActionResult<IEnumerable<ShellCodeLauncher>>> GetShellCodeLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetShellCodeLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/powershell
-        // <summary>
-        // Get PowerShellLaunchers
-        // </summary>
-        [HttpGet("powershell", Name = "GetPowerShellLaunchers")]
-        public async Task<ActionResult<IEnumerable<PowerShellLauncher>>> GetPowerShellLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetPowerShellLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/msbuild
-        // <summary>
-        // Get MSBuildLaunchers
-        // </summary>
-        [HttpGet("msbuild", Name = "GetMSBuildLaunchers")]
-        public async Task<ActionResult<IEnumerable<MSBuildLauncher>>> GetMSBuildLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetMSBuildLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/installutil
-        // <summary>
-        // Get InstallUtilLaunchers
-        // </summary>
-        [HttpGet("installutil", Name = "GetInstallUtilLaunchers")]
-        public async Task<ActionResult<IEnumerable<InstallUtilLauncher>>> GetInstallUtilLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetInstallUtilLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/regsvr32
-        // <summary>
-        // Get Regsvr32Launchers
-        // </summary>
-        [HttpGet("regsvr32", Name = "GetRegsvr32Launchers")]
-        public async Task<ActionResult<IEnumerable<Regsvr32Launcher>>> GetRegsvr32Launchers()
-        {
-            try
-            {
-                return Ok(await _service.GetRegsvr32Launchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        // GET api/launchers/mshta
-        // <summary>
-        // Get MshtaLaunchers
-        // </summary>
-        [HttpGet("mshta", Name = "GetMshtaLaunchers")]
-        public async Task<ActionResult<MshtaLauncher>> GetMshtaLaunchers()
-        {
-            try
-            {
-                return Ok(await _service.GetMshtaLaunchers());
-            }
-            catch (ControllerNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (ControllerBadRequestException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
         // GET: api/launchers/{id}
         // <summary>
         // Get a Launcher
@@ -209,7 +42,18 @@ namespace Covenant.Controllers
         [HttpGet("{id}", Name = "GetLauncher")]
         public async Task<ActionResult<Launcher>> GetLauncher(int id)
         {
-            return Ok(await _service.GetLauncher(id));
+            try
+            {
+                return await _service.GetLauncher(id);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         // GET api/launchers/binary/{id}
@@ -369,6 +213,35 @@ namespace Covenant.Controllers
             try
             {
                 return await _service.GetMshtaLauncher(id);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        // GET: api/launchers/{id}/download
+        // <summary>
+        // Get a Launcher download
+        // </summary>
+        [HttpGet("{id}/download", Name = "GetLauncherDownload")]
+        [Produces(Common.DefaultContentTypeMapping, "text/xml", "text/scriptlet", "text/hta", "text/plain")]
+        [ProducesResponseType(200, Type = typeof(Stream))]
+        public async Task<ActionResult> GetLauncherDownload(int id)
+        {
+            try
+            {
+                Launcher launcher = await _service.GetLauncher(id);
+                string filename = launcher.GetFilename();
+                string fileext = Path.GetExtension(filename);
+                string mediatype = Common.ContentTypeMappings.ContainsKey(fileext) ?
+                    Common.ContentTypeMappings[fileext] :
+                    Common.DefaultContentTypeMapping;
+                return File(launcher.GetContent(), mediatype, filename);
             }
             catch (ControllerNotFoundException e)
             {

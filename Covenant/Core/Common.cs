@@ -105,7 +105,7 @@ namespace Covenant.Core
         }
 
         // Credit - https://github.com/samuelneff/MimeTypeMap
-        public static readonly string DefaultContentTypeMapping = "application/octet-stream";
+        public const string DefaultContentTypeMapping = "application/octet-stream";
         public static readonly IDictionary<string, string> ContentTypeMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
                 {".323", "text/h323"},

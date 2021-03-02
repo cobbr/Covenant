@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
+using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
 
@@ -25,16 +26,18 @@ namespace Covenant.Models.Launchers
             this.DotNetVersion = Core.Common.DotNetVersion.Net40;
         }
 
+        public override string GetFilename() => Utilities.GetSanitizedFilename(this.Name) + ".xml";
+
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
-            this.DiskCode = XMLTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
-            this.DiskCode = DiskCode.Replace("{{TARGET_NAME}}", this.TargetName);
-            this.DiskCode = DiskCode.Replace("{{TASK_NAME}}", this.TaskName);
+            this.LauncherILBytes = StagerAssembly;
+            string code = XMLTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", Convert.ToBase64String(this.LauncherILBytes));
+            code = code.Replace("{{TARGET_NAME}}", this.TargetName);
+            code = code.Replace("{{TASK_NAME}}", this.TaskName);
+            this.DiskCode = Common.CovenantEncoding.GetBytes(code);
 
-            string launcher = "msbuild.exe" + " " + template.Name + ".xml";
-            this.LauncherString = launcher;
+            this.LauncherString = $"msbuild.exe {this.GetFilename()}";
             return this.LauncherString;
         }
 

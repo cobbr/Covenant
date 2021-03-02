@@ -405,6 +405,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync<CommandOutput>("EditCommandOutput", output);
         }
 
+        public Task<CommandOutput> AppendCommandOutput(int id, string append)
+        {
+            return _connection.InvokeAsync<CommandOutput>("AppendCommandOutput", id, append);
+        }
+
         public Task<EmbeddedResource> EditEmbeddedResource(EmbeddedResource resource)
         {
             return _connection.InvokeAsync<EmbeddedResource>("EditEmbeddedResource", resource);
@@ -928,46 +933,6 @@ namespace Covenant.Core
         public Task<IEnumerable<Launcher>> GetLaunchers()
         {
             return _connection.InvokeAsync<IEnumerable<Launcher>>("GetLaunchers");
-        }
-
-        public Task<IEnumerable<BinaryLauncher>> GetBinaryLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<BinaryLauncher>>("GetBinaryLaunchers");
-        }
-
-        public Task<IEnumerable<ServiceBinaryLauncher>> GetServiceBinaryLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<ServiceBinaryLauncher>>("GetServiceBinaryLaunchers");
-        }
-
-        public Task<IEnumerable<ShellCodeLauncher>> GetShellCodeLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<ShellCodeLauncher>>("GetShellCodeLaunchers");
-        }
-
-        public Task<IEnumerable<PowerShellLauncher>> GetPowerShellLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<PowerShellLauncher>>("GetPowerShellLaunchers");
-        }
-
-        public Task<IEnumerable<MSBuildLauncher>> GetMSBuildLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<MSBuildLauncher>>("GetMSBuildLaunchers");
-        }
-
-        public Task<IEnumerable<InstallUtilLauncher>> GetInstallUtilLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<InstallUtilLauncher>>("GetInstallUtilLaunchers");
-        }
-
-        public Task<IEnumerable<Regsvr32Launcher>> GetRegsvr32Launchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<Regsvr32Launcher>>("GetRegsvr32Launchers");
-        }
-
-        public Task<IEnumerable<MshtaLauncher>> GetMshtaLaunchers()
-        {
-            return _connection.InvokeAsync<IEnumerable<MshtaLauncher>>("GetMshtaLaunchers");
         }
 
         public Task<Listener> GetListener(int listenerId)

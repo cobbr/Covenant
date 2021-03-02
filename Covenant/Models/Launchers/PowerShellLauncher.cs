@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
+using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
 
@@ -25,16 +26,20 @@ namespace Covenant.Models.Launchers
             this.CompressStager = true;
         }
 
-        public PowerShellLauncher(String parameterString) : base()
+        public PowerShellLauncher(string parameterString) : base()
         {
             this.ParameterString = parameterString;
         }
 
+        public override string GetFilename() => Utilities.GetSanitizedFilename(this.Name) + ".ps1";
+
+        public override byte[] GetContent() => Common.CovenantEncoding.GetBytes(this.PowerShellCode);
+
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
-            this.PowerShellCode = PowerShellLauncherCodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
+            this.LauncherILBytes = StagerAssembly;
+            this.PowerShellCode = PowerShellLauncherCodeTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", Convert.ToBase64String(this.LauncherILBytes));
             return GetLauncher(PowerShellCode);
         }
 

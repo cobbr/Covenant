@@ -3,13 +3,12 @@
 // License: GNU GPLv3
 
 using System;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -24,7 +23,6 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using NLog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 using Covenant.Hubs;
@@ -186,7 +184,8 @@ namespace Covenant
                         new string[] { }
                     }
                 });
-                
+
+                c.MapType<Stream>(() => new OpenApiSchema { Type = "file" });
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
 

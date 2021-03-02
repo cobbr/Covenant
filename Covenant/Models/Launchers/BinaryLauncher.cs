@@ -24,8 +24,8 @@ namespace Covenant.Models.Launchers
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
-            this.LauncherString = template.Name + ".exe";
+            this.LauncherILBytes = StagerAssembly;
+            this.LauncherString = this.GetFilename();
             return this.LauncherString;
         }
 

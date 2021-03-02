@@ -1,7 +1,9 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 
+@using System.IO
 @using Microsoft.JSInterop
+
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Models.Covenant
@@ -38,26 +40,26 @@
     @if (!this.IsMinimized)
     {
         <div class="card-body interact-style">
-            @if (GruntCommand.CommandOutput != null)
+            @if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
             {
-                if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
-                {
-                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
-                    {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading screenshot... @GruntCommand.CommandOutput.Output.Length bytes</p>}
-                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
-                    {<img style="max-width: 100%" src="data:image/png;base64, @GruntCommand.CommandOutput.Output" />}
-                }
-                else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Download")
-                {
-                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
-                    {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading... @GruntCommand.CommandOutput.Output.Length bytes</p>}
-                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
-                    {DownloadEvent download = GetDownloadEvent(GruntCommand);<p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if (download != null){<a type="button" class="btn btn-link text-white task-text-body" download href="/api/events/download/@download.Id/download">@download.FileName</a>}</p>}
-                }
-                else
-                {
-                    <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">@GruntCommand.CommandOutput.Output</p>
-                }
+                ScreenshotEvent screenshot = GetScreenshotEvent(GruntCommand);
+                string content = screenshot != null ? GetScreenshotContent(screenshot) : string.Empty;
+                if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading screenshot... @screenshot.FileLength bytes</p>}
+                else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                {<img style="max-width: 100%" src="data:image/png;base64, @content" />}
+            }
+            else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Download")
+            {
+                DownloadEvent download = GetDownloadEvent(GruntCommand);
+                if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading... @download.FileLength bytes</p>}
+                else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                {<p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if (download != null){<a type="button" class="btn btn-link text-white task-text-body" download href="/api/events/download/@download.Id/download">@download.FileName</a>}</p>}
+            }
+            else if (GruntCommand.CommandOutput != null)
+            {
+                <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">@GruntCommand.CommandOutput.Output</p>
             }
             else
             {
@@ -166,9 +168,32 @@
                 return ev;
             }
         }
-        catch
+        catch { return null; }
+    }
+
+    private ScreenshotEvent GetScreenshotEvent(GruntCommand command)
+    {
+        try
         {
-            return null;
+            lock (_serviceLock)
+            {
+                ScreenshotEvent ev = Service.GetScreenshotEventByGruntCommand(command.Id).WaitResult();
+                Service.DisposeContext();
+                return ev;
+            }
         }
+        catch { return null; }
+    }
+
+    private string GetScreenshotContent(ScreenshotEvent ev)
+    {
+        using FileStream fs = ev.ReadDownload();
+        if (fs != null)
+        {
+            using MemoryStream ms = new MemoryStream();
+            fs.CopyTo(ms);
+            return Convert.ToBase64String(ms.ToArray());
+        }
+        return "";
     }
 }
