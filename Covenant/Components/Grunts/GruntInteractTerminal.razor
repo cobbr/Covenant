@@ -132,7 +132,7 @@
     {
         if (this.Grunt.Id == gruntTasking.GruntId)
         {
-            scrollToBottom = gruntTasking.GruntCommand.UserId == this.CovenantUser.Id;
+            scrollToBottom = gruntTasking.GruntCommand.UserId == this.CovenantUser.Id && gruntTasking.Status == GruntTaskingStatus.Completed;
             _ = this.InvokeAsync(() => this.StateHasChanged());
         }
     }

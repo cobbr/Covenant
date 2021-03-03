@@ -402,6 +402,7 @@
     using System.IO;
     using System.Text;
     using System.Linq;
+    using System.Threading;
     using System.Collections.Generic;
 
     public static class Task
@@ -411,6 +412,7 @@
         {
             try
             {
+                long baseline = GC.GetTotalMemory(false);
                 using (FileStream fs = File.OpenRead(FileName))
                 {
                     byte[] read = new byte[1048576];
@@ -431,6 +433,10 @@
                         byte[] base64 = Encoding.UTF8.GetBytes(Convert.ToBase64String(finalRead.ToArray()));
                         OutputStream.Write(base64, 0, base64.Length);
                         OutputStream.Flush();
+                        if (GC.GetTotalMemory(true) > (baseline + (baseline * 0.3)))
+                        {
+                            Thread.Sleep(2000);
+                        }
                     }
                 }
                 OutputStream.Close();
