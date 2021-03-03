@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Covenant.API namespace to a new projectfile
 - Updated GetDownloadFile and GetScreenshotFile API endpoints to return file stream
 - Updated Download/Screenshot task output handling
+- Updated GruntTaskForm to add FileOption checkbox for GruntTaskOptions
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
