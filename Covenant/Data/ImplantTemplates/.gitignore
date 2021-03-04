@@ -5,3 +5,7 @@
 !/GruntSMB/
 !/GruntBridge/
 !/Brute/
+!GruntHTTP.yaml
+!GruntSMB.yaml
+!GruntBridge.yaml
+!Brute.yaml

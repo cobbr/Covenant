@@ -28,8 +28,8 @@ namespace Covenant.Core
             context.Database.EnsureCreated();
             CovenantUser user = await InitializeInitialUser(service, context, userManager, username, password);
             await InitializeListeners(service, context, user);
-            await InitializeImplantTemplates(service, context);
             await InitializeTasks(service, context);
+            await InitializeImplantTemplates(service, context);
             await InitializeRoles(roleManager);
             await InitializeThemes(context);
         }
@@ -55,64 +55,16 @@ namespace Covenant.Core
         {
             if (!context.ImplantTemplates.Any())
             {
-                var templates = new ImplantTemplate[]
+                List<string> files = Directory.GetFiles(Common.CovenantImplantTemplateDirectory)
+                    .Where(F => F.EndsWith(".yaml", StringComparison.CurrentCultureIgnoreCase))
+                    .ToList();
+                IDeserializer deserializer = new DeserializerBuilder().Build();
+                foreach (string file in files)
                 {
-                    new ImplantTemplate
-                    {
-                        Name = "GruntHTTP",
-                        Description = "A Windows implant written in C# that communicates over HTTP.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.HTTP,
-                        ImplantDirection = ImplantDirection.Pull,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
-                        CompatibleListenerTypes = new List<ListenerType>
-                        {
-                            await service.GetListenerTypeByName("HTTP")
-                        }
-                    },
-                    new ImplantTemplate
-                    {
-                        Name = "GruntSMB",
-                        Description = "A Windows implant written in C# that communicates over SMB.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.SMB,
-                        ImplantDirection = ImplantDirection.Push,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
-                        CompatibleListenerTypes = new List<ListenerType>
-                        {
-                            await service.GetListenerTypeByName("HTTP"),
-                            await service.GetListenerTypeByName("Bridge")
-                        }
-                    },
-                    new ImplantTemplate
-                    {
-                        Name = "GruntBridge",
-                        Description = "A customizable implant written in C# that communicates with a custom C2Bridge.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.Bridge,
-                        ImplantDirection = ImplantDirection.Push,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
-                        CompatibleListenerTypes = new List<ListenerType>
-                        {
-                            await service.GetListenerTypeByName("Bridge")
-                        }
-                    },
-                    new ImplantTemplate
-                    {
-                        Name = "Brute",
-                        Description = "A cross-platform implant built on .NET Core 3.1.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.HTTP,
-                        ImplantDirection = ImplantDirection.Pull,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore31 },
-                        CompatibleListenerTypes = new List<ListenerType>
-                        {
-                            await service.GetListenerTypeByName("HTTP")
-                        }
-                    }
-                };
-                templates.ToList().ForEach(t => t.ReadFromDisk());
-                await service.CreateImplantTemplates(templates);
+                    string yaml = File.ReadAllText(file);
+                    List<ImplantTemplate> templates = YamlUtilities.FromYaml<ImplantTemplate>(yaml).ToList();
+                    await service.CreateImplantTemplates(templates.ToArray());
+                }
             }
         }
 
