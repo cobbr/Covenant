@@ -14,14 +14,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Data\Grunt\**" />
+    <Compile Remove="Data\ImplantTemplates\**" />
     <Compile Remove="Data\Tasks\**" />
     <Compile Remove="Data\ReferenceSourceLibraries\**" />
     <Compile Remove="Data\Downloads\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Data\Grunt\**" />
+    <None Remove="Data\ImplantTemplates\**" />
     <None Remove="Data\Tasks\CSharp\**" />
     <None Remove="Data\Downloads\**" />
     <None Remove="Data\Temp\**" />

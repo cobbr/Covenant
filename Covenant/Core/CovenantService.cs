@@ -1719,11 +1719,11 @@ namespace Covenant.Core
                     throw new ControllerBadRequestException($"BadRequest - {e.Message}");
                 }
             }
-            else if (grunt.DotNetVersion == Common.DotNetVersion.NetCore31)
+            else if (grunt.DotNetVersion == Common.DotNetVersion.Net50)
             {
                 string src = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile);
                 string sanitizedName = Utilities.GetSanitizedFilename(template.Name);
-                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + sanitizedName + Path.DirectorySeparatorChar;
+                string dir = Common.CovenantImplantTemplateDirectory + sanitizedName + Path.DirectorySeparatorChar;
                 string ResultName;
                 if (template.StagerCode == CodeTemplate)
                 {
@@ -3864,7 +3864,7 @@ public static class Task
                     {
                         Language = ImplantLanguage.CSharp,
                         Source = profile.MessageTransform,
-                        TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                        TargetDotNetVersion = Common.DotNetVersion.Net50,
                         References = Common.DefaultReferencesNetCore,
                         UseSubprocess = false
                     });
@@ -4039,7 +4039,7 @@ public static class Task
                     {
                         Language = ImplantLanguage.CSharp,
                         Source = profile.MessageTransform,
-                        TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                        TargetDotNetVersion = Common.DotNetVersion.Net50,
                         References = Common.DefaultReferencesNetCore,
                         UseSubprocess = false
                     });
@@ -4084,7 +4084,7 @@ public static class Task
                     {
                         Language = ImplantLanguage.CSharp,
                         Source = profile.MessageTransform,
-                        TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                        TargetDotNetVersion = Common.DotNetVersion.Net50,
                         References = Common.DefaultReferencesNetCore,
                         UseSubprocess = false
                     });

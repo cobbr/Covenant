@@ -21,8 +21,8 @@ namespace Covenant.API.Models
         Net35,
         [EnumMember(Value = "Net40")]
         Net40,
-        [EnumMember(Value = "NetCore31")]
-        NetCore31
+        [EnumMember(Value = "Net50")]
+        Net50
     }
     internal static class DotNetVersionEnumExtension
     {
@@ -39,8 +39,8 @@ namespace Covenant.API.Models
                     return "Net35";
                 case DotNetVersion.Net40:
                     return "Net40";
-                case DotNetVersion.NetCore31:
-                    return "NetCore31";
+                case DotNetVersion.Net50:
+                    return "Net50";
             }
             return null;
         }
@@ -53,8 +53,8 @@ namespace Covenant.API.Models
                     return DotNetVersion.Net35;
                 case "Net40":
                     return DotNetVersion.Net40;
-                case "NetCore31":
-                    return DotNetVersion.NetCore31;
+                case "Net50":
+                    return DotNetVersion.Net50;
             }
             return null;
         }

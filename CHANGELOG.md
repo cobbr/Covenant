@@ -83,6 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Download/Screenshot task output handling
 - Updated GruntTaskForm to add FileOption checkbox for GruntTaskOptions
 - Updated Download GruntTask to check memory usage and force garbage collection
+- Updated Brute ImplantTemplate to use Net50
+- Removed unnecessary remaining .task files
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

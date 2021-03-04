@@ -85,7 +85,7 @@ namespace Covenant.Models.Grunts
                     {
                         this.CompileDotNet40();
                     }
-                    else if (version == Common.DotNetVersion.NetCore31)
+                    else if (version == Common.DotNetVersion.Net50)
                     {
                         this.CompileDotNetCore(template, runtimeIdentifier);
                     }
@@ -221,7 +221,7 @@ namespace Covenant.Models.Grunts
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net50</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
@@ -243,16 +243,16 @@ namespace Covenant.Models.Grunts
             });
             string csproj = string.Format(cspprojformat, string.Format(referencegroupformat, string.Join(Environment.NewLine + "    ", references)));
             string sanitizedName = Utilities.GetSanitizedFilename(template.Name);
-            string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + sanitizedName + Path.DirectorySeparatorChar + "Task" + Path.DirectorySeparatorChar;
+            string dir = Common.CovenantImplantTemplateDirectory + sanitizedName + Path.DirectorySeparatorChar + "Task" + Path.DirectorySeparatorChar;
             string file = "Task" + Utilities.GetExtensionForLanguage(this.Language);
             File.WriteAllText(dir + "Task" + ".csproj", csproj);
             File.WriteAllText(dir + file, this.Code);
-            File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNetCoreApp30Directory + this.Name + ".compiled",
+            File.WriteAllBytes(Common.CovenantTaskCSharpCompiledNet50Directory + this.Name + ".compiled",
                 Utilities.Compress(Compiler.Compile(new Compiler.CsharpCoreCompilationRequest
                 {
                     ResultName = "Task",
                     Language = this.Language,
-                    TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                    TargetDotNetVersion = Common.DotNetVersion.Net50,
                     SourceDirectory = dir,
                     OutputKind = OutputKind.DynamicallyLinkedLibrary,
                     RuntimeIdentifier = runtimeIdentifier,

@@ -59,7 +59,7 @@ namespace Covenant.Models.Grunts
                 {
                     return "";
                 }
-                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
+                string dir = Common.CovenantImplantTemplateDirectory + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
                 string file = Utilities.GetSanitizedFilename(this.Name) + "Stager" + Utilities.GetExtensionForLanguage(this.Language);
                 if (!Directory.Exists(dir))
                 {
@@ -82,7 +82,7 @@ namespace Covenant.Models.Grunts
                 {
                     return "";
                 }
-                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
+                string dir = Common.CovenantImplantTemplateDirectory + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
                 string file = Utilities.GetSanitizedFilename(this.Name) + Utilities.GetExtensionForLanguage(this.Language);
                 if (!Directory.Exists(dir))
                 {

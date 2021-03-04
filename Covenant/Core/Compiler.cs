@@ -118,7 +118,7 @@ namespace Covenant.Core
 
         private static byte[] CompileCSharp(CsharpCompilationRequest request)
         {
-            if (request.TargetDotNetVersion == Common.DotNetVersion.NetCore31 && request.UseSubprocess)
+            if (request.TargetDotNetVersion == Common.DotNetVersion.Net50 && request.UseSubprocess)
             {
                 return CompileCSharpCoreSubProcess((CsharpCoreCompilationRequest)request);
             }
@@ -140,7 +140,7 @@ namespace Covenant.Core
             p.WaitForExit();
             try
             {
-                string dir = Path.Combine(request.SourceDirectory, "bin", "Release", "netcoreapp3.1", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
+                string dir = Path.Combine(request.SourceDirectory, "bin", "Release", "net50", RuntimeIdentifiers[request.RuntimeIdentifier], "publish");
                 IEnumerable<string> files = Directory.EnumerateFiles(dir);
                 string file = files
                     .Select(F => new FileInfo(F))

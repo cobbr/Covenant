@@ -27,6 +27,8 @@ namespace Covenant.Core
         public static readonly string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";
         public static readonly string CovenantTempDirectory = CovenantDataDirectory + "Temp" + Path.DirectorySeparatorChar;
 
+        public static readonly string CovenantImplantTemplateDirectory = CovenantDataDirectory + "ImplantTemplates" + Path.DirectorySeparatorChar;
+
         public static readonly string CovenantProfileDirectory = CovenantDataDirectory + "Profiles" + Path.DirectorySeparatorChar;
         public static readonly string CovenantDefaultHttpProfile = CovenantProfileDirectory + "DefaultHttpProfile.yaml";
 
@@ -42,11 +44,11 @@ namespace Covenant.Core
 
         public static readonly string CovenantTaskDirectory = CovenantDataDirectory + "Tasks" + Path.DirectorySeparatorChar;
         public static readonly string CovenantTaskCSharpDirectory = CovenantTaskDirectory + "CSharp" + Path.DirectorySeparatorChar;
-        public static readonly string CovenantTaskCSharpNetCoreApp30Directory = CovenantTaskCSharpDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpNet50Directory = CovenantTaskCSharpDirectory + "net50" + Path.DirectorySeparatorChar;
         public static readonly string CovenantTaskCSharpCompiledDirectory = CovenantTaskCSharpDirectory + "Compiled" + Path.DirectorySeparatorChar;
         public static readonly string CovenantTaskCSharpCompiledNet35Directory = CovenantTaskCSharpCompiledDirectory + "net35" + Path.DirectorySeparatorChar;
         public static readonly string CovenantTaskCSharpCompiledNet40Directory = CovenantTaskCSharpCompiledDirectory + "net40" + Path.DirectorySeparatorChar;
-        public static readonly string CovenantTaskCSharpCompiledNetCoreApp30Directory = CovenantTaskCSharpCompiledDirectory + "netcoreapp3.0" + Path.DirectorySeparatorChar;
+        public static readonly string CovenantTaskCSharpCompiledNet50Directory = CovenantTaskCSharpCompiledDirectory + "net50" + Path.DirectorySeparatorChar;
 
         public static readonly string CovenantLogDirectory = CovenantDataDirectory + "Logs" + Path.DirectorySeparatorChar;
         public static readonly string CovenantLogFile = CovenantLogDirectory + "covenant.log";
@@ -87,7 +89,7 @@ namespace Covenant.Core
             new Compiler.Reference
             {
                 File = String.Join(Path.DirectorySeparatorChar, typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Take(typeof(object).GetTypeInfo().Assembly.Location.Split(Path.DirectorySeparatorChar).Count() - 1))
-                + Path.DirectorySeparatorChar + "System.Private.CoreLib.dll", Framework = DotNetVersion.NetCore31, Enabled = true
+                + Path.DirectorySeparatorChar + "System.Private.CoreLib.dll", Framework = DotNetVersion.Net50, Enabled = true
             }
         };
 
@@ -95,7 +97,7 @@ namespace Covenant.Core
         {
             Net35,
             Net40,
-            NetCore31
+            Net50
         }
 
         private static string SplitLastMatch(string FullString, string SubString)

@@ -9,7 +9,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -291,7 +291,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -667,7 +667,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.Text;
@@ -817,7 +817,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.Text;
@@ -940,7 +940,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
 
@@ -973,7 +973,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1016,7 +1016,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1058,7 +1058,7 @@
   Help:
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1102,7 +1102,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1157,7 +1157,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1208,7 +1208,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.Linq;
@@ -1474,7 +1474,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1549,7 +1549,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;

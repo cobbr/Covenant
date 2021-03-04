@@ -96,7 +96,7 @@ namespace Covenant.Models.Listeners
                 {
                     Language = Grunts.ImplantLanguage.CSharp,
                     Source = profile.MessageTransform,
-                    TargetDotNetVersion = Common.DotNetVersion.NetCore31,
+                    TargetDotNetVersion = Common.DotNetVersion.Net50,
                     References = Common.DefaultReferencesNetCore,
                     UseSubprocess = false
                 })
@@ -197,9 +197,9 @@ namespace Covenant.Models.Listeners
             return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet40Directory + taskname + ".compiled");
         }
 
-        private byte[] GetCompressedILAssembly30(string taskname)
+        private byte[] GetCompressedILAssembly50(string taskname)
         {
-            return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNetCoreApp30Directory + taskname + ".compiled");
+            return File.ReadAllBytes(Common.CovenantTaskCSharpCompiledNet50Directory + taskname + ".compiled");
         }
 
         private ModelUtilities.GruntTaskingMessage GetGruntTaskingMessage(APIModels.GruntTasking tasking, APIModels.DotNetVersion version)
@@ -223,9 +223,9 @@ namespace Covenant.Models.Listeners
                         Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
                     }
                 }
-                else if (version == APIModels.DotNetVersion.NetCore31)
+                else if (version == APIModels.DotNetVersion.Net50)
                 {
-                    Message = Convert.ToBase64String(this.GetCompressedILAssembly30(tasking.GruntTask.Name));
+                    Message = Convert.ToBase64String(this.GetCompressedILAssembly50(tasking.GruntTask.Name));
                     if (tasking.Parameters.Any())
                     {
                         Message += "," + String.Join(",", tasking.Parameters.Select(P => Convert.ToBase64String(Common.CovenantEncoding.GetBytes(P))));
