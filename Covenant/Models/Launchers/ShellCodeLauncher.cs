@@ -31,7 +31,7 @@ namespace Covenant.Models.Launchers
         public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            string inputf = Common.CovenantTempDirectory + Utilities.GetSanitizedFilename(template.Name + ".exe");
+            string inputf = Common.CovenantTempDirectory + Utilities.CreateShortGuid() + "-" + Utilities.GetSanitizedFilename(template.Name + ".exe");
             string outputf = Common.CovenantTempDirectory + Utilities.GetSanitizedFilename(template.Name + ".bin");
             File.WriteAllBytes(inputf, StagerAssembly);
             DonutConfig config = new DonutConfig
