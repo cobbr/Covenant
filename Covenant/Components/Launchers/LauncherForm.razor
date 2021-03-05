@@ -252,7 +252,7 @@
 
     protected override void OnInitialized()
     {
-        if (this.CurrentImplantTemplate != null)
+        if (this.CurrentImplantTemplate != null && !this.CurrentImplantTemplate.CompatibleDotNetVersions.Contains(this.Launcher.DotNetVersion))
         {
             this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).First();
         }
