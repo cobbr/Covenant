@@ -22,6 +22,7 @@
                 </tr>
             </thead>
             <tbody>
+                @ExtraRows
                 @for (int i = (this.CurrentPage * this.PageLength); i < Math.Min((this.CurrentPage * this.PageLength) + this.PageLength, this.FilteredItems.Count); i++)
                 {
                     int number = i;
@@ -119,6 +120,9 @@
     public RenderFragment<TItem> TableRow { get; set; }
 
     [Parameter]
+    public RenderFragment ExtraRows { get; set; }
+
+    [Parameter]
     public RenderFragment ButtonTray { get; set; }
 
     [Parameter]
@@ -176,7 +180,7 @@
     {
         get
         {
-            return (int)Math.Ceiling(Math.Max(this.FilteredItems.Count(), 1) / (decimal)PageLength);
+            return PageLength > 0 ? (int)Math.Ceiling(Math.Max(this.FilteredItems.Count(), 1) / (decimal)PageLength) : 0;
         }
     }
 

@@ -174,6 +174,22 @@ namespace Covenant.Core
         Task NotifyDeleteGruntTasking(object sender, int id);
     }
 
+    public interface IFolderFilerNotificationService
+    {
+        event EventHandler<Folder> OnCreateFolder;
+        event EventHandler<Folder> OnEditFolder;
+        event EventHandler<int> OnDeleteFolder;
+        Task NotifyCreateFolder(object sender, Folder folder);
+        Task NotifyEditFolder(object sender, Folder folder);
+        Task NotifyDeleteFolder(object sender, int id);
+        event EventHandler<FolderFile> OnCreateFolderFile;
+        event EventHandler<FolderFile> OnEditFolderFile;
+        event EventHandler<int> OnDeleteFolderFile;
+        Task NotifyCreateFolderFile(object sender, FolderFile file);
+        Task NotifyEditFolderFile(object sender, FolderFile file);
+        Task NotifyDeleteFolderFile(object sender, int id);
+    }
+
     public interface ICredentialNotificationService
     {
         event EventHandler<CapturedCredential> OnCreateCapturedCredential;
@@ -248,7 +264,7 @@ namespace Covenant.Core
 
     public interface INotificationService : ICovenantUserNotificationService, IIdentityRoleNotificationService, IIdentityUserRoleNotificationService, IThemeNotificationService,
         IEventNotificationService, IImplantTemplateNotificationService, IGruntNotificationService, IGruntTaskNotificationService,
-        IGruntCommandNotificationService, ICommandOutputNotificationService, IGruntTaskingNotificationService,
+        IGruntCommandNotificationService, ICommandOutputNotificationService, IGruntTaskingNotificationService, IFolderFilerNotificationService,
         ICredentialNotificationService, IIndicatorNotificationService, IListenerNotificationService, IProfileNotificationService,
         IHostedFileNotificationService, ILauncherNotificationService
     {
@@ -320,6 +336,12 @@ namespace Covenant.Core
         public event EventHandler<GruntTasking> OnCreateGruntTasking = delegate { };
         public event EventHandler<GruntTasking> OnEditGruntTasking = delegate { };
         public event EventHandler<int> OnDeleteGruntTasking = delegate { };
+        public event EventHandler<Folder> OnCreateFolder = delegate { };
+        public event EventHandler<Folder> OnEditFolder = delegate { };
+        public event EventHandler<int> OnDeleteFolder = delegate { };
+        public event EventHandler<FolderFile> OnCreateFolderFile = delegate { };
+        public event EventHandler<FolderFile> OnEditFolderFile = delegate { };
+        public event EventHandler<int> OnDeleteFolderFile = delegate { };
         public event EventHandler<CapturedCredential> OnCreateCapturedCredential = delegate { };
         public event EventHandler<CapturedCredential> OnEditCapturedCredential = delegate { };
         public event EventHandler<int> OnDeleteCapturedCredential = delegate { };
@@ -406,6 +428,13 @@ namespace Covenant.Core
         public async Task NotifyCreateGruntTasking(object sender, GruntTasking tasking) => await Task.Run(() => this.OnCreateGruntTasking(sender, tasking));
         public async Task NotifyEditGruntTasking(object sender, GruntTasking tasking) => await Task.Run(() => this.OnEditGruntTasking(sender, tasking));
         public async Task NotifyDeleteGruntTasking(object sender, int id) => await Task.Run(() => this.OnDeleteGruntTasking(sender, id));
+
+        public async Task NotifyCreateFolder(object sender, Folder folder) => await Task.Run(() => this.OnCreateFolder(sender, folder));
+        public async Task NotifyEditFolder(object sender, Folder folder) => await Task.Run(() => this.OnEditFolder(sender, folder));
+        public async Task NotifyDeleteFolder(object sender, int id) => await Task.Run(() => this.OnDeleteFolder(sender, id));
+        public async Task NotifyCreateFolderFile(object sender, FolderFile file) => await Task.Run(() => this.OnCreateFolderFile(sender, file));
+        public async Task NotifyEditFolderFile(object sender, FolderFile file) => await Task.Run(() => this.OnEditFolderFile(sender, file));
+        public async Task NotifyDeleteFolderFile(object sender, int id) => await Task.Run(() => this.OnDeleteFolderFile(sender, id));
 
         public async Task NotifyCreateCapturedCredential(object sender, CapturedCredential credential) => await Task.Run(() => this.OnCreateCapturedCredential(sender, credential));
         public async Task NotifyEditCapturedCredential(object sender, CapturedCredential credential) => await Task.Run(() => this.OnEditCapturedCredential(sender, credential));

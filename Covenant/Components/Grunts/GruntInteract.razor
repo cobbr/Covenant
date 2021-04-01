@@ -57,6 +57,12 @@ else
                 Taskings
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="files-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false">
+                <span class="fe fe-files"></span>
+                Files
+            </a>
+        </li>
     </ul>
 
     <div class="tab-content" id="grunt-tab-content">
@@ -71,6 +77,9 @@ else
         </div>
         <div class="tab-pane fade mb-5" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
             <GruntTaskingTable GruntTaskings="GruntTaskings" PageLength="50" />
+        </div>
+        <div class="tab-pane fade mb-5" id="files" role="tabpanel" aria-labelledby="files-tab">
+            <FileBrowser Grunt="Grunt" />
         </div>
     </div>
 }

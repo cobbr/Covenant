@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ActionDropdown, DropdownActionItem components, converted tables to use
 - Added GetContent and GetFilename Launcher abstract methods
 - Added GetLauncherDownload API endpoint
+- Added Grunt FileBrowser
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

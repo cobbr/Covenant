@@ -48,6 +48,8 @@ namespace Covenant.Models
         public DbSet<Indicator> Indicators { get; set; }
         public DbSet<Theme> Themes { get; set; }
 
+        public DbSet<FolderFileNode> FolderFileNodes { get; set; }
+
         public CovenantContext(DbContextOptions<CovenantContext> options) : base(options)
         {
             // this.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
@@ -65,6 +67,11 @@ namespace Covenant.Models
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<GruntTaskOption>().ToTable("GruntTaskOption");
+
+            builder.Entity<Folder>().HasBaseType<FolderFileNode>();
+            builder.Entity<Folder>().ToTable("Folders");
+            builder.Entity<FolderFile>().HasBaseType<FolderFileNode>();
+            builder.Entity<FolderFile>().ToTable("FolderFiles");
 
             builder.Entity<HttpListener>().HasBaseType<Listener>();
             builder.Entity<HttpProfile>().HasBaseType<Profile>();
@@ -97,6 +104,22 @@ namespace Covenant.Models
                 .HasOne(G => G.ImplantTemplate)
                 .WithMany(IT => IT.Grunts)
                 .HasForeignKey(G => G.ImplantTemplateId);
+            
+            builder.Entity<Grunt>()
+                .HasOne(G => G.FolderRoot)
+                .WithOne(F => F.RootGrunt)
+                .HasForeignKey<Grunt>(G => G.FolderRootId)
+                .IsRequired(false);
+            
+            builder.Entity<FolderFileNode>()
+                .HasOne(N => N.Grunt)
+                .WithMany(G => G.FolderFileNodes)
+                .HasForeignKey(N => N.GruntId);
+
+            builder.Entity<Folder>()
+                .HasMany(F => F.Nodes)
+                .WithOne()
+                .HasForeignKey(N => N.ParentId);
 
             builder.Entity<GruntTask>()
                 .HasOne(GT => GT.Author)

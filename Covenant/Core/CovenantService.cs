@@ -221,6 +221,29 @@ namespace Covenant.Core
         Task DeleteGruntTasking(int taskingId);
     }
 
+    public interface IFolderFileService
+    {
+        Task<IEnumerable<Folder>> GetFolders(int gruntId);
+        Task<Folder> GetFolder(int gruntId, int? folderId);
+        Task<Folder> GetFolderByFullName(int gruntId, string FullName);
+        Task<Folder> CreateFolder(Folder folder);
+        Task<Folder> EditFolder(Folder folder);
+        Task DeleteFolder(int gruntId, int folderId);
+
+        Task<IEnumerable<FolderFile>> GetFolderFiles(int gruntId);
+        Task<FolderFile> GetFolderFile(int gruntId, int fileId);
+        Task<FolderFile> CreateFolderFile(FolderFile file);
+        Task<FolderFile> EditFolderFile(FolderFile file);
+        Task DeleteFolderFile(int gruntId, int folderId);
+
+        Task<IEnumerable<FolderFileNode>> GetFolderFileNodes(int gruntId);
+        Task<FolderFileNode> GetFolderFileNode(int gruntId, int nodeId);
+        Task<FolderFileNode> CreateFolderFileNode(FolderFileNode node);
+        Task<IEnumerable<FolderFileNode>> CreateFolderFileNodes(params FolderFileNode[] nodes);
+        Task<FolderFileNode> EditFolderFileNode(FolderFileNode node);
+        Task DeleteFolderFileNode(int gruntId, int nodeId);
+    }
+
     public interface ICredentialService
     {
         Task<IEnumerable<CapturedCredential>> GetCredentials();
@@ -351,7 +374,7 @@ namespace Covenant.Core
 
     public interface ICovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
-        IGruntCommandService, ICommandOutputService, IGruntTaskingService,
+        IGruntCommandService, ICommandOutputService, IGruntTaskingService, IFolderFileService,
         ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService,
         ISettingsService
     {
@@ -368,7 +391,6 @@ namespace Covenant.Core
 
     }
 
-
     public class CovenantService : ICovenantService
     {
         protected readonly DbContextOptions<CovenantContext> _options;
@@ -380,7 +402,6 @@ namespace Covenant.Core
         protected readonly ConcurrentDictionary<int, CancellationTokenSource> _cancellationTokens;
 
         protected CovenantContext _context;
-
 
         public CovenantService(DbContextOptions<CovenantContext> options, CovenantContext context, INotificationService notifier,
             UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, RoleManager<IdentityRole> roleManager,
@@ -1395,6 +1416,12 @@ namespace Covenant.Core
 
             matching_grunt.ImplantTemplateId = grunt.ImplantTemplateId;
             matching_grunt.ImplantTemplate = await this.GetImplantTemplate(grunt.ImplantTemplateId);
+
+            if (grunt.FolderRootId != null && grunt.FolderRootId != 0)
+            {
+                matching_grunt.FolderRootId = grunt.FolderRootId;
+                matching_grunt.FolderRoot = await this.GetFolder(matching_grunt.Id, grunt.FolderRootId);
+            }
 
             matching_grunt.UserDomainName = grunt.UserDomainName;
             matching_grunt.UserName = grunt.UserName;
@@ -3300,14 +3327,29 @@ public static class Task
                     await _notifier.NotifyEditGrunt(this, grunt);
                     await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
                 }
-            }
-            Event ev = null;
-            if ((newStatus == GruntTaskingStatus.Completed || newStatus == GruntTaskingStatus.Progressed) && originalStatus != newStatus)
-            {
-                if (newStatus == GruntTaskingStatus.Completed)
+                else if (tasking.Type == GruntTaskingType.Assembly && tasking.GruntTask.Name.Equals("listdirectory", StringComparison.OrdinalIgnoreCase))
                 {
-                    updatingGruntTasking.CompletionTime = DateTime.UtcNow;
+                    List<FolderFileNode> nodes = ModelUtilities.ParseFolder(updatingGruntTasking.GruntCommand.CommandOutput.Output, grunt.OperatingSystem);
+                    if (nodes != null)
+                    {
+                        foreach (FolderFileNode node in nodes.Where(N => N != null).ToList())
+                        {
+                            node.GruntId = grunt.Id;
+                            await this.CreateFolderFileNode(node);
+                        }
+                        if (nodes.Any())
+                        {
+                            Folder parent = await this.GetOrCreateParentFolder(nodes.First(), grunt.OperatingSystem);
+                            parent.Enumerated = true;
+                            await this.EditFolder(parent);
+                        }
+
+                    }
                 }
+            }
+            if (newStatus == GruntTaskingStatus.Completed && originalStatus != newStatus)
+            {
+                updatingGruntTasking.CompletionTime = DateTime.UtcNow;
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;
             updatingGruntTasking.Status = newStatus;
@@ -3318,18 +3360,6 @@ public static class Task
             await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
             await LoggingService.Log(LogAction.Edit, LogLevel.Trace, updatingGruntTasking);
-            if (ev != null)
-            {
-                tasking.GruntCommand = await _context.GruntCommands
-                    .Where(GC => GC.Id == tasking.GruntCommandId)
-                    .Include(GC => GC.User)
-                    .Include(GC => GC.CommandOutput)
-                    .Include(GC => GC.GruntTasking)
-                        .ThenInclude(GC => GC.GruntTask)
-                    .FirstOrDefaultAsync();
-                await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, tasking.GruntCommand);
-            }
             return await this.GetGruntTasking(updatingGruntTasking.Id);
         }
 
@@ -3435,6 +3465,308 @@ public static class Task
                                        P.Username == cred.Username
                            )) != null;
             }
+        }
+        #endregion
+
+        #region FolderFileNode Actions
+        public async Task<IEnumerable<Folder>> GetFolders(int gruntId)
+        {
+            IEnumerable<Folder> folders = await _context.FolderFileNodes
+                .Where(F => F is Folder)
+                .Select(F => (Folder)F)
+                .ToListAsync();
+            foreach (Folder f in folders)
+            {
+                f.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == f.Id).ToListAsync();
+            }
+            return folders;
+        }
+
+        public async Task<Folder> GetFolder(int gruntId, int? folderId)
+        {
+            if (folderId == null)
+            {
+                return null;
+            }
+            Folder folder = (Folder) await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.Id == folderId && F.GruntId == gruntId && F is Folder);
+            if (folder == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - Folder with id: {folderId}");
+            }
+            folder.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == folder.Id).ToListAsync();
+            return folder;
+        }
+
+        public async Task<Folder> GetFolderByFullName(int gruntId, string FullName)
+        {
+            Folder folder = (Folder)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.FullName == FullName && F.GruntId == gruntId && F is Folder);
+            if (folder == null)
+            {
+                return null;
+            }
+            folder.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == folder.Id).ToListAsync();
+            return folder;
+        }
+
+        private async Task<Folder> GetOrCreateParentFolder(FolderFileNode node, string operatingSystem)
+        {
+            string parentFullName = ModelUtilities.GetDirectoryName(node.FullName, operatingSystem);
+            Folder parent = node.ParentId != 0 && node.ParentId != null ?
+                await this.GetFolder(node.GruntId, node.ParentId) :
+                await this.GetFolderByFullName(node.GruntId, parentFullName);
+            if (parent == null && !string.IsNullOrEmpty(parentFullName))
+            {
+                parent = await this.CreateFolder(new Folder
+                {
+                    FullName = parentFullName,
+                    Name = ModelUtilities.GetFileName(parentFullName, operatingSystem),
+                    GruntId = node.GruntId,
+                    Grunt = node.Grunt,
+                    Nodes = new List<FolderFileNode> { node }
+                });
+            }
+            else if (parent != null && !parent.Nodes.Any(N => N.Id == node.Id))
+            {
+                parent.Nodes.Add(node);
+                _context.FolderFileNodes.Update(parent);
+                await _context.SaveChangesAsync();
+                await _notifier.NotifyEditFolder(this, parent);
+                // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            }
+            node.ParentId = parent?.Id;
+            return parent;
+        }
+
+        public async Task<Folder> CreateFolder(Folder folder)
+        {
+            Folder alreadyCreated = (Folder)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.FullName == folder.FullName && F.GruntId == folder.GruntId && F is Folder);
+            if (alreadyCreated != null)
+            {
+                folder.Id = alreadyCreated.Id;
+                folder.ParentId = alreadyCreated.ParentId;
+                folder.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == folder.Id).ToListAsync();
+                return await this.EditFolder(folder);
+            }
+            folder.Grunt = await this.GetGrunt(folder.GruntId);
+            await _context.FolderFileNodes.AddAsync(folder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateFolder(this, folder);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+
+            Folder parent = await this.GetOrCreateParentFolder(folder, folder.Grunt.OperatingSystem);
+            if (parent == null)
+            {
+                folder.Grunt.FolderRootId = folder.Id;
+                await this.EditGrunt(folder.Grunt);
+            }
+            else if (!parent.Nodes.Any(N => N.Id == folder.Id))
+            {
+                parent.Nodes.Add(folder);
+                _context.FolderFileNodes.Update(parent);
+                await _context.SaveChangesAsync();
+                await _notifier.NotifyEditFolder(this, parent);
+            }
+            folder.ParentId = parent?.Id;
+            for (int i = 0; i < folder.Nodes.Count; i++)
+            {
+                folder.Nodes[i] = folder.Nodes[i].Id == 0 ?
+                    await this.CreateFolderFileNode(folder.Nodes[i]) :
+                    await this.GetFolderFileNode(folder.GruntId, folder.Nodes[i].Id);
+            }
+            _context.FolderFileNodes.Update(folder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolder(this, folder);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            return await GetFolder(folder.GruntId, folder.Id);
+        }
+
+        public async Task<Folder> EditFolder(Folder folder)
+        {
+            Folder matchingFolder = await this.GetFolder(folder.GruntId, folder.Id);
+            matchingFolder.FullName = folder.FullName;
+            matchingFolder.Name = folder.Name;
+            matchingFolder.Length = folder.Length;
+            matchingFolder.CreationTime = folder.CreationTime;
+            matchingFolder.LastAccessTime = folder.LastAccessTime;
+            matchingFolder.LastWriteTime = folder.LastWriteTime;
+            matchingFolder.Enumerated = folder.Enumerated;
+
+            matchingFolder.ParentId = folder.ParentId;
+            matchingFolder.Nodes = folder.Nodes;
+            for (int i = 0; i < matchingFolder.Nodes.Count; i++)
+            {
+                matchingFolder.Nodes[i] = folder.Nodes[i].Id == 0 ?
+                    await this.CreateFolderFileNode(folder.Nodes[i]) :
+                    await this.GetFolderFileNode(matchingFolder.GruntId, matchingFolder.Nodes[i].Id);
+            }
+
+            _context.FolderFileNodes.Update(matchingFolder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolder(this, folder);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingFolder);
+            return await GetFolder(matchingFolder.GruntId, matchingFolder.Id);
+        }
+
+        public async Task DeleteFolder(int gruntId, int folderId)
+        {
+            Folder matchingFolder = await this.GetFolder(gruntId, folderId);
+            _context.FolderFileNodes.Remove(matchingFolder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteFolder(this, matchingFolder.Id);
+            // await LoggingService.Log(LogAction.Delete, LogLevel.Trace, matchingFolder);
+        }
+
+        public async Task<IEnumerable<FolderFile>> GetFolderFiles(int gruntId)
+        {
+            return await _context.FolderFileNodes
+                .Where(F => F is FolderFile)
+                .Select(F => (FolderFile)F)
+                .ToListAsync();
+        }
+
+        public async Task<FolderFile> GetFolderFile(int gruntId, int fileId)
+        {
+            FolderFile file = (FolderFile)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.Id == fileId && F.GruntId == gruntId && F is FolderFile);
+            if (file == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - File with id: {fileId}");
+            }
+            return file;
+        }
+
+        public async Task<FolderFile> CreateFolderFile(FolderFile file)
+        {
+            FolderFile alreadyCreated = (FolderFile)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.FullName == file.FullName && F.GruntId == file.GruntId && F is FolderFile);
+            if (alreadyCreated != null)
+            {
+                file.Id = alreadyCreated.Id;
+                return await this.EditFolderFile(file);
+            }
+            file.Grunt = await this.GetGrunt(file.GruntId);
+            await _context.FolderFileNodes.AddAsync(file);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateFolderFile(this, file);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            Folder parent = await this.GetOrCreateParentFolder(file, file.Grunt.OperatingSystem);
+            if (!parent.Nodes.Any(N => N.Id == file.Id))
+            {
+                parent.Nodes.Add(file);
+                _context.FolderFileNodes.Update(parent);
+            }
+            file.ParentId = parent?.Id;
+            // file.Parent = null;
+            _context.FolderFileNodes.Update(file);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolderFile(this, file);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            return await GetFolderFile(file.GruntId, file.Id);
+        }
+
+        public async Task<FolderFile> EditFolderFile(FolderFile file)
+        {
+            FolderFile matchingFile = await this.GetFolderFile(file.GruntId, file.Id);
+            matchingFile.FullName = file.FullName;
+            matchingFile.Name = file.Name;
+            matchingFile.CreationTime = file.CreationTime;
+            matchingFile.LastAccessTime = file.LastAccessTime;
+            matchingFile.LastWriteTime = file.LastWriteTime;
+            matchingFile.ParentId = file.ParentId;
+
+            _context.FolderFileNodes.Update(matchingFile);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolderFile(this, file);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingFolder);
+            return await GetFolderFile(matchingFile.GruntId, matchingFile.Id);
+        }
+
+        public async Task DeleteFolderFile(int gruntId, int folderId)
+        {
+            FolderFile matchingFile = await this.GetFolderFile(gruntId, folderId);
+            _context.FolderFileNodes.Remove(matchingFile);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteFolderFile(this, matchingFile.Id);
+            // await LoggingService.Log(LogAction.Delete, LogLevel.Trace, matchingFolder);
+        }
+
+        public async Task<IEnumerable<FolderFileNode>> GetFolderFileNodes(int gruntId)
+        {
+            List<FolderFileNode> nodes = new List<FolderFileNode>();
+            nodes.AddRange(await this.GetFolders(gruntId));
+            nodes.AddRange(await this.GetFolderFiles(gruntId));
+            return nodes;
+        }
+
+        public async Task<FolderFileNode> GetFolderFileNode(int gruntId, int nodeId)
+        {
+            FolderFileNode node = await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.Id == nodeId && F.GruntId == gruntId);
+            if (node == null)
+            {
+                node = await _context.FolderFileNodes
+                    .FirstOrDefaultAsync(F => F.Id == nodeId && F.GruntId == gruntId);
+            }
+            if (node == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - FolderFileNode with id: {nodeId}");
+            }
+            return node;
+        }
+
+        public async Task<FolderFileNode> CreateFolderFileNode(FolderFileNode node)
+        {
+            if (node is Folder folder)
+            {
+                return await this.CreateFolder(folder);
+            }
+            if (node is FolderFile file)
+            {
+                return await this.CreateFolderFile(file);
+            }
+            throw new ControllerBadRequestException($"BadRequest - Could not determine type of FolderFileNode");
+        }
+
+        public async Task<IEnumerable<FolderFileNode>> CreateFolderFileNodes(params FolderFileNode[] nodes)
+        {
+            List<FolderFileNode> createdNodes = new List<FolderFileNode>();
+            foreach (FolderFileNode node in nodes)
+            {
+                createdNodes.Add(await this.CreateFolderFileNode(node));
+            }
+            return createdNodes;
+        }
+
+        public async Task<FolderFileNode> EditFolderFileNode(FolderFileNode node)
+        {
+            if (node is Folder folder)
+            {
+                return await this.EditFolder(folder);
+            }
+            if (node is FolderFile file)
+            {
+                return await this.EditFolderFile(file);
+            }
+            throw new ControllerBadRequestException($"BadRequest - Could not determine type of FolderFileNode");
+        }
+
+        public async Task DeleteFolderFileNode(int gruntId, int nodeId)
+        {
+            FolderFileNode matchingNode = await this.GetFolderFileNode(gruntId, nodeId);
+            if (matchingNode is Folder folder)
+            {
+                await this.DeleteFolder(folder.GruntId, folder.Id);
+                return;
+            }
+            if (matchingNode is FolderFile file)
+            {
+                await this.DeleteFolderFile(file.GruntId, file.Id);
+                return;
+            }
+            throw new ControllerBadRequestException($"BadRequest - Could not determine type of FolderFileNode");
         }
         #endregion
 

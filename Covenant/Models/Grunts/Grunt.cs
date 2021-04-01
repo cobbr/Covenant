@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Newtonsoft.Json;
+
 using Covenant.Core;
 using Covenant.Models.Listeners;
 
@@ -104,7 +106,12 @@ namespace Covenant.Models.Grunts
 
         public string PowerShellImport { get; set; } = "";
         public List<GruntCommand> GruntCommands { get; set; } = new List<GruntCommand>();
-       
+
+        public int? FolderRootId { get; set; }
+        public Folder FolderRoot { get; set; }
+
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<FolderFileNode> FolderFileNodes { get; set; }
         
         public void AddChild(Grunt grunt)
         {
