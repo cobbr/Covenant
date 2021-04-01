@@ -134,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing PowerShell launcher "encodedlauncher" box, actually fixed this time
 - Fixed theme to apply to modal content
 - Fixed LauncherForm incorrectly changes DotNetVersion
+- Fixed missing GruntForm OperatingSystem label
 
 ## [v0.6] - 2020-08-04
 ### Added
