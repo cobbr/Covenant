@@ -87,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated Brute ImplantTemplate to use Net50
 - Removed unnecessary remaining .task files
 - Updated DbInitializer to use YAML parsing for default ImplantTemplates
+- Updated ListDirectory ShellCmd DotNetCore tasks
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
