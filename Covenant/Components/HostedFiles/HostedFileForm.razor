@@ -46,7 +46,7 @@
             this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await e.File.OpenReadStream().CopyToAsync(ms);
+                await e.File.OpenReadStream(500000000).CopyToAsync(ms);
                 HostedFile.Content = Convert.ToBase64String(ms.ToArray());
             }
         }
