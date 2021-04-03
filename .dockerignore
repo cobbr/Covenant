@@ -3,3 +3,4 @@
 Dockerfile*
 **/*.trx
 **/*.md
+**/.git*
