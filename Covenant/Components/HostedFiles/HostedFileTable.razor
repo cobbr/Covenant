@@ -100,5 +100,6 @@
         await Service.DeleteHostedFile(file.ListenerId, file.Id);
         Service.DisposeContext();
         this.HostedFiles.RemoveAt(this.HostedFiles.FindIndex(F => F.Id == file.Id));
+        StateHasChanged();
     }
 }
