@@ -10,11 +10,11 @@
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
 
-<div class="modal fade" id="file-modal" tabindex="-1" role="dialog" aria-labelledby="file-modal-label" aria-hidden="true">
+<div class="modal fade" id="@GuidId" tabindex="-1" role="dialog" aria-labelledby="@GuidId-label" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="file-modal-label">Select File</h5>
+                <h5 class="modal-title" id="@GuidId-label">Select File</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -65,6 +65,8 @@
     private GruntTask GruntTask { get; set; }
     private InputFile InputFile { get; set; }
 
+    private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
+
     public async Task Show(GruntTask task)
     {
         this.GruntTask = task;
@@ -76,12 +78,12 @@
             }
         }
         this.StateHasChanged();
-        await IJSRuntime.InvokeAsync<string>("ActivateModal", "#file-modal");
+        await IJSRuntime.InvokeAsync<string>("ActivateModal", $"#{@GuidId}");
     }
 
     private async Task Execute()
     {
-        await IJSRuntime.InvokeAsync<string>("ModalCommand", "#file-modal", "hide");
+        await IJSRuntime.InvokeAsync<string>("ModalCommand", $"#{@GuidId}", "hide");
         await OnSubmit.InvokeAsync(GruntTask);
     }
 
