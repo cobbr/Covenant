@@ -454,7 +454,7 @@
                 List<string> identityList = Identities.Split(',').ToList();
                 List<string> PropertyList = null;
 
-                if (Properties.Trim() != "")
+                if (Properties != null && Properties.Trim() != "")
                 {
                     PropertyList = Properties.Split(',').ToList();	
                 }
@@ -643,7 +643,7 @@
                 List<string> PropertyList = null;
                 List<Domain.UACEnum> UACFilterList = null;
                 
-                if (Properties.Trim() != "")
+                if (Properties != null && Properties.Trim() != "")
                 {
                 	  PropertyList = Properties.Split(',').ToList();	
                 }
@@ -861,7 +861,7 @@
                 List<string> PropertyList = null;
                 List<Domain.UACEnum> UACFilterList = null;
     
-                if (Properties.Trim() != "")
+                if (Properties != null && Properties.Trim() != "")
                 {
                 	  PropertyList = Properties.Split(',').ToList();	
                 }
