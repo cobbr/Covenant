@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -52,7 +53,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.4" />
     <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
-    <PackageReference Include="DonutCore" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -81,6 +81,12 @@
     </Reference>
     <Reference Include="dnlib">
       <HintPath>refs\dnlib.dll</HintPath>
+    </Reference>
+    <Reference Include="PeNet">
+      <HintPath>refs\PeNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Donut">
+      <HintPath>refs\Donut.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

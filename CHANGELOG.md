@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Download task exception on unexpected output
 - Fix credential tracking missing some credentials
 - Fix credential tracking missing Kerberos tickets
+- Fixed missing DonutCore nuget package
 
 ## [v0.6] - 2020-08-04
 ### Added
