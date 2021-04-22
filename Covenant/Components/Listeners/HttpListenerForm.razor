@@ -52,10 +52,10 @@
             <div class="form-group col-md-4">
                 <input id="Urls_i_" name="Urls[i]" value="@Listener.Urls[number]" class="form-control" readonly>
             </div>
-            @if (number != 0)
+            @if (number != 0 && !Disabled)
             {
                 <div class="col-auto align-self-center">
-                    <button type="button" @onclick="(e => RemoveRow(number))" disabled="@Disabled" class="btn btn-outline-danger btn-sm">
+                    <button type="button" @onclick="(e => RemoveRow(number))" class="btn btn-outline-danger btn-sm">
                         <span class="fe fe-x"></span>
                     </button>
                 </div>
@@ -64,9 +64,12 @@
     }
     <div class="text-danger"><ValidationMessage For="() => Listener.ConnectAddresses" /></div>
     <div class="text-danger"><ValidationMessage For="() => Listener.Urls" /></div>
-    <button type="button" @onclick="AddRow" disabled="@Disabled" class="btn btn-outline-primary btn-sm mt-2 mb-4">
-        <span class="fe fe-plus"></span> Add
-    </button>
+    @if (!Disabled)
+    {
+        <button type="button" @onclick="AddRow" class="btn btn-outline-primary btn-sm mt-2 mb-4">
+            <span class="fe fe-plus"></span> Add
+        </button>
+    }
 
     <div class="form-row">
         <div class="form-group col-md-3">

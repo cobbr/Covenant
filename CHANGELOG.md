@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unnecessary remaining .task files
 - Updated DbInitializer to use YAML parsing for default ImplantTemplates
 - Updated ListDirectory ShellCmd DotNetCore tasks
+- Changed HttpListenerForm to remove Add ConnectAddress button when editting
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
