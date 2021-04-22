@@ -424,6 +424,111 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
+- Name: GetNetShares
+  Aliases: []
+  Description: Gets a list of `Share`s from specified remote computer(s).
+  Author: 
+      Name: Ryan Cobb
+      Handle: cobbr_io
+      Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+
+    using SharpSploit.Enumeration;
+
+    public static class Task
+    {
+      public static string Execute(string Computers = ""){
+        String[] targets = Computers.Replace(", ",",").Split(',').ToArray();
+        StringBuilder results = new StringBuilder();
+
+
+            List<Net.ShareInfo> allshares = Net.GetNetShares(targets);
+            var groupedShares = allshares.GroupBy(grouping => grouping.ComputerName);
+
+
+            foreach(var group in groupedShares){
+              results.AppendLine("Shares on " + group.Key + ":\r\n---------------------------");
+                foreach(var s in group){
+                  results.AppendLine(s.ShareName + "\t\t" + s.ShareRemark);
+                }
+                results.AppendLine();
+            }
+        return results.ToString();
+      }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerNames
+    Value: DC01
+    DefaultValue: ''
+    Description: List of comma-delimited ComputerNames to query.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
 - Name: GetDomainGroup
   Aliases: []
   Description: Gets a list of specified (or all) group `DomainObject`s in the current Domain.
