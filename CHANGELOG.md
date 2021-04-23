@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added GetContent and GetFilename Launcher abstract methods
 - Added GetLauncherDownload API endpoint
 - Added Grunt FileBrowser
+- Added back missing GetNetShares task
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -88,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unnecessary remaining .task files
 - Updated DbInitializer to use YAML parsing for default ImplantTemplates
 - Updated ListDirectory ShellCmd DotNetCore tasks
+- Changed HttpListenerForm to remove Add ConnectAddress button when editting
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
@@ -138,6 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed missing GruntForm OperatingSystem label
 - Fixed Domain tasks null properties error
 - Fixed GruntTaskOptionsModal id issue in tabbedterminal view
+- Fixed missing DonutCore nuget package
+- Fixed Docker build Covenant.API project
 
 ## [v0.6] - 2020-08-04
 ### Added
