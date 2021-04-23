@@ -15,11 +15,21 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="BindAddress">BindAddress</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>BindAddress</b> is the local ip address that the listener will bind to. This can be helpful in cases where the Covenant host has multiple NICs. Usually, this value will be <b>0.0.0.0</b>.
+                </div>
+            </a>
             <input id="BindAddress" name="BindAddress" @bind="@Listener.BindAddress" disabled="@Disabled" class="form-control">
             <div class="text-danger"><ValidationMessage For="() => Listener.BindAddress" /></div>
         </div>
         <div class="form-group col-md-4">
             <label for="BindPort">BindPort</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>BindPort</b> is the local port that the listener will bind to. This is the port that the C2Bridge will connect to.
+                </div>
+            </a>
             <input id="BindPort" name="BindPort" @bind="@Listener.BindPort" disabled="@Disabled" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Listener.BindPort" /></div>
         </div>
@@ -27,6 +37,11 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="ConnectPort">ConnectPort</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    <b>ConnectPort</b> is the <b>callback</b> port that Grunts will be directly connecting to. This is the port the C2Bridge should listen on.
+                </div>
+            </a>
             <input id="ConnectPort" name="ConnectPort" @bind-value="Listener.ConnectPort" @bind-value:event="oninput" disabled="@Disabled" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Listener.ConnectPort" /></div>
         </div>
@@ -34,12 +49,22 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="ConnectAddresses_0_">ConnectAddress</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>ConnectAddress</b> is the <b>callback</b> address that Grunts will be directly connecting to. This should be the external address of the C2Bridge, or if you are using redirectors this should be the address that points to the external redirector.
+                </div>
+            </a>
             <input id="ConnectAddresses_0_" name="ConnectAddresses[0]" @bind="@Listener.ConnectAddresses[0]" disabled="@Disabled" class="form-control">
             <div class="text-danger"><ValidationMessage For="() => Listener.ConnectAddresses" /></div>
         </div>
     </div>
     <div class="form-group">
         <label for="ProfileId">BridgeProfile</label>
+        <a href="#" class="tooltips-info">
+            <div class="tooltiptext">
+                The <b>BridgeProfile</b> determines the behavior of Grunt and Listener communication.
+            </div>
+        </a>
         <select id="ProfileId" name="ProfileId" @bind="Listener.ProfileId" class="form-control">
             @foreach (var Profile in Profiles)
             {
