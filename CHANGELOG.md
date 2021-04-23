@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added GetLauncherDownload API endpoint
 - Added Grunt FileBrowser
 - Added back missing GetNetShares task
+- Added Tooltip Helper info in every label for easy to understand
 
 ### Changed
 - Disallow Administrators from changing other user's passwords

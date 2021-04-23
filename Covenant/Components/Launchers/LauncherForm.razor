@@ -35,6 +35,11 @@
         </div>
         <div class="form-group col-md-3">
             <label for="ImplantTemplateId">ImplantTemplate</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>ImplantTemplate</b> is the type of implant that the launcher will generate.
+                </div>
+            </a>
             <select id="ImplantTemplateId" name="ImplantTemplateId" @onchange="(e => OnImplantTemplateChanged(e))" class="form-control">
                 @foreach (var ImplantTemplate in ApplicableImplantTemplates)
                 {
@@ -53,7 +58,13 @@
     </div>
     <div class="form-row">
         <div class="form-group col-md-3">
-            <label for="DotNetVersion">DotNetVersion</label><br />
+            <label for="DotNetVersion">DotNetVersion</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>DotNetVersion</b> of the implant that will be generated. You'll be limited to a choice of the <b>DotNetVersion</b>s compatible with the chosen <b>ImplantTemplate</b>.
+                </div>
+            </a>
+            <br />
             <select id="DotNetVersion" name="DotNetVersion" @bind="Launcher.DotNetVersion" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
                 @foreach (string n in GetApplicableDotNetVersions())
                 {
@@ -137,6 +148,11 @@
     {
         <div class="form-group">
             <label for="SMBPipeName">SMBPipeName</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                     The <b>SMBPipeName</b> is the name of the named pipe that the Grunt will bind to and listen on. This option is only relavent when using the SMB <b>CommType</b>, and will only be displayed if you have selected the SMB <b>CommType</b>.
+                </div>
+            </a>
             <input id="SMBPipeName" name="SMBPipeName" @bind="@Launcher.SMBPipeName" class="form-control">
             <div class="text-danger"><ValidationMessage For="() => Launcher.SMBPipeName" /></div>
         </div>
@@ -144,16 +160,31 @@
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="Delay">Delay</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>Delay</b> is the time that the Grunt will sleep in-between each poll of the server. A larger <b>Delay</b> value will result in stealthier communication, but increase the time it takes to task a Grunt.
+                </div>
+            </a>
             <input id="Delay" name="Delay" @bind="@Launcher.Delay" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Launcher.Delay" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="JitterPercent">JitterPercent</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>JitterPercent</b> is the percentage of variability in the <b>Delay</b> value.
+                </div>
+            </a>
             <input id="JitterPercent" name="JitterPercent" @bind="Launcher.JitterPercent" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Launcher.JitterPercent" /></div>
         </div>
         <div class="form-group col-md-3">
             <label for="ConnectAttempts">ConnectAttempts</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>ConnectAttempts</b> is the number of consective times a Grunt will attempt to poll the listener before quitting. If a Grunt cannot reach the listener and fails to successfully poll the listener more times than the <b>ConnectAttempts</b> value, it will quit.
+                </div>
+            </a>
             <input id="ConnectAttempts" name="ConnectAttempts" @bind="Launcher.ConnectAttempts" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Launcher.ConnectAttempts" /></div>
         </div>
@@ -161,6 +192,11 @@
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="KillDate">KillDate</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>KillDate</b> is the date at which a Grunt will quit and stop calling back to the listener.
+                </div>
+            </a>
             <input id="KillDate" name="KillDate" @bind="Launcher.KillDate" class="form-control">
             <div class="text-danger"><ValidationMessage For="() => Launcher.KillDate" /></div>
         </div>

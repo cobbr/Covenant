@@ -12,17 +12,30 @@
     </div>
     <div class="form-group">
         <label for="Name">Name</label>
+        <a href="#" class="tooltips-info">
+            <div class="tooltiptext"> The <b>Name</b> of the listener that will be used throughout the interface. Pick something recognizable!</div>
+        </a>
         <input id="Name" name="Name" @bind="@Listener.Name" disabled="@Disabled" class="form-control">
         <div class="text-danger"><ValidationMessage For="() => Listener.Name" /></div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="BindAddress">BindAddress</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>BindAddress</b> is the local ip address that the listener will bind to. This can be helpful in cases where the Covenant host has multiple nics. Usually, this value will be <b>0.0.0.0</b>.
+                </div>
+            </a>
             <input id="BindAddress" name="BindAddress" @bind="@Listener.BindAddress" disabled="@Disabled" class="form-control">
             <div class="text-danger"><ValidationMessage For="() => Listener.BindAddress" /></div>
         </div>
         <div class="form-group col-md-4">
             <label for="BindPort">BindPort</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>BindPort</b> is the local port that the listener will bind to.
+                </div>
+            </a>
             <input id="BindPort" name="BindPort" @bind="@Listener.BindPort" disabled="@Disabled" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Listener.BindPort" /></div>
         </div>
@@ -30,6 +43,11 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="ConnectPort">ConnectPort</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>ConnectPort</b> is the *callback* port that Grunts will be directly connecting to. This also represents the port portion of the <b>Urls</b>.
+                </div>
+            </a>
             <input id="ConnectPort" name="ConnectPort" @bind-value="Listener.ConnectPort" @bind-value:event="oninput" disabled="@Disabled" class="form-control" type="number">
             <div class="text-danger"><ValidationMessage For="() => Listener.ConnectPort" /></div>
         </div>
@@ -37,9 +55,19 @@
     <div class="form-row">
         <div class="form-group col-md-4 mb-0">
             <label for="ConnectAddresses_0_">ConnectAddresses</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext"> 
+                    The <b>ConnectAddresses</b> are the <b>callback</b> addresses, and represents the hostname portion of the <b>Url</b>. You must specify at least one <b>ConnectAddress</b> and can specify as many as you would like. You can specify multiple <b>ConnectAddresses</b> for failure prevention. Grunts will attempt to connect to each of these <b>ConnectAddresses</b> and will use the first one that succeeds. If you are using redirectors, this should be the url that points to the external redirector.
+                </div>
+            </a>
         </div>
         <div class="form-group col-md-4 mb-0">
             <label for="Urls_0_">Urls</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>Urls</b> are the <b>callback</b> URLs, and are the urls that Grunts will be directly connecting to. The URLs are calculated based on a combination of the <b>ConnectAddresses</b>, <b>BindPort</b>, and <b>UseSSL</b> values, and should be of the form: <b>http(s)://connectaddress:bindport</b>. The <b>Urls</b> are calculated for you, you should not need to manually edit these values.
+                </div>
+            </a>
         </div>
     </div>
     @for (int i = 0; i < Listener.ConnectAddresses.Count; i++)
@@ -74,6 +102,11 @@
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="UseSSL">UseSSL</label>
+            <a href="#" class="tooltips-info">
+                <div class="tooltiptext">
+                    The <b>UseSSL</b> value determines if the listener should use the HTTPS or HTTP protocol. If <b>UseSSL</b> value is true, an <b>SSLCertificate</b> needs to be provided.
+                </div>
+            </a>
             <select id="UseSSL" name="UseSSL" @onchange="(e => UpdateUseSSL(e))" disabled="@Disabled" class="form-control form-control-sm">
                 @if (Listener.UseSSL)
                 {
@@ -115,6 +148,11 @@
     </div>
     <div class="form-group">
         <label for="ProfileId">HttpProfile</label>
+        <a href="#" class="tooltips-info">
+            <div class="tooltiptext">
+                The <b>HttpProfile</b> determines the behavior of Grunt and Listener communication.    
+            </div>
+        </a>
         <select id="ProfileId" name="ProfileId" @bind="Listener.ProfileId" class="form-control">
             @foreach (var Profile in Profiles)
             {

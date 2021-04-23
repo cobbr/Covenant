@@ -297,3 +297,79 @@ main {
 .dropdown-menu > a:hover {
     background-color: rgba(0,0,0,0.1);
 }
+
+
+a.tooltips-info {
+    position: relative;
+    display: inline;
+}
+
+a.tooltips-info:before
+{
+    content: '?';
+    display: inline-block;
+    font-family: sans-serif;
+    font-weight: bold;
+    text-align: center;
+    width: 2.1ex;
+    height: 2.1ex;
+    font-size: 1.7ex;
+    line-height: 1.8ex;
+    border-radius: 1.2ex;
+    margin-right: 4px;
+    padding: 1px;
+    color: black;
+    background: white;
+    border: 1px solid black;
+    text-decoration: none;
+}
+
+a.tooltips-info:hover:before
+{
+    color: white;
+    background: black;
+    border-color: white;
+    text-decoration: none;
+}
+
+a.tooltips-info .tooltiptext {
+    opacity: 0;
+    bottom: 30px;
+    left: 50%;
+    margin-left: -76px;
+    position: absolute;
+    color: #FFFFFF;
+    background: #000000;
+    line-height: 30px;
+    text-align: justify;
+    visibility: hidden;
+    border-radius: 6px;
+    box-shadow: 0px 0px 0px #800000;
+    max-height: 300px;
+    max-width: 1000px;
+    min-height: 50px;
+    min-width: 600px;
+    display: block;
+    padding: 6px;
+}
+a.tooltips-info .tooltiptext:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -8px;
+    width: 0; height: 0;
+    /*
+    border-top: 8px solid #000000;
+    border-right: 8px solid transparent;
+    border-left: 8px solid transparent;
+    */
+}
+a:hover.tooltips-info .tooltiptext {
+    visibility: visible;
+    opacity: 0.8;
+    bottom: 30px;
+    left: 50%;
+    margin-left: -76px;
+    z-index: 999;
+}
