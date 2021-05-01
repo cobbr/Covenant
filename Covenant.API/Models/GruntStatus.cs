@@ -32,9 +32,7 @@ namespace Covenant.API.Models
         [EnumMember(Value = "Exited")]
         Exited,
         [EnumMember(Value = "Disconnected")]
-        Disconnected,
-        [EnumMember(Value = "Hidden")]
-        Hidden
+        Disconnected
     }
     internal static class GruntStatusEnumExtension
     {
@@ -63,8 +61,6 @@ namespace Covenant.API.Models
                     return "Exited";
                 case GruntStatus.Disconnected:
                     return "Disconnected";
-                case GruntStatus.Hidden:
-                    return "Hidden";
             }
             return null;
         }
@@ -89,8 +85,6 @@ namespace Covenant.API.Models
                     return GruntStatus.Exited;
                 case "Disconnected":
                     return GruntStatus.Disconnected;
-                case "Hidden":
-                    return GruntStatus.Hidden;
             }
             return null;
         }

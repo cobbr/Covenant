@@ -26,7 +26,7 @@ namespace Covenant.API.Models
         /// Initializes a new instance of the Grunt class.
         /// </summary>
         /// <param name="dotNetVersion">Possible values include: 'Net35',
-        /// 'Net40', 'NetCore31'</param>
+        /// 'Net40', 'Net50'</param>
         /// <param name="runtimeIdentifier">Possible values include: 'win_x64',
         /// 'win_x86', 'win_arm', 'win_arm64', 'win7_x64', 'win7_x86',
         /// 'win81_x64', 'win81_x86', 'win81_arm', 'win10_x64', 'win10_x86',
@@ -37,10 +37,10 @@ namespace Covenant.API.Models
         /// 'osx_10_15_x64'</param>
         /// <param name="status">Possible values include: 'Uninitialized',
         /// 'Stage0', 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited',
-        /// 'Disconnected', 'Hidden'</param>
+        /// 'Disconnected'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(string name, string originalServerGuid, int implantTemplateId, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetVersion, RuntimeIdentifier runtimeIdentifier, GruntStatus status, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), ImplantTemplate implantTemplate = default(ImplantTemplate), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>))
+        public Grunt(string name, string originalServerGuid, int implantTemplateId, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetVersion, RuntimeIdentifier runtimeIdentifier, GruntStatus status, bool hidden, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), ImplantTemplate implantTemplate = default(ImplantTemplate), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>), int? folderRootId = default(int?), Folder folderRoot = default(Folder))
         {
             Id = id;
             Name = name;
@@ -62,6 +62,7 @@ namespace Covenant.API.Models
             DotNetVersion = dotNetVersion;
             RuntimeIdentifier = runtimeIdentifier;
             Status = status;
+            Hidden = hidden;
             Integrity = integrity;
             Process = process;
             UserDomainName = userDomainName;
@@ -77,6 +78,8 @@ namespace Covenant.API.Models
             LastCheckIn = lastCheckIn;
             PowerShellImport = powerShellImport;
             GruntCommands = gruntCommands;
+            FolderRootId = folderRootId;
+            FolderRoot = folderRoot;
             CustomInit();
         }
 
@@ -171,7 +174,7 @@ namespace Covenant.API.Models
         public System.DateTime KillDate { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Net35', 'Net40', 'NetCore31'
+        /// Gets or sets possible values include: 'Net35', 'Net40', 'Net50'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion DotNetVersion { get; set; }
@@ -190,11 +193,15 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// Gets or sets possible values include: 'Uninitialized', 'Stage0',
-        /// 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited', 'Disconnected',
-        /// 'Hidden'
+        /// 'Stage1', 'Stage2', 'Active', 'Lost', 'Exited', 'Disconnected'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public GruntStatus Status { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "hidden")]
+        public bool Hidden { get; set; }
 
         /// <summary>
         /// Gets or sets possible values include: 'Untrusted', 'Low', 'Medium',
@@ -274,6 +281,16 @@ namespace Covenant.API.Models
         public IList<GruntCommand> GruntCommands { get; set; }
 
         /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "folderRootId")]
+        public int? FolderRootId { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "folderRoot")]
+        public Folder FolderRoot { get; set; }
+
+        /// <summary>
         /// Validate the object.
         /// </summary>
         /// <exception cref="ValidationException">
@@ -330,6 +347,10 @@ namespace Covenant.API.Models
                         element.Validate();
                     }
                 }
+            }
+            if (FolderRoot != null)
+            {
+                FolderRoot.Validate();
             }
         }
     }

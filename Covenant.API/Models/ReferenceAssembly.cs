@@ -23,7 +23,7 @@ namespace Covenant.API.Models
         /// Initializes a new instance of the ReferenceAssembly class.
         /// </summary>
         /// <param name="dotNetVersion">Possible values include: 'Net35',
-        /// 'Net40', 'NetCore31'</param>
+        /// 'Net40', 'Net50'</param>
         public ReferenceAssembly(int? id = default(int?), string name = default(string), string location = default(string), DotNetVersion? dotNetVersion = default(DotNetVersion?))
         {
             Id = id;
@@ -54,7 +54,7 @@ namespace Covenant.API.Models
         public string Location { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'Net35', 'Net40', 'NetCore31'
+        /// Gets or sets possible values include: 'Net35', 'Net40', 'Net50'
         /// </summary>
         [JsonProperty(PropertyName = "dotNetVersion")]
         public DotNetVersion? DotNetVersion { get; set; }

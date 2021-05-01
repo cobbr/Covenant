@@ -90,6 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated DbInitializer to use YAML parsing for default ImplantTemplates
 - Updated ListDirectory ShellCmd DotNetCore tasks
 - Changed HttpListenerForm to remove Add ConnectAddress button when editting
+- Changed to add Hidden field for Grunts, separate from GruntStatus
+- Updated Covenant.API to latest model
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

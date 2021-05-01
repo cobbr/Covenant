@@ -148,9 +148,9 @@ namespace Covenant.API
             /// </param>
             /// <param name='body'>
             /// </param>
-            public static void AppendCommandOutput(this ICovenantAPI operations, int id, string body = default(string))
+            public static CommandOutput AppendCommandOutput(this ICovenantAPI operations, int id, string body = default(string))
             {
-                operations.AppendCommandOutputAsync(id, body).GetAwaiter().GetResult();
+                return operations.AppendCommandOutputAsync(id, body).GetAwaiter().GetResult();
             }
 
             /// <param name='operations'>
@@ -163,9 +163,12 @@ namespace Covenant.API
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task AppendCommandOutputAsync(this ICovenantAPI operations, int id, string body = default(string), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<CommandOutput> AppendCommandOutputAsync(this ICovenantAPI operations, int id, string body = default(string), CancellationToken cancellationToken = default(CancellationToken))
             {
-                (await operations.AppendCommandOutputWithHttpMessagesAsync(id, body, null, cancellationToken).ConfigureAwait(false)).Dispose();
+                using (var _result = await operations.AppendCommandOutputWithHttpMessagesAsync(id, body, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
             }
 
             /// <param name='operations'>
