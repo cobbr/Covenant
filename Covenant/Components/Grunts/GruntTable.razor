@@ -50,7 +50,7 @@
         <th></th>
     </TableHeader>
     <TableRow Context="grunt">
-        @{ string opacity = GetGruntStatusOpacity(grunt.Status); }
+        @{ string opacity = GetGruntOpacity(grunt); }
         <tr>
             @if (this.OnSelectTerminal.HasDelegate)
             {
@@ -60,7 +60,7 @@
                     </div>
                 </td>
             }
-            <td @attributes="InputAttributes" style="opacity: @GetGruntStatusOpacity(grunt.Status)">
+            <td @attributes="InputAttributes" style="opacity: @GetGruntOpacity(grunt)">
                 <a href="/grunt/interact/@grunt.Id">
                     @grunt.Name
                 </a>
@@ -81,7 +81,7 @@
                             Interact
                         </DropdownActionItem>
                     }
-                    @if (grunt.Status != GruntStatus.Hidden)
+                    @if (!grunt.Hidden)
                     {
                         <DropdownActionItem TItem="Grunt" Item="grunt" OnAction="(async item => await OnHideGrunt(item))" class="text-warning">
                             <span class="fe fe-eye-off"></span>
@@ -148,9 +148,9 @@
         Service.DisposeContext();
     }
 
-    private string GetGruntStatusOpacity(GruntStatus s)
+    private string GetGruntOpacity(Grunt g)
     {
-        return s == GruntStatus.Active ? "1.0" : "0.3";
+        return g.Hidden ? "0.3" : "1.0";
     }
 
     private void OnGruntsChanged(List<Grunt> Grunts)
@@ -177,7 +177,7 @@
     {
         try
         {
-            grunt.Status = GruntStatus.Hidden;
+            grunt.Hidden = true;
             AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
             Service.DisposeContext();
@@ -192,7 +192,7 @@
     {
         try
         {
-            grunt.Status = GruntStatus.Active;
+            grunt.Hidden = false;
             AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
             Service.DisposeContext();

@@ -24,8 +24,7 @@ namespace Covenant.Models.Grunts
         Active,
         Lost,
         Exited,
-        Disconnected,
-        Hidden
+        Disconnected
     }
 
     public enum IntegrityLevel
@@ -84,6 +83,8 @@ namespace Covenant.Models.Grunts
         public Compiler.RuntimeIdentifier RuntimeIdentifier { get; set; } = Compiler.RuntimeIdentifier.win_x64;
         [Required]
         public GruntStatus Status { get; set; } = GruntStatus.Uninitialized;
+        [Required]
+        public bool Hidden { get; set; } = false;
         [Required]
         public IntegrityLevel Integrity { get; set; } = IntegrityLevel.Untrusted;
         public string Process { get; set; } = "";

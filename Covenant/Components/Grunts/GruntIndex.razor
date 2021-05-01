@@ -61,9 +61,9 @@
 
     private void FilterGrunts()
     {
-        this.SomeHidden = this.UnfilteredGrunts.Any(G => G.Status == GruntStatus.Hidden);
+        this.SomeHidden = this.UnfilteredGrunts.Any(G => G.Hidden == true);
         this.Grunts = this.UnfilteredGrunts
-            .Where(G => (!this.Hidden || G.Status != GruntStatus.Hidden) && G.Status != GruntStatus.Uninitialized)
+            .Where(G => (!this.Hidden || !G.Hidden) && G.Status != GruntStatus.Uninitialized)
             .ToList();
     }
 
@@ -77,7 +77,7 @@
     private void OnCreateGrunt(object sender, Grunt grunt)
     {
         this.UnfilteredGrunts.Add(grunt);
-        if ((!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
+        if ((!this.Hidden || !grunt.Hidden) && grunt.Status != GruntStatus.Uninitialized)
         {
             this.FilterGrunts();
             this.InvokeAsync(() => this.StateHasChanged());
@@ -95,10 +95,10 @@
         if (inDisplayedGrunts)
         {
             int index = this.Grunts.FindIndex(G => G.Id == grunt.Id);
-            if ((this.Hidden && grunt.Status == GruntStatus.Hidden) || grunt.Status == GruntStatus.Uninitialized)
+            if ((this.Hidden && grunt.Hidden) || grunt.Status == GruntStatus.Uninitialized)
             {
                 this.Grunts.RemoveAt(index);
-                this.SomeHidden = grunt.Status == GruntStatus.Hidden;
+                this.SomeHidden = grunt.Hidden;
             }
             else
             {
@@ -109,7 +109,7 @@
         if (this.UnfilteredGrunts.Any(G => G.Id == grunt.Id))
         {
             this.UnfilteredGrunts[this.UnfilteredGrunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
-            if (!inDisplayedGrunts && (!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
+            if (!inDisplayedGrunts && (!this.Hidden || !grunt.Hidden) && grunt.Status != GruntStatus.Uninitialized)
             {
                 this.FilterGrunts();
                 await this.InvokeAsync(() => this.StateHasChanged());

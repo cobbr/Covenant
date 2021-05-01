@@ -1426,6 +1426,7 @@ namespace Covenant.Core
             matching_grunt.UserDomainName = grunt.UserDomainName;
             matching_grunt.UserName = grunt.UserName;
             matching_grunt.Status = grunt.Status;
+            matching_grunt.Hidden = grunt.Hidden;
             matching_grunt.Integrity = grunt.Integrity;
             matching_grunt.Process = grunt.Process;
             matching_grunt.LastCheckIn = grunt.LastCheckIn;
