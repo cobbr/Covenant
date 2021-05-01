@@ -8,7 +8,7 @@
 @using Covenant.Models.Launchers
 @inject IJSRuntime IJSRuntime
 
-<EditForm Model="Launcher" OnValidSubmit="(e => this.OnGenerate.InvokeAsync(Launcher))">
+<EditForm Model="Launcher" OnValidSubmit="OnSubmit">
     <DataAnnotationsValidator />
     <div class="form-row">
         <div class="form-group col-md-3">
@@ -320,5 +320,15 @@
         {
             Launcher.UseCertPinning = result;
         }
+    }
+
+    private async Task OnSubmit()
+    {
+        if (DateTime.TryParse(await IJSRuntime.InvokeAsync<string>("GetValue", "#KillDate"), out DateTime date))
+        {
+            Launcher.KillDate = date;
+            StateHasChanged();
+        }
+        await this.OnGenerate.InvokeAsync(Launcher);
     }
 }
