@@ -40,7 +40,7 @@ namespace Covenant.API.Models
         /// 'Disconnected'</param>
         /// <param name="integrity">Possible values include: 'Untrusted',
         /// 'Low', 'Medium', 'High', 'System'</param>
-        public Grunt(string name, string originalServerGuid, int implantTemplateId, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetVersion, RuntimeIdentifier runtimeIdentifier, GruntStatus status, bool hidden, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), ImplantTemplate implantTemplate = default(ImplantTemplate), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>), int? folderRootId = default(int?), Folder folderRoot = default(Folder))
+        public Grunt(string name, string originalServerGuid, int implantTemplateId, bool validateCert, bool useCertPinning, string smbPipeName, int delay, int jitterPercent, int connectAttempts, System.DateTime killDate, DotNetVersion dotNetVersion, RuntimeIdentifier runtimeIdentifier, GruntStatus status, bool hidden, IntegrityLevel integrity, int? id = default(int?), string guid = default(string), IList<string> children = default(IList<string>), ImplantTemplate implantTemplate = default(ImplantTemplate), int? listenerId = default(int?), Listener listener = default(Listener), string note = default(string), string process = default(string), string userDomainName = default(string), string userName = default(string), string ipAddress = default(string), string hostname = default(string), string operatingSystem = default(string), string gruntSharedSecretPassword = default(string), string gruntRSAPublicKey = default(string), string gruntNegotiatedSessionKey = default(string), string gruntChallenge = default(string), System.DateTime? activationTime = default(System.DateTime?), System.DateTime? lastCheckIn = default(System.DateTime?), string powerShellImport = default(string), IList<GruntCommand> gruntCommands = default(IList<GruntCommand>), IList<Folder> folderRoots = default(IList<Folder>))
         {
             Id = id;
             Name = name;
@@ -78,8 +78,7 @@ namespace Covenant.API.Models
             LastCheckIn = lastCheckIn;
             PowerShellImport = powerShellImport;
             GruntCommands = gruntCommands;
-            FolderRootId = folderRootId;
-            FolderRoot = folderRoot;
+            FolderRoots = folderRoots;
             CustomInit();
         }
 
@@ -282,13 +281,8 @@ namespace Covenant.API.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "folderRootId")]
-        public int? FolderRootId { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "folderRoot")]
-        public Folder FolderRoot { get; set; }
+        [JsonProperty(PropertyName = "folderRoots")]
+        public IList<Folder> FolderRoots { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -348,9 +342,15 @@ namespace Covenant.API.Models
                     }
                 }
             }
-            if (FolderRoot != null)
+            if (FolderRoots != null)
             {
-                FolderRoot.Validate();
+                foreach (var element1 in FolderRoots)
+                {
+                    if (element1 != null)
+                    {
+                        element1.Validate();
+                    }
+                }
             }
         }
     }

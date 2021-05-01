@@ -104,12 +104,10 @@ namespace Covenant.Models
                 .HasOne(G => G.ImplantTemplate)
                 .WithMany(IT => IT.Grunts)
                 .HasForeignKey(G => G.ImplantTemplateId);
-            
+
             builder.Entity<Grunt>()
-                .HasOne(G => G.FolderRoot)
-                .WithOne(F => F.RootGrunt)
-                .HasForeignKey<Grunt>(G => G.FolderRootId)
-                .IsRequired(false);
+                .HasMany(G => G.FolderRoots)
+                .WithOne(F => F.RootGrunt);
             
             builder.Entity<FolderFileNode>()
                 .HasOne(N => N.Grunt)

@@ -1636,6 +1636,58 @@ namespace Covenant.API
             /// </param>
             /// <param name='id'>
             /// </param>
+            public static Grunt CheckInGrunt(this ICovenantAPI operations, int id)
+            {
+                return operations.CheckInGruntAsync(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<Grunt> CheckInGruntAsync(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.CheckInGruntWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            public static Grunt CheckInGrunt1(this ICovenantAPI operations, int id)
+            {
+                return operations.CheckInGrunt1Async(id).GetAwaiter().GetResult();
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task<Grunt> CheckInGrunt1Async(this ICovenantAPI operations, int id, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                using (var _result = await operations.CheckInGrunt1WithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                {
+                    return _result.Body;
+                }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
             /// <param name='body'>
             /// </param>
             public static GruntCommand InteractGrunt(this ICovenantAPI operations, int id, string body = default(string))

@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added GetLauncherDownload API endpoint
 - Added Grunt FileBrowser
 - Added back missing GetNetShares task
+- Added CheckInGrunt API
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -92,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed HttpListenerForm to remove Add ConnectAddress button when editting
 - Changed to add Hidden field for Grunts, separate from GruntStatus
 - Updated Covenant.API to latest model
+- Changed Grunts to allow multiple FolderRoots, adapted FileBrowser UI
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug

@@ -245,21 +245,17 @@ namespace Covenant.Models.Listeners
             };
         }
 
-        private int GetTaskingHashCode(APIModels.GruntTasking tasking)
+        private static int GetTaskingHashCode(APIModels.GruntTasking tasking)
         {
             if (tasking != null)
             {
-                int code = tasking.Id ?? default;
-                code ^= tasking.GruntId;
-                code ^= tasking.GruntTaskId;
-                code ^= tasking.GruntCommandId ?? default;
-                foreach (char c in tasking.Name) { code ^= c; }
+                int code = HashCode.Combine(tasking.Id, tasking.GruntId, tasking.GruntCommandId, tasking.Name);
                 return code;
             }
             return Guid.NewGuid().GetHashCode();
         }
 
-        private int GetCacheEntryHashCode(GruntMessageCacheInfo cacheEntry)
+        private static int GetCacheEntryHashCode(GruntMessageCacheInfo cacheEntry)
         {
             return GetTaskingHashCode(cacheEntry.Tasking);
         }
@@ -311,8 +307,7 @@ namespace Covenant.Models.Listeners
             {
                 return null;
             }
-            grunt.LastCheckIn = DateTime.UtcNow;
-            return await _client.EditGruntAsync(grunt);
+            return await _client.CheckInGruntAsync(grunt.Id ?? default);
         }
 
         private async Task<APIModels.GruntTasking> MarkTasked(APIModels.GruntTasking tasking)
@@ -380,6 +375,7 @@ namespace Covenant.Models.Listeners
                             if (gruntTasking.Type == APIModels.GruntTaskingType.Assembly && gruntTasking.GruntTask == null)
                             {
                                 // Can't find corresponding task. Should never reach this point. Will just respond NotFound.
+                                tasking.Grunt = null;
                                 this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.NotFound, Message = "", Tasking = gruntTasking });
                             }
                             else
@@ -391,6 +387,7 @@ namespace Covenant.Models.Listeners
                                     message = this.CreateMessageForGrunt(grunt, gruntTasking.Grunt, this.GetGruntTaskingMessage(gruntTasking, gruntTasking.Grunt.DotNetVersion));
                                     // Transform response
                                     string transformed = this._utilities.ProfileTransform(_transform, Common.CovenantEncoding.GetBytes(JsonConvert.SerializeObject(message)));
+                                    tasking.Grunt = null;
                                     this.PushCache(guid, new GruntMessageCacheInfo { Status = GruntMessageCacheStatus.Ok, Message = transformed, Tasking = gruntTasking });
                                 }
                                 catch (HttpOperationException)

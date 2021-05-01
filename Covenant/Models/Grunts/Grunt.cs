@@ -108,8 +108,7 @@ namespace Covenant.Models.Grunts
         public string PowerShellImport { get; set; } = "";
         public List<GruntCommand> GruntCommands { get; set; } = new List<GruntCommand>();
 
-        public int? FolderRootId { get; set; }
-        public Folder FolderRoot { get; set; }
+        public List<Folder> FolderRoots { get; set; } = new List<Folder>();
 
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public List<FolderFileNode> FolderFileNodes { get; set; }

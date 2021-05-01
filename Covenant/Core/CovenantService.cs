@@ -113,6 +113,7 @@ namespace Covenant.Core
         Task<Grunt> CreateGrunt(Grunt grunt);
         Task<IEnumerable<Grunt>> CreateGrunts(params Grunt[] grunts);
         Task<Grunt> EditGrunt(Grunt grunt, CovenantUser user);
+        Task<Grunt> CheckInGrunt(int gruntId);
         Task DeleteGrunt(int gruntId);
         Task<List<string>> GetCommandSuggestionsForGrunt(Grunt grunt);
         Task<byte[]> CompileGruntStagerCode(int id, Launcher launcher);
@@ -1194,6 +1195,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(G => G.Id == gruntId);
             if (grunt == null)
             {
@@ -1220,6 +1222,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(g => g.Name == name);
             if (grunt == null)
             {
@@ -1246,6 +1249,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(g => g.GUID == guid);
             if (grunt == null)
             {
@@ -1272,6 +1276,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(g => g.OriginalServerGuid == serverguid);
             if (grunt == null)
             {
@@ -1417,10 +1422,10 @@ namespace Covenant.Core
             matching_grunt.ImplantTemplateId = grunt.ImplantTemplateId;
             matching_grunt.ImplantTemplate = await this.GetImplantTemplate(grunt.ImplantTemplateId);
 
-            if (grunt.FolderRootId != null && grunt.FolderRootId != 0)
+            matching_grunt.FolderRoots = grunt.FolderRoots;
+            for (int i = 0; i < matching_grunt.FolderRoots.Count; i++)
             {
-                matching_grunt.FolderRootId = grunt.FolderRootId;
-                matching_grunt.FolderRoot = await this.GetFolder(matching_grunt.Id, grunt.FolderRootId);
+                matching_grunt.FolderRoots[i] = await this.GetFolder(matching_grunt.Id, matching_grunt.FolderRoots[i].Id);
             }
 
             matching_grunt.UserDomainName = grunt.UserDomainName;
@@ -1589,6 +1594,17 @@ namespace Covenant.Core
             await _notifier.NotifyEditGrunt(this, matching_grunt);
             // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matching_grunt);
             return matching_grunt;
+        }
+
+        public async Task<Grunt> CheckInGrunt(int gruntId)
+        {
+            Grunt grunt = await this.GetGrunt(gruntId);
+            grunt.LastCheckIn = DateTime.UtcNow;
+            _context.Grunts.Update(grunt);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditGrunt(this, grunt);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
+            return grunt;
         }
 
         public async Task DeleteGrunt(int gruntId)
@@ -3558,9 +3574,9 @@ public static class Task
             // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
 
             Folder parent = await this.GetOrCreateParentFolder(folder, folder.Grunt.OperatingSystem);
-            if (parent == null)
+            if (parent == null && !folder.Grunt.FolderRoots.Any(F => F.Id == folder.Id))
             {
-                folder.Grunt.FolderRootId = folder.Id;
+                folder.Grunt.FolderRoots.Add(folder);
                 await this.EditGrunt(folder.Grunt);
             }
             else if (!parent.Nodes.Any(N => N.Id == folder.Id))

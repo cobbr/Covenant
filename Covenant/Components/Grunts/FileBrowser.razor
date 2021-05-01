@@ -43,7 +43,7 @@
     <input class="form-control ml-2" @onchange="OnSearch" value="@FolderSearch" />
     <button type="button" class="btn btn-outline-primary" @onclick="OnList"><span class="fe fe-refresh-cw"></span></button>
 </div>
-@if (RootFolder == null)
+@if (!this.Grunt.FolderRoots.Any())
 {
     <p>No files discovered yet!</p>
 }
@@ -51,9 +51,12 @@ else
 {
     <div class="d-flex flex-row flex-nowrap">
         <div class="border-right border-top overflow-auto pt-2" style="width: 300px; height: 70vh;">
-            <ul class="pl-0" style="list-style-type:none;">
-                <FolderDisplay Folder="RootFolder" OnSelectFolder="OnSelectFolder" />
-            </ul>
+            @foreach (Folder RootFolder in this.Grunt.FolderRoots)
+            {
+                <ul class="pl-0" style="list-style-type:none;">
+                    <FolderDisplay Folder="RootFolder" OnSelectFolder="OnSelectFolder" />
+                </ul>
+            }
         </div>
         <div class="flex-grow-1 overflow-auto pl-4" style="height: 70vh;">
             @if (CurrentFolder == null)
@@ -146,7 +149,6 @@ else
 
     private CovenantUser CurrentUser { get; set; }
     private Folder CurrentFolder { get; set; }
-    private Folder RootFolder { get; set; }
 
     private string FolderSearch { get; set; }
 
@@ -155,8 +157,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        this.RootFolder = this.Grunt.FolderRootId != null ? await this.Service.GetFolder(this.Grunt.Id, this.Grunt.FolderRootId ?? default) : null;
-        this.CurrentFolder = this.RootFolder;
+        this.CurrentFolder = this.Grunt.FolderRoots.FirstOrDefault();
         this.FolderSearch = this.CurrentFolder?.FullName;
         this.CurrentUser = await Service.GetCurrentUser((await AuthenticationState).User);
         Service.DisposeContext();
@@ -172,11 +173,10 @@ else
 
     private void OnEditGrunt(object sender, Grunt grunt)
     {
-        if (this.RootFolder == null && this.Grunt.Id == grunt.Id && grunt.FolderRootId != null)
+        if (this.Grunt.FolderRoots.Count != grunt.FolderRoots.Count)
         {
             this.Grunt = Service.GetGrunt(this.Grunt.Id).WaitResult();
-            this.RootFolder = this.Grunt.FolderRootId != null ? this.Service.GetFolder(this.Grunt.Id, this.Grunt.FolderRootId ?? default).WaitResult() : null;
-            this.CurrentFolder = this.RootFolder;
+            this.CurrentFolder = this.Grunt.FolderRoots.FirstOrDefault();
             this.InvokeAsync(() => this.StateHasChanged());
         }
     }

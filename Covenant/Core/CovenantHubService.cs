@@ -420,6 +420,11 @@ namespace Covenant.Core
             return _connection.InvokeAsync<Grunt>("EditGrunt", grunt, user);
         }
 
+        public Task<Grunt> CheckInGrunt(int id)
+        {
+            return _connection.InvokeAsync<Grunt>("CheckInGrunt", id);
+        }
+
         public Task<GruntCommand> EditGruntCommand(GruntCommand command)
         {
             return _connection.InvokeAsync<GruntCommand>("EditGruntCommand", command);
