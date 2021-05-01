@@ -3,6 +3,7 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
 
+@using Covenant.Core
 @using Covenant.Models.Listeners
 @inject IJSRuntime IJSRuntime
 
@@ -46,7 +47,7 @@
             this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await e.File.OpenReadStream().CopyToAsync(ms);
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
                 HostedFile.Content = Convert.ToBase64String(ms.ToArray());
             }
         }

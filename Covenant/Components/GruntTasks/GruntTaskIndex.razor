@@ -173,7 +173,7 @@
             this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await e.File.OpenReadStream().CopyToAsync(ms);
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
                 string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
                 this.ImportedTasks = YamlUtilities.FromYaml<GruntTask>(yaml).ToList();
             }

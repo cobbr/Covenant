@@ -22,6 +22,8 @@ namespace Covenant.Core
         public static readonly CipherMode AesCipherMode = CipherMode.CBC;
         public static readonly PaddingMode AesPaddingMode = PaddingMode.PKCS7;
 
+        public static readonly int CovenantMaxFileSizeUpload = 10000000;
+
         public static readonly string CovenantDirectory = SplitLastMatch(SplitLastMatch(Assembly.GetExecutingAssembly().Location, "bin"), "Covenant.dll");
         public static readonly string CovenantDataDirectory = CovenantDirectory + "Data" + Path.DirectorySeparatorChar;
         public static readonly string CovenantDatabaseFile = CovenantDataDirectory + "covenant.db";

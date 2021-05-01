@@ -2,6 +2,7 @@
 @using System.Threading
 @using Microsoft.AspNetCore.Components.Forms
 
+@using Covenant.Core
 @using Covenant.Models.Listeners
 
 <EditForm Model="Listener" OnValidSubmit="OnFormSubmit">
@@ -178,7 +179,7 @@
             this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await e.File.OpenReadStream().CopyToAsync(ms);
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
                 Listener.SSLCertificate = Convert.ToBase64String(ms.ToArray());
             }
         }
