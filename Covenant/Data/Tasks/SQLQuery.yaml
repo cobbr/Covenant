@@ -1,0 +1,139 @@
+- Author:
+    Name: Julio Urena
+    Handle: plaintext
+    Link: https://twitter.com/JulioUrena
+  Name: SQLQuery
+  Aliases: []
+  Description: MSSQL Query Commands
+  Help: >-
+    Example:
+
+
+    SQLQuery /sqlserver:"SQLSERVER01" /query:"SELECT SUSER_NAME()!EXECUTE AS LOGIN = 'sa'!SELECT SUSER_NAME()"
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: >-
+    using System;
+
+    using System.IO;
+
+    using System.Text;
+
+    using System.Data.SqlClient;
+
+
+    public static class Task
+
+    {
+        public static string Execute(string SqlServer, string Query, string Database = "")
+    		{
+    			StringBuilder results = new StringBuilder();
+    			string conString = "Server = " + SqlServer + "; Database = " + Database + "; Integrated Security = True;";
+    			SqlConnection con = new SqlConnection(conString);
+    			try
+    			{
+    				con.Open();
+    				results.Append("Auth success!");
+    				results.AppendLine();
+    			}
+    			catch
+    			{
+    				return "Auth failed";
+    			}
+    			try
+    			{
+    				string[] queries = Query.Split('!');
+
+    				SqlCommand command;
+    				SqlDataReader reader;
+
+    				foreach (string q in queries)
+    				{
+    					command = new SqlCommand(q, con);
+    					reader = command.ExecuteReader();
+    					//reader.Close();
+
+    					if (reader.HasRows)
+    					{
+    						while (reader.Read())
+    						{
+    							for (int i = 0; i < reader.FieldCount; i++)
+    							{ 
+    								results.Append(reader.GetValue(i) + " ");
+    							}
+    							results.AppendLine();
+    						}
+    					}
+    					else
+    					{
+    						results.AppendLine();
+    					}
+    					reader.Close();
+    				}
+    				
+    				con.Close();
+    				return results.ToString();
+    			}
+    			catch (Exception e)
+    			{
+    				results.AppendLine();
+    				results.Append(e.Message);
+    				return results.ToString();
+    			}
+    	}
+    }
+  Compiled: false
+  TaskingType: Assembly
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.Data.dll
+    Location: net35/System.Data.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Data.dll
+    Location: net40/System.Data.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  EmbeddedResources: []
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: SqlServer
+    Value: localhost
+    DefaultValue: ''
+    Description: Target MSSQL Server
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+    GruntTaskId: 103
+  - Name: Query
+    Value: 
+    DefaultValue: ''
+    Description: 'Query to execute on the server and database selected. '
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+    GruntTaskId: 103
+  - Name: Database
+    Value: ''
+    DefaultValue: master
+    Description: 'Database to run the query against '
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+    GruntTaskId: 103
