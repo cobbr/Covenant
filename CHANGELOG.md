@@ -94,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed to add Hidden field for Grunts, separate from GruntStatus
 - Updated Covenant.API to latest model
 - Changed Grunts to allow multiple FolderRoots, adapted FileBrowser UI
+- Updated SharpSploit version to latest to fix Mimikatz issue
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
