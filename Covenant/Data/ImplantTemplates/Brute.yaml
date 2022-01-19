@@ -615,6 +615,11 @@
                         }
                         catch (Exception) {}
                     }
+                    if (string.IsNullOrEmpty(output))
+                    {
+                        GruntTaskingMessageResponse response = new GruntTaskingMessageResponse(GruntTaskingStatus.Completed, "");
+                        messenger.QueueTaskingMessage(response.ToJson(), message.Name);
+                    }
                 }
             }
         }
