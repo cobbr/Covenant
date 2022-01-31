@@ -30,17 +30,21 @@
 </EditForm>
 
 @code {
-    [Parameter]
-    public CovenantUser CovenantUser { get; set; }
+        [Parameter]
+        public CovenantUser CovenantUser { get; set; }
 
-    [Parameter]
-    public EventCallback<IEnumerable<IdentityRole>> OnChangeRoles { get; set; }
+        [Parameter]
+        public EventCallback<IEnumerable<IdentityRole>> OnChangeRoles { get; set; }
 
     private IEnumerable<IdentityRole> Roles { get; set; }
+    private IdentityRole AdministratorRole { get; set; }
+
 
     protected override async Task OnInitializedAsync()
     {
-        Roles = await Service.GetRoles();
+        AdministratorRole = await Service.GetRoleByName("Administrator");
+        var roles = await Service.GetRoles();
+        Roles = FilterRoles(roles);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -61,10 +65,20 @@
         }
     }
 
+    public IEnumerable<IdentityRole> FilterRoles(IEnumerable<IdentityRole> roles)
+    {
+        if (!UserInRole(CovenantUser, AdministratorRole.Id))
+        {
+            return roles.Where(role => role.Id != AdministratorRole.Id);
+        }
+        return roles;
+    }
+
     private async Task<IEnumerable<IdentityRole>> GetSelectedRoles()
     {
         string[] ids = await IJSRuntime.InvokeAsync<string[]>("GetValue", new object[] { "#Roles" });
-        return ids.Select(id => Service.GetRole(id).WaitResult()).ToList();
+        var filteredRoles = FilterRoles(ids.Select(id => Service.GetRole(id).WaitResult()));
+        return filteredRoles;
     }
 
     private async Task OnSubmit()
