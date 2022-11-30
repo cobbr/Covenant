@@ -1,4 +1,4 @@
-﻿window.GetValue = (selector) => {
+window.GetValue = (selector) => {
     return $(selector).val();
 }
 
@@ -182,428 +182,187 @@ window.InitializeDateTimePicker = (datetimeid) => {
     });
 }
 
-// set up SVG for D3
-window.graphWidth = 600;
-window.graphHeight = 600;
-window.graphColors = d3.scaleOrdinal(d3.schemeCategory10);
-window.graphArrowColor = '#999999';
-window.graphNodes = [];
-window.graphLinks = [];
-window.graphLastNodeId = 0;
+window.hierarchyArray = [];
+const root_node = { id: 0, name: "Covenant", fill: "#232323" };
+if(!window.hierarchyArray.includes(root_node)) {
+        window.hierarchyArray.push(root_node);
+    }
 
 window.ClearGraph = (selector) => {
-    window.graphNodes = [];
-    window.graphLinks = [];
-    window.graphLastNodeId = 0;
-}
-
-window.GraphDisplayGrunt = (id, name) => {
-    const node = { id: id, name: name, reflexive: false, x: 50, y: 50, color: "#007BFF" };
-    if (!window.graphNodes.includes(node)) {
-        window.graphNodes.push(node);
-        window.GraphRestart();
+    window.hierarchyArray = [];
+    const root_node = { id: 0, name: "Covenant", fill: "#232323" };
+    if(!window.hierarchyArray.includes(root_node)) {
+        window.hierarchyArray.push(root_node);
     }
 }
 
-window.GraphDisplayListener = (id, name) => {
-    const node = { id: id, name: name, reflexive: false, x: 50, y: 50, color: "#D52728" };
-    if (!window.graphNodes.includes(node)) {
-        window.graphNodes.push(node);
-        window.GraphRestart();
+window.HierarchyAddListener = (listenerId, listenerName) => {
+    const node = { id: listenerId, name: listenerName, fill: "#D52728", parentId: 0 };
+    if(!window.hierarchyArray.includes(node)) {
+        window.hierarchyArray.push(node);
     }
 }
 
-window.GraphDisplayGruntLink = (idFrom, idTo) => {
-    const fromNode = window.graphNodes.filter(
-        function (node) { return node.id == idFrom }
-    )[0];
-    const toNode = window.graphNodes.filter(
-        function (node) { return node.id == idTo }
-    )[0];
-    toNode.color = "#2BA02C";
-    const link = { source: fromNode, target: toNode, left: true, right: false, color: "#999999" };
-    if (!window.graphLinks.includes(link)) {
-        window.graphLinks.push(link);
-        window.GraphRestart();
+window.HierarchyAddGruntToListener = (listenerId, gruntId, gruntName) => {
+    const node = { id: gruntId, name: gruntName, fill: "#007BFF", parentId: listenerId };
+    if(!window.hierarchyArray.includes(node)) {
+        window.hierarchyArray.push(node);
     }
 }
 
-window.GraphDisplayGruntListenerLink = (listenerId, gruntId) => {
-    const listenerNode = window.graphNodes.filter(
-        function (node) { return node.id == listenerId }
-    )[0];
-    const gruntNode = window.graphNodes.filter(
-        function (node) { return node.id == gruntId }
-    )[0];
-    const link = { source: listenerNode, target: gruntNode, left: true, right: false, color: "#999999" };
-    if (!window.graphLinks.includes(link)) {
-        window.graphLinks.push(link);
-        window.GraphRestart();
+window.HierarchyAddGruntToListener_Inactive = (listenerId, gruntId, gruntName) => {
+    const node = { id: gruntId, name: gruntName, fill: "#384A5E", parentId: listenerId };
+    if(!window.hierarchyArray.includes(node)) {
+        window.hierarchyArray.push(node);
+    }
+}
+
+window.HierarchyAddGruntToGrunt = (parentGruntId, gruntId, gruntName) => {
+    const node = { id: gruntId, name: gruntName, fill: "#2AA02C", parentId: parentGruntId };
+    if(!window.hierarchyArray.includes(node)) {
+        window.hierarchyArray.push(node);
+    }
+}
+
+window.HierarchyAddGruntToGrunt_Inactive = (parentGruntId, gruntId, gruntName) => {
+    const node = { id: gruntId, name: gruntName, fill: "#365037", parentId: parentGruntId };
+    if(!window.hierarchyArray.includes(node)) {
+        window.hierarchyArray.push(node);
     }
 }
 
 window.InitializeGraph = (selector) => {
-    window.graphsvg = d3.select(selector)
-        .append('svg')
-        .on('contextmenu', () => { d3.event.preventDefault(); })
-        .attr('width', window.graphWidth)
-        .attr('height', window.graphHeight)
-        .attr('fill', '#999999');
-
-    // set up initial nodes and links
-    //  - nodes are known by 'id', not by index in array.
-    //  - reflexive edges are indicated on the node (as a bold black circle).
-    //  - links are always source < target; edge directions are set by 'left' and 'right'.
-
-    // init D3 force layout
-    window.graphForce = d3.forceSimulation()
-        .force('link', d3.forceLink().id((d) => d.id).distance(150))
-        .force('charge', d3.forceManyBody().strength(-500))
-        .force('x', d3.forceX(window.graphWidth / 2))
-        .force('y', d3.forceY(window.graphHeight / 2))
-        .on('tick', tick);
-
-    // init D3 drag support
-    window.graphDrag = d3.drag()
-        // Mac Firefox doesn't distinguish between left/right click when Ctrl is held... 
-        .filter(() => d3.event.button === 0 || d3.event.button === 2)
-        .on('start', (d) => {
-            if (!d3.event.active) window.graphForce.alphaTarget(0.3).restart();
-
-            d.fx = d.x;
-            d.fy = d.y;
-        })
-        .on('drag', (d) => {
-            d.fx = d3.event.x;
-            d.fy = d3.event.y;
-        })
-        .on('end', (d) => {
-            if (!d3.event.active) window.graphForce.alphaTarget(0);
-
-            d.fx = null;
-            d.fy = null;
-        });
-
-    // define arrow markers for graph links
-    window.graphsvg.append('svg:defs').append('svg:marker')
-        .attr('id', 'end-arrow')
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 6)
-        .attr('markerWidth', 3)
-        .attr('markerHeight', 3)
-        .attr('orient', 'auto')
-        .append('svg:path')
-        .attr('d', 'M0,-5L10,0L0,5')
-        .attr('fill', window.graphArrowColor);
-
-    window.graphsvg.append('svg:defs').append('svg:marker')
-        .attr('id', 'start-arrow')
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 4)
-        .attr('markerWidth', 3)
-        .attr('markerHeight', 3)
-        .attr('orient', 'auto')
-        .append('svg:path')
-        .attr('d', 'M10,-5L0,0L10,5')
-        .attr('fill', window.graphArrowColor);
-
-    // line displayed when dragging new nodes
-    window.graphDragLine = window.graphsvg.append('svg:path')
-        .attr('class', 'link dragline hidden')
-        .attr('d', 'M0,0L0,0');
-
-    // handles to link and node element groups
-    window.graphPath = window.graphsvg.append('svg:g').selectAll('path');
-    window.graphCircle = window.graphsvg.append('svg:g').selectAll('g');
+    const data = d3.stratify()(window.hierarchyArray);
 
     // mouse event vars
     window.graphSelectedNode = null;
-    window.graphSelectedLink = null;
-    window.graphMousedownLink = null;
     window.graphMousedownNode = null;
     window.graphMouseupNode = null;
 
     window.resetMouseVars = () => {
         window.graphMousedownNode = null;
         window.graphMouseupNode = null;
-        window.graphMousedownLink = null;
     }
 
-    // update force layout (called automatically each iteration)
-    function tick() {
-        // draw directed edges with proper padding from node centers
-        window.graphPath.attr('d', (d) => {
-            const deltaX = d.target.x - d.source.x;
-            const deltaY = d.target.y - d.source.y;
-            const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            const normX = deltaX / dist;
-            const normY = deltaY / dist;
-            const sourcePadding = 40;
-            const targetPadding = 36;
-            const sourceX = d.source.x + (sourcePadding * normX);
-            const sourceY = d.source.y + (sourcePadding * normY);
-            const targetX = d.target.x - (targetPadding * normX);
-            const targetY = d.target.y - (targetPadding * normY);
-
-            return `M${sourceX},${sourceY}L${targetX},${targetY}`;
-        });
-
-        window.graphCircle.attr('transform', (d) => `translate(${d.x},${d.y})`);
-    }
-
-    window.graphMousedown = () => {
-        // because :active only works in WebKit?
-        window.graphsvg.classed('active', true);
-
-        if (d3.event.ctrlKey || window.graphMousedownNode || window.graphMousedownLink) return;
-
-        // insert new node at point
-        const point = d3.mouse(this);
-        const node = { id: ++window.graphLastNodeId, reflexive: false, x: point[0], y: point[1] };
-        // nodes.push(node);
-
-        window.GraphRestart();
-    }
-
-    window.graphMousemove = () => {
-        if (!window.graphMousedownNode) return;
-
-        // update drag line
-        window.graphDragLine.attr('d', `M${window.graphMousedownNode.x},${window.graphMousedownNode.y}L${d3.mouse(this)[0]},${d3.mouse(this)[1]}`);
-    }
-
-    window.graphMouseup = () => {
-        if (window.graphMousedownNode) {
-            // hide drag line
-            window.graphDragLine
-                .classed('hidden', true)
-                .style('marker-end', '');
-        }
-
-        // because :active only works in WebKit?
-        window.graphsvg.classed('active', false);
-
-        // clear mouse event vars
-        window.resetMouseVars();
-    }
-
-    window.graphSpliceLinksForNode = (node) => {
-        const toSplice = window.graphLinks.filter((l) => l.source === node || l.target === node);
-        for (const l of toSplice) {
-            window.graphLinks.splice(window.graphLinks.indexOf(l), 1);
-        }
-    }
-
-    // only respond once per keydown
-    window.graphLastKeyDown = -1;
-
-    window.graphKeydown = () => {
-        if (window.graphLastKeyDown !== -1) return;
-        window.graphLastKeyDown = d3.event.keyCode;
-
-        // ctrl
-        if (d3.event.keyCode === 17) {
-            window.graphCircle.call(window.graphDrag);
-            window.graphsvg.classed('ctrl', true);
-            return;
-        }
-
-        if (!window.graphSelectedNode && !window.graphSelectedLink) return;
-
-        switch (d3.event.keyCode) {
-            case 8: // backspace
-            case 46: // delete
-                if (window.graphSelectedNode) {
-                    window.graphNodes.splice(window.graphNodes.indexOf(window.graphSelectedNode), 1);
-                    window.graphSpliceLinksForNode(window.graphSelectedNode);
-                } else if (window.graphSelectedLink) {
-                    window.graphLinks.splice(window.graphLinks.indexOf(window.graphSelectedLink), 1);
-                }
-                window.graphSelectedLink = null;
-                window.graphSelectedNode = null;
-                window.GraphRestart();
-                break;
-            case 66: // B
-                if (window.graphSelectedLink) {
-                    // set link direction to both left and right
-                    window.graphSelectedLink.left = true;
-                    window.graphSelectedLink.right = true;
-                }
-                window.GraphRestart();
-                break;
-            case 76: // L
-                if (window.graphSelectedLink) {
-                    // set link direction to left only
-                    window.graphSelectedLink.left = true;
-                    window.graphSelectedLink.right = false;
-                }
-                window.GraphRestart();
-                break;
-            case 82: // R
-                if (window.graphSelectedNode) {
-                    // toggle node reflexivity
-                    window.graphSelectedNode.reflexive = !window.graphSelectedNode.reflexive;
-                } else if (window.graphSelectedLink) {
-                    // set link direction to right only
-                    window.graphSelectedLink.left = false;
-                    window.graphSelectedLink.right = true;
-                }
-                window.GraphRestart();
-                break;
-        }
-    }
-
-    window.graphKeyup = () => {
-        window.graphLastKeyDown = -1;
-
-        // ctrl
-        if (d3.event.keyCode === 17) {
-            window.graphCircle.on('.drag', null);
-            window.graphsvg.classed('ctrl', false);
-        }
-    }
-
-    // app starts here
-    window.graphsvg.on('mousedown', window.graphMousedown)
-        .on('mousemove', window.graphMousemove)
-        .on('mouseup', window.graphMouseup);
-    d3.select(window)
-        .on('keydown', window.graphKeydown)
-        .on('keyup', window.graphKeyup);
-    window.GraphRestart();
+    Tree(data, selector);
 }
 
-window.GraphRestart = () => {
-    // assignCoordinates();
-    // path (link) group
-    window.graphPath = window.graphPath.data(window.graphLinks);
+window.GraphRestart = () => {};
 
-    // update existing links
-    window.graphPath.style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
-        .style('marker-end', (d) => d.right ? 'url(#end-arrow)' : '')
-        .style('fill', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor)
-        .style('stroke', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor);
 
-    // remove old links
-    window.graphPath.exit().remove();
+// Copyright 2021 Observable, Inc.
+// Released under the ISC license.
+// https://observablehq.com/@d3/tree
+function Tree(data, selector, { // data is either tabular (array of objects) or hierarchy (nested objects)
+  path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
+  id = Array.isArray(data) ? d => d.id : null, // if tabular data, given a d in data, returns a unique identifier (string)
+  parentId = Array.isArray(data) ? d => d.parentId : null, // if tabular data, given a node d, returns its parent’s identifier
+  children, // if hierarchical data, given a d in data, returns its children
+  tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
+  sort, // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
+  label = d => d.data.name, // given a node d, returns the display name
+  title, // given a node d, returns its hover text
+  link, // given a node d, its link (if any)
+  linkTarget = "_blank", // the target attribute for links (if any)
+  width = 1080, // outer width, in pixels
+  height = 640, // outer height, in pixels
+  r = 8, // radius of nodes
+  padding = 1, // horizontal padding for first and last column
+  fill = d => d.data.fill, // fill for nodes
+  fillOpacity, // fill opacity for nodes
+  stroke = "#555", // stroke for links
+  strokeWidth = 1.5, // stroke width for links
+  strokeOpacity = 0.4, // stroke opacity for links
+  strokeLinejoin, // stroke line join for links
+  strokeLinecap, // stroke line cap for links
+  halo = "#ddd", // color of label halo 
+  haloWidth = 3, // padding around the labels
+  highlight = () => false,
+} = {}) {
 
-    // add new links
-    window.graphPath = window.graphPath.enter().append('svg:path')
-        .attr('class', 'link')
-        .style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
-        .style('marker-end', (d) => d.right ? 'url(#end-arrow)' : '')
-        .style('fill', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor)
-        .style('stroke', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor)
-        .on('mousedown', (d) => {
-            if (d3.event.ctrlKey) return;
+  // If id and parentId options are specified, or the path option, use d3.stratify
+  // to convert tabular data to a hierarchy; otherwise we assume that the data is
+  // specified as an object {children} with nested objects (a.k.a. the “flare.json”
+  // format), and use d3.hierarchy.
+  const root = path != null ? d3.stratify().path(path)(data)
+      : id != null || parentId != null ? d3.stratify().id(id).parentId(parentId)(data)
+      : d3.hierarchy(data, children);
 
-            // select link
-            window.graphMousedownLink = d;
-            window.graphSelectedLink = (window.graphMousedownLink === window.graphSelectedLink) ? null : window.graphMousedownLink;
-            window.graphSelectedNode = null;
-            window.GraphRestart();
-        })
-        .merge(window.graphPath);
-    // circle (node) group
-    // NB: the function arg is crucial here! nodes are known by id, not by index!
-    window.graphCircle = window.graphCircle.data(window.graphNodes, (d) => d.id);
+  // Sort the nodes.
+  if (sort != null) root.sort(sort);
 
-    // update existing nodes (reflexive & selected visual states)
-    window.graphCircle.selectAll('circle')
-        .style('fill', (d) => (d === window.graphSelectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
-        .style('stroke', (d) => d3.rgb(d.color).darker().toString())
-        .classed('reflexive', (d) => d.reflexive);
+  // Compute labels and titles.
+  const descendants = root.descendants();
+  const L = label == null ? null : descendants.map(d => label(d.data, d));
 
-    // remove old nodes
-    window.graphCircle.exit().remove();
+  // Compute the layout.
+  //const dx = 20;
+  const dx = height / (window.hierarchyArray.length);
+  const dy = width / (root.height + padding);
+  tree().nodeSize([dx, dy])(root);
 
-    // add new nodes
-    const g = window.graphCircle.enter().append('svg:g');
+// Center the tree.
+  let x0 = Infinity;
+  let x1 = -x0;
+  root.each(d => {
+    if (d.x > x1) x1 = d.x;
+    if (d.x < x0) x0 = d.x;
+  });
 
-    g.append('svg:circle')
-        .attr('class', 'node')
-        .attr('r', 35)
-        .style('fill', (d) => (d === window.graphSelectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
-        .style('stroke', (d) => d3.rgb(d.color).darker().toString())
-        .classed('reflexive', (d) => d.reflexive)
-        .on('mouseover', function (d) {
-            if (!window.graphMousedownNode || d === window.graphMousedownNode) return;
-            // enlarge target node
-            d3.select(this).attr('transform', 'scale(1.1)');
-        })
-        .on('mouseout', function (d) {
-            if (!window.graphMousedownNode || d === window.graphMousedownNode) return;
-            // unenlarge target node
-            d3.select(this).attr('transform', '');
-        })
-        .on('mousedown', (d) => {
-            if (d3.event.ctrlKey) return;
+  // Compute the default height.
+  if (height === undefined) height = x1 - x0 + dx * 2;
 
+  const svg = d3.select(selector).append("svg")
+      .attr("viewBox", [-dy * padding / 2, x0 - dx, width, height])
+      .attr("width", width)
+      .attr("height", height)
+      .on('contextmenu', () => { d3.event.preventDefault(); })
+      .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10);
+
+  svg.append("g")
+      .attr("fill", "none")
+      .attr("stroke", stroke)
+      .attr("stroke-opacity", strokeOpacity)
+      .attr("stroke-linecap", strokeLinecap)
+      .attr("stroke-linejoin", strokeLinejoin)
+      .attr("stroke-width", strokeWidth)
+    .selectAll("path")
+      .data(root.links())
+      .join("path")
+        .attr("d", d3.linkHorizontal()
+            .x(d => d.y)
+            .y(d => d.x));
+
+  const node = svg.append("g")
+    .selectAll("a")
+    .data(root.descendants())
+    .join("a")
+      .attr("xlink:href", link == null ? null : d => link(d.data, d))
+      .attr("target", link == null ? null : linkTarget)
+      .attr("transform", d => `translate(${d.y},${d.x})`);
+
+  node.append("circle")
+      .attr("fill", d => fill(d.data, d))
+      .attr("r", r)
+      .on('click', (d) => {
             // select node
             window.graphMousedownNode = d;
             window.graphSelectedNode = (window.graphMousedownNode === window.graphSelectedNode) ? null : window.graphMousedownNode;
-            window.graphSelectedLink = null;
-            $("#" + window.graphMousedownNode.id + "-tab").tab('show');
-            // reposition drag line
-            // dragLine
-            //  .style('marker-end', 'url(#end-arrow)')
-            //   .classed('hidden', false)
-            //  .attr('d', `M${mousedownNode.x},${mousedownNode.y}L${mousedownNode.x},${mousedownNode.y}`);
-
-            window.GraphRestart();
-        })
-        .on('mouseup', function (d) {
-            if (!window.graphMousedownNode) return;
-
-            // needed by FF
-            // dragLine
-            //   .classed('hidden', true)
-            //   .style('marker-end', '');
-
-            // check for drag-to-self
-            window.graphMouseupNode = d;
-            if (window.graphMouseupNode === window.graphMousedownNode) {
-                window.resetMouseVars();
-                return;
-            }
-
-            // unenlarge target node
-            d3.select(this).attr('transform', '');
-
-            // add link to graph (update if exists)
-            // NB: links are strictly source < target; arrows separately specified by booleans
-            const isRight = window.graphMousedownNode.id < window.graphMouseupNode.id;
-            const source = isRight ? window.graphMousedownNode : window.graphMouseupNode;
-            const target = isRight ? window.graphMouseupNode : window.graphMousedownNode;
-
-            // const link = links.filter((l) => l.source === source && l.target === target)[0];
-            // if (link) {
-            //   link[isRight ? 'right' : 'left'] = true;
-            // } else {
-            //   links.push({ source, target, left: !isRight, right: isRight });
-            // }
-
-            // select new link
-            window.graphSelectedLink = link;
-            window.graphSelectedNode = null;
-            window.GraphRestart();
+            $("#" + window.graphMousedownNode.data.id + "-tab").tab('show');
         });
 
-    // show node names
+  if (title != null) node.append("title")
+      .text(d => title(d.data, d));
 
-    g.append('svg:text')
-        .attr('x', 0)
-        .attr('y', 4)
-        .attr('class', 'id')
-        .style('fill', 'rgba(255,255,255,0.8)')
-        .text((d) => d.name);
+  if (L) node.append("text")
+      .attr("dy", "0.32em")
+      .attr("x", d => d.children ? -10 : 10)
+      .attr("text-anchor", d => d.children ? "end" : "start")
+      .attr("paint-order", "stroke")
+      .attr("fill", halo)
+      .text((d, i) => L[i]);
 
-    window.graphCircle = g.merge(window.graphCircle);
-
-    // set the graph in motion
-    window.graphForce
-        .nodes(window.graphNodes)
-        .force('link').links(window.graphLinks);
-
-    // window.graphForce.alphaTarget(0.3).restart();
-};
+  return svg.node();
+}
