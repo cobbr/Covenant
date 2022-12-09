@@ -1,0 +1,181 @@
+- Name: NET-scan
+  Aliases: []
+  Description: Use a NET-scan command.
+  Author: 
+      Name: amine brahmi
+      Handle: khraoverflow
+      Link: https://twitter.com/dr_whoami_
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Reflection;
+    using System.Threading;
+
+    using NET-scan;
+
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Command, string Wait_sec)
+        {
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+              
+              string[] args = Command.Split(' ');
+              typeof(net_scan.Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
+              //Thread thread = new Thread(() => net_scan.Program.Main(args));
+              //thread.Start();
+              
+              Thread.Sleep(1000*int.Parse(Wait_sec));
+              
+
+
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+                return "";
+            }
+            catch (Exception e)
+            {
+              if (OutputStream != null)
+              {
+                OutputStream.Close();
+              }
+              return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: NET-scan command to execute, whole command should be inside quotes.
+    SuggestedValues:
+    - hosts -r 192.168.1-2.1-254 -p 445 
+    - ports -h 192.168.56.1 -p 1000  
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Wait_sec
+    Value: ''
+    DefaultValue: '60'
+    Description: time to wait while multiple threads are printing the output of the command, this command isn't very opsec safe don't set anything too high unless you know the scan will take that much time.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: false
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: NET-scan
+    Description: NET-scan is a .NET assembly to perform host discovery based on a mass port scan , and a port scanner.
+    Location: NET-scan\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies:
+  - Name: System.Management.Automation.dll
+    Location: net35\System.Management.Automation.dll
+    DotNetVersion: Net35
+  - Name: System.Management.dll
+    Location: net40\System.Management.dll
+    DotNetVersion: Net40
+  - Name: System.Management.Automation.dll
+    Location: net40\System.Management.Automation.dll
+    DotNetVersion: Net40
+  - Name: System.IdentityModel.dll
+    Location: net40\System.IdentityModel.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.DirectoryServices.dll
+    Location: net40\System.DirectoryServices.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Management.dll
+    Location: net35\System.Management.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.dll
+    Location: net35\System.DirectoryServices.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  - Name: System.IdentityModel.dll
+    Location: net35\System.IdentityModel.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
