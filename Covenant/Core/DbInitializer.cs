@@ -19,6 +19,8 @@ using Covenant.Models.Covenant;
 using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
+using YamlDotNet.Core;
+using Microsoft.AspNetCore.Mvc.ViewComponents;
 
 namespace Covenant.Core
 {
@@ -259,6 +261,12 @@ namespace Covenant.Core
                         Name = "SharpSC", Description = "SharpSC is a .NET assembly to perform basic operations with services.",
                         Location= "SharpSC" + Path.DirectorySeparatorChar,
                         CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "NET-scan", Description = "network host and port scanner ",
+                        Location = "NET-scan" + Path.DirectorySeparatorChar,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion>{Common.DotNetVersion.Net40,Common.DotNetVersion.Net35}
                     }
                 };
                 await service.CreateReferenceSourceLibraries(ReferenceSourceLibraries);
@@ -272,6 +280,7 @@ namespace Covenant.Core
                 var su = await service.GetReferenceSourceLibraryByName("SharpUp");
                 var sw = await service.GetReferenceSourceLibraryByName("SharpWMI");
                 var sc = await service.GetReferenceSourceLibraryByName("SharpSC");
+                var khra_can = await service.GetReferenceSourceLibraryByName("NET-scan");
                 await service.CreateEntities(
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },
