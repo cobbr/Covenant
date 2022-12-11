@@ -68,17 +68,17 @@
   - Name: Command
     Value: ''
     DefaultValue: ''
-    Description: NET-scan command to execute, whole command should be inside quotes.
+    Description: NET-scan command to execute, the command should be inside quotes, followed (optionally) by timeout to wait for output.
     SuggestedValues:
-    - hosts -r 192.168.1-2.1-254 -p 445 
-    - ports -h 192.168.56.1 -p 1000  
+    - '\"hosts -r 192.168.1-2.1-254 -p 445\" 30'
+    - '\"ports -h 192.168.56.1 -p 1000\" 60'  
     Optional: true
     DisplayInCommand: true
     FileOption: false
   - Name: Wait_sec
     Value: ''
     DefaultValue: '60'
-    Description: time to wait while multiple threads are printing the output of the command, this command isn't very opsec safe don't set anything too high unless you know the scan will take that much time.
+    Description: time out to wait for outupt, this command isn't very opsec safe don't set anything too high unless you know the scan will take that much time.
     SuggestedValues: []
     Optional: true
     DisplayInCommand: false
