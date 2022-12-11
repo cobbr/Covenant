@@ -84,6 +84,13 @@ namespace Covenant.Core
         Task<ScreenshotEvent> GetScreenshotEvent(int eventId);
         Task<string> GetScreenshotContent(int eventId);
         Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent);
+
+        Task<IEnumerable<DecryptEvent>> GetDecryptEvents();
+        Task<DecryptEvent> GetDecryptEvent(int eventId);
+        Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent);
+
+
+
     }
 
     public interface IImplantTemplateService
@@ -924,6 +931,33 @@ namespace Covenant.Core
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, screenshotEvent);
             return await this.GetScreenshotEvent(screenshotEvent.Id);
+        }
+
+        public async Task<IEnumerable<DecryptEvent>> GetDecryptEvents()
+        {
+            
+            return await _context.Events.Where(E => E.Type == EventType.Decrypt).Select(E => (DecryptEvent)E).ToListAsync();
+        }
+
+        public async Task<DecryptEvent> GetDecryptEvent(int eventId)
+        {
+            DecryptEvent anEvent = (DecryptEvent)await _context.Events.FirstOrDefaultAsync(E => E.Id == eventId && E.Type == EventType.Decrypt);
+            if (anEvent == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - DecryptEvent with id: {eventId}");
+            }
+            return anEvent;
+        }
+
+
+        public async Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent)
+        {
+            decryptEvent.Time = DateTime.UtcNow;
+            decryptEvent.Decrypt();
+            await _context.Events.AddAsync(decryptEvent);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateEvent(this, decryptEvent);
+            return await this.GetDecryptEvent(decryptEvent.Id);
         }
         #endregion
 
@@ -3050,10 +3084,13 @@ public static class Task
                 string verb = newStatus == GruntTaskingStatus.Completed ? "completed" : "progressed";
                 GruntTask DownloadTask = null;
                 GruntTask ScreenshotTask = null;
+                GruntTask DecryptTask = null;
                 try
                 {
                     DownloadTask = await this.GetGruntTaskByName("Download", grunt.DotNetVersion);
                     ScreenshotTask = await this.GetGruntTaskByName("ScreenShot", grunt.DotNetVersion);
+                    DecryptTask = await this.GetGruntTaskByName("Chrome_passwords", grunt.DotNetVersion);
+                    
                 }
                 catch (ControllerNotFoundException) { }
 
@@ -3092,6 +3129,23 @@ public static class Task
                     screenshotEvent.WriteToDisk();
                     await _context.Events.AddAsync(screenshotEvent);
                     await _notifier.NotifyCreateEvent(this, screenshotEvent);
+                }
+                else if (DecryptTask != null && tasking.GruntTaskId == DecryptTask.Id && newStatus == GruntTaskingStatus.Completed)
+                {
+                    string FileName = tasking.Name + ".png";
+                    DecryptEvent decryptEv = new DecryptEvent
+                    {
+                        Time = updatingGruntTasking.CompletionTime,
+                        MessageHeader = "gathering passwords ...",
+                        MessageBody = "passwords: ",
+                        Level = EventLevel.Info,
+                        Context = grunt.Name,
+                        
+                        EncryptedOutput = updatingGruntTasking.GruntCommand.CommandOutput.Output
+                    };
+                    decryptEv.Decrypt();
+                    await _context.Events.AddAsync(decryptEv);
+                    await _notifier.NotifyCreateEvent(this, decryptEv);
                 }
             }
             updatingGruntTasking.TaskingTime = tasking.TaskingTime;

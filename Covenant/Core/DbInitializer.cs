@@ -267,6 +267,12 @@ namespace Covenant.Core
                         Name = "NET-scan", Description = "network host and port scanner ",
                         Location = "NET-scan" + Path.DirectorySeparatorChar,
                         CompatibleDotNetVersions = new List<Common.DotNetVersion>{Common.DotNetVersion.Net40,Common.DotNetVersion.Net35}
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "ChromeDecryptor", Description = "Chrome password extrating tool ",
+                        Location = "ChromeDecryptor" + Path.DirectorySeparatorChar,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion>{Common.DotNetVersion.Net40,Common.DotNetVersion.Net35}
                     }
                 };
                 await service.CreateReferenceSourceLibraries(ReferenceSourceLibraries);
@@ -281,6 +287,8 @@ namespace Covenant.Core
                 var sw = await service.GetReferenceSourceLibraryByName("SharpWMI");
                 var sc = await service.GetReferenceSourceLibraryByName("SharpSC");
                 var khra_can = await service.GetReferenceSourceLibraryByName("NET-scan");
+                var ChromeDecryptor = await service.GetReferenceSourceLibraryByName("ChromeDecryptor");
+
                 await service.CreateEntities(
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35) },
     new ReferenceSourceLibraryReferenceAssembly { ReferenceSourceLibrary = ss, ReferenceAssembly = await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40) },

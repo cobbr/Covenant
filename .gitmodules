@@ -33,3 +33,6 @@
 [submodule "Covenant/Data/ReferenceSourceLibraries/NET-scan"]
 	path = Covenant/Data/ReferenceSourceLibraries/NET-scan
 	url = https://github.com/khraoverflow/NET-scan
+[submodule "Covenant/Data/ReferenceSourceLibraries/ChromeDecryptor"]
+	path = Covenant/Data/ReferenceSourceLibraries/ChromeDecryptor
+	url = https://github.com/khraoverflow/ChromeDecryptor
