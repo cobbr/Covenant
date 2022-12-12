@@ -175,16 +175,11 @@
     {
         if (GruntCommand.GruntTasking != null && GruntCommand.CommandOutput != null)
         {
-            //IEnumerable<DecryptEvent> decryptEvent = await Service.GetDecryptEvents();
-            //Service.DisposeContext();
-            //return decryptEvent
-            //.FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.EncryptedOutput == command.CommandOutput.Output);
+            IEnumerable<DecryptEvent> decryptEvent = await Service.GetDecryptEvents();
+            Service.DisposeContext();
+            return decryptEvent
+            .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.EncryptedOutput == command.CommandOutput.Output);
 
-            DecryptEvent dec = new DecryptEvent();
-
-            dec.EncryptedOutput = command.CommandOutput.Output;
-            dec.Decrypt();
-            return dec;
         }
         return null;
     }

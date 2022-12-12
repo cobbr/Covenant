@@ -85,6 +85,8 @@ namespace Covenant.Models
             builder.Entity<DownloadEvent>();
             builder.Entity<ScreenshotEvent>();
 
+            builder.Entity<DecryptEvent>();
+
             builder.Entity<FileIndicator>();
             builder.Entity<NetworkIndicator>();
             builder.Entity<TargetIndicator>();
