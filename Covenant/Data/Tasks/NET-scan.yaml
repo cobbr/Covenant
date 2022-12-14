@@ -21,7 +21,7 @@
     public static class Task
     {
         public static Stream OutputStream { get; set; }
-        public static string Execute(string Command, string Wait_sec)
+        public static string Execute(string Command)
         {
             try
             {
@@ -34,14 +34,9 @@
                 Console.SetOut(stdOutWriter);
                 Console.SetError(stdErrWriter);
               
-              string[] args = Command.Split(' ');
-              typeof(net_scan.Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
-              //Thread thread = new Thread(() => net_scan.Program.Main(args));
-              //thread.Start();
+                string[] args = Command.Split(' ');
+                typeof(net_scan.Program).GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { args });
               
-              Thread.Sleep(1000*int.Parse(Wait_sec));
-              
-
 
                 Console.Out.Flush();
                 Console.Error.Flush();
@@ -70,18 +65,10 @@
     DefaultValue: ''
     Description: NET-scan command to execute, the command should be inside quotes, followed (optionally) by timeout to wait for output.
     SuggestedValues:
-    - '\"hosts -r 192.168.1-2.1-254 -p 445\" 30'
-    - '\"ports -h 192.168.56.1 -p 1000\" 60'  
+    - hosts -r 192.168.1-2.1-254 -p 445
+    - ports -h 192.168.56.1 -p 1000  
     Optional: true
     DisplayInCommand: true
-    FileOption: false
-  - Name: Wait_sec
-    Value: ''
-    DefaultValue: '60'
-    Description: time out to wait for outupt, this command isn't very opsec safe don't set anything too high unless you know the scan will take that much time.
-    SuggestedValues: []
-    Optional: true
-    DisplayInCommand: false
     FileOption: false
   ReferenceSourceLibraries:
   - Name: NET-scan

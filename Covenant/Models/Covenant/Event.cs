@@ -75,14 +75,23 @@ namespace Covenant.Models.Covenant
                     {
                         try
                         {
-                            string username = line.Split(':')[0];
+                        string username = line.Split(':')[0];
 
+                        if(line.Split(':')[1].StartsWith("ENC_"))
+                        {
                             byte[] payload = Convert.FromBase64String(line.Split(':')[1].Substring(4));
                             string password = Encoding.Default.GetString(AesGcmDecrypt(key, payload));
 
                             DecryptedOutput += username + "     :      " + password + "    :    " + line.Split(':')[2] + line.Split(':')[3];
                             DecryptedOutput += Environment.NewLine;
+                        }
+                        else
+                        {
 
+                            DecryptedOutput += username + "     :      " + line.Split(':')[1] + "    :    " + line.Split(':')[2] + line.Split(':')[3];
+                            DecryptedOutput += Environment.NewLine;
+                        }
+                            
                         }
                         catch (Exception)
                         {
@@ -97,35 +106,13 @@ namespace Covenant.Models.Covenant
 
                     DecryptedOutput = x.Message + Environment.NewLine + EncryptedOutput;
                 }
-           
-           
-
-            //string pass = lines[3].Split(':')[1].Substring(4);
-
-
-            
-            //byte[] payload = Convert.FromBase64String("djEwuFGRQmVcqIKMu0ONmtpURUQMGbsoC77S4Av62iLVyrZNFOw9xNWPqg==");
-
-            
-            //DecryptedOutput = Encoding.Default.GetString(AesGcmDecrypt(key,payload));
-
-            
-            
             return true;
         }
 
-        //private static string Decrypt(string base64Key, string base64Ciphertext)
-        //{
-
-          
-        //}
 
         public static byte[] AesGcmDecrypt( byte[] key, byte[] payload)
         {
-            //byte[] realPayload = new byte[payload.Length - 12], nonce = new byte[12];
-            //Buffer.BlockCopy(payload, 3, nonce, 0, 12); // get the first 12 bytes as nonce
-            //Buffer.BlockCopy(payload, 15, realPayload, 0, payload.Length - 12); // get the rest as the payload
-
+            
             byte[] nonce = payload.Skip(3).Take(12).ToArray();
             byte[] realPayload = payload.Skip(15).ToArray(); // from 15 to end
 
