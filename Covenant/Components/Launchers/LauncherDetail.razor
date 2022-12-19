@@ -1,0 +1,224 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Covenant.Core
+@using Covenant.Models.Covenant
+@using Covenant.Models.Listeners
+@using Covenant.Models.Launchers
+
+@using System.IO
+@using Microsoft.JSInterop
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+@inject NavigationManager NavigationManager
+
+<ul class="nav nav-tabs mb-3" id="launcher-tab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" id="generate-tab" data-toggle="tab" href="#generate" role="tab" aria-controls="generate" aria-selected="false">
+            <span class="fe fe-zap"></span>
+            Generate
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="host-tab" data-toggle="tab" href="#host" role="tab" aria-controls="host" aria-selected="false">
+            <span class="fe fe-cloud-lightning"></span>
+            Host
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="code-tab" data-toggle="tab" href="#code" role="tab" aria-controls="code" aria-selected="false">
+            <span class="fe fe-code"></span>
+            Code
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content" id="launcher-tab-content">
+    <div class="tab-pane fade" id="generate" role="tabpanel" aria-labelledby="generate-tab">
+        <LauncherForm Launcher="Launcher" OnGenerate="OnGenerate">
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary mr-3" id="generate">
+                        <span class="fe fe-zap"></span>
+                        Generate
+                    </button>
+                    @if (this.GenerateInProgress)
+                    {
+                        <span class="fe fe-loader spin"></span>
+                    }
+                </div>
+                <div class="col-md-3">
+                    <button type="button" @onclick="OnDownload" class="btn btn-outline-primary" id="download">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </button>
+                </div>
+            </div>
+            @ChildContent
+        </LauncherForm>
+    </div>
+    <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
+        <LauncherHost Launcher="Launcher" OnHost="OnHost" />
+    </div>
+    <div class="tab-pane fade" id="code" role="tabpanel" aria-labelledby="code-tab">
+        <div class="form-group col-md-12">
+            <label for="copy-stager-code">StagerCode</label>
+            <textarea @ref="CodeMirrorElement" rows="10" value="@Launcher.StagerCode" class="form-control code-mirror-csharp" disabled></textarea>
+        </div>
+        <div class="form-group col-md-12">
+            <button type="button" @onclick="(e => CopyToClipboard(Launcher.StagerCode))" class="btn btn-primary">
+                <span class="fe fe-clipboard"></span>
+                Copy
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="border-top mt-4">
+    <div class="form-group mt-4">
+        <label for="Launcher">Launcher</label>
+        <div class="input-group">
+            <input id="Launcher" value="@LauncherString" class="form-control">
+            <div class="input-group-append">
+                <button type="button" @onclick="(e => CopyToClipboard(LauncherString))" class="btn btn-outline-primary">
+                    <span class="fe fe-clipboard"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@if (Launcher.Type == LauncherType.PowerShell)
+{
+    <div class="border-top mt-4">
+        <div class="form-group mt-2">
+            <label for="EncodedLauncher">EncodedLauncher</label>
+            <div class="input-group">
+                <input id="EncodedLauncher" class="form-control" value="@PowerShellEncodedLauncherString" />
+                <div class="input-group-append">
+                    <button type="button" @onclick="(e => CopyToClipboard(PowerShellEncodedLauncherString))" class="btn btn-outline-primary">
+                        <span class="fe fe-clipboard"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Launcher Launcher { get; set; }
+
+    [Parameter]
+    public EventCallback<Launcher> OnSubmit { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [CascadingParameter]
+    public Theme Theme { get; set; }
+
+    private const int MAX_LAUNCHER_LENGTH = 30000;
+    private bool GenerateInProgress { get; set; } = false;
+
+    private string PowerShellEncodedLauncherString
+    {
+        get
+        {
+            if (Launcher.Type == LauncherType.PowerShell)
+            {
+                PowerShellLauncher PSL = ((PowerShellLauncher)Launcher);
+                string esl = PSL.EncodedLauncherString;
+                return esl.Substring(0, Math.Min(esl.Length, MAX_LAUNCHER_LENGTH));
+            }
+            return "";
+        }
+    }
+
+    private string LauncherString
+    {
+        get
+        {
+            string ls = Launcher.LauncherString;
+            return ls.Substring(0, Math.Min(ls.Length, MAX_LAUNCHER_LENGTH));
+        }
+    }
+
+    private ElementReference CodeMirrorElement { get; set; }
+
+    protected override void OnInitialized()
+    {
+        this.INotificationService.OnEditLauncher += OnEditLauncher;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString(), true);
+            await IJSRuntime.InvokeAsync<string>("ShowTab", "#generate-tab");
+        }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditLauncher -= OnEditLauncher;
+    }
+
+    private void OnEditLauncher(object sender, Launcher launcher)
+    {
+        if (this.Launcher.Id == launcher.Id)
+        {
+            this.Launcher = launcher;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await IJSRuntime.InvokeAsync<string>("CopyToClipboard", text);
+    }
+
+    private async Task OnGenerate(Launcher aLauncher)
+    {
+        this.GenerateInProgress = true;
+        this.StateHasChanged();
+        await this.OnSubmit.InvokeAsync(aLauncher);
+        this.GenerateInProgress = false;
+        this.StateHasChanged();
+    }
+
+    private async Task OnHost(string Path)
+    {
+        try
+        {
+            this.Launcher = await Service.CreateHostedLauncher(
+                this.Launcher.Id,
+                await Service.CreateHostedFile(
+                    new HostedFile
+                    {
+                        ListenerId = Launcher.ListenerId,
+                        Path = Path,
+                        Content = Convert.ToBase64String(Launcher.GetContent())
+                    })
+            );
+            NavigationManager.NavigateTo($"/launcher");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+
+    private async Task OnDownload()
+    {
+        string filename = this.Launcher.GetFilename();
+        string fileext = Path.GetExtension(filename);
+        string mediatype = Common.ContentTypeMappings.ContainsKey(fileext) ?
+            Common.ContentTypeMappings[fileext] :
+            Common.DefaultContentTypeMapping;
+        string content = Convert.ToBase64String(this.Launcher.GetContent());
+
+        await IJSRuntime.InvokeAsync<string>("DownloadFile", filename, mediatype, content);
+    }
+}

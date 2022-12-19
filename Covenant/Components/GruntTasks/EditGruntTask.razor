@@ -12,11 +12,19 @@
     <h1 class="h2">GruntTask: <span class="primary-color">@GruntTask.Name</span></h1>
 </div>
 
-<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit">
+<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnEdit">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-edit"></span>
+        Edit
+    </button>
     <button type="button" @onclick="OnExport" class="btn btn-secondary">
         <span class="fe fe-share"></span>
         Export
     </button>
+    @if (!string.IsNullOrEmpty(this.ErrorMessage))
+    {
+        <div class="text-danger">@ErrorMessage</div>
+    }
 </GruntTaskForm>
 
 @code {
@@ -25,6 +33,8 @@
 
     [Parameter]
     public GruntTask GruntTask { get; set; }
+
+    private string ErrorMessage { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -40,12 +50,17 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // return RedirectToAction(nameof(Edit), new { Id = taskModel.Id });
+            this.ErrorMessage = e.Message;
         }
     }
 
     private async Task OnExport()
     {
-        await IJSRuntime.InvokeAsync<string>("DownloadFile", this.GruntTask.Name + ".yaml", "application/x-yaml", Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.GruntTask.ToYaml())));
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            this.GruntTask.Name + ".yaml",
+            Common.ContentTypeMappings[".yaml"],
+            Convert.ToBase64String(Common.CovenantEncoding.GetBytes(new List<GruntTask> { this.GruntTask }.ToYaml()))
+        );
     }
 }

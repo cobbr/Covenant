@@ -57,6 +57,12 @@ else
                 Taskings
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="files-tab" data-toggle="tab" href="#files" role="tab" aria-controls="files" aria-selected="false">
+                <span class="fe fe-files"></span>
+                Files
+            </a>
+        </li>
     </ul>
 
     <div class="tab-content" id="grunt-tab-content">
@@ -71,6 +77,9 @@ else
         </div>
         <div class="tab-pane fade mb-5" id="taskings" role="tabpanel" aria-labelledby="taskings-tab">
             <GruntTaskingTable GruntTaskings="GruntTaskings" PageLength="50" />
+        </div>
+        <div class="tab-pane fade mb-5" id="files" role="tabpanel" aria-labelledby="files-tab">
+            <FileBrowser Grunt="Grunt" />
         </div>
     </div>
 }
@@ -104,16 +113,11 @@ else
         this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
     }
 
-    bool scrollToBottom = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "#info-tab");
-        }
-        if (scrollToBottom)
-        {
-            await IJSRuntime.InvokeAsync<string>("ScrollToBottom", "#interact-scroll");
         }
     }
 
@@ -130,7 +134,6 @@ else
         if (this.GruntId == gruntTasking.GruntId)
         {
             this.GruntTaskings.Add(gruntTasking);
-            // scrollToBottom = true;
         }
     }
 
@@ -142,7 +145,6 @@ else
             if (index != -1)
             {
                 this.GruntTaskings[index] = gruntTasking;
-                // scrollToBottom = true;
                 _ = this.InvokeAsync(() => this.StateHasChanged());
             }
         }

@@ -3,17 +3,14 @@
 @inherits OwningComponentBase<ICovenantService>
 
 @using Microsoft.JSInterop
-@using Microsoft.AspNetCore.Identity;
-@using Microsoft.Extensions.Configuration;
+@using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
-@using Covenant.Models.Covenant;
 @using Covenant.Models.Listeners;
 @using Covenant.Components.HostedFiles
 
 @inject IJSRuntime IJSRuntime
-@inject UserManager<CovenantUser> UserManager
-@inject IConfiguration Configuration
+@inject CovenantAPIService CovenantAPIService
 @inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
@@ -35,6 +32,12 @@
                 Hosted Files
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="log-tab" data-toggle="tab" href="#log" role="tab" aria-controls="log" aria-selected="false">
+                <span class="fe fe-book"></span>
+                Web Log
+            </a>
+        </li>
     </ul>
 
     <div class="tab-content" id="listener-tab-content">
@@ -42,9 +45,8 @@
             <HttpListenerForm Listener="@((HttpListener)Listener)"
                               Profiles="new List<Profile> { Listener.Profile }"
                               OnSubmit="OnSubmitHttpListener"
-                              SubmitIcon="edit"
-                              SubmitLabel="Edit"
-                              Disabled="true" />
+                              Disabled="true">
+            </HttpListenerForm>
             <div class="btn-group" role="group">
                 @if (Listener.Status == ListenerStatus.Active)
                 {
@@ -62,9 +64,16 @@
                     <span class="fe fe-x"></span> Delete
                 </button>
             </div>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
         </div>
         <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
             <HostedFileIndex ListenerId="ListenerId" HostedFiles="GetHostedFiles()" />
+        </div>
+        <div class="tab-pane fade" id="log" role="tabpanel" aria-labelledby="log-tab">
+            <LogTable LogFile="@(Common.CovenantListenersDirectory + Utilities.GetSanitizedFilename(Listener.GUID) + System.IO.Path.DirectorySeparatorChar + "requests.log")" />
         </div>
     </div>
 }
@@ -84,9 +93,8 @@ else if (Listener.ListenerType.Name == "Bridge")
             <BridgeListenerForm Listener="@((BridgeListener)Listener)"
                                 Profiles="new List<Profile> { Listener.Profile }"
                                 OnSubmit="OnSubmitBridgeListener"
-                                SubmitIcon="edit"
-                                SubmitLabel="Edit"
-                                Disabled="true" />
+                                Disabled="true">
+            </BridgeListenerForm>
             <div class="btn-group" role="group">
                 @if (Listener.Status == ListenerStatus.Active)
                 {
@@ -104,12 +112,11 @@ else if (Listener.ListenerType.Name == "Bridge")
                     <span class="fe fe-x"></span> Delete
                 </button>
             </div>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
         </div>
-        @*
-        <div class="tab-pane fade" id="host" role="tabpanel" aria-labelledby="host-tab">
-            <HostedFileIndex />
-        </div>
-        *@
     </div>
 }
 
@@ -120,11 +127,17 @@ else if (Listener.ListenerType.Name == "Bridge")
     [Parameter]
     public Listener Listener { get; set; }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private string DisplayError { get; set; }
     private bool IsDeleted { get; set; } = false;
+    private string Token { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         this.Listener = this.Listener ?? await Service.GetListener(this.ListenerId);
+        this.Token = (await Service.GetUserToken((await AuthenticationState).User)).CovenantToken;
         Service.DisposeContext();
     }
 
@@ -142,8 +155,8 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
+            Service.DisposeContext();
         }
     }
 
@@ -156,27 +169,38 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
+            Service.DisposeContext();
         }
     }
 
-    private async Task StartListener()
+    private void StartListener()
     {
         try
         {
             if (Listener.Status != ListenerStatus.Active)
             {
                 Listener.Status = ListenerStatus.Active;
-                await Service.EditListener(Listener);
-                NavigationManager.NavigateTo("/listener");
+                if (this.Listener.ListenerType.Name == "HTTP")
+                {
+                    HttpListener httpListener = (HttpListener)this.Listener;
+                    _ = this.InvokeAsync(async () => await CovenantAPIService.EditHttpListener(httpListener, this.Token));
+                    NavigationManager.NavigateTo("/listener");
+                }
+                else if (this.Listener.ListenerType.Name == "Bridge")
+                {
+                    BridgeListener bridgeListener = (BridgeListener)this.Listener;
+                    _ = this.InvokeAsync(async () => await CovenantAPIService.EditBridgeListener(bridgeListener, this.Token));
+                    NavigationManager.NavigateTo("/listener");
+                }
             }
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Index));
+            this.DisplayError = e.Message;
         }
+        Service.DisposeContext();
+        Listener.Status = ListenerStatus.Stopped;
     }
 
     private async Task StopListener()
@@ -192,8 +216,9 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Index));
+            Service.DisposeContext();
+            Listener.Status = ListenerStatus.Active;
+            this.DisplayError = e.Message;
         }
     }
 
@@ -207,8 +232,8 @@ else if (Listener.ListenerType.Name == "Bridge")
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Index));
+            Service.DisposeContext();
+            this.DisplayError = e.Message;
         }
     }
 

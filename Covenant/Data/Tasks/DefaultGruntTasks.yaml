@@ -10,7 +10,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: Assembly
   UnsafeCompile: false
@@ -104,7 +104,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: Exit
   UnsafeCompile: false
@@ -125,7 +125,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: Tasks
   UnsafeCompile: false
@@ -146,7 +146,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: TaskKill
   UnsafeCompile: false
@@ -175,7 +175,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: SetDelay
   UnsafeCompile: false
@@ -204,7 +204,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: SetJitter
   UnsafeCompile: false
@@ -233,7 +233,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: SetConnectAttempts
   UnsafeCompile: false
@@ -262,7 +262,7 @@
   CompatibleDotNetVersions:
   - Net35
   - Net40
-  - NetCore31
+  - Net50
   Code: ''
   TaskingType: SetKillDate
   UnsafeCompile: false
@@ -402,6 +402,7 @@
     using System.IO;
     using System.Text;
     using System.Linq;
+    using System.Threading;
     using System.Collections.Generic;
 
     public static class Task
@@ -411,6 +412,7 @@
         {
             try
             {
+                long baseline = GC.GetTotalMemory(false);
                 using (FileStream fs = File.OpenRead(FileName))
                 {
                     byte[] read = new byte[1048576];
@@ -431,6 +433,10 @@
                         byte[] base64 = Encoding.UTF8.GetBytes(Convert.ToBase64String(finalRead.ToArray()));
                         OutputStream.Write(base64, 0, base64.Length);
                         OutputStream.Flush();
+                        if (GC.GetTotalMemory(true) > (baseline + (baseline * 0.3)))
+                        {
+                            Thread.Sleep(2000);
+                        }
                     }
                 }
                 OutputStream.Close();

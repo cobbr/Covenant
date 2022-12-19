@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Covenant.Core;
 using Covenant.Models.Listeners;
@@ -30,18 +29,9 @@ namespace Covenant.Models.Grunts
         Pull
     }
 
-    public class ListenerTypeImplantTemplate
+    public class ImplantTemplate : ILoggable, IYamlSerializable<ImplantTemplate>
     {
-        public int ListenerTypeId { get; set; }
-        public ListenerType ListenerType { get; set; }
-
-        public int ImplantTemplateId { get; set; }
-        public ImplantTemplate ImplantTemplate { get; set; }
-    }
-
-    public class ImplantTemplate
-    {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), YamlIgnore]
         public int Id { get; set; }
         public string Name { get; set; } = "";
         public string Description { get; set; }
@@ -49,20 +39,16 @@ namespace Covenant.Models.Grunts
         public CommunicationType CommType { get; set; }
         public ImplantDirection ImplantDirection { get; set; }
 
-        private List<ListenerTypeImplantTemplate> ListenerTypeImplantTemplates { get; set; } = new List<ListenerTypeImplantTemplate>();
-        public void SetListenerTypeImplantTemplates(List<ListenerTypeImplantTemplate> templates)
-        {
-            this.ListenerTypeImplantTemplates = templates;
-        }
-        [NotMapped]
-        public List<ListenerType> CompatibleListenerTypes => ListenerTypeImplantTemplates.Select(l => l.ListenerType).ToList();
-
+        public List<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; } = new List<ReferenceSourceLibrary>();
+        public List<ReferenceAssembly> ReferenceAssemblies { get; set; } = new List<ReferenceAssembly>();
+        public List<EmbeddedResource> EmbeddedResources { get; set; } = new List<EmbeddedResource>();
+        public List<ListenerType> CompatibleListenerTypes { get; set; } = new List<ListenerType>();
         public List<Common.DotNetVersion> CompatibleDotNetVersions { get; set; } = new List<Common.DotNetVersion>();
 
         public string StagerCode { get; set; } = "";
         public string ExecutorCode { get; set; } = "";
 
-        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore, YamlIgnore]
         public List<Grunt> Grunts { get; set; } = new List<Grunt>();
 
         private string StagerLocation
@@ -73,7 +59,7 @@ namespace Covenant.Models.Grunts
                 {
                     return "";
                 }
-                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
+                string dir = Common.CovenantImplantTemplateDirectory + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
                 string file = Utilities.GetSanitizedFilename(this.Name) + "Stager" + Utilities.GetExtensionForLanguage(this.Language);
                 if (!Directory.Exists(dir))
                 {
@@ -96,7 +82,7 @@ namespace Covenant.Models.Grunts
                 {
                     return "";
                 }
-                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
+                string dir = Common.CovenantImplantTemplateDirectory + Utilities.GetSanitizedFilename(this.Name) + Path.DirectorySeparatorChar;
                 string file = Utilities.GetSanitizedFilename(this.Name) + Utilities.GetExtensionForLanguage(this.Language);
                 if (!Directory.Exists(dir))
                 {
@@ -123,5 +109,8 @@ namespace Covenant.Models.Grunts
                 this.ExecutorCode = File.ReadAllText(this.ExecutorLocation);
             }
         }
+
+        // ImplantTemplate|Action|ID|Name|Description|Language|CommType|ImplantDirection
+        public string ToLog(LogAction action) => $"ImplantTemplate|{action}|{this.Id}|{this.Name}|{this.Description}|{this.Language}|{this.CommType}|{this.ImplantDirection}";
     }
 }

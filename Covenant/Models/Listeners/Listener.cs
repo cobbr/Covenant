@@ -4,13 +4,13 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Covenant.Core;
 using Covenant.Models.Grunts;
@@ -19,23 +19,26 @@ namespace Covenant.Models.Listeners
 {
     public class ListenerType
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), YamlIgnore]
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
-        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore, YamlIgnore]
         public List<Listener> Listeners { get; set; }
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore, YamlIgnore]
+        public List<ImplantTemplate> ImplantTemplates { get; set; }
     }
 
     public enum ListenerStatus
     {
         Uninitialized,
         Active,
-        Stopped
+        Stopped,
+        Deleted
     }
 
-    public class Listener
+    public class Listener : ILoggable
     {
         [Key]
         public int Id { get; set; }
@@ -71,7 +74,10 @@ namespace Covenant.Models.Listeners
         public virtual CancellationTokenSource Start() { return null; }
         public virtual void Stop(CancellationTokenSource cancellationTokenSource) { }
 
-        protected string ListenerDirectory { get { return Common.CovenantListenersDirectory + this.GUID + Path.DirectorySeparatorChar; } }
+        protected string ListenerDirectory { get { return Common.CovenantListenersDirectory + Utilities.GetSanitizedFilename(this.GUID) + Path.DirectorySeparatorChar; } }
+
+        // Listener|Action|ID|Name|GUID|BindAddress|BindPort|ConnectAddresses|ConnectPort|ProfileID|ListenerType|Status
+        public string ToLog(LogAction action) => $"Listener|{action}|{this.Id}|{this.Name}|{this.GUID}|{this.BindAddress}|{this.BindPort}|{string.Join(",", this.ConnectAddresses)}|{this.ConnectPort}|{this.ProfileId}|{this.ListenerType.Name}|{this.Status}";
     }
 
     public class ListenerStartException : Exception

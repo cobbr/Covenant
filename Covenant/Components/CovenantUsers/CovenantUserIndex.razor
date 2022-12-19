@@ -3,13 +3,18 @@
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
+@using System.IO
+@using System.Threading
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
 @using Covenant.Models.Covenant
+@using Covenant.Components.Shared
 @using Covenant.Components.Themes
 @inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
@@ -43,25 +48,61 @@
         }
     </div>
     <div class="tab-pane fade" id="themes" role="tabpanel" aria-labelledby="themes-tab">
-        <ThemeTable Themes="Themes" />
+        <ThemeTable Themes="Themes" OnError="OnError" />
         <a href="/theme/create" class="btn btn-primary">
             <span class="fe fe-plus"></span>
             Create
         </a>
+        <ButtonActivatedModal @ref="_ImportModal" class="btn btn-secondary ml-1">
+            <ButtonContent>
+                <span class="fe fe-download"></span>
+                Import
+            </ButtonContent>
+            <TitleContent>Import Theme(s)</TitleContent>
+            <ModalBody>
+                <InputFile OnChange="OnUploadImport" />
+                @if (this.UploadInProgress)
+                {
+                    <span class="fe fe-loader spin"></span>
+                }
+                @if (!string.IsNullOrEmpty(this.ImportErrorMessage))
+                {
+                    <span class="text-danger">@ImportErrorMessage</span>
+                }
+            </ModalBody>
+            <ModalFooter>
+                <button type="button" class="btn btn-primary" @onclick="OnImport">
+                    <span class="fe fe-download"></span>
+                    Import
+                </button>
+            </ModalFooter>
+        </ButtonActivatedModal>
+        <button type="button" class="btn btn-secondary" @onclick="OnExport">
+            <span class="fe fe-share"></span>
+            Export All
+        </button>
     </div>
 </div>
+@if (!string.IsNullOrEmpty(this.ErrorMessage))
+{
+    <span class="text-danger">@ErrorMessage</span>
+}
 
 @code {
     [Parameter]
     public IEnumerable<CovenantUser> CovenantUsers { get; set; }
 
     [Parameter]
-    public IEnumerable<Theme> Themes { get; set; }
+    public List<Theme> Themes { get; set; }
+
+    private ButtonActivatedModal _ImportModal;
 
     protected override async Task OnInitializedAsync()
     {
         this.CovenantUsers = this.CovenantUsers ?? await Service.GetUsers();
-        this.Themes = this.Themes ?? await Service.GetThemes();
+        this.Themes = this.Themes ?? (await Service.GetThemes()).ToList();
+        this.INotificationService.OnCreateTheme += OnCreateTheme;
+        this.INotificationService.OnDeleteTheme += OnDeleteTheme;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -72,9 +113,93 @@
         }
     }
 
+    private void OnCreateTheme(object sender, Theme theme)
+    {
+        this.Themes.Add(theme);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteTheme(object sender, int id)
+    {
+        this.Themes.RemoveAt(this.Themes.FindIndex(T => T.Id == id));
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private string ErrorMessage { get; set; }
+    private void OnError(string error)
+    {
+        this.ErrorMessage = error;
+    }
+
     private bool IsAdmin()
     {
         AuthenticationState state = AuthenticationStateProvider.GetAuthenticationStateAsync().WaitResult();
         return state.User.IsInRole("Administrator");
+    }
+
+    private string ImportErrorMessage { get; set; }
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
+    private List<Theme> ImportedThemes { get; set; } = null;
+    private async Task OnUploadImport(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
+                this.ImportedThemes = YamlUtilities.FromYaml<Theme>(yaml).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ImportErrorMessage = ex.Message;
+        }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
+    }
+
+    private async Task OnImport()
+    {
+        if (this.ImportedThemes != null)
+        {
+            this.ImportErrorMessage = "";
+            try
+            {
+                await Service.CreateThemes(this.ImportedThemes.ToArray());
+            }
+            catch (Exception e)
+            {
+                this.ImportErrorMessage += e.Message + Environment.NewLine;
+                this.StateHasChanged();
+            }
+            if (string.IsNullOrEmpty(this.ImportErrorMessage))
+            {
+                this.ImportedThemes = null;
+                await _ImportModal.DismissModal();
+            }
+        }
+    }
+
+    private async Task OnExport()
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                "Themes.yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.Themes.ToYaml()))
+            );
+        }
+        catch (Exception)
+        {
+            //
+        }
     }
 }

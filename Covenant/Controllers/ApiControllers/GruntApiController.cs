@@ -205,6 +205,28 @@ namespace Covenant.Controllers
             }
         }
 
+        // GET api/grunts/{id}/checkin
+        // <summary>
+        // Check in a Grunt
+        // </summary>
+        [HttpGet("{id}/checkin", Name = "CheckInGrunt")]
+        [HttpPut("{id}/checkin", Name = "CheckInGrunt")]
+        public async Task<ActionResult<Grunt>> CheckInGrunt(int id)
+        {
+            try
+            {
+                return await _service.CheckInGrunt(id);
+            }
+            catch (ControllerNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (ControllerBadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         // DELETE api/grunts/{id}
         // <summary>
         // Delete a Grunt

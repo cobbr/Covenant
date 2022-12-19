@@ -1,0 +1,13 @@
+[Unit]
+Description=Covenant Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/Covenant/Covenant
+ExecStart=/usr/bin/dotnet /opt/Covenant/Covenant/bin/release/net5.0/publish/Covenant.dll
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

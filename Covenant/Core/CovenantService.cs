@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +24,7 @@ using Covenant.Models.Listeners;
 using Covenant.Models.Launchers;
 using Covenant.Models.Grunts;
 using Covenant.Models.Indicators;
+using NLog;
 
 namespace Covenant.Core
 {
@@ -34,6 +34,7 @@ namespace Covenant.Core
         Task<CovenantUser> GetUser(string userId);
         Task<CovenantUser> GetUserByUsername(string username);
         Task<CovenantUser> GetCurrentUser(ClaimsPrincipal principal);
+        Task<CovenantUserLoginResult> GetUserToken(ClaimsPrincipal principal);
         Task<CovenantUserLoginResult> Login(CovenantUserLogin login);
         Task<CovenantUser> CreateUserVerify(ClaimsPrincipal principal, CovenantUserRegister register);
         Task<CovenantUser> CreateUser(CovenantUserLogin login);
@@ -63,6 +64,7 @@ namespace Covenant.Core
         Task<IEnumerable<Theme>> GetThemes();
         Task<Theme> GetTheme(int id);
         Task<Theme> CreateTheme(Theme theme);
+        Task<IEnumerable<Theme>> CreateThemes(params Theme[] themes);
         Task<Theme> EditTheme(Theme theme);
         Task DeleteTheme(int id);
     }
@@ -78,17 +80,17 @@ namespace Covenant.Core
         Task<IEnumerable<Event>> CreateEvents(params Event[] events);
         Task<IEnumerable<DownloadEvent>> GetDownloadEvents();
         Task<DownloadEvent> GetDownloadEvent(int eventId);
-        Task<string> GetDownloadContent(int eventId);
-        Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent);
+        Task<DownloadEvent> GetDownloadEventByGruntCommand(int id);
+        Task<DownloadEvent> CreateDownloadEvent(DownloadEventContent downloadEvent);
         Task<IEnumerable<ScreenshotEvent>> GetScreenshotEvents();
         Task<ScreenshotEvent> GetScreenshotEvent(int eventId);
-        Task<string> GetScreenshotContent(int eventId);
-        Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent);
+        Task<ScreenshotEvent> GetScreenshotEventByGruntCommand(int id);
+        Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent);
+        Task DeleteEvent(int id);
 
-        Task<IEnumerable<DecryptEvent>> GetDecryptEvents();
+         Task<IEnumerable<DecryptEvent>> GetDecryptEvents();
         Task<DecryptEvent> GetDecryptEvent(int eventId);
         Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent);
-
 
 
     }
@@ -117,6 +119,7 @@ namespace Covenant.Core
         Task<Grunt> CreateGrunt(Grunt grunt);
         Task<IEnumerable<Grunt>> CreateGrunts(params Grunt[] grunts);
         Task<Grunt> EditGrunt(Grunt grunt, CovenantUser user);
+        Task<Grunt> CheckInGrunt(int gruntId);
         Task DeleteGrunt(int gruntId);
         Task<List<string>> GetCommandSuggestionsForGrunt(Grunt grunt);
         Task<byte[]> CompileGruntStagerCode(int id, Launcher launcher);
@@ -207,6 +210,7 @@ namespace Covenant.Core
         Task<CommandOutput> CreateCommandOutput(CommandOutput output);
         Task<IEnumerable<CommandOutput>> CreateCommandOutputs(params CommandOutput[] outputs);
         Task<CommandOutput> EditCommandOutput(CommandOutput output);
+        Task<CommandOutput> AppendCommandOutput(int id, string append);
         Task DeleteCommandOutput(int id);
     }
 
@@ -222,6 +226,29 @@ namespace Covenant.Core
         Task<IEnumerable<GruntTasking>> CreateGruntTaskings(params GruntTasking[] taskings);
         Task<GruntTasking> EditGruntTasking(GruntTasking tasking);
         Task DeleteGruntTasking(int taskingId);
+    }
+
+    public interface IFolderFileService
+    {
+        Task<IEnumerable<Folder>> GetFolders(int gruntId);
+        Task<Folder> GetFolder(int gruntId, int? folderId);
+        Task<Folder> GetFolderByFullName(int gruntId, string FullName);
+        Task<Folder> CreateFolder(Folder folder);
+        Task<Folder> EditFolder(Folder folder);
+        Task DeleteFolder(int gruntId, int folderId);
+
+        Task<IEnumerable<FolderFile>> GetFolderFiles(int gruntId);
+        Task<FolderFile> GetFolderFile(int gruntId, int fileId);
+        Task<FolderFile> CreateFolderFile(FolderFile file);
+        Task<FolderFile> EditFolderFile(FolderFile file);
+        Task DeleteFolderFile(int gruntId, int folderId);
+
+        Task<IEnumerable<FolderFileNode>> GetFolderFileNodes(int gruntId);
+        Task<FolderFileNode> GetFolderFileNode(int gruntId, int nodeId);
+        Task<FolderFileNode> CreateFolderFileNode(FolderFileNode node);
+        Task<IEnumerable<FolderFileNode>> CreateFolderFileNodes(params FolderFileNode[] nodes);
+        Task<FolderFileNode> EditFolderFileNode(FolderFileNode node);
+        Task DeleteFolderFileNode(int gruntId, int nodeId);
     }
 
     public interface ICredentialService
@@ -319,52 +346,44 @@ namespace Covenant.Core
     {
         Task<IEnumerable<Launcher>> GetLaunchers();
         Task<Launcher> GetLauncher(int id);
-        Task<BinaryLauncher> GetBinaryLauncher();
-        Task<BinaryLauncher> GenerateBinaryLauncher();
-        Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file);
+        Task<BinaryLauncher> GetBinaryLauncher(int id);
+        Task<ServiceBinaryLauncher> GetServiceBinaryLauncher(int id);
+        Task<ShellCodeLauncher> GetShellCodeLauncher(int id);
+        Task<PowerShellLauncher> GetPowerShellLauncher(int id);
+        Task<MSBuildLauncher> GetMSBuildLauncher(int id);
+        Task<InstallUtilLauncher> GetInstallUtilLauncher(int id);
+        Task<Regsvr32Launcher> GetRegsvr32Launcher(int id);
+        Task<MshtaLauncher> GetMshtaLauncher(int id);
+        Task<BinaryLauncher> CreateBinaryLauncher(BinaryLauncher launcher);
+        Task<ServiceBinaryLauncher> CreateServiceBinaryLauncher(ServiceBinaryLauncher launcher);
+        Task<ShellCodeLauncher> CreateShellCodeLauncher(ShellCodeLauncher launcher);
+        Task<PowerShellLauncher> CreatePowerShellLauncher(PowerShellLauncher launcher);
+        Task<MSBuildLauncher> CreateMSBuildLauncher(MSBuildLauncher launcher);
+        Task<InstallUtilLauncher> CreateInstallUtilLauncher(InstallUtilLauncher launcher);
+        Task<Regsvr32Launcher> CreateRegsvr32Launcher(Regsvr32Launcher launcher);
+        Task<MshtaLauncher> CreateMshtaLauncher(MshtaLauncher launcher);
+        Task<Launcher> CreateHostedLauncher(int id, HostedFile file);
         Task<BinaryLauncher> EditBinaryLauncher(BinaryLauncher launcher);
-        Task<ShellCodeLauncher> GetShellCodeLauncher();
-        Task<ShellCodeLauncher> GenerateShellCodeLauncher();
-        Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file);
+        Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher);
         Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher);
-        Task<PowerShellLauncher> GetPowerShellLauncher();
-        Task<PowerShellLauncher> GeneratePowerShellLauncher();
-        Task<PowerShellLauncher> GeneratePowerShellHostedLauncher(HostedFile file);
         Task<PowerShellLauncher> EditPowerShellLauncher(PowerShellLauncher launcher);
-        Task<MSBuildLauncher> GetMSBuildLauncher();
-        Task<MSBuildLauncher> GenerateMSBuildLauncher();
-        Task<MSBuildLauncher> GenerateMSBuildHostedLauncher(HostedFile file);
         Task<MSBuildLauncher> EditMSBuildLauncher(MSBuildLauncher launcher);
-        Task<InstallUtilLauncher> GetInstallUtilLauncher();
-        Task<InstallUtilLauncher> GenerateInstallUtilLauncher();
-        Task<InstallUtilLauncher> GenerateInstallUtilHostedLauncher(HostedFile file);
         Task<InstallUtilLauncher> EditInstallUtilLauncher(InstallUtilLauncher launcher);
-        Task<WmicLauncher> GetWmicLauncher();
-        Task<WmicLauncher> GenerateWmicLauncher();
-        Task<WmicLauncher> GenerateWmicHostedLauncher(HostedFile file);
-        Task<WmicLauncher> EditWmicLauncher(WmicLauncher launcher);
-        Task<Regsvr32Launcher> GetRegsvr32Launcher();
-        Task<Regsvr32Launcher> GenerateRegsvr32Launcher();
-        Task<Regsvr32Launcher> GenerateRegsvr32HostedLauncher(HostedFile file);
         Task<Regsvr32Launcher> EditRegsvr32Launcher(Regsvr32Launcher launcher);
-        Task<MshtaLauncher> GetMshtaLauncher();
-        Task<MshtaLauncher> GenerateMshtaLauncher();
-        Task<MshtaLauncher> GenerateMshtaHostedLauncher(HostedFile file);
         Task<MshtaLauncher> EditMshtaLauncher(MshtaLauncher launcher);
-        Task<CscriptLauncher> GetCscriptLauncher();
-        Task<CscriptLauncher> GenerateCscriptLauncher();
-        Task<CscriptLauncher> GenerateCscriptHostedLauncher(HostedFile file);
-        Task<CscriptLauncher> EditCscriptLauncher(CscriptLauncher launcher);
-        Task<WscriptLauncher> GetWscriptLauncher();
-        Task<WscriptLauncher> GenerateWscriptLauncher();
-        Task<WscriptLauncher> GenerateWscriptHostedLauncher(HostedFile file);
-        Task<WscriptLauncher> EditWscriptLauncher(WscriptLauncher launcher);
+        Task DeleteLauncher(int id);
+    }
+
+    public interface ISettingsService
+    {
+        Task ResetCovenantToFactoryDefault(ClaimsPrincipal principal);
     }
 
     public interface ICovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
-        IGruntCommandService, ICommandOutputService, IGruntTaskingService,
-        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService
+        IGruntCommandService, ICommandOutputService, IGruntTaskingService, IFolderFileService,
+        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService,
+        ISettingsService
     {
         Task<IEnumerable<T>> CreateEntities<T>(params T[] entities);
         void DisposeContext();
@@ -373,24 +392,26 @@ namespace Covenant.Core
     public interface IRemoteCovenantService : ICovenantUserService, IIdentityRoleService, IIdentityUserRoleService, IThemeService,
         IEventService, IImplantTemplateService, IGruntService, IGruntTaskService,
         IGruntCommandService, ICommandOutputService, IGruntTaskingService,
-        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService
+        ICredentialService, IIndicatorService, IListenerService, IProfileService, IHostedFileService, ILauncherService,
+        ISettingsService
     {
 
     }
 
-
     public class CovenantService : ICovenantService
     {
         protected readonly DbContextOptions<CovenantContext> _options;
-        protected CovenantContext _context;
         protected readonly INotificationService _notifier;
         protected readonly UserManager<CovenantUser> _userManager;
         protected readonly SignInManager<CovenantUser> _signInManager;
+        protected readonly RoleManager<IdentityRole> _roleManager;
         protected readonly IConfiguration _configuration;
         protected readonly ConcurrentDictionary<int, CancellationTokenSource> _cancellationTokens;
 
+        protected CovenantContext _context;
+
         public CovenantService(DbContextOptions<CovenantContext> options, CovenantContext context, INotificationService notifier,
-            UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager,
+            UserManager<CovenantUser> userManager, SignInManager<CovenantUser> signInManager, RoleManager<IdentityRole> roleManager,
             IConfiguration configuration, ConcurrentDictionary<int, CancellationTokenSource> cancellationTokens)
         {
             _options = options;
@@ -398,6 +419,7 @@ namespace Covenant.Core
             _notifier = notifier;
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _configuration = configuration;
             _cancellationTokens = cancellationTokens;
         }
@@ -460,6 +482,26 @@ namespace Covenant.Core
             return await this.GetUser(user.Id);
         }
 
+        public async Task<CovenantUserLoginResult> GetUserToken(ClaimsPrincipal principal)
+        {
+            try
+            {
+                CovenantUser user = await this.GetCurrentUser(principal);
+                List<string> userRoles = await _context.UserRoles.Where(UR => UR.UserId == user.Id).Select(UR => UR.RoleId).ToListAsync();
+                List<string> roles = await _context.Roles.Where(R => userRoles.Contains(R.Id)).Select(R => R.Name).ToListAsync();
+                string token = Utilities.GenerateJwtToken(
+                    user.UserName, user.Id, roles.ToArray(),
+                    _configuration["JwtKey"], _configuration["JwtIssuer"],
+                    _configuration["JwtAudience"], _configuration["JwtExpireDays"]
+                );
+                return new CovenantUserLoginResult { Success = true, CovenantToken = token };
+            }
+            catch
+            {
+                return new CovenantUserLoginResult { Success = false, CovenantToken = "" };
+            }
+        }
+
         public async Task<CovenantUserLoginResult> Login(CovenantUserLogin login)
         {
             SignInResult result = await _signInManager.PasswordSignInAsync(login.UserName, login.Password, false, false);
@@ -499,13 +541,12 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Password does not match ConfirmPassword.");
             }
-            CovenantUser created = await CreateUser(new CovenantUserLogin { UserName = register.UserName, Password = register.Password });
+            CovenantUser created = await this.CreateUser(new CovenantUserLogin { UserName = register.UserName, Password = register.Password });
             await _userManager.AddToRoleAsync(created, "User");
             if (!_userManager.Users.Any())
             {
                 await _signInManager.PasswordSignInAsync(register.UserName, register.Password, true, lockoutOnFailure: false);
             }
-            // _notifier.OnCreateCovenantUser?.Invoke(this, created);
             return created;
         }
 
@@ -534,6 +575,7 @@ namespace Covenant.Core
             {
                 throw new ControllerNotFoundException($"NotFound - Could not find CovenantUser with username: {user.UserName}");
             }
+
             string savedRoles = String.Join(",", await this.GetUserRolesForUser(savedUser.Id));
 
             DateTime eventTime = DateTime.UtcNow;
@@ -546,8 +588,10 @@ namespace Covenant.Core
                 Context = "Users"
             };
             await _context.Events.AddAsync(userEvent);
-            // _notifier.OnCreateCovenantUser(this, savedUser);
+            await _notifier.NotifyCreateCovenantUser(this, savedUser);
             await _notifier.NotifyCreateEvent(this, userEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, savedUser);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, userEvent);
             return savedUser;
         }
 
@@ -564,8 +608,8 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Could not edit CovenantUser with id: {user.Id}");
             }
-            // await _context.SaveChangesAsync();
             await _notifier.NotifyEditCovenantUser(this, matching_user);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matching_user);
             return matching_user;
         }
 
@@ -586,8 +630,8 @@ namespace Covenant.Core
             {
                 throw new ControllerBadRequestException($"BadRequest - Could not set new password for CovenantUser with username: {user.UserName}");
             }
-            // await _context.SaveChangesAsync();
             await _notifier.NotifyEditCovenantUser(this, matching_user);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matching_user);
             return matching_user;
         }
 
@@ -603,6 +647,7 @@ namespace Covenant.Core
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             await _notifier.NotifyDeleteCovenantUser(this, user.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, user);
         }
 
         private IQueryable<CovenantUser> GetAdminUsers()
@@ -696,7 +741,7 @@ namespace Covenant.Core
                 }
                 throw new ControllerBadRequestException(Errors);
             }
-            // _notifier.OnCreateIdentityUserRole(this, userRole);
+            await _notifier.NotifyCreateIdentityUserRole(this, userRole);
             return userRole;
         }
 
@@ -722,7 +767,7 @@ namespace Covenant.Core
                 throw new ControllerBadRequestException($"BadRequest - Could not remove role: {role.Name} from CovenantUser: {user.UserName}");
             }
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteIdentityUserRole(this, new Tuple<string, string>(user.Id, role.Id));
+            await _notifier.NotifyDeleteIdentityUserRole(this, new Tuple<string, string>(user.Id, role.Id));
         }
         #endregion
 
@@ -748,6 +793,16 @@ namespace Covenant.Core
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateTheme(this, theme);
             return await this.GetTheme(theme.Id);
+        }
+
+        public async Task<IEnumerable<Theme>> CreateThemes(params Theme[] themes)
+        {
+            List<Theme> createdThemes = new List<Theme>();
+            foreach (Theme theme in themes)
+            {
+                createdThemes.Add(await this.CreateTheme(theme));
+            }
+            return createdThemes;
         }
 
         public async Task<Theme> EditTheme(Theme theme)
@@ -792,6 +847,10 @@ namespace Covenant.Core
         public async Task DeleteTheme(int id)
         {
             Theme theme = await this.GetTheme(id);
+            if ((await this.GetUsers()).Any(U => U.ThemeId == id))
+            {
+                throw new ControllerBadRequestException(@$"BadRequest - Theme is being used by a User and cannot be deleted");
+            }
             _context.Themes.Remove(theme);
             await _notifier.NotifyDeleteTheme(this, id);
             await _context.SaveChangesAsync();
@@ -837,14 +896,18 @@ namespace Covenant.Core
             await _context.Events.AddAsync(anEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, anEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, anEvent);
             return await this.GetEvent(anEvent.Id);
         }
 
         public async Task<IEnumerable<Event>> CreateEvents(params Event[] events)
         {
-            await _context.Events.AddRangeAsync(events);
-            await _context.SaveChangesAsync();
-            return events;
+            List<Event> createdEvents = new List<Event>();
+            foreach (Event ev in events)
+            {
+                createdEvents.Add(await this.CreateEvent(ev));
+            }
+            return createdEvents;
         }
 
         public async Task<IEnumerable<DownloadEvent>> GetDownloadEvents()
@@ -862,31 +925,43 @@ namespace Covenant.Core
             return anEvent;
         }
 
-        public async Task<string> GetDownloadContent(int eventId)
+        public async Task<DownloadEvent> GetDownloadEventByGruntCommand(int id)
         {
-            DownloadEvent theEvent = await this.GetDownloadEvent(eventId);
-            string filename = Path.Combine(Common.CovenantDownloadDirectory, theEvent.FileName);
-            if (!File.Exists(filename))
+            DownloadEvent anEvent = await _context.Events
+                .Where(E => E.Type == EventType.Download)
+                .Select(E => (DownloadEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (anEvent == null)
             {
-                throw new ControllerBadRequestException($"BadRequest - Path does not exist on disk: {filename}");
+                throw new ControllerNotFoundException($"NotFound - DownloadEvent with GruntCommandId: {id}");
             }
-            try
-            {
-                return Convert.ToBase64String(File.ReadAllBytes(filename));
-            }
-            catch (Exception e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Unable to read download content from: {filename}{Environment.NewLine}{e.Message}");
-            }
+            return anEvent;
         }
 
-        public async Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent)
+        private async Task<DownloadEvent> CreateDownloadEvent(DownloadEvent downloadEvent, byte[] contents)
         {
-            downloadEvent.Time = DateTime.UtcNow;
-            downloadEvent.WriteToDisk();
+            return await this.CreateDownloadEvent(new DownloadEventContent
+            {
+                Name = downloadEvent.Name,
+                GruntCommandId = downloadEvent.GruntCommandId,
+                Time = downloadEvent.Time,
+                MessageHeader = downloadEvent.MessageHeader,
+                MessageBody = downloadEvent.MessageBody,
+                Level = downloadEvent.Level,
+                Context = downloadEvent.Context,
+                FileName = downloadEvent.FileName,
+                Progress = downloadEvent.Progress,
+                FileContents = contents
+            });
+        }
+
+        public async Task<DownloadEvent> CreateDownloadEvent(DownloadEventContent downloadEvent)
+        {
+            downloadEvent.WriteDownload(downloadEvent.FileContents);
             await _context.Events.AddAsync(downloadEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, downloadEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, downloadEvent);
             return await this.GetDownloadEvent(downloadEvent.Id);
         }
 
@@ -905,31 +980,43 @@ namespace Covenant.Core
             return anEvent;
         }
 
-        public async Task<string> GetScreenshotContent(int eventId)
+        public async Task<ScreenshotEvent> GetScreenshotEventByGruntCommand(int id)
         {
-            ScreenshotEvent theEvent = await this.GetScreenshotEvent(eventId);
-            string filename = System.IO.Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(theEvent.FileName));
-            if (!System.IO.File.Exists(filename))
+            ScreenshotEvent anEvent = await _context.Events
+                .Where(E => E.Type == EventType.Screenshot)
+                .Select(E => (ScreenshotEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (anEvent == null)
             {
-                throw new ControllerBadRequestException($"BadRequest - Path does not exist on disk: {filename}");
+                throw new ControllerNotFoundException($"NotFound - ScreenshotEvent with GruntCommandId: {id}");
             }
-            try
-            {
-                return Convert.ToBase64String(System.IO.File.ReadAllBytes(filename));
-            }
-            catch (Exception e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Unable to read download content from: {filename}{Environment.NewLine}{e.Message}");
-            }
+            return anEvent;
         }
 
-        public async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent)
+        private async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEvent screenshotEvent, byte[] contents)
         {
-            screenshotEvent.Time = DateTime.UtcNow;
-            screenshotEvent.WriteToDisk();
+            return await this.CreateScreenshotEvent(new ScreenshotEventContent
+            {
+                Name = screenshotEvent.Name,
+                GruntCommandId = screenshotEvent.GruntCommandId,
+                Time = screenshotEvent.Time,
+                MessageHeader = screenshotEvent.MessageHeader,
+                MessageBody = screenshotEvent.MessageBody,
+                Level = screenshotEvent.Level,
+                Context = screenshotEvent.Context,
+                FileName = screenshotEvent.FileName,
+                Progress = screenshotEvent.Progress,
+                FileContents = contents
+            });
+        }
+
+        public async Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent)
+        {
+            screenshotEvent.WriteDownload(screenshotEvent.FileContents);
             await _context.Events.AddAsync(screenshotEvent);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateEvent(this, screenshotEvent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, screenshotEvent);
             return await this.GetScreenshotEvent(screenshotEvent.Id);
         }
 
@@ -959,20 +1046,40 @@ namespace Covenant.Core
             await _notifier.NotifyCreateEvent(this, decryptEvent);
             return await this.GetDecryptEvent(decryptEvent.Id);
         }
+        public async Task DeleteEvent(int id)
+        {
+            Event e = await this.GetEvent(id);
+            _context.Events.Remove(e);
+            await _notifier.NotifyDeleteEvent(this, id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, e);
+            await _context.SaveChangesAsync();
+        }
         #endregion
 
         #region ImplantTemplate Actions
         public async Task<IEnumerable<ImplantTemplate>> GetImplantTemplates()
         {
             return await _context.ImplantTemplates
-                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .Include(IT => IT.CompatibleListenerTypes)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(IT => IT.ReferenceAssemblies)
+                .Include(IT => IT.EmbeddedResources)
                 .ToListAsync();
         }
 
         public async Task<ImplantTemplate> GetImplantTemplate(int id)
         {
             ImplantTemplate template = await _context.ImplantTemplates
-                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .Include(IT => IT.CompatibleListenerTypes)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(IT => IT.ReferenceAssemblies)
+                .Include(IT => IT.EmbeddedResources)
                 .FirstOrDefaultAsync(IT => IT.Id == id);
             if (template == null)
             {
@@ -984,7 +1091,13 @@ namespace Covenant.Core
         public async Task<ImplantTemplate> GetImplantTemplateByName(string name)
         {
             ImplantTemplate template = await _context.ImplantTemplates
-                .Include("ListenerTypeImplantTemplates.ListenerType")
+                .Include(IT => IT.CompatibleListenerTypes)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(IT => IT.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(IT => IT.ReferenceAssemblies)
+                .Include(IT => IT.EmbeddedResources)
                 .FirstOrDefaultAsync(IT => IT.Name == name);
             if (template == null)
             {
@@ -995,24 +1108,34 @@ namespace Covenant.Core
 
         public async Task<ImplantTemplate> CreateImplantTemplate(ImplantTemplate template)
         {
-            List<ListenerType> types = template.CompatibleListenerTypes.ToList();
-            template.SetListenerTypeImplantTemplates(new List<ListenerTypeImplantTemplate>());
-
+            for (int i = 0; i < template.CompatibleListenerTypes.Count; i++)
+            {
+                template.CompatibleListenerTypes[i] = template.CompatibleListenerTypes[i].Id != 0 ?
+                    await this.GetListenerType(template.CompatibleListenerTypes[i].Id) :
+                    await this.GetListenerTypeByName(template.CompatibleListenerTypes[i].Name);
+            }
+            for (int i = 0; i < template.ReferenceSourceLibraries.Count; i++)
+            {
+                template.ReferenceSourceLibraries[i] = template.ReferenceSourceLibraries[i].Id != 0 ?
+                    await this.GetReferenceSourceLibrary(template.ReferenceSourceLibraries[i].Id) :
+                    await this.GetReferenceSourceLibraryByName(template.ReferenceSourceLibraries[i].Name);
+            }
+            for (int i = 0; i < template.ReferenceAssemblies.Count; i++)
+            {
+                template.ReferenceAssemblies[i] = template.ReferenceAssemblies[i].Id != 0 ?
+                    await this.GetReferenceAssembly(template.ReferenceAssemblies[i].Id) :
+                    await this.GetReferenceAssemblyByName(template.ReferenceAssemblies[i].Name, template.ReferenceAssemblies[i].DotNetVersion);
+            }
+            for (int i = 0; i < template.EmbeddedResources.Count; i++)
+            {
+                template.EmbeddedResources[i] = template.ReferenceAssemblies[i].Id != 0 ?
+                    await this.GetEmbeddedResource(template.EmbeddedResources[i].Id) :
+                    await this.GetEmbeddedResourceByName(template.EmbeddedResources[i].Name);
+            }
             await _context.ImplantTemplates.AddAsync(template);
             await _context.SaveChangesAsync();
-
-            foreach (ListenerType type in types)
-            {
-                await this.CreateEntities(
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await this.GetListenerType(type.Id),
-                        ImplantTemplate = template
-                    }
-                );
-            }
-            await _context.SaveChangesAsync();
-            // _notifier.OnCreateImplantTemplate(this, template);
+            await _notifier.NotifyCreateImplantTemplate(this, template);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, template);
             return await this.GetImplantTemplate(template.Id);
         }
 
@@ -1036,26 +1159,31 @@ namespace Covenant.Core
             matchingTemplate.ImplantDirection = template.ImplantDirection;
             matchingTemplate.StagerCode = template.StagerCode;
             matchingTemplate.ExecutorCode = template.ExecutorCode;
+            matchingTemplate.ReferenceSourceLibraries = template.ReferenceSourceLibraries;
+            matchingTemplate.ReferenceAssemblies = template.ReferenceAssemblies;
+            matchingTemplate.EmbeddedResources = template.EmbeddedResources;
             matchingTemplate.CompatibleDotNetVersions = template.CompatibleDotNetVersions;
-
-            IEnumerable<ListenerType> typesToAdd = template.CompatibleListenerTypes.Where(CLT => !matchingTemplate.CompatibleListenerTypes.Select(Two => Two.Id).Contains(CLT.Id));
-            IEnumerable<ListenerType> typesToRemove = matchingTemplate.CompatibleListenerTypes.Where(CLT => !template.CompatibleListenerTypes.Select(Two => Two.Id).Contains(CLT.Id));
-            foreach (ListenerType type in typesToAdd)
+            matchingTemplate.CompatibleListenerTypes = template.CompatibleListenerTypes;
+            for (int i = 0; i < matchingTemplate.CompatibleListenerTypes.Count; i++)
             {
-                _context.Add(new ListenerTypeImplantTemplate
-                {
-                    ImplantTemplateId = matchingTemplate.Id,
-                    ListenerTypeId = type.Id
-                });
+                matchingTemplate.CompatibleListenerTypes[i] = await this.GetListenerType(matchingTemplate.CompatibleListenerTypes[i].Id);
             }
-            foreach (ListenerType type in typesToRemove)
+            for (int i = 0; i < template.ReferenceSourceLibraries.Count; i++)
             {
-                _context.Remove(await _context.FindAsync<ListenerTypeImplantTemplate>(type.Id, matchingTemplate.Id));
+                matchingTemplate.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibrary(matchingTemplate.ReferenceSourceLibraries[i].Id);
             }
-
+            for (int i = 0; i < template.ReferenceAssemblies.Count; i++)
+            {
+                matchingTemplate.ReferenceAssemblies[i] = await this.GetReferenceAssembly(matchingTemplate.ReferenceAssemblies[i].Id);
+            }
+            for (int i = 0; i < template.EmbeddedResources.Count; i++)
+            {
+                matchingTemplate.EmbeddedResources[i] = await this.GetEmbeddedResource(matchingTemplate.EmbeddedResources[i].Id);
+            }
             _context.ImplantTemplates.Update(matchingTemplate);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditImplantTemplate(this, matchingTemplate);
+            await _notifier.NotifyEditImplantTemplate(this, matchingTemplate);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingTemplate);
             return await this.GetImplantTemplate(matchingTemplate.Id);
         }
 
@@ -1064,7 +1192,8 @@ namespace Covenant.Core
             ImplantTemplate matchingTemplate = await this.GetImplantTemplate(id);
             _context.ImplantTemplates.Remove(matchingTemplate);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteImplantTemplate(this, matchingTemplate.Id);
+            await _notifier.NotifyDeleteImplantTemplate(this, matchingTemplate.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, matchingTemplate);
         }
         #endregion
 
@@ -1098,6 +1227,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(G => G.Id == gruntId);
             if (grunt == null)
             {
@@ -1124,6 +1254,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(g => g.Name == name);
             if (grunt == null)
             {
@@ -1150,6 +1281,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(g => g.GUID == guid);
             if (grunt == null)
             {
@@ -1176,6 +1308,7 @@ namespace Covenant.Core
         {
             Grunt grunt = await _context.Grunts
                 .Include(G => G.ImplantTemplate)
+                .Include(G => G.FolderRoots)
                 .FirstOrDefaultAsync(g => g.OriginalServerGuid == serverguid);
             if (grunt == null)
             {
@@ -1272,19 +1405,22 @@ namespace Covenant.Core
                 });
             }
             grunt.ImplantTemplate = await this.GetImplantTemplate(grunt.ImplantTemplateId);
+            grunt.Listener = await this.GetListener(grunt.ListenerId);
             await _context.Grunts.AddAsync(grunt);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGrunt(this, grunt);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, grunt);
             return await this.GetGrunt(grunt.Id);
         }
 
         public async Task<IEnumerable<Grunt>> CreateGrunts(params Grunt[] grunts)
         {
-            foreach (Grunt g in grunts)
+            List<Grunt> createdGrunts = new List<Grunt>();
+            foreach (Grunt grunt in grunts)
             {
-                await this.CreateGrunt(g);
+                createdGrunts.Add(await this.CreateGrunt(grunt));
             }
-            return grunts;
+            return createdGrunts;
         }
 
         public async Task<Grunt> EditGrunt(Grunt grunt, CovenantUser user = null)
@@ -1306,6 +1442,7 @@ namespace Covenant.Core
                 };
                 await _context.Events.AddAsync(gruntEvent);
                 await _notifier.NotifyCreateEvent(this, gruntEvent);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, gruntEvent);
             }
             matching_grunt.Name = grunt.Name;
             matching_grunt.GUID = grunt.GUID;
@@ -1317,9 +1454,16 @@ namespace Covenant.Core
             matching_grunt.ImplantTemplateId = grunt.ImplantTemplateId;
             matching_grunt.ImplantTemplate = await this.GetImplantTemplate(grunt.ImplantTemplateId);
 
+            matching_grunt.FolderRoots = grunt.FolderRoots;
+            for (int i = 0; i < matching_grunt.FolderRoots.Count; i++)
+            {
+                matching_grunt.FolderRoots[i] = await this.GetFolder(matching_grunt.Id, matching_grunt.FolderRoots[i].Id);
+            }
+
             matching_grunt.UserDomainName = grunt.UserDomainName;
             matching_grunt.UserName = grunt.UserName;
             matching_grunt.Status = grunt.Status;
+            matching_grunt.Hidden = grunt.Hidden;
             matching_grunt.Integrity = grunt.Integrity;
             matching_grunt.Process = grunt.Process;
             matching_grunt.LastCheckIn = grunt.LastCheckIn;
@@ -1475,19 +1619,58 @@ namespace Covenant.Core
                 };
                 await _context.Indicators.AddAsync(indicator);
                 // _notifier.OnCreateIndicator(this, indicator);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, indicator);
             }
             _context.Grunts.Update(matching_grunt);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditGrunt(this, matching_grunt);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matching_grunt);
             return matching_grunt;
+        }
+
+        public async Task<Grunt> CheckInGrunt(int gruntId)
+        {
+            Grunt grunt = await this.GetGrunt(gruntId);
+            grunt.LastCheckIn = DateTime.UtcNow;
+            _context.Grunts.Update(grunt);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditGrunt(this, grunt);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
+            return grunt;
         }
 
         public async Task DeleteGrunt(int gruntId)
         {
             Grunt grunt = await this.GetGrunt(gruntId);
+            Listener listener = await this.GetListener(grunt.ListenerId);
+            ImplantTemplate template = await this.GetImplantTemplate(grunt.ImplantTemplateId);
+
             _context.Grunts.Remove(grunt);
+            // Necessary so Launcher doesn't become invalidated
+            Grunt replacement = new Grunt
+            {
+                ListenerId = listener.Id,
+                Listener = listener,
+                ImplantTemplateId = template.Id,
+                ImplantTemplate = template,
+                SMBPipeName = grunt.SMBPipeName,
+                ValidateCert = grunt.ValidateCert,
+                UseCertPinning = grunt.UseCertPinning,
+                Delay = grunt.Delay,
+                JitterPercent = grunt.JitterPercent,
+                ConnectAttempts = grunt.ConnectAttempts,
+                KillDate = grunt.KillDate,
+                DotNetVersion = grunt.DotNetVersion,
+                RuntimeIdentifier = grunt.RuntimeIdentifier,
+                OriginalServerGuid = grunt.OriginalServerGuid,
+                GruntSharedSecretPassword = grunt.GruntSharedSecretPassword
+            };
+            await _context.Grunts.AddAsync(replacement);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteGrunt(this, grunt.Id);
+            await _notifier.NotifyCreateGrunt(this, replacement);
+            await _context.SaveChangesAsync();
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, grunt);
+            await _notifier.NotifyDeleteGrunt(this, grunt.Id);
         }
 
         public async Task<List<string>> GetCommandSuggestionsForGrunt(Grunt grunt)
@@ -1562,20 +1745,61 @@ namespace Covenant.Core
                         references = Common.DefaultNet40References;
                         break;
                 }
-                ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                references.AddRange(template.ReferenceAssemblies.Select(RA => new Compiler.Reference
                 {
-                    Language = template.Language,
-                    Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
-                    TargetDotNetVersion = grunt.DotNetVersion,
-                    OutputKind = outputKind,
-                    References = references
+                    File = Common.CovenantAssemblyReferenceDirectory + RA.Location,
+                    Framework = RA.DotNetVersion,
+                    Enabled = true
+                }));
+                template.ReferenceSourceLibraries.ForEach(RSL =>
+                {
+                    references.AddRange(RSL.ReferenceAssemblies.Select(RA => new Compiler.Reference
+                    {
+                        File = Common.CovenantAssemblyReferenceDirectory + RA.Location,
+                        Framework = RA.DotNetVersion,
+                        Enabled = true
+                    }));
                 });
+                List<Compiler.EmbeddedResource> resources = template.EmbeddedResources.Select(ER => new Compiler.EmbeddedResource
+                {
+                    Name = ER.Name,
+                    File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
+                    Platform = Platform.X64,
+                    Enabled = true
+                }).ToList();
+                template.ReferenceSourceLibraries.ForEach(RSL =>
+                {
+                    resources.AddRange(RSL.EmbeddedResources.Select(ER => new Compiler.EmbeddedResource
+                    {
+                        Name = ER.Name,
+                        File = Common.CovenantEmbeddedResourcesDirectory + ER.Location,
+                        Platform = Platform.X64,
+                        Enabled = true
+                    }));
+                });
+                try
+                {
+                    ILBytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = template.Language,
+                        Source = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile),
+                        SourceDirectories = template.ReferenceSourceLibraries.Select(RSL => Common.CovenantReferenceSourceLibraries + RSL.Location).ToList(),
+                        TargetDotNetVersion = grunt.DotNetVersion,
+                        OutputKind = outputKind,
+                        References = references,
+                        EmbeddedResources = resources
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
+                }
             }
-            else if (grunt.DotNetVersion == Common.DotNetVersion.NetCore31)
+            else if (grunt.DotNetVersion == Common.DotNetVersion.Net50)
             {
                 string src = this.GruntTemplateReplace(CodeTemplate, template, grunt, listener, profile);
                 string sanitizedName = Utilities.GetSanitizedFilename(template.Name);
-                string dir = Common.CovenantDataDirectory + "Grunt" + Path.DirectorySeparatorChar + sanitizedName + Path.DirectorySeparatorChar;
+                string dir = Common.CovenantImplantTemplateDirectory + sanitizedName + Path.DirectorySeparatorChar;
                 string ResultName;
                 if (template.StagerCode == CodeTemplate)
                 {
@@ -1872,15 +2096,18 @@ namespace Covenant.Core
         {
             await _context.ReferenceAssemblies.AddAsync(assembly);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateReferenceAssembly(this, assembly);
+            await _notifier.NotifyCreateReferenceAssembly(this, assembly);
             return await this.GetReferenceAssembly(assembly.Id);
         }
 
         public async Task<IEnumerable<ReferenceAssembly>> CreateReferenceAssemblies(params ReferenceAssembly[] assemblies)
         {
-            await _context.ReferenceAssemblies.AddRangeAsync(assemblies);
-            await _context.SaveChangesAsync();
-            return assemblies;
+            List<ReferenceAssembly> createdAssemblies = new List<ReferenceAssembly>();
+            foreach (ReferenceAssembly assembly in assemblies)
+            {
+                createdAssemblies.Add(await this.CreateReferenceAssembly(assembly));
+            }
+            return createdAssemblies;
         }
 
         public async Task<ReferenceAssembly> EditReferenceAssembly(ReferenceAssembly assembly)
@@ -1891,7 +2118,7 @@ namespace Covenant.Core
             matchingAssembly.DotNetVersion = assembly.DotNetVersion;
             _context.ReferenceAssemblies.Update(matchingAssembly);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditReferenceAssembly(this, matchingAssembly);
+            await _notifier.NotifyEditReferenceAssembly(this, matchingAssembly);
             return await this.GetReferenceAssembly(matchingAssembly.Id);
         }
 
@@ -1900,7 +2127,7 @@ namespace Covenant.Core
             ReferenceAssembly matchingAssembly = await this.GetReferenceAssembly(id);
             _context.ReferenceAssemblies.Remove(matchingAssembly);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteReferenceAssembly(this, matchingAssembly.Id);
+            await _notifier.NotifyDeleteReferenceAssembly(this, matchingAssembly.Id);
         }
         #endregion
 
@@ -1936,15 +2163,18 @@ namespace Covenant.Core
         {
             await _context.EmbeddedResources.AddAsync(resource);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateEmbeddedResource(this, resource);
+            await _notifier.NotifyCreateEmbeddedResource(this, resource);
             return await this.GetEmbeddedResource(resource.Id);
         }
 
         public async Task<IEnumerable<EmbeddedResource>> CreateEmbeddedResources(params EmbeddedResource[] resources)
         {
-            await _context.EmbeddedResources.AddRangeAsync(resources);
-            await _context.SaveChangesAsync();
-            return resources;
+            List<EmbeddedResource> createdResources = new List<EmbeddedResource>();
+            foreach (EmbeddedResource resource in resources)
+            {
+                createdResources.Add(await this.CreateEmbeddedResource(resource));
+            }
+            return createdResources;
         }
 
         public async Task<EmbeddedResource> EditEmbeddedResource(EmbeddedResource resource)
@@ -1954,7 +2184,7 @@ namespace Covenant.Core
             matchingResource.Location = resource.Location;
             _context.EmbeddedResources.Update(matchingResource);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditEmbeddedResource(this, resource);
+            await _notifier.NotifyEditEmbeddedResource(this, resource);
             return await this.GetEmbeddedResource(matchingResource.Id);
         }
 
@@ -1962,7 +2192,7 @@ namespace Covenant.Core
         {
             EmbeddedResource matchingResource = await this.GetEmbeddedResource(id);
             _context.EmbeddedResources.Remove(matchingResource);
-            // _notifier.OnDeleteEmbeddedResource(this, matchingResource.Id);
+            await _notifier.NotifyDeleteEmbeddedResource(this, matchingResource.Id);
             await _context.SaveChangesAsync();
         }
         #endregion
@@ -1971,8 +2201,8 @@ namespace Covenant.Core
         public async Task<IEnumerable<ReferenceSourceLibrary>> GetReferenceSourceLibraries()
         {
             return await _context.ReferenceSourceLibraries
-                .Include("ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
+                .Include(RSL => RSL.ReferenceAssemblies)
+                .Include(RSL => RSL.EmbeddedResources)
                 .ToListAsync();
         }
 
@@ -1980,8 +2210,8 @@ namespace Covenant.Core
         {
             ReferenceSourceLibrary library = await _context.ReferenceSourceLibraries
                 .Where(RSL => RSL.Id == id)
-                .Include("ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
+                .Include(RSL => RSL.ReferenceAssemblies)
+                .Include(RSL => RSL.EmbeddedResources)
                 .FirstOrDefaultAsync();
             if (library == null)
             {
@@ -1994,8 +2224,8 @@ namespace Covenant.Core
         {
             ReferenceSourceLibrary library = await _context.ReferenceSourceLibraries
                 .Where(RSL => RSL.Name == name)
-                .Include("ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
+                .Include(RSL => RSL.ReferenceAssemblies)
+                .Include(RSL => RSL.EmbeddedResources)
                 .FirstOrDefaultAsync();
             if (library == null)
             {
@@ -2008,15 +2238,18 @@ namespace Covenant.Core
         {
             await _context.ReferenceSourceLibraries.AddAsync(library);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateReferenceSourceLibrary(this, library);
+            await _notifier.NotifyCreateReferenceSourceLibrary(this, library);
             return await this.GetReferenceSourceLibrary(library.Id);
         }
 
         public async Task<IEnumerable<ReferenceSourceLibrary>> CreateReferenceSourceLibraries(params ReferenceSourceLibrary[] libraries)
         {
-            await _context.ReferenceSourceLibraries.AddRangeAsync(libraries);
-            await _context.SaveChangesAsync();
-            return libraries;
+            List<ReferenceSourceLibrary> createdLibraries = new List<ReferenceSourceLibrary>();
+            foreach (ReferenceSourceLibrary library in libraries)
+            {
+                createdLibraries.Add(await this.CreateReferenceSourceLibrary(library));
+            }
+            return createdLibraries;
         }
 
         public async Task<ReferenceSourceLibrary> EditReferenceSourceLibrary(ReferenceSourceLibrary library)
@@ -2025,20 +2258,11 @@ namespace Covenant.Core
             matchingLibrary.Name = library.Name;
             matchingLibrary.Description = library.Description;
             matchingLibrary.Location = library.Location;
-
-            var removeAssemblies = matchingLibrary.ReferenceAssemblies.Select(MRA => MRA.Id).Except(library.ReferenceAssemblies.Select(RA => RA.Id));
-            var addAssemblies = library.ReferenceAssemblies.Select(MRA => MRA.Id).Except(matchingLibrary.ReferenceAssemblies.Select(MRA => MRA.Id));
-            removeAssemblies.ToList().ForEach(async RA => matchingLibrary.Remove(await this.GetReferenceAssembly(RA)));
-            addAssemblies.ToList().ForEach(async AA => matchingLibrary.Add(await this.GetReferenceAssembly(AA)));
-
-            var removeResources = matchingLibrary.EmbeddedResources.Select(MER => MER.Id).Except(library.EmbeddedResources.Select(ER => ER.Id));
-            var addResources = library.EmbeddedResources.Select(MER => MER.Id).Except(matchingLibrary.EmbeddedResources.Select(MER => MER.Id));
-            removeResources.ToList().ForEach(async RR => matchingLibrary.Remove(await this.GetEmbeddedResource(RR)));
-            addResources.ToList().ForEach(async AR => matchingLibrary.Add(await this.GetEmbeddedResource(AR)));
-
+            matchingLibrary.ReferenceAssemblies = library.ReferenceAssemblies;
+            matchingLibrary.EmbeddedResources = library.EmbeddedResources;
             _context.ReferenceSourceLibraries.Update(matchingLibrary);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditReferenceSourceLibrary(this, library);
+            await _notifier.NotifyEditReferenceSourceLibrary(this, library);
             return await this.GetReferenceSourceLibrary(matchingLibrary.Id);
         }
 
@@ -2047,7 +2271,7 @@ namespace Covenant.Core
             ReferenceSourceLibrary referenceSourceLibrary = await this.GetReferenceSourceLibrary(id);
             _context.ReferenceSourceLibraries.Remove(referenceSourceLibrary);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteReferenceSourceLibrary(this, referenceSourceLibrary.Id);
+            await _notifier.NotifyDeleteReferenceSourceLibrary(this, referenceSourceLibrary.Id);
         }
         #endregion
 
@@ -2056,6 +2280,7 @@ namespace Covenant.Core
         {
             _context.Entry(option).State = EntityState.Modified;
             await _context.SaveChangesAsync();
+            await _notifier.NotifyEditGruntTaskOption(this, option);
             return option;
         }
 
@@ -2063,15 +2288,18 @@ namespace Covenant.Core
         {
             await _context.AddAsync(option);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateGruntTaskOption(this, option);
+            await _notifier.NotifyCreateGruntTaskOption(this, option);
             return option;
         }
 
         public async Task<IEnumerable<GruntTaskOption>> CreateGruntTaskOptions(params GruntTaskOption[] options)
         {
-            await _context.AddRangeAsync(options);
-            await _context.SaveChangesAsync();
-            return options;
+            List<GruntTaskOption> createdOptions = new List<GruntTaskOption>();
+            foreach (GruntTaskOption option in options)
+            {
+                createdOptions.Add(await this.CreateGruntTaskOption(option));
+            }
+            return createdOptions;
         }
         #endregion
 
@@ -2105,7 +2333,7 @@ namespace Covenant.Core
         {
             await _context.AddAsync(author);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateGruntTaskOption(this, option);
+            await _notifier.NotifyCreateGruntTaskAuthor(this, author);
             return author;
         }
 
@@ -2123,11 +2351,12 @@ namespace Covenant.Core
             return await _context.GruntTasks
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .ToListAsync();
         }
 
@@ -2138,11 +2367,12 @@ namespace Covenant.Core
                 // .Where(T => T.SupportedDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .AsEnumerable()
                 .Where(T => T.CompatibleDotNetVersions.Contains(grunt.DotNetVersion));
         }
@@ -2153,11 +2383,12 @@ namespace Covenant.Core
                 .Where(T => T.Id == id)
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .FirstOrDefaultAsync();
             if (task == null)
             {
@@ -2175,11 +2406,12 @@ namespace Covenant.Core
                 // .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .Include(T => T.Options)
                 .Include(T => T.Author)
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                .Include(T => T.ReferenceSourceLibraries)
+                    .ThenInclude(RSL => RSL.EmbeddedResources)
+                .Include(T => T.ReferenceAssemblies)
+                .Include(T => T.EmbeddedResources)
                 .AsEnumerable()
                 .Where(T => T.CompatibleDotNetVersions.Contains(version))
                 .FirstOrDefault();
@@ -2189,11 +2421,12 @@ namespace Covenant.Core
                 task = _context.GruntTasks
                     .Include(T => T.Options)
                     .Include(T => T.Author)
-                    .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary")
-                    .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryReferenceAssemblies.ReferenceAssembly")
-                    .Include("GruntTaskReferenceSourceLibraries.ReferenceSourceLibrary.ReferenceSourceLibraryEmbeddedResources.EmbeddedResource")
-                    .Include("GruntTaskReferenceAssemblies.ReferenceAssembly")
-                    .Include("GruntTaskEmbeddedResources.EmbeddedResource")
+                    .Include(T => T.ReferenceSourceLibraries)
+                        .ThenInclude(RSL => RSL.ReferenceAssemblies)
+                    .Include(T => T.ReferenceSourceLibraries)
+                        .ThenInclude(RSL => RSL.EmbeddedResources)
+                    .Include(T => T.ReferenceAssemblies)
+                    .Include(T => T.EmbeddedResources)
                     .AsEnumerable()
                     .Where(T => T.Aliases.Any(A => A.Equals(lower, StringComparison.CurrentCultureIgnoreCase)))
                     .Where(T => T.CompatibleDotNetVersions.Contains(version))
@@ -2235,11 +2468,10 @@ namespace Covenant.Core
             List<ReferenceAssembly> assemblies = task.ReferenceAssemblies.ToList();
             List<ReferenceSourceLibrary> libraries = task.ReferenceSourceLibraries.ToList();
             task.Options = new List<GruntTaskOption>();
-            task.EmbeddedResources.ForEach(ER => task.Remove(ER));
-            task.ReferenceAssemblies.ForEach(RA => task.Remove(RA));
-            task.ReferenceSourceLibraries.ForEach(RSL => task.Remove(RSL));
 
-            GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
+            GruntTaskAuthor author = task.AuthorId != 0 ?
+                await this.GetGruntTaskAuthor(task.AuthorId) :
+                await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
             if (author != null)
             {
                 task.AuthorId = author.Id;
@@ -2251,6 +2483,24 @@ namespace Covenant.Core
                 await _context.SaveChangesAsync();
                 task.AuthorId = task.Author.Id;
             }
+            for (int i = 0; i < task.EmbeddedResources.Count; i++)
+            {
+                task.EmbeddedResources[i] = task.EmbeddedResources[i].Id != 0 ?
+                    await this.GetEmbeddedResource(task.EmbeddedResources[i].Id) :
+                    await this.GetEmbeddedResourceByName(task.EmbeddedResources[i].Name);
+            }
+            for (int i = 0; i < task.ReferenceAssemblies.Count; i++)
+            {
+                task.ReferenceAssemblies[i] = task.ReferenceAssemblies[i].Id != 0 ?
+                    await this.GetReferenceAssembly(task.ReferenceAssemblies[i].Id) :
+                    await this.GetReferenceAssemblyByName(task.ReferenceAssemblies[i].Name, task.ReferenceAssemblies[i].DotNetVersion);
+            }
+            for (int i = 0; i < task.ReferenceSourceLibraries.Count; i++)
+            {
+                task.ReferenceSourceLibraries[i] = task.ReferenceSourceLibraries[i].Id != 0 ?
+                    await this.GetReferenceSourceLibrary(task.ReferenceSourceLibraries[i].Id) :
+                    await this.GetReferenceSourceLibraryByName(task.ReferenceSourceLibraries[i].Name);
+            }
 
             await _context.GruntTasks.AddAsync(task);
             await _context.SaveChangesAsync();
@@ -2260,39 +2510,10 @@ namespace Covenant.Core
                 option.GruntTaskId = task.Id;
                 await _context.AddAsync(option);
                 await _context.SaveChangesAsync();
-            }
-            foreach (EmbeddedResource resource in resources)
-            {
-                await this.CreateEntities(
-                    new GruntTaskEmbeddedResource
-                    {
-                        EmbeddedResource = await this.GetEmbeddedResourceByName(resource.Name),
-                        GruntTask = task
-                    }
-                );
-            }
-            foreach (ReferenceAssembly assembly in assemblies)
-            {
-                await this.CreateEntities(
-                    new GruntTaskReferenceAssembly
-                    {
-                        ReferenceAssembly = await this.GetReferenceAssemblyByName(assembly.Name, assembly.DotNetVersion),
-                        GruntTask = task
-                    }
-                );
-            }
-            foreach (ReferenceSourceLibrary library in libraries)
-            {
-                await this.CreateEntities(
-                    new GruntTaskReferenceSourceLibrary
-                    {
-                        ReferenceSourceLibrary = await this.GetReferenceSourceLibraryByName(library.Name),
-                        GruntTask = task
-                    }
-                );
+                await _notifier.NotifyCreateGruntTaskOption(this, option);
             }
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateGruntTask(this, task);
+            await _notifier.NotifyCreateGruntTask(this, task);
             return await this.GetGruntTask(task.Id);
         }
 
@@ -2342,21 +2563,21 @@ namespace Covenant.Core
                     option.DisplayInCommand = newOption.DisplayInCommand;
                 }
             }
-
-            var removeAssemblies = updatingTask.ReferenceAssemblies.Select(MRA => MRA.Id).Except(task.ReferenceAssemblies.Select(RA => RA.Id));
-            var addAssemblies = task.ReferenceAssemblies.Select(MRA => MRA.Id).Except(updatingTask.ReferenceAssemblies.Select(MRA => MRA.Id));
-            removeAssemblies.ToList().ForEach(async RA => updatingTask.Remove(await this.GetReferenceAssembly(RA)));
-            addAssemblies.ToList().ForEach(async AA => updatingTask.Add(await this.GetReferenceAssembly(AA)));
-
-            var removeResources = updatingTask.EmbeddedResources.Select(MER => MER.Id).Except(task.EmbeddedResources.Select(ER => ER.Id));
-            var addResources = task.EmbeddedResources.Select(MER => MER.Id).Except(updatingTask.EmbeddedResources.Select(MER => MER.Id));
-            removeResources.ToList().ForEach(async RR => updatingTask.Remove(await this.GetEmbeddedResource(RR)));
-            addResources.ToList().ForEach(async AR => updatingTask.Add(await this.GetEmbeddedResource(AR)));
-
-            var removeLibraries = updatingTask.ReferenceSourceLibraries.Select(MRSL => MRSL.Id).Except(task.ReferenceSourceLibraries.Select(RSL => RSL.Id));
-            var addLibraries = task.ReferenceSourceLibraries.Select(RSL => RSL.Id).Except(updatingTask.ReferenceSourceLibraries.Select(MRSL => MRSL.Id));
-            removeLibraries.ToList().ForEach(async RL => updatingTask.Remove(await this.GetReferenceSourceLibrary(RL)));
-            addLibraries.ToList().ForEach(async AL => updatingTask.Add(await this.GetReferenceSourceLibrary(AL)));
+            updatingTask.ReferenceAssemblies = task.ReferenceAssemblies;
+            updatingTask.EmbeddedResources = task.EmbeddedResources;
+            updatingTask.ReferenceSourceLibraries = task.ReferenceSourceLibraries;
+            for (int i = 0; i < updatingTask.EmbeddedResources.Count; i++)
+            {
+                updatingTask.EmbeddedResources[i] = await this.GetEmbeddedResource(updatingTask.EmbeddedResources[i].Id);
+            }
+            for (int i = 0; i < updatingTask.ReferenceAssemblies.Count; i++)
+            {
+                updatingTask.ReferenceAssemblies[i] = await this.GetReferenceAssembly(updatingTask.ReferenceAssemblies[i].Id);
+            }
+            for (int i = 0; i < task.ReferenceSourceLibraries.Count; i++)
+            {
+                updatingTask.ReferenceSourceLibraries[i] = await this.GetReferenceSourceLibrary(updatingTask.ReferenceSourceLibraries[i].Id);
+            }
 
             GruntTaskAuthor author = await _context.GruntTaskAuthors.FirstOrDefaultAsync(A => A.Name == task.Author.Name);
             if (author != null)
@@ -2374,8 +2595,7 @@ namespace Covenant.Core
 
             _context.GruntTasks.Update(updatingTask);
             await _context.SaveChangesAsync();
-
-            // _notifier.OnEditGruntTask(this, updatingTask);
+            await _notifier.NotifyEditGruntTask(this, updatingTask);
             return updatingTask;
         }
 
@@ -2386,9 +2606,16 @@ namespace Covenant.Core
             {
                 throw new ControllerNotFoundException($"NotFound - GruntTask with id: {taskId}");
             }
+            if (_context.GruntTaskings.Any(GT => GT.GruntTaskId == taskId))
+            {
+                throw new ControllerBadRequestException(
+                    $@"BadRequest - Can't delete GruntTask with id: {taskId} that has been used by existing GruntTaskings." +
+                    " Delete the corresponding GruntTaskings first to delete this GruntTask."
+                );
+            }
             _context.GruntTasks.Remove(removingTask);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteGruntTask(this, removingTask.Id);
+            await _notifier.NotifyDeleteGruntTask(this, removingTask.Id);
         }
         #endregion
 
@@ -2435,6 +2662,7 @@ namespace Covenant.Core
             command.User = await this.GetUser(command.UserId);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGruntCommand(this, command);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, command);
             return command;
         }
 
@@ -2465,7 +2693,7 @@ namespace Covenant.Core
                     {
                         await _context.Credentials.AddAsync(cred);
                         await _context.SaveChangesAsync();
-                        // _notifier.OnCreateCapturedCredential(this, cred);
+                        await _notifier.NotifyCreateCapturedCredential(this, cred);
                     }
                 }
             }
@@ -2477,6 +2705,8 @@ namespace Covenant.Core
             _context.GruntCommands.Update(updatingCommand);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditGruntCommand(this, updatingCommand);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, updatingCommand);
+
             return updatingCommand;
         }
 
@@ -2485,7 +2715,7 @@ namespace Covenant.Core
             GruntCommand command = await this.GetGruntCommand(id);
             _context.GruntCommands.Remove(command);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteGruntCommand(this, command.Id);
+            await _notifier.NotifyDeleteGruntCommand(this, command.Id);
         }
 
         private string GetCommandFromInput(string UserInput, List<ParsedParameter> parameters, GruntTask task = null)
@@ -2647,15 +2877,18 @@ namespace Covenant.Core
             await _context.CommandOutputs.AddAsync(output);
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateCommandOutput(this, output);
-            // _notifier.OnCreateCommandOutput(this, output);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, output);
             return output;
         }
 
         public async Task<IEnumerable<CommandOutput>> CreateCommandOutputs(params CommandOutput[] outputs)
         {
-            await _context.CommandOutputs.AddRangeAsync(outputs);
-            await _context.SaveChangesAsync();
-            return outputs;
+            List<CommandOutput> createdOutputs = new List<CommandOutput>();
+            foreach (CommandOutput output in outputs)
+            {
+                createdOutputs.Add(await this.CreateCommandOutput(output));
+            }
+            return createdOutputs;
         }
 
         public async Task<CommandOutput> EditCommandOutput(CommandOutput output)
@@ -2672,10 +2905,37 @@ namespace Covenant.Core
                 {
                     await _context.Credentials.AddAsync(cred);
                     await _context.SaveChangesAsync();
-                    // _notifier.OnCreateCapturedCredential(this, cred);
+                    await _notifier.NotifyCreateCapturedCredential(this, cred);
                 }
             }
             return updatingOutput;
+        }
+
+        public async Task<CommandOutput> AppendCommandOutput(int id, string append)
+        {
+            CommandOutput updatingOutput = await this.GetCommandOutput(id);
+
+            DownloadEvent dev = await _context.Events
+                .Where(E => E.Type == EventType.Download)
+                .Select(E => (DownloadEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            ScreenshotEvent sev = await _context.Events
+                .Where(E => E.Type == EventType.Screenshot)
+                .Select(E => (ScreenshotEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (dev != null)
+            {
+                dev.WriteDownload(Convert.FromBase64String(append));
+                return updatingOutput;
+            }
+            else if (sev != null)
+            {
+                sev.WriteDownload(Convert.FromBase64String(append));
+                return updatingOutput;
+            }
+            updatingOutput.Output += append;
+            await this.EditCommandOutput(updatingOutput);
+            return await this.GetCommandOutput(updatingOutput.Id);
         }
 
         public async Task DeleteCommandOutput(int id)
@@ -2683,7 +2943,7 @@ namespace Covenant.Core
             CommandOutput output = await this.GetCommandOutput(id);
             _context.CommandOutputs.Remove(output);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteCommandOutput(this, output.Id);
+            await _notifier.NotifyDeleteCommandOutput(this, output.Id);
         }
         #endregion
 
@@ -2800,6 +3060,8 @@ namespace Covenant.Core
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyEditGrunt(this, tasking.Grunt);
                 await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
+                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, tasking.Grunt);
+                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, tasking.GruntCommand);
                 tasking.Status = GruntTaskingStatus.Completed;
             }
             else if (tasking.GruntTask.Name.Equals("wmigrunt", StringComparison.OrdinalIgnoreCase))
@@ -2927,6 +3189,37 @@ public static class Task
                 parameters[0] = parameters[0] == "localhost" ? tasking.Grunt.Hostname : parameters[0];
                 parameters[0] = parameters[0] == "127.0.0.1" ? tasking.Grunt.IPAddress : parameters[0];
             }
+            else if (tasking.GruntTask.Name.Equals("Download", StringComparison.CurrentCultureIgnoreCase))
+            {
+                string FileName = parameters[0];
+                DownloadEvent downloadEvent = await this.CreateDownloadEvent(new DownloadEvent
+                {
+                    GruntCommandId = tasking.GruntCommandId,
+                    // Time = updatingGruntTasking.CompletionTime,
+                    MessageHeader = "Download Started",
+                    MessageBody = "Downloading: " + FileName,
+                    Level = EventLevel.Info,
+                    Context = tasking.Grunt.Name,
+                    FileName = FileName,
+                    Progress = DownloadEvent.DownloadProgress.Portion
+                }, new byte[] { });
+            }
+            else if (tasking.GruntTask.Name.Equals("ScreenShot", StringComparison.CurrentCultureIgnoreCase))
+            {
+                string FileName = tasking.Name + ".png";
+                ScreenshotEvent screenshotEvent = await this.CreateScreenshotEvent(new ScreenshotEvent
+                {
+                    GruntCommandId = tasking.GruntCommandId,
+                    // Time = updatingGruntTasking.CompletionTime,
+                    MessageHeader = "Download ScreenShot Started",
+                    MessageBody = "Downloading screenshot: " + FileName,
+                    Level = EventLevel.Info,
+                    Context = tasking.Grunt.Name,
+                    FileName = FileName,
+                    Progress = DownloadEvent.DownloadProgress.Portion
+                }, new byte[] { });
+            }
+
             tasking.Parameters = parameters;
             try
             {
@@ -2949,14 +3242,18 @@ public static class Task
             parent.Listener = await this.GetListener(parent.ListenerId);
             await _notifier.NotifyCreateGruntTasking(this, tasking);
             await _notifier.NotifyNotifyListener(this, parent);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, tasking);
             return tasking;
         }
 
         public async Task<IEnumerable<GruntTasking>> CreateGruntTaskings(params GruntTasking[] taskings)
         {
-            await _context.GruntTaskings.AddRangeAsync(taskings);
-            await _context.SaveChangesAsync();
-            return taskings;
+            List<GruntTasking> createdTaskings = new List<GruntTasking>();
+            foreach (GruntTasking tasking in taskings)
+            {
+                createdTaskings.Add(await this.CreateGruntTasking(tasking));
+            }
+            return createdTaskings;
         }
 
         public async Task<GruntTasking> EditGruntTasking(GruntTasking tasking)
@@ -3001,12 +3298,14 @@ public static class Task
                     }
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
                 }
                 else if (tasking.Type == GruntTaskingType.SetKillDate && tasking.Parameters.Count >= 1 && DateTime.TryParse(tasking.Parameters[0], out DateTime date))
                 {
                     grunt.KillDate = date;
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
                 }
                 else if (tasking.Type == GruntTaskingType.Connect)
                 {
@@ -3038,6 +3337,7 @@ public static class Task
                             connectedGrunt.Status = GruntStatus.Active;
                             _context.Grunts.Update(connectedGrunt);
                             await _notifier.NotifyEditGrunt(this, connectedGrunt);
+                            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, connectedGrunt);
                         }
                         else
                         {
@@ -3069,13 +3369,34 @@ public static class Task
                     disconnectFromGrunt.Status = GruntStatus.Disconnected;
                     _context.Grunts.Update(disconnectFromGrunt);
                     await _notifier.NotifyEditGrunt(this, disconnectFromGrunt);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, disconnectFromGrunt);
+
                     grunt.RemoveChild(disconnectFromGrunt);
                     _context.Grunts.Update(grunt);
                     await _notifier.NotifyEditGrunt(this, grunt);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
+                }
+                else if (tasking.Type == GruntTaskingType.Assembly && tasking.GruntTask.Name.Equals("listdirectory", StringComparison.OrdinalIgnoreCase))
+                {
+                    List<FolderFileNode> nodes = ModelUtilities.ParseFolder(updatingGruntTasking.GruntCommand.CommandOutput.Output, grunt.OperatingSystem);
+                    if (nodes != null)
+                    {
+                        foreach (FolderFileNode node in nodes.Where(N => N != null).ToList())
+                        {
+                            node.GruntId = grunt.Id;
+                            await this.CreateFolderFileNode(node);
+                        }
+                        if (nodes.Any())
+                        {
+                            Folder parent = await this.GetOrCreateParentFolder(nodes.First(), grunt.OperatingSystem);
+                            parent.Enumerated = true;
+                            await this.EditFolder(parent);
+                        }
+
+                    }
                 }
             }
-            Event ev = null;
-            if ((newStatus == GruntTaskingStatus.Completed || newStatus == GruntTaskingStatus.Progressed) && originalStatus != newStatus)
+            if (newStatus == GruntTaskingStatus.Completed && originalStatus != newStatus)
             {
                 if (newStatus == GruntTaskingStatus.Completed)
                 {
@@ -3155,17 +3476,8 @@ public static class Task
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditGrunt(this, grunt);
             await _notifier.NotifyEditGruntTasking(this, updatingGruntTasking);
-            if (ev != null)
-            {
-                tasking.GruntCommand = await _context.GruntCommands
-                    .Where(GC => GC.Id == tasking.GruntCommandId)
-                    .Include(GC => GC.User)
-                    .Include(GC => GC.CommandOutput)
-                    .Include(GC => GC.GruntTasking)
-                        .ThenInclude(GC => GC.GruntTask)
-                    .FirstOrDefaultAsync();
-                await _notifier.NotifyEditGruntCommand(this, tasking.GruntCommand);
-            }
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, grunt);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, updatingGruntTasking);
             return await this.GetGruntTasking(updatingGruntTasking.Id);
         }
 
@@ -3178,12 +3490,12 @@ public static class Task
             }
             _context.GruntTaskings.Remove(removingGruntTasking);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteGruntTasking(this, removingGruntTasking.Id);
+            await _notifier.NotifyDeleteGruntTasking(this, removingGruntTasking.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, removingGruntTasking);
         }
 
         private async Task<Grunt> GetParentGrunt(Grunt child)
         {
-            // var parent = child.ImplantTemplate.CommType != CommunicationType.SMB ? child : await _context.Grunts.Include(G => G.ImplantTemplate).FirstOrDefaultAsync(G => G.Children.Contains(child.GUID));
             Grunt parent;
             if (child.ImplantTemplate.CommType != CommunicationType.SMB)
             {
@@ -3274,6 +3586,308 @@ public static class Task
         }
         #endregion
 
+        #region FolderFileNode Actions
+        public async Task<IEnumerable<Folder>> GetFolders(int gruntId)
+        {
+            IEnumerable<Folder> folders = await _context.FolderFileNodes
+                .Where(F => F is Folder)
+                .Select(F => (Folder)F)
+                .ToListAsync();
+            foreach (Folder f in folders)
+            {
+                f.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == f.Id).ToListAsync();
+            }
+            return folders;
+        }
+
+        public async Task<Folder> GetFolder(int gruntId, int? folderId)
+        {
+            if (folderId == null)
+            {
+                return null;
+            }
+            Folder folder = (Folder) await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.Id == folderId && F.GruntId == gruntId && F is Folder);
+            if (folder == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - Folder with id: {folderId}");
+            }
+            folder.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == folder.Id).ToListAsync();
+            return folder;
+        }
+
+        public async Task<Folder> GetFolderByFullName(int gruntId, string FullName)
+        {
+            Folder folder = (Folder)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.FullName == FullName && F.GruntId == gruntId && F is Folder);
+            if (folder == null)
+            {
+                return null;
+            }
+            folder.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == folder.Id).ToListAsync();
+            return folder;
+        }
+
+        private async Task<Folder> GetOrCreateParentFolder(FolderFileNode node, string operatingSystem)
+        {
+            string parentFullName = ModelUtilities.GetDirectoryName(node.FullName, operatingSystem);
+            Folder parent = node.ParentId != 0 && node.ParentId != null ?
+                await this.GetFolder(node.GruntId, node.ParentId) :
+                await this.GetFolderByFullName(node.GruntId, parentFullName);
+            if (parent == null && !string.IsNullOrEmpty(parentFullName))
+            {
+                parent = await this.CreateFolder(new Folder
+                {
+                    FullName = parentFullName,
+                    Name = ModelUtilities.GetFileName(parentFullName, operatingSystem),
+                    GruntId = node.GruntId,
+                    Grunt = node.Grunt,
+                    Nodes = new List<FolderFileNode> { node }
+                });
+            }
+            else if (parent != null && !parent.Nodes.Any(N => N.Id == node.Id))
+            {
+                parent.Nodes.Add(node);
+                _context.FolderFileNodes.Update(parent);
+                await _context.SaveChangesAsync();
+                await _notifier.NotifyEditFolder(this, parent);
+                // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            }
+            node.ParentId = parent?.Id;
+            return parent;
+        }
+
+        public async Task<Folder> CreateFolder(Folder folder)
+        {
+            Folder alreadyCreated = (Folder)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.FullName == folder.FullName && F.GruntId == folder.GruntId && F is Folder);
+            if (alreadyCreated != null)
+            {
+                folder.Id = alreadyCreated.Id;
+                folder.ParentId = alreadyCreated.ParentId;
+                folder.Nodes = await _context.FolderFileNodes.Where(F => F.ParentId == folder.Id).ToListAsync();
+                return await this.EditFolder(folder);
+            }
+            folder.Grunt = await this.GetGrunt(folder.GruntId);
+            await _context.FolderFileNodes.AddAsync(folder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateFolder(this, folder);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+
+            Folder parent = await this.GetOrCreateParentFolder(folder, folder.Grunt.OperatingSystem);
+            if (parent == null && !folder.Grunt.FolderRoots.Any(F => F.Id == folder.Id))
+            {
+                folder.Grunt.FolderRoots.Add(folder);
+                await this.EditGrunt(folder.Grunt);
+            }
+            else if (!parent.Nodes.Any(N => N.Id == folder.Id))
+            {
+                parent.Nodes.Add(folder);
+                _context.FolderFileNodes.Update(parent);
+                await _context.SaveChangesAsync();
+                await _notifier.NotifyEditFolder(this, parent);
+            }
+            folder.ParentId = parent?.Id;
+            for (int i = 0; i < folder.Nodes.Count; i++)
+            {
+                folder.Nodes[i] = folder.Nodes[i].Id == 0 ?
+                    await this.CreateFolderFileNode(folder.Nodes[i]) :
+                    await this.GetFolderFileNode(folder.GruntId, folder.Nodes[i].Id);
+            }
+            _context.FolderFileNodes.Update(folder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolder(this, folder);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            return await GetFolder(folder.GruntId, folder.Id);
+        }
+
+        public async Task<Folder> EditFolder(Folder folder)
+        {
+            Folder matchingFolder = await this.GetFolder(folder.GruntId, folder.Id);
+            matchingFolder.FullName = folder.FullName;
+            matchingFolder.Name = folder.Name;
+            matchingFolder.Length = folder.Length;
+            matchingFolder.CreationTime = folder.CreationTime;
+            matchingFolder.LastAccessTime = folder.LastAccessTime;
+            matchingFolder.LastWriteTime = folder.LastWriteTime;
+            matchingFolder.Enumerated = folder.Enumerated;
+
+            matchingFolder.ParentId = folder.ParentId;
+            matchingFolder.Nodes = folder.Nodes;
+            for (int i = 0; i < matchingFolder.Nodes.Count; i++)
+            {
+                matchingFolder.Nodes[i] = folder.Nodes[i].Id == 0 ?
+                    await this.CreateFolderFileNode(folder.Nodes[i]) :
+                    await this.GetFolderFileNode(matchingFolder.GruntId, matchingFolder.Nodes[i].Id);
+            }
+
+            _context.FolderFileNodes.Update(matchingFolder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolder(this, folder);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingFolder);
+            return await GetFolder(matchingFolder.GruntId, matchingFolder.Id);
+        }
+
+        public async Task DeleteFolder(int gruntId, int folderId)
+        {
+            Folder matchingFolder = await this.GetFolder(gruntId, folderId);
+            _context.FolderFileNodes.Remove(matchingFolder);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteFolder(this, matchingFolder.Id);
+            // await LoggingService.Log(LogAction.Delete, LogLevel.Trace, matchingFolder);
+        }
+
+        public async Task<IEnumerable<FolderFile>> GetFolderFiles(int gruntId)
+        {
+            return await _context.FolderFileNodes
+                .Where(F => F is FolderFile)
+                .Select(F => (FolderFile)F)
+                .ToListAsync();
+        }
+
+        public async Task<FolderFile> GetFolderFile(int gruntId, int fileId)
+        {
+            FolderFile file = (FolderFile)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.Id == fileId && F.GruntId == gruntId && F is FolderFile);
+            if (file == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - File with id: {fileId}");
+            }
+            return file;
+        }
+
+        public async Task<FolderFile> CreateFolderFile(FolderFile file)
+        {
+            FolderFile alreadyCreated = (FolderFile)await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.FullName == file.FullName && F.GruntId == file.GruntId && F is FolderFile);
+            if (alreadyCreated != null)
+            {
+                file.Id = alreadyCreated.Id;
+                return await this.EditFolderFile(file);
+            }
+            file.Grunt = await this.GetGrunt(file.GruntId);
+            await _context.FolderFileNodes.AddAsync(file);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateFolderFile(this, file);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            Folder parent = await this.GetOrCreateParentFolder(file, file.Grunt.OperatingSystem);
+            if (!parent.Nodes.Any(N => N.Id == file.Id))
+            {
+                parent.Nodes.Add(file);
+                _context.FolderFileNodes.Update(parent);
+            }
+            file.ParentId = parent?.Id;
+            // file.Parent = null;
+            _context.FolderFileNodes.Update(file);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolderFile(this, file);
+            // await LoggingService.Log(LogAction.Create, LogLevel.Trace, folder);
+            return await GetFolderFile(file.GruntId, file.Id);
+        }
+
+        public async Task<FolderFile> EditFolderFile(FolderFile file)
+        {
+            FolderFile matchingFile = await this.GetFolderFile(file.GruntId, file.Id);
+            matchingFile.FullName = file.FullName;
+            matchingFile.Name = file.Name;
+            matchingFile.CreationTime = file.CreationTime;
+            matchingFile.LastAccessTime = file.LastAccessTime;
+            matchingFile.LastWriteTime = file.LastWriteTime;
+            matchingFile.ParentId = file.ParentId;
+
+            _context.FolderFileNodes.Update(matchingFile);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyEditFolderFile(this, file);
+            // await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingFolder);
+            return await GetFolderFile(matchingFile.GruntId, matchingFile.Id);
+        }
+
+        public async Task DeleteFolderFile(int gruntId, int folderId)
+        {
+            FolderFile matchingFile = await this.GetFolderFile(gruntId, folderId);
+            _context.FolderFileNodes.Remove(matchingFile);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteFolderFile(this, matchingFile.Id);
+            // await LoggingService.Log(LogAction.Delete, LogLevel.Trace, matchingFolder);
+        }
+
+        public async Task<IEnumerable<FolderFileNode>> GetFolderFileNodes(int gruntId)
+        {
+            List<FolderFileNode> nodes = new List<FolderFileNode>();
+            nodes.AddRange(await this.GetFolders(gruntId));
+            nodes.AddRange(await this.GetFolderFiles(gruntId));
+            return nodes;
+        }
+
+        public async Task<FolderFileNode> GetFolderFileNode(int gruntId, int nodeId)
+        {
+            FolderFileNode node = await _context.FolderFileNodes
+                .FirstOrDefaultAsync(F => F.Id == nodeId && F.GruntId == gruntId);
+            if (node == null)
+            {
+                node = await _context.FolderFileNodes
+                    .FirstOrDefaultAsync(F => F.Id == nodeId && F.GruntId == gruntId);
+            }
+            if (node == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - FolderFileNode with id: {nodeId}");
+            }
+            return node;
+        }
+
+        public async Task<FolderFileNode> CreateFolderFileNode(FolderFileNode node)
+        {
+            if (node is Folder folder)
+            {
+                return await this.CreateFolder(folder);
+            }
+            if (node is FolderFile file)
+            {
+                return await this.CreateFolderFile(file);
+            }
+            throw new ControllerBadRequestException($"BadRequest - Could not determine type of FolderFileNode");
+        }
+
+        public async Task<IEnumerable<FolderFileNode>> CreateFolderFileNodes(params FolderFileNode[] nodes)
+        {
+            List<FolderFileNode> createdNodes = new List<FolderFileNode>();
+            foreach (FolderFileNode node in nodes)
+            {
+                createdNodes.Add(await this.CreateFolderFileNode(node));
+            }
+            return createdNodes;
+        }
+
+        public async Task<FolderFileNode> EditFolderFileNode(FolderFileNode node)
+        {
+            if (node is Folder folder)
+            {
+                return await this.EditFolder(folder);
+            }
+            if (node is FolderFile file)
+            {
+                return await this.EditFolderFile(file);
+            }
+            throw new ControllerBadRequestException($"BadRequest - Could not determine type of FolderFileNode");
+        }
+
+        public async Task DeleteFolderFileNode(int gruntId, int nodeId)
+        {
+            FolderFileNode matchingNode = await this.GetFolderFileNode(gruntId, nodeId);
+            if (matchingNode is Folder folder)
+            {
+                await this.DeleteFolder(folder.GruntId, folder.Id);
+                return;
+            }
+            if (matchingNode is FolderFile file)
+            {
+                await this.DeleteFolderFile(file.GruntId, file.Id);
+                return;
+            }
+            throw new ControllerBadRequestException($"BadRequest - Could not determine type of FolderFileNode");
+        }
+        #endregion
+
         #region Credentials Actions
         public async Task<IEnumerable<CapturedCredential>> GetCredentials()
         {
@@ -3339,7 +3953,8 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateCapturedCredential(this, credential);
+            await _notifier.NotifyCreateCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             return await GetPasswordCredential(credential.Id);
         }
 
@@ -3347,7 +3962,8 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateCapturedCredential(this, credential);
+            await _notifier.NotifyCreateCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             return await GetHashCredential(credential.Id);
         }
 
@@ -3355,15 +3971,30 @@ public static class Task
         {
             await _context.Credentials.AddAsync(credential);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateCapturedCredential(this, credential);
+            await _notifier.NotifyCreateCapturedCredential(this, credential);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, credential);
             return await GetTicketCredential(credential.Id);
         }
 
         public async Task<IEnumerable<CapturedCredential>> CreateCredentials(params CapturedCredential[] credentials)
         {
-            await _context.Credentials.AddRangeAsync(credentials);
-            await _context.SaveChangesAsync();
-            return credentials;
+            List<CapturedCredential> createdCredentials = new List<CapturedCredential>();
+            foreach(CapturedCredential credential in credentials)
+            {
+                if (credential.Type == CredentialType.Password)
+                {
+                    createdCredentials.Add(await this.CreatePasswordCredential((CapturedPasswordCredential)credential));
+                }
+                else if (credential.Type == CredentialType.Hash)
+                {
+                    createdCredentials.Add(await this.CreateHashCredential((CapturedHashCredential)credential));
+                }
+                else if (credential.Type == CredentialType.Ticket)
+                {
+                    createdCredentials.Add(await this.CreateTicketCredential((CapturedTicketCredential)credential));
+                }
+            }
+            return createdCredentials;
         }
 
         public async Task<CapturedPasswordCredential> EditPasswordCredential(CapturedPasswordCredential credential)
@@ -3375,7 +4006,8 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditCapturedCredential(this, matchingCredential);
+            await _notifier.NotifyEditCapturedCredential(this, matchingCredential);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingCredential);
             return await GetPasswordCredential(matchingCredential.Id);
         }
 
@@ -3389,7 +4021,8 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditCapturedCredential(this, matchingCredential);
+            await _notifier.NotifyEditCapturedCredential(this, matchingCredential);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingCredential);
             return await GetHashCredential(matchingCredential.Id);
         }
 
@@ -3403,7 +4036,8 @@ public static class Task
 
             _context.Credentials.Update(matchingCredential);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditCapturedCredential(this, matchingCredential);
+            await _notifier.NotifyEditCapturedCredential(this, matchingCredential);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingCredential);
             return await GetTicketCredential(matchingCredential.Id);
         }
 
@@ -3416,7 +4050,8 @@ public static class Task
             }
             _context.Credentials.Remove(credential);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteCapturedCredential(this, credential.Id);
+            await _notifier.NotifyDeleteCapturedCredential(this, credential.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, credential);
         }
         #endregion
 
@@ -3488,15 +4123,30 @@ public static class Task
         {
             await _context.Indicators.AddAsync(indicator);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateIndicator(this, indicator);
+            await _notifier.NotifyCreateIndicator(this, indicator);
+            if (indicator.Type == IndicatorType.FileIndicator)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, (FileIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.NetworkIndicator)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, (NetworkIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.TargetIndicator)
+            {
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, (TargetIndicator)indicator);
+            }
             return await GetIndicator(indicator.Id);
         }
 
         public async Task<IEnumerable<Indicator>> CreateIndicators(params Indicator[] indicators)
         {
-            await _context.Indicators.AddRangeAsync(indicators);
-            await _context.SaveChangesAsync();
-            return indicators;
+            List<Indicator> createdIndicators = new List<Indicator>();
+            foreach (Indicator indicator in indicators)
+            {
+                createdIndicators.Add(await this.CreateIndicator(indicator));
+            }
+            return createdIndicators;
         }
 
         public async Task<Indicator> EditIndicator(Indicator indicator)
@@ -3518,6 +4168,9 @@ public static class Task
                     matchingFileIndicator.SHA1 = fileIndicator.SHA1;
                     matchingFileIndicator.MD5 = fileIndicator.MD5;
                     _context.Indicators.Update(matchingFileIndicator);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditIndicator(this, matchingFileIndicator);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingFileIndicator);
                     break;
                 case IndicatorType.NetworkIndicator:
                     NetworkIndicator matchingNetworkIndicator = (NetworkIndicator)matchingIndicator;
@@ -3528,6 +4181,9 @@ public static class Task
                     matchingNetworkIndicator.Port = networkIndicator.Port;
                     matchingNetworkIndicator.URI = networkIndicator.URI;
                     _context.Indicators.Update(matchingNetworkIndicator);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditIndicator(this, matchingNetworkIndicator);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingNetworkIndicator);
                     break;
                 case IndicatorType.TargetIndicator:
                     TargetIndicator matchingTargetIndicator = (TargetIndicator)matchingIndicator;
@@ -3535,10 +4191,11 @@ public static class Task
                     matchingTargetIndicator.ComputerName = targetIndicator.ComputerName;
                     matchingTargetIndicator.UserName = targetIndicator.UserName;
                     _context.Indicators.Update(matchingTargetIndicator);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditIndicator(this, matchingTargetIndicator);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingTargetIndicator);
                     break;
             }
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditIndicator(this, indicator);
             return await this.GetIndicator(indicator.Id);
         }
 
@@ -3551,7 +4208,19 @@ public static class Task
             }
             _context.Indicators.Remove(indicator);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteIndicator(this, indicator.Id);
+            await _notifier.NotifyDeleteIndicator(this, indicator.Id);
+            if (indicator.Type == IndicatorType.FileIndicator)
+            {
+                await LoggingService.Log(LogAction.Delete, LogLevel.Trace, (FileIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.NetworkIndicator)
+            {
+                await LoggingService.Log(LogAction.Delete, LogLevel.Trace, (NetworkIndicator)indicator);
+            }
+            else if (indicator.Type == IndicatorType.TargetIndicator)
+            {
+                await LoggingService.Log(LogAction.Delete, LogLevel.Trace, (TargetIndicator)indicator);
+            }
         }
         #endregion
 
@@ -3606,7 +4275,8 @@ public static class Task
             }
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateProfile(this, profile);
+            await _notifier.NotifyCreateProfile(this, profile);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             return await this.GetProfile(profile.Id);
         }
 
@@ -3614,27 +4284,65 @@ public static class Task
         {
             await _context.Profiles.AddRangeAsync(profiles);
             await _context.SaveChangesAsync();
-            return profiles;
+            foreach (Profile profile in profiles)
+            {
+                await _notifier.NotifyCreateProfile(this, profile);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
+            }
+            return await this.GetProfiles();
         }
 
         public async Task<Profile> EditProfile(Profile profile, CovenantUser currentUser)
         {
             Profile matchingProfile = await this.GetProfile(profile.Id);
-            matchingProfile.Description = profile.Description;
+            if ((await this.GetListeners()).Any(L => L.ProfileId == matchingProfile.Id))
+            {
+                throw new ControllerBadRequestException(@$"BadRequest - Profile is being used by a Listener and cannot be edited.");
+            }
             matchingProfile.Name = profile.Name;
+            matchingProfile.Description = profile.Description;
             matchingProfile.Type = profile.Type;
+            if (matchingProfile.MessageTransform != profile.MessageTransform)
+            {
+                if (!await this.IsAdmin(currentUser))
+                {
+                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot edit the MessageTransform");
+                }
+                try
+                {
+                    byte[] bytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = ImplantLanguage.CSharp,
+                        Source = profile.MessageTransform,
+                        TargetDotNetVersion = Common.DotNetVersion.Net50,
+                        References = Common.DefaultReferencesNetCore,
+                        UseSubprocess = false
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
+                }
+                matchingProfile.MessageTransform = profile.MessageTransform;
+            }
             _context.Profiles.Update(matchingProfile);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditProfile(this, matchingProfile);
+            await _notifier.NotifyEditProfile(this, matchingProfile);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingProfile);
             return await this.GetProfile(profile.Id);
         }
 
         public async Task DeleteProfile(int id)
         {
             Profile profile = await this.GetProfile(id);
+            if ((await this.GetListeners()).Any(L => L.ProfileId == id))
+            {
+                throw new ControllerBadRequestException(@$"BadRequest - Profile is being used by a Listener and cannot be deleted");
+            }
             _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteProfile(this, profile.Id);
+            await _notifier.NotifyDeleteProfile(this, profile.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, profile);
         }
 
         public async Task<IEnumerable<HttpProfile>> GetHttpProfiles()
@@ -3667,15 +4375,74 @@ public static class Task
             return (BridgeProfile)profile;
         }
 
+        private bool ValidateHttpProfile(HttpProfile profile)
+        {
+            bool guidInUrls = true;
+            foreach (string url in profile.HttpUrls)
+            {
+                if (!url.Contains("{GUID}"))
+                {
+                    guidInUrls = false;
+                    break;
+                }
+            }
+            bool guidInHeaders = false;
+            bool tooManyHeaders = false;
+            foreach (HttpProfileHeader header in profile.HttpRequestHeaders)
+            {
+                if (header.Name.Contains("{GUID}") || header.Value.Contains("{GUID}"))
+                {
+                    if (guidInHeaders)
+                    {
+                        tooManyHeaders = true;
+                        break;
+                    }
+                    guidInHeaders = true;
+                }
+            }
+            if (!guidInHeaders && !guidInUrls)
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile must include {GUID} location");
+            }
+            if (guidInHeaders && guidInUrls)
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile should include {GUID} only in HttpUrls or a HttpRequestHeader, not both");
+            }
+            if (tooManyHeaders)
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile should include {GUID} only in a single HttpRequestHeader, not multiple");
+            }
+            if (!profile.HttpGetResponse.Contains("{DATA}") || !profile.HttpPostResponse.Contains("{DATA}") || !profile.HttpPostRequest.Contains("{DATA}"))
+            {
+                throw new ControllerBadRequestException("BadRequest - HttpProfile must include {DATA} location in each request/response body");
+            }
+            return true;
+        }
+
+        private bool ValidateBridgeProfile(BridgeProfile profile)
+        {
+            if (!profile.ReadFormat.Contains("{DATA}") || !profile.ReadFormat.Contains("{GUID}"))
+            {
+                throw new ControllerBadRequestException("BadRequest - BridgeProfile ReadFormat must include {GUID} and {DATA} locations");
+            }
+            if (!profile.WriteFormat.Contains("{DATA}") || !profile.WriteFormat.Contains("{GUID}"))
+            {
+                throw new ControllerBadRequestException("BadRequest - BridgeProfile WriteFormat must include {GUID} and {DATA} locations");
+            }
+            return true;
+        }
+
         public async Task<HttpProfile> CreateHttpProfile(HttpProfile profile, CovenantUser currentUser)
         {
             if (!await this.IsAdmin(currentUser))
             {
                 throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
             }
+            this.ValidateHttpProfile(profile);
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateProfile(this, profile);
+            await _notifier.NotifyCreateProfile(this, profile);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             return await this.GetHttpProfile(profile.Id);
         }
 
@@ -3685,9 +4452,11 @@ public static class Task
             {
                 throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
             }
+            this.ValidateBridgeProfile(profile);
             await _context.Profiles.AddAsync(profile);
             await _context.SaveChangesAsync();
-            // _notifier.OnCreateProfile(this, profile);
+            await _notifier.NotifyCreateProfile(this, profile);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, profile);
             return await this.GetBridgeProfile(profile.Id);
         }
 
@@ -3712,13 +4481,30 @@ public static class Task
             {
                 if (!await this.IsAdmin(currentUser))
                 {
-                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
+                    throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot edit the MessageTransform");
+                }
+                try
+                {
+                    byte[] bytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = ImplantLanguage.CSharp,
+                        Source = profile.MessageTransform,
+                        TargetDotNetVersion = Common.DotNetVersion.Net50,
+                        References = Common.DefaultReferencesNetCore,
+                        UseSubprocess = false
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
                 }
                 matchingProfile.MessageTransform = profile.MessageTransform;
             }
+            this.ValidateHttpProfile(matchingProfile);
             _context.Update(matchingProfile);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditProfile(this, matchingProfile);
+            await _notifier.NotifyEditProfile(this, matchingProfile);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingProfile);
             return await this.GetHttpProfile(profile.Id);
         }
 
@@ -3742,11 +4528,28 @@ public static class Task
                 {
                     throw new ControllerUnauthorizedException($"Unauthorized - User with username: {currentUser.UserName} is not an Administrator and cannot create new profiles");
                 }
+                try
+                {
+                    byte[] bytes = Compiler.Compile(new Compiler.CsharpFrameworkCompilationRequest
+                    {
+                        Language = ImplantLanguage.CSharp,
+                        Source = profile.MessageTransform,
+                        TargetDotNetVersion = Common.DotNetVersion.Net50,
+                        References = Common.DefaultReferencesNetCore,
+                        UseSubprocess = false
+                    });
+                }
+                catch (CompilerException e)
+                {
+                    throw new ControllerBadRequestException($"BadRequest - {e.Message}");
+                }
                 matchingProfile.MessageTransform = profile.MessageTransform;
             }
+            this.ValidateBridgeProfile(matchingProfile);
             _context.Update(matchingProfile);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditProfile(this, matchingProfile);
+            await _notifier.NotifyEditProfile(this, matchingProfile);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingProfile);
             return await this.GetBridgeProfile(profile.Id);
         }
         #endregion
@@ -3757,6 +4560,7 @@ public static class Task
             return await _context.Listeners
                 .Include(L => L.ListenerType)
                 .Include(L => L.Profile)
+                .Where(L => L.Status != ListenerStatus.Deleted)
                 .ToListAsync();
         }
 
@@ -3790,58 +4594,39 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                Event listenerEvent = await this.CreateEvent(new Event
+                await this.CreateEvent(new Event
                 {
                     Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
                     MessageBody = "Stopped Listener: " + matchingListener.Name,
-                    Level = EventLevel.Warning,
-                    Context = "*"
-                });
-                await _context.SaveChangesAsync();
-            }
-            else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
-            {
-                matchingListener.StartTime = DateTime.UtcNow;
-                Profile profile = await this.GetProfile(matchingListener.ProfileId);
-                CancellationTokenSource listenerCancellationToken = null;
-                try
-                {
-                    listenerCancellationToken = matchingListener.Start();
-                    matchingListener.Status = ListenerStatus.Active;
-                }
-                catch (ListenerStartException e)
-                {
-                    throw new ControllerBadRequestException($"BadRequest - Listener with id: {matchingListener.Id} did not start due to exception: {e.Message}");
-                }
-                _cancellationTokens[matchingListener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {matchingListener.Id} did not start properly");
-                Event listenerEvent = await this.CreateEvent(new Event
-                {
-                    Time = matchingListener.StartTime,
-                    MessageHeader = "Started Listener",
-                    MessageBody = "Started Listener: " + matchingListener.Name,
                     Level = EventLevel.Highlight,
                     Context = "*"
                 });
+            }
+            else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
+            {
+                _context.Listeners.Update(matchingListener);
                 await _context.SaveChangesAsync();
+                await this.StartListenerVerify(matchingListener);
             }
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditListener(this, matchingListener);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingListener);
             return await this.GetListener(matchingListener.Id);
         }
 
         public async Task StartListener(int listenerId)
         {
             Listener listener = await this.GetListener(listenerId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
             try
             {
                 CancellationTokenSource listenerCancellationToken = listener.Start();
+                _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
+                listener.StartTime = DateTime.UtcNow;
+                listener.Status = ListenerStatus.Active;
                 _context.Listeners.Update(listener);
                 await _context.SaveChangesAsync();
-                await _notifier.NotifyEditListener(this, listener);
-                _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
             }
             catch (ListenerStartException e)
             {
@@ -3856,16 +4641,11 @@ public static class Task
             {
                 listener.Stop(_cancellationTokens[listener.Id]);
             }
-            _context.Launchers.Where(L => L.ListenerId == listener.Id).ToList().ForEach(L =>
-            {
-                L.LauncherString = "";
-                L.StagerCode = "";
-                L.Base64ILByteString = "";
-                _context.Launchers.Update(L);
-            });
-            _context.Listeners.Remove(listener);
+            listener.Status = ListenerStatus.Deleted;
+            await this.EditListener(listener);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteListener(this, listener.Id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, listener);
+            await _notifier.NotifyDeleteListener(this, listener.Id);
         }
 
         public async Task<IEnumerable<HttpListener>> GetHttpListeners()
@@ -3873,7 +4653,7 @@ public static class Task
             return await _context.Listeners
                 .Include(L => L.ListenerType)
                 .Include(L => L.Profile)
-                .Where(L => L.ListenerType.Name == "HTTP")
+                .Where(L => L.ListenerType.Name == "HTTP" && L.Status != ListenerStatus.Deleted)
                 .Select(L => (HttpListener)L)
                 .ToListAsync();
         }
@@ -3883,7 +4663,7 @@ public static class Task
             return await _context.Listeners
                 .Include(L => L.ListenerType)
                 .Include(L => L.Profile)
-                .Where(L => L.ListenerType.Name == "Bridge")
+                .Where(L => L.ListenerType.Name == "Bridge" && L.Status != ListenerStatus.Deleted)
                 .Select(L => (BridgeListener)L)
                 .ToListAsync();
         }
@@ -3910,13 +4690,22 @@ public static class Task
             return (BridgeListener)listener;
         }
 
-        private async Task<HttpListener> StartInitialHttpListener(HttpListener listener)
+        private async Task<Listener> StartListenerVerify(Listener listener)
         {
-            listener.StartTime = DateTime.UtcNow;
-            if (listener.UseSSL && string.IsNullOrWhiteSpace(listener.SSLCertificate))
+            if (listener.ListenerType.Name == "HTTP")
             {
-                throw new ControllerBadRequestException($"HttpListener: {listener.Name} missing SSLCertificate");
+                HttpListener httpListener = (HttpListener)listener;
+                return await this.StartListenerVerify(listener, "http", (i) => httpListener.Urls[i]);
             }
+            else if (listener.ListenerType.Name == "Bridge")
+            {
+                return await this.StartListenerVerify(listener, "bridge", (i) => "");
+            }
+            return null;
+        }
+
+        private async Task<Listener> StartListenerVerify(Listener listener, string protocol, Func<int, string> GetUri)
+        {
             if (_context.Listeners.Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
             {
                 throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
@@ -3927,17 +4716,16 @@ public static class Task
             {
                 NetworkIndicator httpIndicator = new NetworkIndicator
                 {
-                    Protocol = "http",
+                    Protocol = protocol,
                     Domain = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? "" : listener.ConnectAddresses[i],
                     IPAddress = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? listener.ConnectAddresses[i] : "",
-                    Port = listener.BindPort,
-                    URI = listener.Urls[i]
+                    Port = listener.ConnectPort,
+                    URI = GetUri(i)
                 };
                 IEnumerable<NetworkIndicator> indicators = await this.GetNetworkIndicators();
                 if (indicators.FirstOrDefault(I => I.IPAddress == httpIndicator.IPAddress && I.Domain == httpIndicator.Domain) == null)
                 {
-                    await _context.Indicators.AddAsync(httpIndicator);
-                    // _notifier.OnCreateIndicator(this, httpIndicator);
+                    await this.CreateIndicator(httpIndicator);
                 }
             }
 
@@ -3953,53 +4741,9 @@ public static class Task
             return listener;
         }
 
-        private async Task<BridgeListener> StartInitialBridgeListener(BridgeListener listener)
-        {
-            listener.StartTime = DateTime.UtcNow;
-            if (_context.Listeners.Where(L => L.Status == ListenerStatus.Active && L.BindPort == listener.BindPort).Any())
-            {
-                throw new ControllerBadRequestException($"Listener already listening on port: {listener.BindPort}");
-            }
-            CancellationTokenSource listenerCancellationToken = null;
-            try
-            {
-                listenerCancellationToken = listener.Start();
-            }
-            catch (ListenerStartException e)
-            {
-                throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start due to exception: {e.Message}");
-            }
-            _cancellationTokens[listener.Id] = listenerCancellationToken ?? throw new ControllerBadRequestException($"BadRequest - Listener with id: {listener.Id} did not start properly");
+        private async Task<HttpListener> StartHttpListenerVerify(HttpListener listener) => (HttpListener)await this.StartListenerVerify(listener);
 
-            for (int i = 0; i < listener.ConnectAddresses.Count; i++)
-            {
-                NetworkIndicator bridgeIndicator = new NetworkIndicator
-                {
-                    Protocol = "bridge",
-                    Domain = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? "" : listener.ConnectAddresses[i],
-                    IPAddress = Utilities.IsIPAddress(listener.ConnectAddresses[i]) ? listener.ConnectAddresses[i] : "",
-                    Port = listener.BindPort
-                };
-                IEnumerable<NetworkIndicator> indicators = await this.GetNetworkIndicators();
-                if (indicators.FirstOrDefault(I => I.IPAddress == bridgeIndicator.IPAddress && I.Domain == bridgeIndicator.Domain) == null)
-                {
-                    await _context.Indicators.AddAsync(bridgeIndicator);
-                    // _notifier.OnCreateIndicator(this, bridgeIndicator);
-                }
-            }
-
-            _cancellationTokens[listener.Id] = listenerCancellationToken;
-            Event listenerEvent = await this.CreateEvent(new Event
-            {
-                Time = listener.StartTime,
-                MessageHeader = "Started Listener",
-                MessageBody = "Started Listener: " + listener.Name,
-                Level = EventLevel.Highlight,
-                Context = "*"
-            });
-            await _context.SaveChangesAsync();
-            return listener;
-        }
+        private async Task<BridgeListener> StartBridgeListenerVerify(BridgeListener listener) => (BridgeListener) await this.StartListenerVerify(listener);
 
         public async Task<HttpListener> CreateHttpListener(HttpListener listener)
         {
@@ -4026,22 +4770,35 @@ public static class Task
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
-                listener = await this.StartInitialHttpListener(listener);
-                _context.Listeners.Update(listener);
-                await _context.SaveChangesAsync();
-                await _notifier.NotifyEditListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
+                try
+                {
+                    listener = await this.StartHttpListenerVerify(listener);
+                    _context.Listeners.Update(listener);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditListener(this, listener);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
+                }
+                catch (ControllerBadRequestException)
+                {
+                    _context.Listeners.Remove(listener);
+                    _context.SaveChanges();
+                    throw;
+                }
             }
             else
             {
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
             }
             return await this.GetHttpListener(listener.Id);
         }
 
         public async Task<BridgeListener> CreateBridgeListener(BridgeListener listener)
         {
+            listener.ListenerType = await this.GetListenerType(listener.ListenerTypeId);
             listener.Profile = await this.GetBridgeProfile(listener.ProfileId);
             // Append capital letter to appease Password complexity requirements, get rid of warning output
             string password = Utilities.CreateSecureGuid().ToString() + "A";
@@ -4064,28 +4821,46 @@ public static class Task
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
-                listener.Status = ListenerStatus.Active;
-                listener = await this.StartInitialBridgeListener(listener);
-                _context.Listeners.Update(listener);
-                await _context.SaveChangesAsync();
-                await _notifier.NotifyEditListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
+
+                try
+                {
+                    listener = await this.StartBridgeListenerVerify(listener);
+                    _context.Listeners.Update(listener);
+                    await _context.SaveChangesAsync();
+                    await _notifier.NotifyEditListener(this, listener);
+                    await LoggingService.Log(LogAction.Edit, LogLevel.Trace, listener);
+                }
+                catch (ControllerBadRequestException)
+                {
+                    _context.Listeners.Remove(listener);
+                    _context.SaveChanges();
+                    throw;
+                }
             }
             else
             {
                 await _context.Listeners.AddAsync(listener);
                 await _context.SaveChangesAsync();
                 await _notifier.NotifyCreateListener(this, listener);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, listener);
             }
             return await this.GetBridgeListener(listener.Id);
         }
 
         public async Task<IEnumerable<Listener>> CreateListeners(params Listener[] listeners)
         {
-            await _context.Listeners.AddRangeAsync(listeners);
-            await _context.SaveChangesAsync();
+            List<Listener> createdListeners = new List<Listener>();
             foreach (Listener l in listeners)
             {
-                await _notifier.NotifyCreateListener(this, l);
+                if (l.ListenerType.Name == "HTTP")
+                {
+                    createdListeners.Add(await this.CreateHttpListener((HttpListener)l));
+                }
+                else if (l.ListenerType.Name == "Bridge")
+                {
+                    createdListeners.Add(await this.CreateBridgeListener((BridgeListener)l));
+                }
             }
             return listeners;
         }
@@ -4111,26 +4886,24 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                DateTime eventTime = DateTime.UtcNow;
-                Event listenerEvent = await this.CreateEvent(new Event
+                await this.CreateEvent(new Event
                 {
-                    Time = eventTime,
+                    Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
                     MessageBody = "Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.Urls,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
-                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
-                matchingListener.Status = ListenerStatus.Active;
-                matchingListener = await this.StartInitialHttpListener(matchingListener);
+                matchingListener = await this.StartHttpListenerVerify(matchingListener);
             }
 
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditListener(this, matchingListener);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingListener);
             return await this.GetHttpListener(matchingListener.Id);
         }
 
@@ -4152,26 +4925,24 @@ public static class Task
                 matchingListener.Stop(_cancellationTokens[matchingListener.Id]);
                 matchingListener.Status = listener.Status;
                 matchingListener.StartTime = DateTime.MinValue;
-                DateTime eventTime = DateTime.UtcNow;
-                Event listenerEvent = await this.CreateEvent(new Event
+                await this.CreateEvent(new Event
                 {
-                    Time = eventTime,
+                    Time = DateTime.UtcNow,
                     MessageHeader = "Stopped Listener",
                     MessageBody = "Stopped Listener: " + matchingListener.Name + " at: " + matchingListener.ConnectAddresses,
                     Level = EventLevel.Warning,
                     Context = "*"
                 });
-                await _context.SaveChangesAsync();
             }
             else if (matchingListener.Status != ListenerStatus.Active && listener.Status == ListenerStatus.Active)
             {
-                matchingListener.Status = ListenerStatus.Active;
-                matchingListener = await this.StartInitialBridgeListener(matchingListener);
+                matchingListener = await this.StartBridgeListenerVerify(matchingListener);
             }
 
             _context.Listeners.Update(matchingListener);
             await _context.SaveChangesAsync();
             await _notifier.NotifyEditListener(this, matchingListener);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingListener);
             return await this.GetBridgeListener(matchingListener.Id);
         }
         #endregion
@@ -4231,19 +5002,18 @@ public static class Task
                 {
                     throw new ControllerBadRequestException($"BadRequest - HostedFile already exists at: {hostedFile.Path}");
                 }
-                FileIndicator indicator = new FileIndicator
+                Indicator indicator = await this.CreateIndicator(new FileIndicator
                 {
                     FileName = hostedFile.Path.Split("/").Last(),
                     FilePath = listener.Urls + hostedFile.Path,
                     MD5 = Encrypt.Utilities.GetMD5(Convert.FromBase64String(hostedFile.Content)),
                     SHA1 = Encrypt.Utilities.GetSHA1(Convert.FromBase64String(hostedFile.Content)),
                     SHA2 = Encrypt.Utilities.GetSHA256(Convert.FromBase64String(hostedFile.Content))
-                };
-                await _context.Indicators.AddAsync(indicator);
+                });
                 await _context.HostedFiles.AddAsync(hostedFile);
                 await _context.SaveChangesAsync();
-                // _notifier.OnCreateIndicator(this, indicator);
-                // _notifier.OnCreateHostedFile(this, hostedFile);
+                await _notifier.NotifyCreateHostedFile(this, hostedFile);
+                await LoggingService.Log(LogAction.Create, LogLevel.Trace, hostedFile);
                 return await this.GetHostedFile(hostedFile.Id);
             }
             catch (Exception)
@@ -4254,9 +5024,12 @@ public static class Task
 
         public async Task<IEnumerable<HostedFile>> CreateHostedFiles(params HostedFile[] files)
         {
-            await _context.HostedFiles.AddRangeAsync(files);
-            await _context.SaveChangesAsync();
-            return files;
+            List<HostedFile> createdFiles = new List<HostedFile>();
+            foreach (HostedFile file in files)
+            {
+                createdFiles.Add(await this.CreateHostedFile(file));
+            }
+            return createdFiles;
         }
 
         public async Task<HostedFile> EditHostedFile(int listenerId, HostedFile file)
@@ -4270,7 +5043,8 @@ public static class Task
                 HostedFile updatedFile = listener.HostFile(matchingFile);
                 _context.HostedFiles.Update(updatedFile);
                 await _context.SaveChangesAsync();
-                // _notifier.OnEditHostedFile(this, updatedFile);
+                await _notifier.NotifyEditHostedFile(this, updatedFile);
+                await LoggingService.Log(LogAction.Edit, LogLevel.Trace, updatedFile);
                 return await this.GetHostedFile(updatedFile.Id);
             }
             catch
@@ -4283,9 +5057,11 @@ public static class Task
         {
             HttpListener listener = await this.GetHttpListener(listenerId);
             HostedFile file = await this.GetHostedFileForListener(listenerId, hostedFileId);
+            listener.UnhostFile(file);
             _context.HostedFiles.Remove(file);
             await _context.SaveChangesAsync();
-            // _notifier.OnDeleteHostedFile(this, file.Id);
+            await _notifier.NotifyDeleteHostedFile(this, hostedFileId);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, file);
         }
         #endregion
 
@@ -4305,19 +5081,88 @@ public static class Task
             return launcher;
         }
 
-        public async Task<BinaryLauncher> GetBinaryLauncher()
+        public async Task<BinaryLauncher> GetBinaryLauncher(int id)
         {
-            BinaryLauncher launcher = (BinaryLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Binary);
-            if (launcher == null)
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.Binary)
             {
-                throw new ControllerNotFoundException($"NotFound - BinaryLauncher");
+                throw new ControllerNotFoundException($"NotFound - BinaryLauncher with id: {id}");
             }
-            return launcher;
+            return (BinaryLauncher) launcher;
         }
 
-        public async Task<BinaryLauncher> GenerateBinaryLauncher()
+        public async Task<ServiceBinaryLauncher> GetServiceBinaryLauncher(int id)
         {
-            BinaryLauncher launcher = await this.GetBinaryLauncher();
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.ServiceBinary)
+            {
+                throw new ControllerNotFoundException($"NotFound - ServiceBinaryLauncher with id: {id}");
+            }
+            return (ServiceBinaryLauncher)launcher;
+        }
+
+        public async Task<ShellCodeLauncher> GetShellCodeLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.ShellCode)
+            {
+                throw new ControllerNotFoundException($"NotFound - ShellCodeLauncher with id: {id}");
+            }
+            return (ShellCodeLauncher)launcher;
+        }
+
+        public async Task<PowerShellLauncher> GetPowerShellLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.PowerShell)
+            {
+                throw new ControllerNotFoundException($"NotFound - PowerShellLauncher with id: {id}");
+            }
+            return (PowerShellLauncher)launcher;
+        }
+
+        public async Task<MSBuildLauncher> GetMSBuildLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.MSBuild)
+            {
+                throw new ControllerNotFoundException($"NotFound - MSBuildLauncher with id: {id}");
+            }
+            return (MSBuildLauncher)launcher;
+        }
+
+        public async Task<InstallUtilLauncher> GetInstallUtilLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.InstallUtil)
+            {
+                throw new ControllerNotFoundException($"NotFound - InstallUtilLauncher with id: {id}");
+            }
+            return (InstallUtilLauncher)launcher;
+        }
+
+        public async Task<Regsvr32Launcher> GetRegsvr32Launcher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.Regsvr32)
+            {
+                throw new ControllerNotFoundException($"NotFound - Regsvr32Launcher with id: {id}");
+            }
+            return (Regsvr32Launcher)launcher;
+        }
+
+        public async Task<MshtaLauncher> GetMshtaLauncher(int id)
+        {
+            Launcher launcher = await this.GetLauncher(id);
+            if (launcher.Type != LauncherType.Mshta)
+            {
+                throw new ControllerNotFoundException($"NotFound - MshtaLauncher with id: {id}");
+            }
+            return (MshtaLauncher)launcher;
+        }
+
+        private async Task<Launcher> GenerateLauncher(Launcher launcher)
+        {
             Listener listener = await this.GetListener(launcher.ListenerId);
             ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
             Profile profile = await this.GetProfile(listener.ProfileId);
@@ -4348,33 +5193,85 @@ public static class Task
             await _context.SaveChangesAsync();
             await _notifier.NotifyCreateGrunt(this, grunt);
 
-            launcher.GetLauncher(
+            launcher.GetLauncherString(
                 this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
                 CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
                 grunt,
                 template
             );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetBinaryLauncher();
+            return launcher;
         }
 
-        public async Task<BinaryLauncher> GenerateBinaryHostedLauncher(HostedFile file)
+        private async Task<Launcher> CreateLauncher(Launcher launcher)
         {
-            BinaryLauncher launcher = await this.GetBinaryLauncher();
+            Launcher generatedLauncher = await this.GenerateLauncher(launcher); 
+            await _context.Launchers.AddAsync(generatedLauncher);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateLauncher(this, launcher);
+            await LoggingService.Log(LogAction.Create, LogLevel.Trace, launcher);
+            return await this.GetLauncher(generatedLauncher.Id);
+        }
+
+        public async Task<BinaryLauncher> CreateBinaryLauncher(BinaryLauncher launcher)
+        {
+            return await this.GetBinaryLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<ServiceBinaryLauncher> CreateServiceBinaryLauncher(ServiceBinaryLauncher launcher)
+        {
+            return await this.GetServiceBinaryLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<ShellCodeLauncher> CreateShellCodeLauncher(ShellCodeLauncher launcher)
+        {
+            return await this.GetShellCodeLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<PowerShellLauncher> CreatePowerShellLauncher(PowerShellLauncher launcher)
+        {
+            return await this.GetPowerShellLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<MSBuildLauncher> CreateMSBuildLauncher(MSBuildLauncher launcher)
+        {
+            if (launcher.DotNetVersion == Common.DotNetVersion.Net35)
+            {
+                throw new ControllerBadRequestException($"BadRequest - MSBuildLauncher not compatible with DotNetVersion: {launcher.DotNetVersion}");
+            }
+            return await this.GetMSBuildLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<InstallUtilLauncher> CreateInstallUtilLauncher(InstallUtilLauncher launcher)
+        {
+            return await this.GetInstallUtilLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<Regsvr32Launcher> CreateRegsvr32Launcher(Regsvr32Launcher launcher)
+        {
+            return await this.GetRegsvr32Launcher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<MshtaLauncher> CreateMshtaLauncher(MshtaLauncher launcher)
+        {
+            return await this.GetMshtaLauncher((await this.CreateLauncher(launcher)).Id);
+        }
+
+        public async Task<Launcher> CreateHostedLauncher(int id, HostedFile file)
+        {
+            Launcher launcher = await this.GetLauncher(id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
+            launcher.GetHostedLauncherString(listener, savedFile);
             _context.Launchers.Update(launcher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetBinaryLauncher();
+            await _notifier.NotifyEditLauncher(this, launcher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, launcher);
+            return await this.GetLauncher(id);
         }
 
         public async Task<BinaryLauncher> EditBinaryLauncher(BinaryLauncher launcher)
         {
-            BinaryLauncher matchingLauncher = await this.GetBinaryLauncher();
+            BinaryLauncher matchingLauncher = await this.GetBinaryLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4389,82 +5286,42 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (BinaryLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetBinaryLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetBinaryLauncher(matchingLauncher.Id);
         }
 
-        public async Task<ShellCodeLauncher> GetShellCodeLauncher()
+        public async Task<ServiceBinaryLauncher> EditServiceBinaryLauncher(ServiceBinaryLauncher launcher)
         {
-            ShellCodeLauncher launcher = (ShellCodeLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.ShellCode);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - ShellCodeLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<ShellCodeLauncher> GenerateShellCodeLauncher()
-        {
-            ShellCodeLauncher launcher = await this.GetShellCodeLauncher();
+            ServiceBinaryLauncher matchingLauncher = await this.GetServiceBinaryLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-
-            if (!template.CompatibleListenerTypes.Select(LT => LT.Id).Contains(listener.ListenerTypeId))
-            {
-                throw new ControllerBadRequestException($"BadRequest - ListenerType not compatible with chosen ImplantTemplate");
-            }
-
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
+            matchingLauncher.ListenerId = listener.Id;
+            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
+            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
+            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
+            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
+            matchingLauncher.ValidateCert = launcher.ValidateCert;
+            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
+            matchingLauncher.Delay = launcher.Delay;
+            matchingLauncher.JitterPercent = launcher.JitterPercent;
+            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
+            matchingLauncher.KillDate = launcher.KillDate;
+            matchingLauncher.LauncherString = launcher.LauncherString;
+            matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (ServiceBinaryLauncher)await this.GenerateLauncher(matchingLauncher);
+            _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetShellCodeLauncher();
-        }
-
-        public async Task<ShellCodeLauncher> GenerateShellCodeHostedLauncher(HostedFile file)
-        {
-            ShellCodeLauncher launcher = await this.GetShellCodeLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetShellCodeLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetServiceBinaryLauncher(matchingLauncher.Id);
         }
 
         public async Task<ShellCodeLauncher> EditShellCodeLauncher(ShellCodeLauncher launcher)
         {
-            ShellCodeLauncher matchingLauncher = await this.GetShellCodeLauncher();
+            ShellCodeLauncher matchingLauncher = await this.GetShellCodeLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4479,76 +5336,17 @@ public static class Task
             matchingLauncher.KillDate = launcher.KillDate;
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (ShellCodeLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetShellCodeLauncher();
-        }
-
-        public async Task<PowerShellLauncher> GetPowerShellLauncher()
-        {
-            PowerShellLauncher launcher = (PowerShellLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.PowerShell);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - PowerShellLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<PowerShellLauncher> GeneratePowerShellLauncher()
-        {
-            PowerShellLauncher launcher = await this.GetPowerShellLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetPowerShellLauncher();
-        }
-
-        public async Task<PowerShellLauncher> GeneratePowerShellHostedLauncher(HostedFile file)
-        {
-            PowerShellLauncher launcher = await this.GetPowerShellLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetPowerShellLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetShellCodeLauncher(matchingLauncher.Id);
         }
 
         public async Task<PowerShellLauncher> EditPowerShellLauncher(PowerShellLauncher launcher)
         {
-            PowerShellLauncher matchingLauncher = await this.GetPowerShellLauncher();
+            PowerShellLauncher matchingLauncher = await this.GetPowerShellLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4566,76 +5364,17 @@ public static class Task
             matchingLauncher.ParameterString = launcher.ParameterString;
             matchingLauncher.PowerShellCode = launcher.PowerShellCode;
             matchingLauncher.EncodedLauncherString = launcher.EncodedLauncherString;
+            matchingLauncher = (PowerShellLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetPowerShellLauncher();
-        }
-
-        public async Task<MSBuildLauncher> GetMSBuildLauncher()
-        {
-            MSBuildLauncher launcher = (MSBuildLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.MSBuild);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - MSBuildLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<MSBuildLauncher> GenerateMSBuildLauncher()
-        {
-            MSBuildLauncher launcher = await this.GetMSBuildLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMSBuildLauncher();
-        }
-
-        public async Task<MSBuildLauncher> GenerateMSBuildHostedLauncher(HostedFile file)
-        {
-            MSBuildLauncher launcher = await this.GetMSBuildLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMSBuildLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetPowerShellLauncher(matchingLauncher.Id);
         }
 
         public async Task<MSBuildLauncher> EditMSBuildLauncher(MSBuildLauncher launcher)
         {
-            MSBuildLauncher matchingLauncher = await this.GetMSBuildLauncher();
+            MSBuildLauncher matchingLauncher = await this.GetMSBuildLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4653,76 +5392,17 @@ public static class Task
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.TargetName = launcher.TargetName;
             matchingLauncher.TaskName = launcher.TaskName;
+            matchingLauncher = (MSBuildLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetMSBuildLauncher();
-        }
-
-        public async Task<InstallUtilLauncher> GetInstallUtilLauncher()
-        {
-            InstallUtilLauncher launcher = (InstallUtilLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.InstallUtil);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - InstallUtilLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<InstallUtilLauncher> GenerateInstallUtilLauncher()
-        {
-            InstallUtilLauncher launcher = await this.GetInstallUtilLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetInstallUtilLauncher();
-        }
-
-        public async Task<InstallUtilLauncher> GenerateInstallUtilHostedLauncher(HostedFile file)
-        {
-            InstallUtilLauncher launcher = await this.GetInstallUtilLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetInstallUtilLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetMSBuildLauncher(matchingLauncher.Id);
         }
 
         public async Task<InstallUtilLauncher> EditInstallUtilLauncher(InstallUtilLauncher launcher)
         {
-            InstallUtilLauncher matchingLauncher = await this.GetInstallUtilLauncher();
+            InstallUtilLauncher matchingLauncher = await this.GetInstallUtilLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4738,164 +5418,17 @@ public static class Task
             matchingLauncher.LauncherString = launcher.LauncherString;
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.StagerCode = launcher.StagerCode;
+            matchingLauncher = (InstallUtilLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetInstallUtilLauncher();
-        }
-
-        public async Task<WmicLauncher> GetWmicLauncher()
-        {
-            WmicLauncher launcher = (WmicLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Wmic);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - WmicLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<WmicLauncher> GenerateWmicLauncher()
-        {
-            WmicLauncher launcher = await this.GetWmicLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWmicLauncher();
-        }
-
-        public async Task<WmicLauncher> GenerateWmicHostedLauncher(HostedFile file)
-        {
-            WmicLauncher launcher = await this.GetWmicLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWmicLauncher();
-        }
-
-        public async Task<WmicLauncher> EditWmicLauncher(WmicLauncher launcher)
-        {
-            WmicLauncher matchingLauncher = await this.GetWmicLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
-            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
-            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
-            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
-            matchingLauncher.ValidateCert = launcher.ValidateCert;
-            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
-            matchingLauncher.Delay = launcher.Delay;
-            matchingLauncher.JitterPercent = launcher.JitterPercent;
-            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
-            matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.StagerCode = launcher.StagerCode;
-            matchingLauncher.DiskCode = launcher.DiskCode;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.ProgId = launcher.ProgId;
-            _context.Launchers.Update(matchingLauncher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetWmicLauncher();
-        }
-
-        public async Task<Regsvr32Launcher> GetRegsvr32Launcher()
-        {
-            Regsvr32Launcher launcher = (Regsvr32Launcher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Regsvr32);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - Regsvr32Launcher");
-            }
-            return launcher;
-        }
-
-        public async Task<Regsvr32Launcher> GenerateRegsvr32Launcher()
-        {
-            Regsvr32Launcher launcher = await this.GetRegsvr32Launcher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetRegsvr32Launcher();
-        }
-
-        public async Task<Regsvr32Launcher> GenerateRegsvr32HostedLauncher(HostedFile file)
-        {
-            Regsvr32Launcher launcher = await this.GetRegsvr32Launcher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetRegsvr32Launcher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetInstallUtilLauncher(matchingLauncher.Id);
         }
 
         public async Task<Regsvr32Launcher> EditRegsvr32Launcher(Regsvr32Launcher launcher)
         {
-            Regsvr32Launcher matchingLauncher = await this.GetRegsvr32Launcher();
+            Regsvr32Launcher matchingLauncher = await this.GetRegsvr32Launcher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -4918,76 +5451,17 @@ public static class Task
             matchingLauncher.ProgId = launcher.ProgId;
             matchingLauncher.ParameterString = launcher.ParameterString;
             matchingLauncher.DllName = launcher.DllName;
+            matchingLauncher = (Regsvr32Launcher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetRegsvr32Launcher();
-        }
-
-        public async Task<MshtaLauncher> GetMshtaLauncher()
-        {
-            MshtaLauncher launcher = (MshtaLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Mshta);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - MshtaLauncher");
-            }
-            return launcher;
-        }
-
-        public async Task<MshtaLauncher> GenerateMshtaLauncher()
-        {
-            MshtaLauncher launcher = await this.GetMshtaLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
-            {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMshtaLauncher();
-        }
-
-        public async Task<MshtaLauncher> GenerateMshtaHostedLauncher(HostedFile file)
-        {
-            MshtaLauncher launcher = await this.GetMshtaLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetMshtaLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetRegsvr32Launcher(matchingLauncher.Id);
         }
 
         public async Task<MshtaLauncher> EditMshtaLauncher(MshtaLauncher launcher)
         {
-            MshtaLauncher matchingLauncher = await this.GetMshtaLauncher();
+            MshtaLauncher matchingLauncher = await this.GetMshtaLauncher(launcher.Id);
             Listener listener = await this.GetListener(launcher.ListenerId);
             matchingLauncher.ListenerId = listener.Id;
             matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
@@ -5006,186 +5480,45 @@ public static class Task
             matchingLauncher.DiskCode = launcher.DiskCode;
             matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
             matchingLauncher.ProgId = launcher.ProgId;
+            matchingLauncher = (MshtaLauncher)await this.GenerateLauncher(matchingLauncher);
             _context.Launchers.Update(matchingLauncher);
             await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetMshtaLauncher();
+            await _notifier.NotifyEditLauncher(this, matchingLauncher);
+            await LoggingService.Log(LogAction.Edit, LogLevel.Trace, matchingLauncher);
+            return await this.GetMshtaLauncher(matchingLauncher.Id);
         }
 
-        public async Task<CscriptLauncher> GetCscriptLauncher()
+        public async Task DeleteLauncher(int id)
         {
-            CscriptLauncher launcher = (CscriptLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Cscript);
-            if (launcher == null)
+            Launcher launcher = await this.GetLauncher(id);
+            _context.Launchers.Remove(launcher);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyDeleteLauncher(this, id);
+            await LoggingService.Log(LogAction.Delete, LogLevel.Trace, launcher);
+        }
+        #endregion
+
+        #region Settings Actions
+        public async Task ResetCovenantToFactoryDefault(ClaimsPrincipal principal)
+        {
+            if (_userManager.Users.Any() && !principal.Identity.IsAuthenticated)
             {
-                throw new ControllerNotFoundException($"NotFound - CscriptLauncher");
+                throw new ControllerUnauthorizedException($"Unauthorized - Must be signed in to register a new user.");
             }
-            return launcher;
-        }
-
-        public async Task<CscriptLauncher> GenerateCscriptLauncher()
-        {
-            CscriptLauncher launcher = await this.GetCscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
+            if (_userManager.Users.Any() && !principal.IsInRole("Administrator"))
             {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetCscriptLauncher();
-        }
-
-        public async Task<CscriptLauncher> GenerateCscriptHostedLauncher(HostedFile file)
-        {
-            CscriptLauncher launcher = await this.GetCscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetCscriptLauncher();
-        }
-
-        public async Task<CscriptLauncher> EditCscriptLauncher(CscriptLauncher launcher)
-        {
-            CscriptLauncher matchingLauncher = await this.GetCscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
-            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
-            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
-            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
-            matchingLauncher.ValidateCert = launcher.ValidateCert;
-            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
-            matchingLauncher.Delay = launcher.Delay;
-            matchingLauncher.JitterPercent = launcher.JitterPercent;
-            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
-            matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.StagerCode = launcher.StagerCode;
-            matchingLauncher.DiskCode = launcher.DiskCode;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.ProgId = launcher.ProgId;
-            _context.Launchers.Update(matchingLauncher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetCscriptLauncher();
-        }
-
-        public async Task<WscriptLauncher> GetWscriptLauncher()
-        {
-            WscriptLauncher launcher = (WscriptLauncher)await _context.Launchers.FirstOrDefaultAsync(S => S.Type == LauncherType.Wscript);
-            if (launcher == null)
-            {
-                throw new ControllerNotFoundException($"NotFound - WscriptLauncher");
+                throw new ControllerUnauthorizedException($"Unauthorized - Must be signed in as an Administrator to reset Covenant.");
             }
-            return launcher;
-        }
-
-        public async Task<WscriptLauncher> GenerateWscriptLauncher()
-        {
-            WscriptLauncher launcher = await this.GetWscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            ImplantTemplate template = await this.GetImplantTemplate(launcher.ImplantTemplateId);
-            Profile profile = await this.GetProfile(listener.ProfileId);
-            Grunt grunt = new Grunt
+            IEnumerable<Listener> listeners = await this.GetListeners();
+            this.DisposeContext();
+            foreach (Listener l in listeners.Where(L => L.Status == ListenerStatus.Active))
             {
-                ListenerId = listener.Id,
-                Listener = listener,
-                ImplantTemplateId = template.Id,
-                ImplantTemplate = template,
-                SMBPipeName = launcher.SMBPipeName,
-                ValidateCert = launcher.ValidateCert,
-                UseCertPinning = launcher.UseCertPinning,
-                Delay = launcher.Delay,
-                JitterPercent = launcher.JitterPercent,
-                ConnectAttempts = launcher.ConnectAttempts,
-                KillDate = launcher.KillDate,
-                DotNetVersion = launcher.DotNetVersion,
-                RuntimeIdentifier = launcher.RuntimeIdentifier
-            };
-
-            await _context.Grunts.AddAsync(grunt);
-            await _context.SaveChangesAsync();
-            await _notifier.NotifyCreateGrunt(this, grunt);
-
-            launcher.GetLauncher(
-                this.GruntTemplateReplace(template.StagerCode, template, grunt, listener, profile),
-                CompileGruntCode(template.StagerCode, template, grunt, listener, profile, launcher),
-                grunt,
-                template
-            );
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWscriptLauncher();
-        }
-
-        public async Task<WscriptLauncher> GenerateWscriptHostedLauncher(HostedFile file)
-        {
-            WscriptLauncher launcher = await this.GetWscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            HostedFile savedFile = await this.GetHostedFile(file.Id);
-            string hostedLauncher = launcher.GetHostedLauncher(listener, savedFile);
-            _context.Launchers.Update(launcher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, launcher);
-            return await this.GetWscriptLauncher();
-        }
-
-        public async Task<WscriptLauncher> EditWscriptLauncher(WscriptLauncher launcher)
-        {
-            WscriptLauncher matchingLauncher = await this.GetWscriptLauncher();
-            Listener listener = await this.GetListener(launcher.ListenerId);
-            matchingLauncher.ListenerId = listener.Id;
-            matchingLauncher.ImplantTemplateId = launcher.ImplantTemplateId;
-            matchingLauncher.DotNetVersion = launcher.DotNetVersion;
-            matchingLauncher.RuntimeIdentifier = launcher.RuntimeIdentifier;
-            matchingLauncher.SMBPipeName = launcher.SMBPipeName;
-            matchingLauncher.ValidateCert = launcher.ValidateCert;
-            matchingLauncher.UseCertPinning = launcher.UseCertPinning;
-            matchingLauncher.Delay = launcher.Delay;
-            matchingLauncher.JitterPercent = launcher.JitterPercent;
-            matchingLauncher.ConnectAttempts = launcher.ConnectAttempts;
-            matchingLauncher.KillDate = launcher.KillDate;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.LauncherString = launcher.LauncherString;
-            matchingLauncher.StagerCode = launcher.StagerCode;
-            matchingLauncher.DiskCode = launcher.DiskCode;
-            matchingLauncher.ScriptLanguage = launcher.ScriptLanguage;
-            matchingLauncher.ProgId = launcher.ProgId;
-            _context.Launchers.Update(matchingLauncher);
-            await _context.SaveChangesAsync();
-            // _notifier.OnEditLauncher(this, matchingLauncher);
-            return await this.GetWscriptLauncher();
+                l.Status = ListenerStatus.Stopped;
+                await this.EditListener(l);
+                this.DisposeContext();
+            }
+            await _context.Database.EnsureDeletedAsync();
+            await DbInitializer.Initialize(this, _context, _roleManager, _userManager);
         }
         #endregion
     }

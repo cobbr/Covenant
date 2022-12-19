@@ -2,12 +2,15 @@
 
 @using System.Collections.Generic
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
+@using Covenant.Models.Covenant
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
 @inject INotificationService INotificationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <CovenantTable TItem="Grunt" Items="Grunts" ItemsChanged="GruntsChanged" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -44,9 +47,11 @@
         <SortableTableHeader TItem="Grunt" TItem2="string" GetSortableProperty="(grunt) => grunt.ImplantTemplate?.Name">
             <HeaderContent>Template</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="grunt">
-        <tr style="opacity: @GetGruntStatusOpacity(grunt.Status)">
+        @{ string opacity = GetGruntOpacity(grunt); }
+        <tr>
             @if (this.OnSelectTerminal.HasDelegate)
             {
                 <td @attributes="InputAttributes">
@@ -55,18 +60,52 @@
                     </div>
                 </td>
             }
-            <td @attributes="InputAttributes">
+            <td @attributes="InputAttributes" style="opacity: @GetGruntOpacity(grunt)">
                 <a href="/grunt/interact/@grunt.Id">
                     @grunt.Name
                 </a>
             </td>
-            <td @attributes="InputAttributes">@grunt.Hostname</td>
-            <td @attributes="InputAttributes">@grunt.UserName</td>
-            <td @attributes="InputAttributes">@grunt.Integrity</td>
-            <td @attributes="InputAttributes">@grunt.LastCheckIn</td>
-            <td @attributes="InputAttributes">@grunt.Status</td>
-            <td @attributes="InputAttributes">@grunt.Note</td>
-            <td @attributes="InputAttributes">@grunt.ImplantTemplate?.Name</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.Hostname</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.UserName</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.Integrity</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.LastCheckIn</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.Status</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.Note</td>
+            <td @attributes="InputAttributes" style="opacity: @opacity">@grunt.ImplantTemplate?.Name</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionGrunt">
+                    @if (this.OnSelectTerminal.HasDelegate)
+                    {
+                        <DropdownActionItem Item="grunt" OnAction="(item => OnSelectTerminal.InvokeAsync(item))">
+                            <span class="fe fe-terminal"></span>
+                            Interact
+                        </DropdownActionItem>
+                    }
+                    @if (!grunt.Hidden)
+                    {
+                        <DropdownActionItem TItem="Grunt" Item="grunt" OnAction="(async item => await OnHideGrunt(item))" class="text-warning">
+                            <span class="fe fe-eye-off"></span>
+                            Hide
+                        </DropdownActionItem>
+                    }
+                    else
+                    {
+                        <DropdownActionItem Item="grunt" OnAction="(async item => await OnUnhideGrunt(item))" class="text-success">
+                            <span class="fe fe-eye"></span>
+                            Unhide
+                        </DropdownActionItem>
+                    }
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="grunt" OnAction="(async item => await OnExitGrunt(item))" class="text-danger">
+                        <span class="fe fe-slash"></span>
+                        Exit
+                    </DropdownActionItem>
+                    <DropdownActionItem Item="grunt" OnAction="(async item => await OnDeleteGrunt(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
     <ButtonTray>@ButtonTray</ButtonTray>
@@ -94,6 +133,9 @@
     [Parameter]
     public EventCallback<Grunt> OnSelectTerminal { get; set; }
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
     [Parameter]
     public RenderFragment ButtonTray { get; set; }
 
@@ -106,9 +148,9 @@
         Service.DisposeContext();
     }
 
-    private string GetGruntStatusOpacity(GruntStatus s)
+    private string GetGruntOpacity(Grunt g)
     {
-        return s == GruntStatus.Active ? "1.0" : "0.3";
+        return g.Hidden || g.Status != GruntStatus.Active ? "0.3" : "1.0";
     }
 
     private void OnGruntsChanged(List<Grunt> Grunts)
@@ -129,5 +171,62 @@
             grunt.Integrity.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.OperatingSystem.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             grunt.Process.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnHideGrunt(Grunt grunt)
+    {
+        try
+        {
+            grunt.Hidden = true;
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnUnhideGrunt(Grunt grunt)
+    {
+        try
+        {
+            grunt.Hidden = false;
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditGrunt(grunt, await Service.GetCurrentUser(state.User));
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnExitGrunt(Grunt grunt)
+    {
+        try
+        {
+            CovenantUser user = await Service.GetCurrentUser((await this.AuthenticationState).User);
+            GruntCommand command = await Service.InteractGrunt(grunt.Id, user.Id, "Exit");
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
+    }
+
+    private async Task OnDeleteGrunt(Grunt grunt)
+    {
+        try
+        {
+            await Service.DeleteGrunt(grunt.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // return RedirectToAction(nameof(Interact), new { id = grunt.Id });
+        }
     }
 }

@@ -108,7 +108,7 @@
             <input id="Hostname" name="Hostname" value="@Grunt.Hostname" class="form-control" readonly>
         </div>
         <div class="form-group col-md-4">
-            <label for="OperatingSystem"></label>
+            <label for="OperatingSystem">OperatingSystem</label>
             <input id="OperatingSystem" name="OperatingSystem" value="@Grunt.OperatingSystem" class="form-control" readonly>
         </div>
     </div>
@@ -175,7 +175,7 @@
         <button type="submit" class="btn btn-primary">
             <span class="fe fe-edit"></span> Edit
         </button>
-        @if (this.Grunt.Status == GruntStatus.Hidden)
+        @if (this.Grunt.Hidden)
         {
             <button type="button" @onclick="OnUnhide" class="btn btn-success ml-2">
                 <span class="fe fe-eye"></span> Unhide
@@ -204,16 +204,13 @@
 
     private async Task OnHide()
     {
-        this.Grunt.Status = GruntStatus.Hidden;
+        this.Grunt.Hidden = true;
         await this.OnSubmit.InvokeAsync(this.Grunt);
     }
 
     private async Task OnUnhide()
     {
-        if (this.Grunt.Status == GruntStatus.Hidden)
-        {
-            this.Grunt.Status = GruntStatus.Active;
-        }
+        this.Grunt.Hidden = false;
         await this.OnSubmit.InvokeAsync(this.Grunt);
     }
 

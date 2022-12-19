@@ -2,18 +2,19 @@
 
 @using System.IO
 @using System.Threading
-@using System.Threading.Tasks 
+@using System.Threading.Tasks
 @using Microsoft.JSInterop
-@using BlazorInputFile
+@using Microsoft.AspNetCore.Components.Forms
+
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @inject IJSRuntime IJSRuntime
 
-<div class="modal fade" id="file-modal" tabindex="-1" role="dialog" aria-labelledby="file-modal-label" aria-hidden="true">
+<div class="modal fade" id="@GuidId" tabindex="-1" role="dialog" aria-labelledby="@GuidId-label" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="file-modal-label">Select File</h5>
+                <h5 class="modal-title" id="@GuidId-label">Select File</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -28,7 +29,7 @@
                         {
                             <div class="form-group">
                                 <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
-                                <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                                <InputFile OnChange="(e => OnUpload(e, number))" />
                                 @if (this.UploadInProgress)
                                 {
                                     <span class="fe fe-loader spin"></span>
@@ -63,73 +64,51 @@
 
     private GruntTask GruntTask { get; set; }
     private InputFile InputFile { get; set; }
-    private IList<MemoryStream> UploadedFiles { get; set; }
-    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
-    private bool UploadInProgress { get; set; } = false;
+
+    private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
 
     public async Task Show(GruntTask task)
     {
         this.GruntTask = task;
+        foreach (GruntTaskOption option in this.GruntTask.Options)
+        {
+            if (!string.IsNullOrWhiteSpace(option.DefaultValue) && string.IsNullOrWhiteSpace(option.Value))
+            {
+                option.Value = option.DefaultValue;
+            }
+        }
         this.StateHasChanged();
-        await IJSRuntime.InvokeAsync<string>("ActivateModal", "#file-modal");
+        await IJSRuntime.InvokeAsync<string>("ActivateModal", $"#{@GuidId}");
     }
 
     private async Task Execute()
     {
-        await UploadSemaphore.WaitAsync();
-        if (this.UploadedFiles != null && this.GruntTask.Options.Any(O => O.FileOption && string.IsNullOrEmpty(O.Value)))
-        {
-            this.OnRead(this.UploadedFiles);
-        }
-        UploadSemaphore.Release();
-        await IJSRuntime.InvokeAsync<string>("ModalCommand", "#file-modal", "hide");
+        await IJSRuntime.InvokeAsync<string>("ModalCommand", $"#{@GuidId}", "hide");
         await OnSubmit.InvokeAsync(GruntTask);
     }
 
     private string ErrorMessage { get; set; }
-    private async Task OnUpload(IFileListEntry[] files)
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
+    private async Task OnUpload(InputFileChangeEventArgs e, int i)
     {
         try
         {
             await UploadSemaphore.WaitAsync();
             this.UploadInProgress = true;
             this.StateHasChanged();
-            this.UploadedFiles = new List<MemoryStream>();
-            for (int i = 0; i < files.Length; i++)
+            using (MemoryStream ms = new MemoryStream())
             {
-                if (files[i] != null)
-                {
-                    MemoryStream ms = new MemoryStream();
-                    await files[i].Data.CopyToAsync(ms);
-                    this.UploadedFiles.Add(ms);
-                    this.OnRead(this.UploadedFiles);
-                }
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                this.GruntTask.Options[i].Value = Convert.ToBase64String(ms.ToArray());
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            this.ErrorMessage = e.Message;
+            this.ErrorMessage = ex.Message;
         }
         this.UploadInProgress = false;
         this.StateHasChanged();
         UploadSemaphore.Release();
-    }
-
-    private void OnRead(IList<MemoryStream> Streams)
-    {
-        try
-        {
-            for (int i = 0; i < Streams.Count(); i++)
-            {
-                GruntTaskOption option = this.GruntTask.Options.Where(O => O.FileOption).ToList()[i];
-                option.Value = Convert.ToBase64String(Streams[i].ToArray());
-                this.UploadedFiles[i] = new MemoryStream(Convert.FromBase64String(option.Value));
-            }
-        }
-        catch (Exception e)
-        {
-            this.ErrorMessage = e.Message;
-            this.StateHasChanged();
-        }
     }
 }

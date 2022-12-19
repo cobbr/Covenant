@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.161
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Covenant", "Covenant\Covenant.csproj", "{D5865774-CD82-4CCE-A3F1-7F2C4639301B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Covenant", "Covenant\Covenant.csproj", "{D5865774-CD82-4CCE-A3F1-7F2C4639301B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Covenant.API", "Covenant.API\Covenant.API.csproj", "{9BFCF3FC-791C-4C88-B20E-40F264144A4D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D5865774-CD82-4CCE-A3F1-7F2C4639301B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5865774-CD82-4CCE-A3F1-7F2C4639301B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5865774-CD82-4CCE-A3F1-7F2C4639301B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BFCF3FC-791C-4C88-B20E-40F264144A4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BFCF3FC-791C-4C88-B20E-40F264144A4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BFCF3FC-791C-4C88-B20E-40F264144A4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BFCF3FC-791C-4C88-B20E-40F264144A4D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

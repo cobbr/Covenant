@@ -1,0 +1,264 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@using Covenant.Models.Covenant
+@using Covenant.Components.Shared
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject UserManager<CovenantUser> UserManager
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+
+<div class="d-flex flex-row flex-nowrap mb-3">
+    @if (BackStack.Any())
+    {
+        <a type="button" class="d-flex align-items-center mr-1" @onclick="OnBackButton">
+            <span class="fe fe-arrow-left"></span>
+        </a>
+    }
+    else
+    {
+        <a class="d-flex align-items-center mr-1 disabled">
+            <span class="fe fe-arrow-left text-muted"></span>
+        </a>
+    }
+    @if (ForwardStack.Any())
+    {
+        <a type="button" class="d-flex align-items-center ml-2" @onclick="OnForwardButton">
+            <span class="fe fe-arrow-right"></span>
+        </a>
+    }
+    else
+    {
+        <a class="d-flex align-items-center ml-2 disabled">
+            <span class="fe fe-arrow-right text-muted"></span>
+        </a>
+    }
+    <input class="form-control ml-2" @onchange="OnSearch" value="@FolderSearch" />
+    <button type="button" class="btn btn-outline-primary" @onclick="OnList"><span class="fe fe-refresh-cw"></span></button>
+</div>
+@if (!this.Grunt.FolderRoots.Any())
+{
+    <p>No files discovered yet!</p>
+}
+else
+{
+    <div class="d-flex flex-row flex-nowrap">
+        <div class="border-right border-top overflow-auto pt-2" style="width: 300px; height: 70vh;">
+            @foreach (Folder RootFolder in this.Grunt.FolderRoots)
+            {
+                <ul class="pl-0" style="list-style-type:none;">
+                    <FolderDisplay Folder="RootFolder" OnSelectFolder="OnSelectFolder" />
+                </ul>
+            }
+        </div>
+        <div class="flex-grow-1 overflow-auto pl-4" style="height: 70vh;">
+            @if (CurrentFolder == null)
+            {
+                <p>Unknown folder</p>
+            }
+            else
+            {
+                <CovenantTable class="table table-hover" TItem="FolderFileNode" Items="CurrentFolder.Nodes.ToList()" IsSearchable="false" IsSortable="false" IsPaginated="true" PageLength="100">
+                    <TableHeader>
+                        <SortableTableHeader TItem="FolderFileNode" TItem2="string" GetSortableProperty="(node) => node.Name">
+                            <HeaderContent>Name</HeaderContent>
+                        </SortableTableHeader>
+                        <SortableTableHeader TItem="FolderFileNode" TItem2="long" GetSortableProperty="(node) => node.Length">
+                            <HeaderContent>Length</HeaderContent>
+                        </SortableTableHeader>
+                        <SortableTableHeader TItem="FolderFileNode" TItem2="DateTime" GetSortableProperty="(node) => node.CreationTime">
+                            <HeaderContent>CreationTime</HeaderContent>
+                        </SortableTableHeader>
+                        <th></th>
+                    </TableHeader>
+                    <ExtraRows>
+                        @if (CurrentFolder.ParentId != null && CurrentFolder.ParentId != 0)
+                        {
+                            <tr>
+                                <td class="p-2">
+                                    <a type="button" @onclick="(e => OnSelectFolder(CurrentFolder.ParentId))">
+                                        <span class="fe fe-folder text-muted"></span>
+                                        ..
+                                    </a>
+                                </td>
+                                <td class="p-2"></td>
+                                <td class="p-2"></td>
+                                <td class="p-2"></td>
+                            </tr>
+                        }
+                    </ExtraRows>
+                    <TableRow Context="node">
+                        <tr>
+                            @{
+                                string name = node.Name;
+                                if (name.Length > 25)
+                                {
+                                    name = name.Substring(0, 22) + "...";
+                                }
+                            }
+                            @if (node is Folder folder)
+                            {
+                                <td class="p-2">
+                                    <a type="button" class="d-flex flex-row flex-nowrap" @onclick="(e => OnSelectFolder(folder.Id))">
+                                        <span class="fe fe-folder text-muted"></span>
+                                        <span class="pl-2">@name</span>
+                                    </a>
+                                </td>
+                                <td class="p-2"></td>
+                                <td class="p-2"></td>
+                                <td class="p-2"></td>
+                            }
+                            else if (node is FolderFile file)
+                            {
+                                <td class="p-2">
+                                    <span class="fe fe-file text-muted"></span>
+                                    <span class="pl-1">@name</span>
+                                </td>
+                                <td class="p-2">@file.Length</td>
+                                <td class="p-2">@file.CreationTime</td>
+                                <td class="p-2" style="text-align: right;">
+                                    <ActionDropdown Name="dropdownActionFile">
+                                        <DropdownActionItem Item="file" OnAction="(async item => await OnDownloadFile(file))">
+                                            <span class="fe fe-download"></span>
+                                            Download
+                                        </DropdownActionItem>
+                                    </ActionDropdown>
+                                </td>
+                            }
+                        </tr>
+                    </TableRow>
+                </CovenantTable>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Grunt Grunt { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private CovenantUser CurrentUser { get; set; }
+    private Folder CurrentFolder { get; set; }
+
+    private string FolderSearch { get; set; }
+
+    private Stack<string> BackStack { get; set; } = new Stack<string>();
+    private Stack<string> ForwardStack { get; set; } = new Stack<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.CurrentFolder = this.Grunt.FolderRoots.FirstOrDefault();
+        this.FolderSearch = this.CurrentFolder?.FullName;
+        this.CurrentUser = await Service.GetCurrentUser((await AuthenticationState).User);
+        Service.DisposeContext();
+        this.INotificationService.OnEditGrunt += OnEditGrunt;
+        this.INotificationService.OnEditFolder += OnEditFolder;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditGrunt -= OnEditGrunt;
+        this.INotificationService.OnEditFolder -= OnEditFolder;
+    }
+
+    private void OnEditGrunt(object sender, Grunt grunt)
+    {
+        if (this.Grunt.FolderRoots.Count != grunt.FolderRoots.Count)
+        {
+            this.Grunt = Service.GetGrunt(this.Grunt.Id).WaitResult();
+            this.CurrentFolder = this.Grunt.FolderRoots.FirstOrDefault();
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnEditFolder(object sender, Folder folder)
+    {
+        if (this.CurrentFolder != null && this.CurrentFolder.Id == folder.Id)
+        {
+            this.CurrentFolder = folder;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task OnSelectFolder(int? folderId)
+    {
+        if (this.CurrentFolder != null)
+        {
+            this.BackStack.Push(this.CurrentFolder.FullName);
+        }
+        this.ForwardStack.Clear();
+        this.CurrentFolder = await this.Service.GetFolder(this.Grunt.Id, folderId);
+        this.FolderSearch = this.CurrentFolder.FullName;
+        if (!this.CurrentFolder.Enumerated)
+        {
+            await this.OnList();
+        }
+        Service.DisposeContext();
+    }
+
+    private async Task OnSearch(ChangeEventArgs e)
+    {
+        if (e.Value is string str)
+        {
+            if (this.CurrentFolder != null)
+            {
+                this.BackStack.Push(this.CurrentFolder.FullName);
+            }
+            this.ForwardStack.Clear();
+            this.FolderSearch = str.TrimEnd('\\').TrimEnd('/');
+            this.CurrentFolder = await this.Service.GetFolderByFullName(this.Grunt.Id, this.FolderSearch);
+            Service.DisposeContext();
+        }
+    }
+
+    private async Task OnList()
+    {
+        if (!string.IsNullOrWhiteSpace(this.FolderSearch))
+        {
+            await Service.InteractGrunt(this.Grunt.Id, this.CurrentUser.Id, @$"ListDirectory /path:""{this.FolderSearch}""");
+        }
+        else
+        {
+            await Service.InteractGrunt(this.Grunt.Id, this.CurrentUser.Id, @$"ListDirectory");
+        }
+        Service.DisposeContext();
+    }
+
+    private async Task OnDownloadFile(FolderFile file)
+    {
+        await Service.InteractGrunt(this.Grunt.Id, this.CurrentUser.Id, @$"Download /filename:""{file.FullName}""");
+        Service.DisposeContext();
+    }
+
+    private async Task OnBackButton()
+    {
+        if (BackStack.TryPop(out string folder))
+        {
+            this.ForwardStack.Push(this.FolderSearch);
+            this.FolderSearch = folder;
+            this.CurrentFolder = await this.Service.GetFolderByFullName(this.Grunt.Id, this.FolderSearch);
+            Service.DisposeContext();
+        }
+    }
+
+    private async Task OnForwardButton()
+    {
+        if (ForwardStack.TryPop(out string folder))
+        {
+            this.BackStack.Push(this.FolderSearch);
+            this.FolderSearch = folder;
+            this.CurrentFolder = await this.Service.GetFolderByFullName(this.Grunt.Id, this.FolderSearch);
+            Service.DisposeContext();
+        }
+    }
+}

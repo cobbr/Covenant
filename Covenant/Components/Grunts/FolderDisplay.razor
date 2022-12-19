@@ -1,0 +1,109 @@
+﻿@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Microsoft.AspNetCore.Components
+
+@using Covenant.Core
+@using Covenant.Models.Grunts
+@inject INotificationService INotificationService
+
+<li>
+    <div class="d-flex flex-row flex-nowrap">
+        <a type="button" class="d-flex align-self-center" @onclick="(e => OnToggleExpand())">
+            @if (!Expanded)
+            {
+                <span style="font-size: 12px;" class="fe fe-chevron-right text-muted"></span>
+            }
+            else
+            {
+                <span style="font-size: 12px;" class="fe fe-chevron-down"></span>
+            }
+        </a>
+        <a type="button" class="d-flex flex-row flex-nowrap" @onclick="(e => OnSelectFolder.InvokeAsync(Folder.Id))">
+            @if (!Expanded)
+            {
+                <span class="fe fe-folder text-muted ml-1"></span>
+            }
+            else
+            {
+                <span class="fe fe-folder ml-1"></span>
+            }
+            @{
+                string name = Folder.ParentId == null ? Folder.FullName : Folder.Name;
+                if (name.Length > 25)
+                {
+                    name = name.Substring(0, 22) + "...";
+                }
+            }
+            <span class="ml-2">@name</span>
+        </a>
+    </div>
+    @if (Expanded)
+    {
+        <ul class="pl-3" style="list-style-type:none;">
+            @foreach (FolderFileNode node in Folder.Nodes)
+            {
+                @if (node is Folder folder)
+                {
+                    <FolderDisplay Folder="folder" Expanded="false" OnSelectFolder="OnSelectFolder" />
+                }
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter]
+    public Folder Folder { get; set; }
+
+    [Parameter]
+    public bool Expanded { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<int?> OnSelectFolder { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Folder = await this.Service.GetFolder(this.Folder.GruntId, this.Folder.Id);
+        Service.DisposeContext();
+        this.INotificationService.OnEditFolder += OnEditFolder;
+        _shouldRender = true;
+    }
+
+    private bool _shouldRender = false;
+    protected override bool ShouldRender()
+    {
+        if (_shouldRender)
+        {
+            _shouldRender = false;
+            return true;
+        }
+        return _shouldRender;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnEditFolder -= OnEditFolder;
+    }
+
+    private void OnEditFolder(object sender, Folder folder)
+    {
+        if (this.Folder.Id == folder.Id)
+        {
+            this.Folder = folder;
+            _shouldRender = true;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task OnToggleExpand()
+    {
+        this.Expanded = !this.Expanded;
+        if (this.Expanded)
+        {
+            this.Folder = await this.Service.GetFolder(this.Folder.GruntId, this.Folder.Id);
+            Service.DisposeContext();
+        }
+        _shouldRender = true;
+    }
+}

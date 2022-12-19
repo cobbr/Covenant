@@ -4,7 +4,7 @@
 @using System.Threading
 @using System.Threading.Tasks
 @using Microsoft.AspNetCore.Components.Forms
-@using BlazorInputFile
+
 @using Covenant.Core
 @using Covenant.Models.Grunts
 
@@ -40,7 +40,7 @@ else
                 {
                     <div class="form-group col-md-12">
                         <label for="@GruntTask.Options[number].Name">@GruntTask.Options[number].Name</label><br />
-                        <InputFile @ref="InputFile" id="@GruntTask.Options[number].Name" OnChange="OnUpload" />
+                        <InputFile OnChange="(e => OnUpload(e, number))" />
                         @if (this.UploadInProgress)
                         {
                             <span class="fe fe-loader spin"></span>
@@ -77,10 +77,6 @@ else
     [Parameter]
     public EventCallback<GruntTask> OnSubmit { get; set; }
 
-    public InputFile InputFile { get; set; }
-    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
-    private bool UploadInProgress { get; set; } = false;
-
     private IList<GruntTask> GruntTasks { get; set; }
     private GruntTask GruntTask { get; set; }
 
@@ -103,35 +99,36 @@ else
         if (int.TryParse((string)e.Value, out int GruntTaskId))
         {
             this.GruntTask = this.GruntTasks.FirstOrDefault(GT => GT.Id == GruntTaskId);
+            foreach (GruntTaskOption option in this.GruntTask.Options)
+            {
+                if (!string.IsNullOrWhiteSpace(option.DefaultValue) && string.IsNullOrWhiteSpace(option.Value))
+                {
+                    option.Value = option.DefaultValue;
+                }
+            }
             this.StateHasChanged();
         }
     }
 
     private string ErrorMessage { get; set; }
-    private async Task OnUpload(IFileListEntry[] files)
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
+    private async Task OnUpload(InputFileChangeEventArgs e, int i)
     {
         try
         {
             await UploadSemaphore.WaitAsync();
             this.UploadInProgress = true;
             this.StateHasChanged();
-            for (int i = 0; i < files.Length; i++)
+            using (MemoryStream ms = new MemoryStream())
             {
-                if (files[i] != null)
-                {
-                    MemoryStream ms = new MemoryStream();
-                    await files[i].Data.CopyToAsync(ms);
-
-                    GruntTaskOption option = this.GruntTask.Options.Where(O => O.FileOption).ToList()[i];
-                    option.Value = Convert.ToBase64String(ms.ToArray());
-
-                    files[i] = null;
-                }
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                this.GruntTask.Options[i].Value = Convert.ToBase64String(ms.ToArray());
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            this.ErrorMessage = e.Message;
+            this.ErrorMessage = ex.Message;
         }
         this.UploadInProgress = false;
         this.StateHasChanged();

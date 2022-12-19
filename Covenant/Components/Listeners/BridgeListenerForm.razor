@@ -48,12 +48,7 @@
         </select>
         <div class="text-danger"><ValidationMessage For="() => Listener.ProfileId" /></div>
     </div>
-    @if (!Disabled)
-    {
-        <button type="submit" class="btn btn-primary">
-            <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-        </button>
-    }
+    @ChildContent
 </EditForm>
 
 @code {
@@ -64,16 +59,13 @@
     public IEnumerable<Profile> Profiles { get; set; }
 
     [Parameter]
-    public string SubmitIcon { get; set; } = "edit";
-
-    [Parameter]
-    public string SubmitLabel { get; set; } = "Edit";
+    public bool Disabled { get; set; } = false;
 
     [Parameter]
     public EventCallback<BridgeListener> OnSubmit { get; set; }
 
     [Parameter]
-    public bool Disabled { get; set; } = false;
+    public RenderFragment ChildContent { get; set; }
 
     protected override void OnInitialized()
     {

@@ -10,7 +10,11 @@
     <h1 class="h2">Edit HostedFile</h1>
 </div>
 
-<HostedFileForm HostedFile="HostedFile" OnSubmit="OnEdit" SubmitIcon="edit" SubmitLabel="Edit">
+<HostedFileForm HostedFile="HostedFile" OnSubmit="OnEdit">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-edit"></span>
+        Edit
+    </button>
     <button type="button" class="btn btn-danger" @onclick="(e => OnDelete(HostedFile))">
         <span class="fe fe-x"></span> Delete
     </button>

@@ -21,6 +21,7 @@
         <SortableTableHeader TItem="Theme" TItem2="string" GetSortableProperty="(theme) => string.Empty">
             <HeaderContent>Color Palette</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="theme">
         <tr>
@@ -38,6 +39,19 @@
                     <div class="border-right border-top border-bottom" style="height: 30px; width: 30px; border-color: #ffffff; background-color: @theme.NavbarColor"></div>
                 </div>
             </td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionTheme">
+                    <DropdownActionItem Item="theme" OnAction="(async item => await OnExportTheme(item))">
+                        <span class="fe fe-share"></span>
+                        Export
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="theme" OnAction="(async item => await OnDeleteTheme(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -48,6 +62,9 @@
 
     [Parameter]
     public EventCallback<IEnumerable<Theme>> ThemesChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnError { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -77,5 +94,35 @@
         return SearchTerm == string.Empty ||
             theme.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             theme.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnExportTheme(Theme theme)
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                theme.Name + ".yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(new List<Theme> { theme }.ToYaml()))
+            );
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
+    }
+
+    private async Task OnDeleteTheme(Theme theme)
+    {
+        try
+        {
+            await Service.DeleteTheme(theme.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
     }
 }

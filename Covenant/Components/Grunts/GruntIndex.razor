@@ -56,13 +56,14 @@
         Service.DisposeContext();
         this.INotificationService.OnCreateGrunt += OnCreateGrunt;
         this.INotificationService.OnEditGrunt += OnEditGrunt;
+        this.INotificationService.OnDeleteGrunt += OnDeleteGrunt;
     }
 
     private void FilterGrunts()
     {
-        this.SomeHidden = this.UnfilteredGrunts.Any(G => G.Status == GruntStatus.Hidden);
+        this.SomeHidden = this.UnfilteredGrunts.Any(G => G.Hidden == true);
         this.Grunts = this.UnfilteredGrunts
-            .Where(G => (!this.Hidden || G.Status != GruntStatus.Hidden) && G.Status != GruntStatus.Uninitialized)
+            .Where(G => (!this.Hidden || !G.Hidden) && G.Status != GruntStatus.Uninitialized)
             .ToList();
     }
 
@@ -70,12 +71,13 @@
     {
         this.INotificationService.OnCreateGrunt -= OnCreateGrunt;
         this.INotificationService.OnEditGrunt -= OnEditGrunt;
+        this.INotificationService.OnDeleteGrunt -= OnDeleteGrunt;
     }
 
     private void OnCreateGrunt(object sender, Grunt grunt)
     {
         this.UnfilteredGrunts.Add(grunt);
-        if ((!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
+        if ((!this.Hidden || !grunt.Hidden) && grunt.Status != GruntStatus.Uninitialized)
         {
             this.FilterGrunts();
             this.InvokeAsync(() => this.StateHasChanged());
@@ -92,18 +94,34 @@
         bool inDisplayedGrunts = this.Grunts.Any(G => G.Id == grunt.Id);
         if (inDisplayedGrunts)
         {
-            this.Grunts[this.Grunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
+            int index = this.Grunts.FindIndex(G => G.Id == grunt.Id);
+            if ((this.Hidden && grunt.Hidden) || grunt.Status == GruntStatus.Uninitialized)
+            {
+                this.Grunts.RemoveAt(index);
+                this.SomeHidden = grunt.Hidden;
+            }
+            else
+            {
+                this.Grunts[index] = grunt;
+            }
             await this.InvokeAsync(() => this.StateHasChanged());
         }
         if (this.UnfilteredGrunts.Any(G => G.Id == grunt.Id))
         {
             this.UnfilteredGrunts[this.UnfilteredGrunts.FindIndex(G => G.Id == grunt.Id)] = grunt;
-            if (!inDisplayedGrunts && (!this.Hidden || grunt.Status != GruntStatus.Hidden) && grunt.Status != GruntStatus.Uninitialized)
+            if (!inDisplayedGrunts && (!this.Hidden || !grunt.Hidden) && grunt.Status != GruntStatus.Uninitialized)
             {
                 this.FilterGrunts();
                 await this.InvokeAsync(() => this.StateHasChanged());
             }
         }
+    }
+
+    private void OnDeleteGrunt(object sender, int id)
+    {
+        this.UnfilteredGrunts.RemoveAt(this.Grunts.FindIndex(G => G.Id == id));
+        this.FilterGrunts();
+        this.InvokeAsync(() => this.StateHasChanged());
     }
 
     public void OnSelectTerminal(Grunt grunt)

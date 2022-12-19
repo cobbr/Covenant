@@ -1,8 +1,15 @@
-﻿@using System.Collections.Generic
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.Collections.Generic
+@using Microsoft.Rest
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using Covenant.Core
 @using Covenant.Models.Listeners
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
+@inject CovenantAPIService CovenantAPIService
 
 <CovenantTable TItem="Listener" Items="Listeners.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -25,6 +32,7 @@
         <SortableTableHeader TItem="Listener" TItem2="int" GetSortableProperty="(listener) => listener.ConnectPort">
             <HeaderContent>ConnectPort</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="listener">
         <tr>
@@ -36,6 +44,29 @@
             <td>@listener.StartTime</td>
             <td>@ToString(listener.ConnectAddresses)</td>
             <td>@listener.ConnectPort</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionListener">
+                    @if (listener.Status != ListenerStatus.Active)
+                    {
+                        <DropdownActionItem Item="listener" OnAction="(async item => await OnStartListener(item))">
+                            <span class="fe fe-play"></span>
+                            Start
+                        </DropdownActionItem>
+                    }
+                    else
+                    {
+                        <DropdownActionItem Item="listener" OnAction="(async item => await OnStopListener(item))" class="text-warning">
+                            <span class="fe fe-stop-circle"></span>
+                            Stop
+                        </DropdownActionItem>
+                    }
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="listener" OnAction="(async item => await OnDeleteListener(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -48,6 +79,9 @@
     public EventCallback<List<Listener>> ListenersChanged { get; set; }
 
     [Parameter]
+    public EventCallback<string> OnError { get; set; }
+
+    [Parameter]
     public bool IsSearchable { get; set; } = false;
 
     [Parameter]
@@ -58,6 +92,17 @@
 
     [Parameter]
     public int PageLength { get; set; } = 25;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private string Token { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Token = (await Service.GetUserToken((await AuthenticationState).User)).CovenantToken;
+        Service.DisposeContext();
+    }
 
     private string ToString(List<string> list)
     {
@@ -79,5 +124,63 @@
             listener.StartTime.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             ToString(listener.ConnectAddresses).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             listener.ConnectPort.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnStartListener(Listener listener)
+    {
+        try
+        {
+            if (listener.Status != ListenerStatus.Active)
+            {
+                listener.Status = ListenerStatus.Active;
+                if (listener.ListenerType.Name == "HTTP")
+                {
+                    HttpListener httpListener = (HttpListener)listener;
+                    await CovenantAPIService.EditHttpListener(httpListener, this.Token);
+                }
+                else if (listener.ListenerType.Name == "Bridge")
+                {
+                    BridgeListener bridgeListener = (BridgeListener)listener;
+                    await CovenantAPIService.EditBridgeListener(bridgeListener, this.Token);
+                }
+            }
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            listener.Status = ListenerStatus.Stopped;
+            await this.OnError.InvokeAsync(e.Message);
+        }
+        catch (HttpOperationException e)
+        {
+            await this.OnError.InvokeAsync(e.Response.Content);
+        }
+    }
+
+    private async Task OnStopListener(Listener listener)
+    {
+        try
+        {
+            listener.Status = ListenerStatus.Stopped;
+            listener = await Service.EditListener(listener);
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            listener.Status = ListenerStatus.Active;
+            await this.OnError.InvokeAsync(e.Message);
+        }
+        Service.DisposeContext();
+    }
+
+    private async Task OnDeleteListener(Listener listener)
+    {
+        try
+        {
+            await Service.DeleteListener(listener.Id);
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
+        Service.DisposeContext();
     }
 }

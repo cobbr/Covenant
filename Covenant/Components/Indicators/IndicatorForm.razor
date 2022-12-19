@@ -8,7 +8,7 @@
     <div class="form-row">
         <div class="form-group">
             <label for="Type">Type</label><br />
-            <select id="Type" name="Type" value="@Indicator.Type" @onchange="(e => OnChangeType(e))" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
+            <select id="Type" name="Type" value="@Indicator.Type" disabled="@DisableType" @onchange="(e => OnChangeType(e))" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
                 @foreach (var n in Enum.GetNames(typeof(IndicatorType)))
                 {
                     if (Enum.TryParse<IndicatorType>(n, out IndicatorType type) && this.Indicator.Type == type)
@@ -105,9 +105,7 @@
             </div>
         </div>
     }
-    <button type="submit" class="btn btn-primary">
-        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-    </button>
+    @ChildContent
 </EditForm>
 
 @code {
@@ -115,13 +113,13 @@
     public Indicator Indicator { get; set; }
 
     [Parameter]
+    public bool DisableType { get; set; } = false;
+
+    [Parameter]
     public EventCallback<Indicator> OnSubmit { get; set; }
 
     [Parameter]
-    public string SubmitIcon { get; set; }
-
-    [Parameter]
-    public string SubmitLabel { get; set; }
+    public RenderFragment ChildContent { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

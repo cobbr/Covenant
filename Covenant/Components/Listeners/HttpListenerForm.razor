@@ -1,9 +1,9 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
-@using System.IO
-@using System.Linq
-@using Covenant.Models.Listeners
+﻿@using System.IO
+@using System.Threading
+@using Microsoft.AspNetCore.Components.Forms
 
-@using BlazorInputFile
+@using Covenant.Core
+@using Covenant.Models.Listeners
 
 <EditForm Model="Listener" OnValidSubmit="OnFormSubmit">
     <DataAnnotationsValidator />
@@ -53,10 +53,10 @@
             <div class="form-group col-md-4">
                 <input id="Urls_i_" name="Urls[i]" value="@Listener.Urls[number]" class="form-control" readonly>
             </div>
-            @if (number != 0)
+            @if (number != 0 && !Disabled)
             {
                 <div class="col-auto align-self-center">
-                    <button type="button" @onclick="(e => RemoveRow(number))" disabled="@Disabled" class="btn btn-outline-danger btn-sm">
+                    <button type="button" @onclick="(e => RemoveRow(number))" class="btn btn-outline-danger btn-sm">
                         <span class="fe fe-x"></span>
                     </button>
                 </div>
@@ -65,31 +65,52 @@
     }
     <div class="text-danger"><ValidationMessage For="() => Listener.ConnectAddresses" /></div>
     <div class="text-danger"><ValidationMessage For="() => Listener.Urls" /></div>
-    <button type="button" @onclick="AddRow" disabled="@Disabled" class="btn btn-outline-primary btn-sm mt-2 mb-4">
-        <span class="fe fe-plus"></span> Add
-    </button>
+    @if (!Disabled)
+    {
+        <button type="button" @onclick="AddRow" class="btn btn-outline-primary btn-sm mt-2 mb-4">
+            <span class="fe fe-plus"></span> Add
+        </button>
+    }
 
     <div class="form-row">
         <div class="form-group col-md-3">
             <label for="UseSSL">UseSSL</label>
             <select id="UseSSL" name="UseSSL" @onchange="(e => UpdateUseSSL(e))" disabled="@Disabled" class="form-control form-control-sm">
-                <option value="False">False</option>
-                <option value="True">True</option>
+                @if (Listener.UseSSL)
+                {
+                    <option selected value="True">True</option>
+                    <option value="False">False</option>
+                }
+                else
+                {
+                    <option selected value="False">False</option>
+                    <option value="True">True</option>
+                }
             </select>
             <div class="text-danger"><ValidationMessage For="() => Listener.UseSSL" /></div>
         </div>
 
-        <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
-            <label for="SSLCertificateFile">SSLCertificate</label>
-            <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
-                        disabled="@Disabled"
-                        OnChange="FileUpload" />
-        </div>
+        @if (!Disabled)
+        {
+            <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
+                <label for="SSLCertificateFile">SSLCertificate</label>
+                <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
+                           OnChange="FileUpload" />
+                @if (this.UploadInProgress)
+                {
+                    <span class="fe fe-loader spin"></span>
+                }
+                @if (string.IsNullOrEmpty(this.ErrorMessage))
+                {
+                    <span class="text-danger">@ErrorMessage</span>
+                }
+            </div>
+        }
 
         <div class="form-group col-md-6 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificatePassword">SSLCertificatePassword</label>
             <input id="SSLCertificatePassword" name="SSLCertificatePassword"
-                    @bind="Listener.SSLCertificatePassword" disabled="@Disabled" class="form-control form-control-sm">
+                   @bind="Listener.SSLCertificatePassword" disabled="@Disabled" class="form-control form-control-sm">
             <div class="text-danger"><ValidationMessage For="() => Listener.SSLCertificatePassword" /></div>
         </div>
     </div>
@@ -103,12 +124,7 @@
         </select>
         <div class="text-danger"><ValidationMessage For="() => Listener.ProfileId" /></div>
     </div>
-    @if (!Disabled)
-    {
-        <button type="submit" class="btn btn-primary">
-            <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-        </button>
-    }
+    @ChildContent
 </EditForm>
 
 @code {
@@ -119,16 +135,16 @@
     public IEnumerable<Profile> Profiles { get; set; }
 
     [Parameter]
-    public string SubmitIcon { get; set; } = "edit";
-
-    [Parameter]
-    public string SubmitLabel { get; set; } = "Edit";
-
-    [Parameter]
     public EventCallback<HttpListener> OnSubmit { get; set; }
 
     [Parameter]
     public bool Disabled { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
 
     private void UpdateRow(int row, ChangeEventArgs e)
     {
@@ -153,17 +169,27 @@
         }
     }
 
-    private async Task FileUpload(IFileListEntry[] files)
+    private string ErrorMessage { get; set; }
+    private async Task FileUpload(InputFileChangeEventArgs e)
     {
-        IFileListEntry file = files.FirstOrDefault();
-        if (file != null)
+        try
         {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await file.Data.CopyToAsync(ms);
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
                 Listener.SSLCertificate = Convert.ToBase64String(ms.ToArray());
             }
         }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = ex.Message;
+        }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
     }
 
     private async Task OnFormSubmit()

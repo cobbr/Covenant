@@ -2,6 +2,7 @@
 @page "/data/index"
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
 
 @using Microsoft.JSInterop
 @using Covenant.Core
@@ -10,6 +11,7 @@
 @using Covenant.Components.Credentials
 @using Covenant.Components.Indicators
 @using Covenant.Components.Events
+@inject INotificationService INotificationService
 @inject IJSRuntime IJSRuntime
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap pb-2 mb-3">
@@ -60,51 +62,57 @@
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
             <h4 class="h5">Downloads</h4>
         </div>
-        <DownloadEventTable DownloadEvents="DownloadEvents" />
+        <DownloadEventTable DownloadEvents="DownloadEvents.ToList()" />
     </div>
     <div class="tab-pane fade" id="screenshots" role="tabpanel" aria-labelledby="screenshots-tab">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
             <h4 class="h5">Screenshots</h4>
         </div>
-        <ScreenshotEventTable ScreenshotEvents="ScreenshotEvents" />
+        <ScreenshotEventTable ScreenshotEvents="ScreenshotEvents.ToList()" />
     </div>
 </div>
 
 @code {
     [Parameter]
-    public IEnumerable<CapturedPasswordCredential> PasswordCredentials { get; set; }
+    public List<CapturedPasswordCredential> PasswordCredentials { get; set; }
 
     [Parameter]
-    public IEnumerable<CapturedHashCredential> HashCredentials { get; set; }
+    public List<CapturedHashCredential> HashCredentials { get; set; }
 
     [Parameter]
-    public IEnumerable<CapturedTicketCredential> TicketCredentials { get; set; }
+    public List<CapturedTicketCredential> TicketCredentials { get; set; }
 
     [Parameter]
-    public IEnumerable<TargetIndicator> TargetIndicators { get; set; }
+    public List<TargetIndicator> TargetIndicators { get; set; }
 
     [Parameter]
-    public IEnumerable<NetworkIndicator> NetworkIndicators { get; set; }
+    public List<NetworkIndicator> NetworkIndicators { get; set; }
 
     [Parameter]
-    public IEnumerable<FileIndicator> FileIndicators { get; set; }
+    public List<FileIndicator> FileIndicators { get; set; }
 
     [Parameter]
-    public IEnumerable<DownloadEvent> DownloadEvents { get; set; }
+    public List<DownloadEvent> DownloadEvents { get; set; }
 
     [Parameter]
-    public IEnumerable<ScreenshotEvent> ScreenshotEvents { get; set; }
+    public List<ScreenshotEvent> ScreenshotEvents { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        this.PasswordCredentials = this.PasswordCredentials ?? await Service.GetPasswordCredentials();
-        this.HashCredentials = this.HashCredentials ?? await Service.GetHashCredentials();
-        this.TicketCredentials = this.TicketCredentials ?? await Service.GetTicketCredentials();
-        this.TargetIndicators = this.TargetIndicators ?? await Service.GetTargetIndicators();
-        this.NetworkIndicators = this.NetworkIndicators ?? await Service.GetNetworkIndicators();
-        this.FileIndicators = this.FileIndicators ?? await Service.GetFileIndicators();
-        this.DownloadEvents = this.DownloadEvents ?? await Service.GetDownloadEvents();
-        this.ScreenshotEvents = this.ScreenshotEvents ?? await Service.GetScreenshotEvents();
+        this.PasswordCredentials = this.PasswordCredentials ?? (await Service.GetPasswordCredentials()).ToList();
+        this.HashCredentials = this.HashCredentials ?? (await Service.GetHashCredentials()).ToList();
+        this.TicketCredentials = this.TicketCredentials ?? (await Service.GetTicketCredentials()).ToList();
+        this.TargetIndicators = this.TargetIndicators ?? (await Service.GetTargetIndicators()).ToList();
+        this.NetworkIndicators = this.NetworkIndicators ?? (await Service.GetNetworkIndicators()).ToList();
+        this.FileIndicators = this.FileIndicators ?? (await Service.GetFileIndicators()).ToList();
+        this.DownloadEvents = this.DownloadEvents ?? (await Service.GetDownloadEvents()).ToList();
+        this.ScreenshotEvents = this.ScreenshotEvents ?? (await Service.GetScreenshotEvents()).ToList();
+        this.INotificationService.OnCreateCapturedCredential += OnCreateCredential;
+        this.INotificationService.OnDeleteCapturedCredential += OnDeleteCredential;
+        this.INotificationService.OnCreateIndicator += OnCreateIndicator;
+        this.INotificationService.OnDeleteIndicator += OnDeleteIndicator;
+        this.INotificationService.OnCreateEvent += OnCreateEvent;
+        this.INotificationService.OnDeleteEvent += OnDeleteEvent;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -113,5 +121,109 @@
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "#credentials-tab");
         }
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateCapturedCredential -= OnCreateCredential;
+        this.INotificationService.OnDeleteCapturedCredential -= OnDeleteCredential;
+        this.INotificationService.OnCreateIndicator -= OnCreateIndicator;
+        this.INotificationService.OnDeleteIndicator -= OnDeleteIndicator;
+        this.INotificationService.OnCreateEvent -= OnCreateEvent;
+        this.INotificationService.OnDeleteEvent -= OnDeleteEvent;
+    }
+
+    private void OnCreateCredential(object sender, CapturedCredential credential)
+    {
+        if (credential.Type == CredentialType.Password)
+        {
+            this.PasswordCredentials.Add((CapturedPasswordCredential)credential);
+        }
+        else if (credential.Type == CredentialType.Hash)
+        {
+            this.HashCredentials.Add((CapturedHashCredential)credential);
+        }
+        else if (credential.Type == CredentialType.Ticket)
+        {
+            this.TicketCredentials.Add((CapturedTicketCredential)credential);
+        }
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteCredential(object sender, int id)
+    {
+        if (this.PasswordCredentials.Any(PC => PC.Id == id))
+        {
+            this.PasswordCredentials.RemoveAt(this.PasswordCredentials.FindIndex(PC => PC.Id == id));
+        }
+        else if (this.HashCredentials.Any(HC => HC.Id == id))
+        {
+            this.HashCredentials.RemoveAt(this.HashCredentials.FindIndex(HC => HC.Id == id));
+        }
+        else if (this.TicketCredentials.Any(TC => TC.Id == id))
+        {
+            this.TicketCredentials.RemoveAt(this.TicketCredentials.FindIndex(TC => TC.Id == id));
+        }
+        _ = this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnCreateIndicator(object sender, Indicator indicator)
+    {
+        if (indicator.Type == IndicatorType.TargetIndicator)
+        {
+            this.TargetIndicators.Add((TargetIndicator)indicator);
+        }
+        else if (indicator.Type == IndicatorType.NetworkIndicator)
+        {
+            this.NetworkIndicators.Add((NetworkIndicator)indicator);
+        }
+        else if (indicator.Type == IndicatorType.FileIndicator)
+        {
+            this.FileIndicators.Add((FileIndicator)indicator);
+        }
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteIndicator(object sender, int id)
+    {
+        if (this.TargetIndicators.Any(TI => TI.Id == id))
+        {
+            this.TargetIndicators.RemoveAt(this.TargetIndicators.FindIndex(TI => TI.Id == id));
+        }
+        else if (this.NetworkIndicators.Any(NI => NI.Id == id))
+        {
+            this.NetworkIndicators.RemoveAt(this.NetworkIndicators.FindIndex(NI => NI.Id == id));
+        }
+        else if (this.FileIndicators.Any(FI => FI.Id == id))
+        {
+            this.FileIndicators.RemoveAt(this.FileIndicators.FindIndex(FI => FI.Id == id));
+        }
+        _ = this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnCreateEvent(object sender, Event ev)
+    {
+        if (ev.Type == EventType.Download)
+        {
+            this.DownloadEvents.Add((DownloadEvent)ev);
+        }
+        else if (ev.Type == EventType.Screenshot)
+        {
+            this.ScreenshotEvents.Add((ScreenshotEvent)ev);
+        }
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteEvent(object sender, int id)
+    {
+        if (this.DownloadEvents.Any(DE => DE.Id == id))
+        {
+            this.DownloadEvents.RemoveAt(this.DownloadEvents.FindIndex(DE => DE.Id == id));
+        }
+        else if (this.ScreenshotEvents.Any(SE => SE.Id == id))
+        {
+            this.ScreenshotEvents.RemoveAt(this.ScreenshotEvents.FindIndex(SE => SE.Id == id));
+        }
+        _ = this.InvokeAsync(() => this.StateHasChanged());
     }
 }

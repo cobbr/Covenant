@@ -1,6 +1,5 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
-@using System.Net.Mime
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
 @using Covenant.Core
@@ -9,11 +8,19 @@
 @using Covenant.Models.Launchers
 @inject IJSRuntime IJSRuntime
 
-<EditForm Model="Launcher" OnValidSubmit="(e => this.OnGenerate.InvokeAsync(Launcher))">
+<EditForm Model="Launcher" OnValidSubmit="OnSubmit">
     <DataAnnotationsValidator />
-    <div class="form-group">
-        <label for="Description">Description</label>
-        <input id="Description" name="Description" @bind="Launcher.Description" class="form-control-plaintext" readonly>
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="Name">Name</label>
+            <input id="Name" name="Name" @bind="@Launcher.Name" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.Name" /></div>
+        </div>
+        <div class="form-group col-md-9">
+            <label for="Description">Description</label>
+            <input id="Description" name="Description" @bind="@Launcher.Description" class="form-control">
+            <div class="text-danger"><ValidationMessage For="() => Launcher.Name" /></div>
+        </div>
     </div>
     <div class="form-row">
         <div class="form-group col-md-3">
@@ -43,18 +50,45 @@
             </select>
             <div class="text-danger"><ValidationMessage For="() => Launcher.ImplantTemplateId" /></div>
         </div>
+    </div>
+    <div class="form-row">
         <div class="form-group col-md-3">
             <label for="DotNetVersion">DotNetVersion</label><br />
             <select id="DotNetVersion" name="DotNetVersion" @bind="Launcher.DotNetVersion" class="selectpicker show-menu-arrow" data-dropup-auto="false" data-width="auto">
-                @foreach (var n in GetApplicableDotNetVersions())
+                @foreach (string n in GetApplicableDotNetVersions())
                 {
-                    <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    if (Enum.GetName(this.Launcher.DotNetVersion) == n)
+                    {
+                        <option selected value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(Common.DotNetVersion).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
                 }
             </select>
             <div class="text-danger"><ValidationMessage For="() => Launcher.DotNetVersion" /></div>
         </div>
+        <div class="form-group col-md-3">
+            <label for="OutputKind">OutputKind</label><br />
+            <select id="OutputKind" name="OutputKind" @bind="Launcher.OutputKind" class="selectpicker show-menu-arrow" data-width="auto">
+                @foreach (string n in Enum.GetNames(typeof(Covenant.API.Models.OutputKind)))
+                {
+                    string currentKind = Enum.GetName(typeof(Covenant.API.Models.OutputKind), Launcher.OutputKind);
+                    @if (currentKind == n)
+                    {
+                        <option selected value="@(((Enum)typeof(Covenant.API.Models.OutputKind).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                    else
+                    {
+                        <option value="@(((Enum)typeof(Covenant.API.Models.OutputKind).GetField(n).GetValue(null)).ToString("d"))">@n</option>
+                    }
+                }
+            </select>
+            <div class="text-danger"><ValidationMessage For="() => Launcher.OutputKind" /></div>
+        </div>
     </div>
-    @if (Launcher.DotNetVersion == Common.DotNetVersion.NetCore31)
+    @if (Launcher.DotNetVersion == Common.DotNetVersion.Net50)
     {
         <div class="form-row">
             <div class="form-group col-md-3">
@@ -77,22 +111,23 @@
             </div>
         </div>
     }
-    @if (this.CurrentImplantTemplate != null && this.CurrentImplantTemplate.Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
+    @if (this.CurrentImplantTemplate != null &&
+      (this.CurrentImplantTemplate.Name.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase) | this.CurrentImplantTemplate.Name.Contains("Brute", StringComparison.CurrentCultureIgnoreCase)))
     {
         <div class="form-row">
             <div class="form-group col-md-3">
                 <label for="ValidateCert">ValidateCert</label>
                 <select id="ValidateCert" name="ValidateCert" @onchange="(e => UpdateValidateCert(e))" class="form-control">
-                    <option value="True">True</option>
                     <option value="False">False</option>
+                    <option value="True">True</option>
                 </select>
                 <div class="text-danger"><ValidationMessage For="() => Launcher.ValidateCert" /></div>
             </div>
             <div class="form-group col-md-3">
                 <label for="UseCertPinning">UseCertPinning</label>
                 <select id="UseCertPinning" name="UseCertPinning" @onchange="(e => UpdateUseCertPinning(e))" class="form-control">
-                    <option value="True">True</option>
                     <option value="False">False</option>
+                    <option value="True">True</option>
                 </select>
                 <div class="text-danger"><ValidationMessage For="() => Launcher.UseCertPinning" /></div>
             </div>
@@ -135,6 +170,8 @@
     {
         case "Binary":
             break;
+        case "ServiceBinary":
+            break;
         case "ShellCode":
             break;
         case "Cscript":
@@ -162,14 +199,7 @@
             <ScriptletLauncherFormPartial @bind-Launcher="Launcher" />
             break;
     }
-    <div class="btn-group" role="group">
-        <button type="submit" class="btn btn-primary mr-5" id="generate">
-            <span class="fe fe-zap"></span> Generate
-        </button>
-        <button type="button" @onclick="OnDownload" class="btn btn-outline-primary ml-5" id="download">
-            <span class="fe fe-download"></span> Download
-        </button>
-    </div>
+    @ChildContent
 </EditForm>
 
 @code {
@@ -178,6 +208,9 @@
 
     [Parameter]
     public EventCallback<Launcher> OnGenerate { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
 
     private IEnumerable<Listener> _ActiveListeners;
     private IEnumerable<Listener> ActiveListeners
@@ -219,9 +252,9 @@
 
     protected override void OnInitialized()
     {
-        if (this.CurrentImplantTemplate != null)
+        if (this.CurrentImplantTemplate != null && !this.CurrentImplantTemplate.CompatibleDotNetVersions.Contains(this.Launcher.DotNetVersion))
         {
-            this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+            this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).First();
         }
     }
 
@@ -233,6 +266,7 @@
             RefreshNeeded = false;
         }
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#DotNetVersion.selectpicker", ((int)Enum.Parse(typeof(Common.DotNetVersion), this.Launcher.DotNetVersion.ToString())).ToString());
+        await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#OutputKind.selectpicker", ((int)Enum.Parse(typeof(Covenant.API.Models.OutputKind), this.Launcher.OutputKind.ToString())).ToString());
         await IJSRuntime.InvokeAsync<string>("InitializeDateTimePicker", "#KillDate");
         await IJSRuntime.InvokeAsync<string>("InitializeSelectPicker", "#RuntimeIdentifier.selectpicker", ((int)Enum.Parse(typeof(Compiler.RuntimeIdentifier), this.Launcher.RuntimeIdentifier.ToString())).ToString());
     }
@@ -241,8 +275,8 @@
     {
         if (this.CurrentImplantTemplate != null)
         {
-            IEnumerable<string> names = this.CurrentImplantTemplate.CompatibleDotNetVersions.Select(CDN => CDN.ToString());
-            return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s));
+            IEnumerable<string> names = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).Select(CDN => CDN.ToString());
+            return Enum.GetNames(typeof(Common.DotNetVersion)).Where(s => names.Contains(s)).ToList();
         }
         return new List<string>();
     }
@@ -266,7 +300,7 @@
             this.Launcher.ImplantTemplateId = id;
             if (this.CurrentImplantTemplate != null)
             {
-                this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.First();
+                this.Launcher.DotNetVersion = this.CurrentImplantTemplate.CompatibleDotNetVersions.Where(CDN => this.Launcher.Type != LauncherType.MSBuild || CDN != Common.DotNetVersion.Net35).First();
             }
             this.RefreshNeeded = true;
         }
@@ -288,66 +322,13 @@
         }
     }
 
-    private async Task OnDownload()
+    private async Task OnSubmit()
     {
-        string filename = (await Service.GetImplantTemplate(this.Launcher.ImplantTemplateId)).Name ?? "GruntStager";
-        string fileext = ".exe";
-        string mediatype = "";
-        string content = "";
-
-        switch (this.Launcher.Type)
+        if (DateTime.TryParse(await IJSRuntime.InvokeAsync<string>("GetValue", "#KillDate"), out DateTime date))
         {
-            case LauncherType.Binary:
-                fileext = ".exe";
-                mediatype = MediaTypeNames.Application.Octet;
-                content = ((BinaryLauncher)this.Launcher).Base64ILByteString;
-                break;
-            case LauncherType.ShellCode:
-                fileext = ".bin";
-                mediatype = MediaTypeNames.Application.Octet;
-                content = ((ShellCodeLauncher)this.Launcher).Base64ILByteString;
-                break;
-            case LauncherType.Cscript:
-                fileext = ".js";
-                mediatype = MediaTypeNames.Text.Plain;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((CscriptLauncher)this.Launcher).DiskCode));
-                break;
-            case LauncherType.InstallUtil:
-                fileext = ".dll";
-                mediatype = MediaTypeNames.Application.Octet;
-                content = Convert.ToBase64String(Convert.FromBase64String(((InstallUtilLauncher)this.Launcher).DiskCode));
-                break;
-            case LauncherType.MSBuild:
-                fileext = ".xml";
-                mediatype = MediaTypeNames.Text.Plain;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((MSBuildLauncher)this.Launcher).DiskCode));
-                break;
-            case LauncherType.Mshta:
-                fileext = ".hta";
-                mediatype = MediaTypeNames.Text.Plain;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((MshtaLauncher)this.Launcher).DiskCode));
-                break;
-            case LauncherType.PowerShell:
-                fileext = ".ps1";
-                mediatype = MediaTypeNames.Text.Plain;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((PowerShellLauncher)this.Launcher).PowerShellCode));
-                break;
-            case LauncherType.Regsvr32:
-                fileext = ".sct";
-                mediatype = MediaTypeNames.Application.Octet;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((Regsvr32Launcher)this.Launcher).DiskCode));
-                break;
-            case LauncherType.Wmic:
-                fileext = "xsl";
-                mediatype = MediaTypeNames.Text.Plain;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((WmicLauncher)this.Launcher).DiskCode));
-                break;
-            case LauncherType.Wscript:
-                fileext = "GruntStager.js";
-                mediatype = MediaTypeNames.Text.Plain;
-                content = Convert.ToBase64String(Common.CovenantEncoding.GetBytes(((WscriptLauncher)this.Launcher).DiskCode));
-                break;
+            Launcher.KillDate = date;
+            StateHasChanged();
         }
-        await IJSRuntime.InvokeAsync<string>("DownloadFile", filename + fileext, mediatype, content);
+        await this.OnGenerate.InvokeAsync(Launcher);
     }
 }

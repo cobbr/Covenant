@@ -1,34 +1,75 @@
 ﻿@inherits OwningComponentBase<ICovenantService>
 
+@using System.IO
+@using Microsoft.JSInterop
+
 @using Covenant.Core
 @using Covenant.Models.Launchers
 @using Covenant.Components.Shared
+@inject IJSRuntime IJSRuntime
 
-<CovenantTable TItem="Launcher" Items="Launchers.ToList()" SearchRow="IsRowDisplayed"
+<CovenantTable TItem="Launcher" Items="Launchers" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
         <SortableTableHeader TItem="Launcher" TItem2="string" GetSortableProperty="(launcher) => launcher.Name">
             <HeaderContent>Name</HeaderContent>
         </SortableTableHeader>
+        <SortableTableHeader TItem="Launcher" TItem2="LauncherType" GetSortableProperty="(launcher) => launcher.Type">
+            <HeaderContent>Type</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Launcher" TItem2="Common.DotNetVersion" GetSortableProperty="(launcher) => launcher.DotNetVersion">
+            <HeaderContent>DotNetVersion</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="Launcher" TItem2="DateTime" GetSortableProperty="(launcher) => launcher.KillDate">
+            <HeaderContent>KillDate</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="Launcher" TItem2="string" GetSortableProperty="(launcher) => launcher.Description">
             <HeaderContent>Description</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="launcher">
         <tr>
             <td>
-                <a href="/launcher/create/@launcher.Id">
+                <a href="/launcher/edit/@launcher.Id">
                     @launcher.Name
                 </a>
             </td>
+            <td>@launcher.Type</td>
+            <td>@launcher.DotNetVersion</td>
+            <td>@launcher.KillDate</td>
             <td>@launcher.Description</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionLauncher">
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnGenerate(item))">
+                        <span class="fe fe-zap"></span>
+                        Generate
+                    </DropdownActionItem>
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnDownload(item))">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </DropdownActionItem>
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnCopyLauncher(item))">
+                        <span class="fe fe-clipboard"></span>
+                        Copy LauncherString
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="launcher" OnAction="(async item => await OnDeleteLauncher(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
+    <TableBottom>
+        <br><br><br>
+    </TableBottom>
 </CovenantTable>
 
 @code {
     [Parameter]
-    public IEnumerable<Launcher> Launchers { get; set; }
+    public List<Launcher> Launchers { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -44,13 +85,88 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.Launchers = this.Launchers ?? await Service.GetLaunchers();
+        this.Launchers = this.Launchers ?? (await Service.GetLaunchers()).ToList();
     }
 
     private bool IsRowDisplayed(Launcher launcher, string SearchTerm)
     {
         return SearchTerm == string.Empty ||
             launcher.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            Enum.GetName<LauncherType>(launcher.Type).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            Enum.GetName<Common.DotNetVersion>(launcher.DotNetVersion).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            launcher.KillDate.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             launcher.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnGenerate(Launcher launcher)
+    {
+        try
+        {
+            switch (launcher.Type)
+            {
+                case LauncherType.Binary:
+                    BinaryLauncher binaryLauncher = (BinaryLauncher)launcher;
+                    launcher = await Service.EditBinaryLauncher(binaryLauncher);
+                    break;
+                case LauncherType.ServiceBinary:
+                    ServiceBinaryLauncher serviceBinaryLauncher = (ServiceBinaryLauncher)launcher;
+                    launcher = await Service.EditServiceBinaryLauncher(serviceBinaryLauncher);
+                    break;
+                case LauncherType.ShellCode:
+                    ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)launcher;
+                    launcher = await Service.EditShellCodeLauncher(shellcodeLauncher);
+                    break;
+                case LauncherType.InstallUtil:
+                    InstallUtilLauncher installUtilLauncher = (InstallUtilLauncher)launcher;
+                    launcher = await Service.EditInstallUtilLauncher(installUtilLauncher);
+                    break;
+                case LauncherType.MSBuild:
+                    MSBuildLauncher msBuildLauncher = (MSBuildLauncher)launcher;
+                    launcher = await Service.EditMSBuildLauncher(msBuildLauncher);
+                    break;
+                case LauncherType.Mshta:
+                    MshtaLauncher mshtaLauncher = (MshtaLauncher)launcher;
+                    launcher = await Service.EditMshtaLauncher(mshtaLauncher);
+                    break;
+                case LauncherType.PowerShell:
+                    PowerShellLauncher powershellLauncher = (PowerShellLauncher)launcher;
+                    launcher = await Service.EditPowerShellLauncher(powershellLauncher);
+                    break;
+                case LauncherType.Regsvr32:
+                    Regsvr32Launcher regSvr32Launcher = (Regsvr32Launcher)launcher;
+                    launcher = await Service.EditRegsvr32Launcher(regSvr32Launcher);
+                    break;
+                default:
+                    return;
+            }
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+        }
+    }
+
+    private async Task OnDownload(Launcher launcher)
+    {
+        string filename = launcher.GetFilename();
+        string fileext = Path.GetExtension(filename);
+        string mediatype = Common.ContentTypeMappings.ContainsKey(fileext) ?
+            Common.ContentTypeMappings[fileext] :
+            Common.DefaultContentTypeMapping;
+        string content = Convert.ToBase64String(launcher.GetContent());
+        await IJSRuntime.InvokeAsync<string>("DownloadFile", filename, mediatype, content);
+    }
+
+    private async Task OnCopyLauncher(Launcher launcher)
+    {
+        await IJSRuntime.InvokeAsync<string>("CopyToClipboard", launcher.LauncherString);
+    }
+
+    private async Task OnDeleteLauncher(Launcher launcher)
+    {
+        await Service.DeleteLauncher(launcher.Id);
+        Service.DisposeContext();
     }
 }

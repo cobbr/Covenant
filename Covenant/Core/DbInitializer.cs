@@ -16,7 +16,6 @@ using YamlDotNet.Serialization;
 
 using Covenant.Models;
 using Covenant.Models.Covenant;
-using Covenant.Models.Launchers;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
 using YamlDotNet.Core;
@@ -26,93 +25,52 @@ namespace Covenant.Core
 {
     public static class DbInitializer
     {
-        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public async static Task Initialize(ICovenantService service, CovenantContext context, RoleManager<IdentityRole> roleManager, UserManager<CovenantUser> userManager, string username = "", string password = "")
         {
-            await InitializeListeners(service, context, ListenerCancellationTokens);
-            await InitializeImplantTemplates(service, context);
-            await InitializeLaunchers(service, context);
+            context.Database.EnsureCreated();
+            CovenantUser user = await InitializeInitialUser(service, context, userManager, username, password);
+            await InitializeListeners(service, context, user);
             await InitializeTasks(service, context);
+            await InitializeImplantTemplates(service, context);
             await InitializeRoles(roleManager);
             await InitializeThemes(context);
+        }
+
+        public async static Task<CovenantUser> InitializeInitialUser(ICovenantService service, CovenantContext context, UserManager<CovenantUser> userManager, string username, string password)
+        {
+            if (!context.Users.Any() && !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+            {
+                CovenantUser user = new CovenantUser { UserName = username };
+                IdentityResult userResult = await userManager.CreateAsync(user, password);
+                if (userResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, "User");
+                    await userManager.AddToRoleAsync(user, "Administrator");
+                    return await service.GetUserByUsername(user.UserName);
+                }
+                Console.Error.WriteLine($"Error creating user: {user.UserName}");
+            }
+            return null;
         }
 
         public async static Task InitializeImplantTemplates(ICovenantService service, CovenantContext context)
         {
             if (!context.ImplantTemplates.Any())
             {
-                var templates = new ImplantTemplate[]
+                List<string> files = Directory.GetFiles(Common.CovenantImplantTemplateDirectory)
+                    .Where(F => F.EndsWith(".yaml", StringComparison.CurrentCultureIgnoreCase))
+                    .ToList();
+                IDeserializer deserializer = new DeserializerBuilder().Build();
+                foreach (string file in files)
                 {
-                    new ImplantTemplate
-                    {
-                        Name = "GruntHTTP",
-                        Description = "A Windows implant written in C# that communicates over HTTP.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.HTTP,
-                        ImplantDirection = ImplantDirection.Pull,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
-                    },
-                    new ImplantTemplate
-                    {
-                        Name = "GruntSMB",
-                        Description = "A Windows implant written in C# that communicates over SMB.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.SMB,
-                        ImplantDirection = ImplantDirection.Push,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
-                    },
-                    new ImplantTemplate
-                    {
-                        Name = "GruntBridge",
-                        Description = "A customizable implant written in C# that communicates with a custom C2Bridge.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.Bridge,
-                        ImplantDirection = ImplantDirection.Push,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
-                    },
-                    new ImplantTemplate
-                    {
-                        Name = "Brute",
-                        Description = "A cross-platform implant built on .NET Core 3.1.",
-                        Language = ImplantLanguage.CSharp,
-                        CommType = CommunicationType.HTTP,
-                        ImplantDirection = ImplantDirection.Pull,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.NetCore31 }
-                    }
-                };
-                templates.ToList().ForEach(t => t.ReadFromDisk());
-                await service.CreateImplantTemplates(templates);
-
-                await service.CreateEntities(
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await service.GetListenerTypeByName("HTTP"),
-                        ImplantTemplate = await service.GetImplantTemplateByName("GruntHTTP")
-                    },
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await service.GetListenerTypeByName("HTTP"),
-                        ImplantTemplate = await service.GetImplantTemplateByName("GruntSMB")
-                    },
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await service.GetListenerTypeByName("Bridge"),
-                        ImplantTemplate = await service.GetImplantTemplateByName("GruntBridge")
-                    },
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await service.GetListenerTypeByName("Bridge"),
-                        ImplantTemplate = await service.GetImplantTemplateByName("GruntSMB")
-                    },
-                    new ListenerTypeImplantTemplate
-                    {
-                        ListenerType = await service.GetListenerTypeByName("HTTP"),
-                        ImplantTemplate = await service.GetImplantTemplateByName("Brute")
-                    }
-                );
+                    string yaml = File.ReadAllText(file);
+                    List<ImplantTemplate> templates = YamlUtilities.FromYaml<ImplantTemplate>(yaml).ToList();
+                    await service.CreateImplantTemplates(templates.ToArray());
+                }
             }
         }
 
-        public async static Task InitializeListeners(ICovenantService service, CovenantContext context, ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens)
+        public async static Task InitializeListeners(ICovenantService service, CovenantContext context, CovenantUser user)
         {
             if (!context.ListenerTypes.Any())
             {
@@ -124,42 +82,27 @@ namespace Covenant.Core
             if (!context.Profiles.Any())
             {
                 string[] files = Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories);
-                HttpProfile[] httpProfiles = files.Where(F => F.Contains("HTTP", StringComparison.CurrentCultureIgnoreCase))
-                    .Select(F => HttpProfile.Create(F))
-                    .ToArray();
-                BridgeProfile[] bridgeProfiles = files.Where(F => F.Contains("Bridge", StringComparison.CurrentCultureIgnoreCase))
-                    .Select(F => BridgeProfile.Create(F))
-                    .ToArray();
-                await service.CreateProfiles(httpProfiles);
-                await service.CreateProfiles(bridgeProfiles);
+                List<Profile> profiles = new List<Profile>();
+                Directory.GetFiles(Common.CovenantProfileDirectory, "*.yaml", SearchOption.AllDirectories)
+                    .ToList()
+                    .ForEach(F => profiles.AddRange(Profile.FromYamlEnumerable(File.ReadAllText(F))));
+                if (user == null)
+                {
+                    await service.CreateProfiles(profiles.ToArray());
+                }
+                else
+                {
+                    foreach (Profile p in profiles)
+                    {
+                        await service.CreateProfile(p, user);
+                    }
+                }
             }
             var listeners = (await service.GetListeners()).Where(L => L.Status == ListenerStatus.Active);
 
             foreach (Listener l in listeners)
             {
-                l.Profile = await service.GetProfile(l.ProfileId);
                 await service.StartListener(l.Id);
-            }
-        }
-
-        public async static Task InitializeLaunchers(ICovenantService service, CovenantContext context)
-        {
-            if (!context.Launchers.Any())
-            {
-                var launchers = new Launcher[]
-                {
-                    new BinaryLauncher(),
-                    new ShellCodeLauncher(),
-                    new PowerShellLauncher(),
-                    new MSBuildLauncher(),
-                    new InstallUtilLauncher(),
-                    new WmicLauncher(),
-                    new Regsvr32Launcher(),
-                    new MshtaLauncher(),
-                    new CscriptLauncher(),
-                    new WscriptLauncher()
-                };
-                await service.CreateEntities(launchers);
             }
         }
 
@@ -212,25 +155,107 @@ namespace Covenant.Core
                     {
                         Name = "SharpSploit", Description = "SharpSploit is a library for C# post-exploitation modules.",
                         Location =  "SharpSploit" + Path.DirectorySeparatorChar + "SharpSploit" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.Protocols.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.Protocols.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Management.Automation.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40),
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "Rubeus", Description = "Rubeus is a C# toolset for raw Kerberos interaction and abuses.",
                         Location = "Rubeus" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.AccountManagement.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.IdentityModel.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "Seatbelt", Description = "Seatbelt is a C# project that performs a number of security oriented host-survey \"safety checks\" relevant from both offensive and defensive security perspectives.",
                         Location = "Seatbelt" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.DirectoryServices.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Web.Extensions.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Data.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Data.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Data.DataSetExtensions.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Data.DataSetExtensions.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Windows.Forms.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpDPAPI", Description = "SharpDPAPI is a C# port of some Mimikatz DPAPI functionality.",
                         Location = "SharpDPAPI" + Path.DirectorySeparatorChar + "SharpDPAPI" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Security.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     // new ReferenceSourceLibrary
                     // {
@@ -242,19 +267,58 @@ namespace Covenant.Core
                     {
                         Name = "SharpDump", Description = "SharpDump is a C# port of PowerSploit's Out-Minidump.ps1 functionality.",
                         Location = "SharpDump" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpUp", Description = "SharpUp is a C# port of various PowerUp functionality.",
                         Location = "SharpUp" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.XML.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     new ReferenceSourceLibrary
                     {
                         Name = "SharpWMI", Description = "SharpWMI is a C# implementation of various WMI functionality.",
                         Location = "SharpWMI" + Path.DirectorySeparatorChar,
-                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 }
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion> { Common.DotNetVersion.Net35, Common.DotNetVersion.Net40 },
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Management.dll", Common.DotNetVersion.Net40)
+
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
                     },
                     new ReferenceSourceLibrary
                     {
@@ -422,12 +486,8 @@ namespace Covenant.Core
                 foreach (string file in files)
                 {
                     string yaml = File.ReadAllText(file);
-                    List<SerializedGruntTask> serialized = deserializer.Deserialize<List<SerializedGruntTask>>(yaml);
-                    List<GruntTask> tasks = serialized.Select(S => new GruntTask().FromSerializedGruntTask(S)).ToList();
-                    foreach (GruntTask task in tasks)
-                    {
-                        await service.CreateGruntTask(task);
-                    }
+                    List<GruntTask> tasks = YamlUtilities.FromYaml<GruntTask>(yaml).ToList();
+                    await service.CreateGruntTasks(tasks.ToArray());
                 }
             }
         }
@@ -517,9 +577,11 @@ namespace Covenant.Core
                         CodeMirrorTheme = CodeMirrorTheme.night,
                     }
                 };
-
-                await context.Themes.AddRangeAsync(themes);
-                await context.SaveChangesAsync();
+                foreach (Theme t in themes)
+                {
+                    await context.Themes.AddAsync(t);
+                    await context.SaveChangesAsync();
+                }
             }
         }
     }

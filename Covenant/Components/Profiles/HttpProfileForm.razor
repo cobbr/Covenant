@@ -67,10 +67,7 @@
             <div class="text-danger"><ValidationMessage For="() => Profile.HttpPostResponse" /></div>
         </div>
     </div>
-
-    <button type="submit" class="btn btn-primary">
-        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-    </button>
+    @ChildContent
 </EditForm>
 
 @code {
@@ -81,10 +78,7 @@
     public EventCallback<HttpProfile> OnSubmit { get; set; }
 
     [Parameter]
-    public string SubmitIcon { get; set; } = "edit";
-
-    [Parameter]
-    public string SubmitLabel { get; set; } = "Edit";
+    public RenderFragment ChildContent { get; set; }
 
     [CascadingParameter]
     public Theme Theme { get; set; }

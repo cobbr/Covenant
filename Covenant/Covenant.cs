@@ -6,9 +6,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Security.Authentication;
@@ -23,9 +20,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 
-using NLog.Web;
-using NLog.Config;
-using NLog.Targets;
 using McMaster.Extensions.CommandLineUtils;
 
 using Covenant.Models;
@@ -74,6 +68,7 @@ namespace Covenant
 
                 string username = UserNameOption.HasValue() ? UserNameOption.Value() : Environment.GetEnvironmentVariable("COVENANT_USERNAME");
                 string password = PasswordOption.HasValue() ? PasswordOption.Value() : Environment.GetEnvironmentVariable("COVENANT_PASSWORD");
+
                 if (!string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 {
                     Console.Write("Password: ");
@@ -116,55 +111,11 @@ namespace Covenant
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     var configuration = services.GetRequiredService<IConfiguration>();
                     configuration["CovenantPort"] = CovenantPort.ToString();
-                    var listenerTokenSources = services.GetRequiredService<ConcurrentDictionary<int, CancellationTokenSource>>();
-                    context.Database.EnsureCreated();
-                    DbInitializer.Initialize(service, context, roleManager, listenerTokenSources).Wait();
-                    CovenantUser serviceUser = new CovenantUser { UserName = "ServiceUser" };
-                    if (!context.Users.Any())
-                    {
-                        string serviceUserPassword = Utilities.CreateSecretPassword() + "A";
-                        userManager.CreateAsync(serviceUser, serviceUserPassword).Wait();
-                        userManager.AddToRoleAsync(serviceUser, "ServiceUser").Wait();
-                        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-                        {
-                            CovenantUser user = new CovenantUser { UserName = username };
-                            Task<IdentityResult> task = userManager.CreateAsync(user, password);
-                            task.Wait();
-                            IdentityResult userResult = task.Result;
-                            if (userResult.Succeeded)
-                            {
-                                userManager.AddToRoleAsync(user, "User").Wait();
-                                userManager.AddToRoleAsync(user, "Administrator").Wait();
-                            }
-                            else
-                            {
-                                Console.Error.WriteLine($"Error creating user: {user.UserName}");
-                                return -1;
-                            }
-                        }
-                    }
-                    configuration["ServiceUserToken"] = Utilities.GenerateJwtToken(
-                        serviceUser.UserName, serviceUser.Id, new string[] { "ServiceUser" },
-                        configuration["JwtKey"], configuration["JwtIssuer"],
-                        configuration["JwtAudience"], configuration["JwtExpireDays"]
-                    );
+                    DbInitializer.Initialize(service, context, roleManager, userManager, username, password).Wait();
                 }
 
-                LoggingConfiguration loggingConfig = new LoggingConfiguration();
-                var consoleTarget = new ColoredConsoleTarget();
-                var fileTarget = new FileTarget();
-                loggingConfig.AddTarget("console", consoleTarget);
-                loggingConfig.AddTarget("file", fileTarget);
-                consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                fileTarget.FileName = Common.CovenantLogDirectory + "covenant.log";
-                loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "console");
-                loggingConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, "file");
-
-                var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
                 try
                 {
-                    logger.Debug("Starting Covenant API");
                     if (!IsElevated())
                     {
                         Console.Error.WriteLine("WARNING: Running Covenant non-elevated. You may not have permission to start Listeners on low-numbered ports. Consider running Covenant elevated.");
@@ -172,9 +123,8 @@ namespace Covenant
                     Console.WriteLine($"Covenant has started! Navigate to {CovenantUri} in a browser");
                     host.Run();
                 }
-                catch (Exception ex)
+                catch
                 {
-                    logger.Error(ex, "Covenant stopped due to exception");
                     throw;
                 }
                 finally

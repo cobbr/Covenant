@@ -1,8 +1,10 @@
-﻿@using System.Collections.Generic
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System.Collections.Generic
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Authorization
 
-@using Covenant.Core 
+@using Covenant.Core
 @using Covenant.Models.Listeners
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -20,6 +22,7 @@
         <SortableTableHeader TItem="Profile" TItem2="ProfileType" GetSortableProperty="(profile) => profile.Type">
             <HeaderContent>Type</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="profile">
         <tr>
@@ -37,6 +40,19 @@
             </td>
             <td>@profile.Description</td>
             <td>@profile.Type</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionProfile">
+                    <DropdownActionItem Item="profile" OnAction="(async item => await OnExportProfile(item))">
+                        <span class="fe fe-share"></span>
+                        Export
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="profile" OnAction="(async item => await OnDeleteProfile(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -44,6 +60,9 @@
 @code {
     [Parameter]
     public IEnumerable<Profile> Profiles { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnError { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -76,5 +95,35 @@
             profile.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             profile.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             profile.Type.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnExportProfile(Profile profile)
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                profile.Name + ".yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(new List<Profile> { profile }.ToYaml()))
+            );
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
+    }
+
+    private async Task OnDeleteProfile(Profile profile)
+    {
+        try
+        {
+            await Service.DeleteProfile(profile.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
     }
 }

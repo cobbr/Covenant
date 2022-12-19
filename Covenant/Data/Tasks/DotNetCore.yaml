@@ -9,7 +9,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -60,11 +60,27 @@
             SharpSploitResultList<FileSystemEntryResult> results = new SharpSploitResultList<FileSystemEntryResult>();
             foreach (string dir in Directory.GetDirectories(Path))
             {
-                results.Add(new FileSystemEntryResult(dir));
+                DirectoryInfo dirInfo = new DirectoryInfo(dir);
+                results.Add(new FileSystemEntryResult
+                {
+                    Name = dirInfo.FullName,
+                    Length = 0,
+                    CreationTimeUtc = dirInfo.CreationTimeUtc,
+                    LastAccessTimeUtc = dirInfo.LastAccessTimeUtc,
+                    LastWriteTimeUtc = dirInfo.LastWriteTimeUtc
+                });
             }
             foreach (string file in Directory.GetFiles(Path))
             {
-                results.Add(new FileSystemEntryResult(file));
+                FileInfo fileInfo = new FileInfo(file);
+                results.Add(new FileSystemEntryResult
+                {
+                    Name = fileInfo.FullName,
+                    Length = fileInfo.Length,
+                    CreationTimeUtc = fileInfo.CreationTimeUtc,
+                    LastAccessTimeUtc = fileInfo.LastAccessTimeUtc,
+                    LastWriteTimeUtc = fileInfo.LastWriteTimeUtc
+                });
             }
             return results;
         }
@@ -75,7 +91,11 @@
     /// </summary>
     public sealed class FileSystemEntryResult : SharpSploitResult
     {
-        public string Name { get; } = "";
+        public string Name { get; set; } = "";
+        public long Length { get; set; } = 0;
+        public DateTime CreationTimeUtc { get; set; } = new DateTime();
+        public DateTime LastAccessTimeUtc { get; set; } = new DateTime();
+        public DateTime LastWriteTimeUtc { get; set; } = new DateTime();
         protected internal override IList<SharpSploitResultProperty> ResultProperties
         {
             get
@@ -86,14 +106,29 @@
                     {
                         Name = "Name",
                         Value = this.Name
+                    },
+                    new SharpSploitResultProperty
+                    {
+                        Name = "Length",
+                        Value = this.Length
+                    },
+                    new SharpSploitResultProperty
+                    {
+                        Name = "CreationTimeUtc",
+                        Value = this.CreationTimeUtc
+                    },
+                    new SharpSploitResultProperty
+                    {
+                        Name = "LastAccessTimeUtc",
+                        Value = this.LastAccessTimeUtc
+                    },
+                    new SharpSploitResultProperty
+                    {
+                        Name = "LastWriteTimeUtc",
+                        Value = this.LastWriteTimeUtc
                     }
                 };
             }
-        }
-    
-        public FileSystemEntryResult(string Name = "")
-        {
-            this.Name = Name;
         }
     }
     
@@ -159,35 +194,48 @@
         {
             if (this.Results.Count > 0)
             {
-                StringBuilder builder1 = new StringBuilder();
-                StringBuilder builder2 = new StringBuilder();
+                StringBuilder labels = new StringBuilder();
+                StringBuilder underlines = new StringBuilder();
+                List<StringBuilder> rows = new List<StringBuilder>();
+                for (int i = 0; i < this.Results.Count; i++)
+                {
+                    rows.Add(new StringBuilder());
+                }
                 for (int i = 0; i < this.Results[0].ResultProperties.Count; i++)
                 {
-                    builder1.Append(this.Results[0].ResultProperties[i].Name);
-                    builder2.Append(new String('-', this.Results[0].ResultProperties[i].Name.Length));
-                    if (i != this.Results[0].ResultProperties.Count-1)
+                    labels.Append(this.Results[0].ResultProperties[i].Name);
+                    underlines.Append(new string('-', this.Results[0].ResultProperties[i].Name.Length));
+                    int maxproplen = 0;
+                    for (int j = 0; j < rows.Count; j++)
                     {
-                        builder1.Append(new String(' ', PROPERTY_SPACE));
-                        builder2.Append(new String(' ', PROPERTY_SPACE));
-                    }
-                }
-                builder1.AppendLine();
-                builder1.AppendLine(builder2.ToString());
-                foreach (SharpSploitResult result in this.Results)
-                {
-                    for (int i = 0; i < result.ResultProperties.Count; i++)
-                    {
-                        SharpSploitResultProperty property = result.ResultProperties[i];
+                        SharpSploitResultProperty property = this.Results[j].ResultProperties[i];
                         string ValueString = property.Value.ToString();
-                        builder1.Append(ValueString);
-                        if (i != result.ResultProperties.Count-1)
+                        rows[j].Append(ValueString);
+                        if (maxproplen < ValueString.Length)
                         {
-                            builder1.Append(new String(' ', Math.Max(1, property.Name.Length + PROPERTY_SPACE - ValueString.Length)));
+                            maxproplen = ValueString.Length;
                         }
                     }
-                    builder1.AppendLine();
+                    if (i != this.Results[0].ResultProperties.Count - 1)
+                    {
+                        labels.Append(new string(' ', Math.Max(2, maxproplen + 2 - this.Results[0].ResultProperties[i].Name.Length)));
+                        underlines.Append(new string(' ', Math.Max(2, maxproplen + 2 - this.Results[0].ResultProperties[i].Name.Length)));
+                        for (int j = 0; j < rows.Count; j++)
+                        {
+                            SharpSploitResultProperty property = this.Results[j].ResultProperties[i];
+                            string ValueString = property.Value.ToString();
+                            rows[j].Append(new string(' ', Math.Max(this.Results[0].ResultProperties[i].Name.Length - ValueString.Length + 2, maxproplen - ValueString.Length + 2)));
+                        }
+                    }
                 }
-                return builder1.ToString();
+                labels.AppendLine();
+                labels.Append(underlines.ToString());
+                foreach (StringBuilder row in rows)
+                {
+                    labels.AppendLine();
+                    labels.Append(row.ToString());
+                }
+                return labels.ToString();
             }
             return "";
         }
@@ -291,7 +339,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -667,7 +715,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.Text;
@@ -730,13 +778,13 @@
         {
             if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
             {
-                return ShellExecute("bash -c " + ShellCommand, Username, Domain, Password);
+                return ShellExecute("bash -c \"" + ShellCommand + "\"", Username, Domain, Password);
             }
             else if (Environment.OSVersion.Platform.ToString().Contains("Win32"))
             {
-                return ShellExecute("cmd.exe /c " + ShellCommand, Username, Domain, Password);
+                return ShellExecute("cmd.exe /c \"" + ShellCommand + "\"", Username, Domain, Password);
             }
-            return ShellExecute("cmd.exe /c " + ShellCommand, Username, Domain, Password);
+            return ShellExecute("cmd.exe /c \"" + ShellCommand + "\"", Username, Domain, Password);
         }
 
         /// <summary>
@@ -817,7 +865,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.Text;
@@ -940,7 +988,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
 
@@ -973,7 +1021,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1016,7 +1064,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1058,7 +1106,7 @@
   Help:
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1102,7 +1150,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1157,7 +1205,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1208,7 +1256,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.Linq;
@@ -1474,7 +1522,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;
@@ -1549,7 +1597,7 @@
   Help: 
   Language: CSharp
   CompatibleDotNetVersions:
-  - NetCore31
+  - Net50
   Code: |
     using System;
     using System.IO;

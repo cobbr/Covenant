@@ -1,5 +1,8 @@
-﻿@using System
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using System
 @using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Covenant
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
@@ -7,26 +10,38 @@
 <CovenantTable TItem="ScreenshotEvent" Items="ScreenshotEvents.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
     <TableHeader>
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => screenshot.Name">
+            <HeaderContent>Name</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => screenshot.FileName">
             <HeaderContent>FileName</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="ScreenshotEvent" TItem2="int" GetSortableProperty="(screenshot) => Convert.FromBase64String(screenshot.FileContents).Length">
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="long" GetSortableProperty="(screenshot) => screenshot.FileLength">
             <HeaderContent>Size</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="ScreenshotEvent" TItem2="string" GetSortableProperty="(screenshot) => string.Empty">
-            <HeaderContent>Image</HeaderContent>
+        <SortableTableHeader TItem="ScreenshotEvent" TItem2="DateTime" GetSortableProperty="(screenshot) => screenshot.Time">
+            <HeaderContent>ScreenshotTime</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="screenshot">
         <tr>
-            <td>
-                @screenshot.FileName
-            </td>
-            <td>
-                @System.Convert.FromBase64String(screenshot.FileContents).Length
-            </td>
-            <td>
-                <img style="max-width:100%" src="data:image/png;base64, @screenshot.FileContents" />
+            <td>@screenshot.Name</td>
+            <td>@screenshot.FileName</td>
+            <td>@screenshot.FileLength</td>
+            <td>@screenshot.Time</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionScreenshot">
+                    <a class="dropdown-item" type="button" download href="/api/events/screenshot/@screenshot.Id/download">
+                        <span class="fe fe-download"></span>
+                        Download
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="screenshot" OnAction="(async item => await OnDeleteEvent(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
             </td>
         </tr>
     </TableRow>
@@ -34,7 +49,7 @@
 
 @code {
     [Parameter]
-    public IEnumerable<ScreenshotEvent> ScreenshotEvents { get; set; }
+    public List<ScreenshotEvent> ScreenshotEvents { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -51,7 +66,21 @@
     private bool IsRowDisplayed(ScreenshotEvent screenshot, string SearchTerm)
     {
         return SearchTerm == string.Empty ||
+            screenshot.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             screenshot.FileName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            Convert.FromBase64String(screenshot.FileContents).Length.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+            screenshot.FileLength.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnDeleteEvent(Event ev)
+    {
+        try
+        {
+            await Service.DeleteEvent(ev.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+
+        }
     }
 }

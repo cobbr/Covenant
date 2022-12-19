@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.ComponentModel;
@@ -16,18 +17,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-
-using NLog.Web;
-using NLog.Config;
-using NLog.Targets;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
 
@@ -36,12 +34,15 @@ using APIModels = Covenant.API.Models;
 
 namespace Covenant.Models.Listeners
 {
-    public class HostedFile
+    public class HostedFile : ILoggable
     {
         public int Id { get; set; }
         public int ListenerId { get; set; }
         public string Path { get; set; }
         public string Content { get; set; }
+
+        // NetworkIndicator|Action|ID|ListenerID|Path
+        public string ToLog(LogAction action) => $"HostedFile|{action}|{this.Id}|{this.ListenerId}|{this.Path}";
     }
 
     public class HttpListener : Listener
@@ -89,10 +90,14 @@ namespace Covenant.Models.Listeners
                 List<string> addresses = new List<string>();
                 foreach (string url in value)
                 {
-                    Uri uri = new Uri(url);
-                    this.UseSSL = uri.Scheme == "https";
-                    addresses.Add(uri.Host);
-                    this.ConnectPort = uri.Port;
+                    try
+                    {
+                        Uri uri = new Uri(url);
+                        this.UseSSL = uri.Scheme == "https";
+                        addresses.Add(uri.Host);
+                        this.ConnectPort = uri.Port;
+                    }
+                    catch { }
                 }
                 this.ConnectAddresses = addresses;
             }
@@ -162,32 +167,16 @@ namespace Covenant.Models.Listeners
                 _ = internalListener.Configure(InternalListener.ToProfile(this.Profile), this.GUID, configuration["CovenantUrl"], configuration["CovenantToken"]);
             }
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-            LoggingConfiguration loggingConfig = new LoggingConfiguration();
-            using (var consoleTarget = new ColoredConsoleTarget())
+
+            Task task = host.RunAsync(cancellationTokenSource.Token);
+            // Don't love this, but we wait to see if the Listener throws an error on Startup
+            Thread.Sleep(500);
+            if (task.Status == TaskStatus.Faulted)
             {
-                using (var fileTarget = new FileTarget())
-                {
-                    loggingConfig.AddTarget("console", consoleTarget);
-                    loggingConfig.AddTarget("file", fileTarget);
-                    consoleTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                    fileTarget.Layout = @"${longdate}|${event-properties:item=EventId_Id}|${uppercase:${level}}|${logger}|${message} ${exception:format=tostring}";
-                    fileTarget.FileName = Common.CovenantLogDirectory + "covenant-http.log";
-                    loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "console");
-                    loggingConfig.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, "file");
-
-                    var logger = NLogBuilder.ConfigureNLog(loggingConfig).GetCurrentClassLogger();
-
-                    System.Threading.Tasks.Task task = host.RunAsync(cancellationTokenSource.Token);
-                    // Don't love this, but we wait to see if the Listener throws an error on Startup
-                    Thread.Sleep(500);
-                    if (task.Status == System.Threading.Tasks.TaskStatus.Faulted)
-                    {
-                        throw new ListenerStartException(task.Exception.Message);
-                    }
-                    this.Status = ListenerStatus.Active;
-                    return cancellationTokenSource;
-                }
+                throw new ListenerStartException(task.Exception.Message);
             }
+            this.Status = ListenerStatus.Active;
+            return cancellationTokenSource;
         }
 
         public override void Stop(CancellationTokenSource cancellationTokenSource)
@@ -216,7 +205,8 @@ namespace Covenant.Models.Listeners
                                 listenOptions.UseHttps(httpsOptions =>
                                 {
                                     httpsOptions.ServerCertificate = new X509Certificate2(SSLCertificateFile, this.SSLCertificatePassword);
-                                    httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                                    httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls13 |
+                                                                System.Security.Authentication.SslProtocols.Tls12 |
                                                                 System.Security.Authentication.SslProtocols.Tls11 |
                                                                 System.Security.Authentication.SslProtocols.Tls;
                                 });
@@ -224,19 +214,11 @@ namespace Covenant.Models.Listeners
                         }
                     })
                     .UseContentRoot(Directory.GetCurrentDirectory())
-                    .ConfigureLogging((hostingContext, logging) =>
-                    {
-                        // logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                        logging.AddConsole();
-                        logging.AddDebug();
-                        logging.AddFilter("System", LogLevel.Warning)
-                            .AddFilter("Microsoft", LogLevel.Warning);
-                    })
-                    .UseNLog()
                     .UseStartup<HttpListenerStartup>()
                     .UseSetting("CovenantUrl", this.CovenantUrl)
                     .UseSetting("CovenantToken", this.CovenantToken)
                     .UseSetting("ProfileUrls", JsonConvert.SerializeObject((this.Profile as HttpProfile).HttpUrls))
+                    .UseSetting("ListenerDirectory", this.ListenerDirectory)
                     .UseSetting("ListenerStaticHostDirectory", this.ListenerStaticHostDirectory)
                     .UseUrls((this.UseSSL ? "https://" : "http://") + this.BindAddress + ":" + this.BindPort);
                 })
@@ -264,9 +246,12 @@ namespace Covenant.Models.Listeners
 
         public void UnhostFile(HostedFile hostFileRequest)
         {
+            hostFileRequest.Path = hostFileRequest.Path.TrimStart('/').TrimStart('\\');
             string FullPath = Path.GetFullPath(Path.Combine(this.ListenerStaticHostDirectory, hostFileRequest.Path));
             if (!FullPath.StartsWith(this.ListenerStaticHostDirectory, StringComparison.OrdinalIgnoreCase)) { throw new CovenantDirectoryTraversalException(); }
-            FileInfo file = new FileInfo(FullPath);
+            FileInfo file1 = new FileInfo(FullPath);
+            string filename = Utilities.GetSanitizedFilename(file1.Name);
+            FileInfo file = new FileInfo(file1.DirectoryName + Path.DirectorySeparatorChar + filename);
             if (file.Exists)
             {
                 file.Delete();
@@ -338,18 +323,29 @@ namespace Covenant.Models.Listeners
 
     public class HttpListenerStartup
     {
-        public IConfiguration Configuration { get; }
+        private IConfiguration _configuration { get; }
+        private Action<HttpContext> _logContext { get; }
+
         public HttpListenerStartup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
+            _logContext = (HttpContext context) =>
+            {
+                string log = $@"{context.Connection.RemoteIpAddress} - - [{DateTime.Now}] ""{context.Request.Method} {context.Request.Path} {context.Request.Protocol}"" {context.Response.StatusCode} ""{context.Request.Headers["User-Agent"]}""{Environment.NewLine}";
+                File.AppendAllText(_configuration["ListenerDirectory"] + "requests.log", log);
+            };
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<HttpListenerContext>();
-            services.AddSingleton<InternalListener>(IL => new InternalListener());
-            services.AddMvc();
+            services.AddSingleton(IL => new InternalListener());
+            services.AddSingleton(F => this._logContext);
+            services.AddMvc().AddMvcOptions(options =>
+            {
+                options.Filters.Add(new WebLogResultServiceFilter(_logContext));
+            });
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
@@ -372,21 +368,43 @@ namespace Covenant.Models.Listeners
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                foreach (string route in JsonConvert.DeserializeObject<List<string>>(Configuration["ProfileUrls"]))
+                foreach (string route in JsonConvert.DeserializeObject<List<string>>(_configuration["ProfileUrls"]))
                 {
                     string urlOnly = route.Split("?").First();
                     endpoints.MapControllerRoute(urlOnly, urlOnly, new { controller = "HttpListener", action = "Route" });
                 }
+                endpoints.MapFallbackToController("Fallback", "HttpListener");
             });
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Configuration["ListenerStaticHostDirectory"]),
+                FileProvider = new PhysicalFileProvider(_configuration["ListenerStaticHostDirectory"]),
                 RequestPath = "",
                 ContentTypeProvider = new FileExtensionContentTypeProvider(Common.ContentTypeMappings),
                 ServeUnknownFileTypes = true,
-                DefaultContentType = "text/plain"
+                DefaultContentType = Common.DefaultContentTypeMapping,
+                OnPrepareResponse = ctx => this._logContext(ctx.Context)
             });
+        }
+    }
+
+    public class WebLogResultServiceFilter : IResultFilter
+    {
+        private Action<HttpContext> _logContext;
+
+        public WebLogResultServiceFilter(Action<HttpContext> logContext)
+        {
+            _logContext = logContext;
+        }
+
+        public void OnResultExecuting(ResultExecutingContext context) { }
+
+        public void OnResultExecuted(ResultExecutedContext context)
+        {
+            if (context.HttpContext.Response.StatusCode != 200)
+            {
+                _logContext(context.HttpContext);
+            }
         }
     }
 }

@@ -12,15 +12,19 @@
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Name">
             <HeaderContent>Name</HeaderContent>
         </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetAliases(task)">
+            <HeaderContent>Aliases</HeaderContent>
+        </SortableTableHeader>
+        <SortableTableHeader TItem="GruntTask" TItem2="ImplantLanguage" GetSortableProperty="(task) => task.Language">
+            <HeaderContent>Language</HeaderContent>
+        </SortableTableHeader>
         <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetCompatibleDotNetVersions(task)">
             <HeaderContent>CompatibleDotNetVersions</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => GetReferenceSourceLibraries(task)">
-            <HeaderContent>ReferenceSourceLibraries</HeaderContent>
+        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Author.Name">
+            <HeaderContent>Author</HeaderContent>
         </SortableTableHeader>
-        <SortableTableHeader TItem="GruntTask" TItem2="string" GetSortableProperty="(task) => task.Description">
-            <HeaderContent>Description</HeaderContent>
-        </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="task">
         <tr>
@@ -29,9 +33,23 @@
                     @task.Name
                 </a>
             </td>
+            <td>@GetAliases(task)</td>
+            <td>@task.Language</td>
             <td>@GetCompatibleDotNetVersions(task)</td>
-            <td>@GetReferenceSourceLibraries(task)</td>
-            <td>@task.Description</td>
+            <td>@task.Author.Name</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionGruntTask">
+                    <DropdownActionItem Item="task" OnAction="(async item => await OnExportGruntTask(item))">
+                        <span class="fe fe-share"></span>
+                        Export
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="task" OnAction="(async item => await OnDeleteGruntTask(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
@@ -39,6 +57,9 @@
 @code {
     [Parameter]
     public IEnumerable<GruntTask> GruntTasks { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnError { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = true;
@@ -50,11 +71,11 @@
     public bool IsPaginated { get; set; } = true;
 
     [Parameter]
-    public int PageLength { get; set; } = 10;
+    public int PageLength { get; set; } = 25;
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasks = await Service.GetGruntTasks();
+        this.GruntTasks = this.GruntTasks ?? await Service.GetGruntTasks();
     }
 
     private string GetCompatibleDotNetVersions(GruntTask task)
@@ -62,17 +83,48 @@
         return string.Join(", ", task.CompatibleDotNetVersions.Select(DN => DN.ToString()));
     }
 
-    private string GetReferenceSourceLibraries(GruntTask task)
+    private string GetAliases(GruntTask task)
     {
-        return string.Join(",", task.ReferenceSourceLibraries.Select(RSL => RSL.Name));
+        return string.Join(",", task.Aliases);
     }
 
     private bool IsRowDisplayed(GruntTask task, string SearchTerm)
     {
         return SearchTerm == string.Empty ||
             task.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            task.Description.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            GetAliases(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
+            task.Language.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             GetCompatibleDotNetVersions(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
-            GetReferenceSourceLibraries(task).Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+            task.Author.Name.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnExportGruntTask(GruntTask task)
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                task.Name + ".yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(new List<GruntTask> { task }.ToYaml()))
+            );
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
+    }
+
+    private async Task OnDeleteGruntTask(GruntTask task)
+    {
+        try
+        {
+            await Service.DeleteGruntTask(task.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            await this.OnError.InvokeAsync(e.Message);
+        }
     }
 }

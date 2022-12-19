@@ -22,38 +22,44 @@
                 </tr>
             </thead>
             <tbody>
+                @ExtraRows
                 @for (int i = (this.CurrentPage * this.PageLength); i < Math.Min((this.CurrentPage * this.PageLength) + this.PageLength, this.FilteredItems.Count); i++)
                 {
                     int number = i;
                     @TableRow(this.FilteredItems[number])
                 }
             </tbody>
+            @TableBottom
         </table>
     </div>
     @if (this.IsPaginated)
     {
         <div class="d-flex flex-nowrap float-right">
-            <span class="text-muted mt-2 mr-2">Page @(CurrentPage + 1) of @TotalPages</span>
+            @if (this.TotalPages > 1)
+            {
+                <span class="text-muted mt-2 mr-2">Page @(CurrentPage + 1) of @TotalPages</span>
+            }
             <div class="btn-group-sm" role="group">
-                @if (this.CurrentPage == 0)
+                @if (this.TotalPages > 1)
                 {
-                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToFront">
-                        <span class="fe fe-arrow-left-circle"></span>
-                    </button>
-                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToLeft">
-                        <span class="fe fe-arrow-left"></span>
-                    </button>
-                }
-                else
-                {
-                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToFront">
-                        <span class="fe fe-arrow-left-circle"></span>
-                    </button>
-                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToLeft">
-                        <span class="fe fe-arrow-left"></span>
-                    </button>
-                }
-                @{
+                    @if (this.CurrentPage == 0)
+                    {
+                        <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToFront">
+                            <span class="fe fe-arrow-left-circle"></span>
+                        </button>
+                        <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToLeft">
+                            <span class="fe fe-arrow-left"></span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm primary-color" @onclick="OnNavigateToFront">
+                            <span class="fe fe-arrow-left-circle"></span>
+                        </button>
+                        <button class="btn btn-sm primary-color" @onclick="OnNavigateToLeft">
+                            <span class="fe fe-arrow-left"></span>
+                        </button>
+                    }
                     int Left = Math.Max(1, this.CurrentPage - 3);
                     int Right = Math.Min(this.TotalPages, this.CurrentPage + 5);
                     if (Left == 1)
@@ -64,41 +70,41 @@
                     {
                         Left = Math.Max(1, this.CurrentPage - 3 - (this.CurrentPage + 5 - this.TotalPages));
                     }
-                }
-                @for (int i = Left; i <= CurrentPage; i++)
-                {
-                    int number = i;
-                    <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
-                        @number
+                    @for (int i = Left; i <= CurrentPage; i++)
+                    {
+                        int number = i;
+                        <button class="btn btn-secondary-outline" @onclick="(e => OnNavigateToPage(number - 1))">
+                            @number
+                        </button>
+                    }
+                    <button class="btn btn-sm btn-primary text-white disabled">
+                        @(CurrentPage + 1)
                     </button>
-                }
-                <button class="btn btn-sm btn-primary text-white disabled">
-                    @(CurrentPage + 1)
-                </button>
-                @for (int i = CurrentPage + 2; i <= Right; i++)
-                {
-                    int number = i;
-                    <button class="btn primary-color" @onclick="(e => OnNavigateToPage(number - 1))">
-                        @number
-                    </button>
-                }
-                @if (this.CurrentPage == (this.TotalPages - 1))
-                {
-                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToRight">
-                        <span class="fe fe-arrow-right"></span>
-                    </button>
-                    <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToBack">
-                        <span class="fe fe-arrow-right-circle"></span>
-                    </button>
-                }
-                else
-                {
-                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToRight">
-                        <span class="fe fe-arrow-right"></span>
-                    </button>
-                    <button class="btn btn-sm primary-color" @onclick="OnNavigateToBack">
-                        <span class="fe fe-arrow-right-circle"></span>
-                    </button>
+                    @for (int i = CurrentPage + 2; i <= Right; i++)
+                    {
+                        int number = i;
+                        <button class="btn primary-color" @onclick="(e => OnNavigateToPage(number - 1))">
+                            @number
+                        </button>
+                    }
+                    @if (this.CurrentPage == (this.TotalPages - 1))
+                    {
+                        <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToRight">
+                            <span class="fe fe-arrow-right"></span>
+                        </button>
+                        <button class="btn btn-sm primary-color disabled" @onclick="OnNavigateToBack">
+                            <span class="fe fe-arrow-right-circle"></span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm primary-color" @onclick="OnNavigateToRight">
+                            <span class="fe fe-arrow-right"></span>
+                        </button>
+                        <button class="btn btn-sm primary-color" @onclick="OnNavigateToBack">
+                            <span class="fe fe-arrow-right-circle"></span>
+                        </button>
+                    }
                 }
                 @ButtonTray
             </div>
@@ -114,7 +120,13 @@
     public RenderFragment<TItem> TableRow { get; set; }
 
     [Parameter]
+    public RenderFragment ExtraRows { get; set; }
+
+    [Parameter]
     public RenderFragment ButtonTray { get; set; }
+
+    [Parameter]
+    public RenderFragment TableBottom { get; set; }
 
     private List<TItem> _items;
     [Parameter]
@@ -168,7 +180,7 @@
     {
         get
         {
-            return (int)Math.Ceiling(Math.Max(this.FilteredItems.Count(), 1) / (decimal)PageLength);
+            return PageLength > 0 ? (int)Math.Ceiling(Math.Max(this.FilteredItems.Count(), 1) / (decimal)PageLength) : 0;
         }
     }
 

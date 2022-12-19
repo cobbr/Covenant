@@ -15,6 +15,7 @@ using Covenant.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 
 namespace Covenant.Controllers
 {
@@ -23,11 +24,15 @@ namespace Covenant.Controllers
     {
         private readonly Covenant.Models.Listeners.HttpListenerContext _context;
         private readonly Covenant.Models.Listeners.InternalListener _internalListener;
+        private readonly IConfiguration _configuration;
+        private readonly Action<HttpContext> _logContext;
 
-		public HttpListenerController(Covenant.Models.Listeners.HttpListenerContext context, Covenant.Models.Listeners.InternalListener internalListener)
+        public HttpListenerController(Covenant.Models.Listeners.HttpListenerContext context, Covenant.Models.Listeners.InternalListener internalListener, IConfiguration configuration, Action<HttpContext> logContext)
         {
             _context = context;
             _internalListener = internalListener;
+            _configuration = configuration;
+            _logContext = logContext;
         }
 
         private void SetHeaders()
@@ -41,21 +46,24 @@ namespace Covenant.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<string>> Route()
         {
-            string guid = "";
             try
             {
                 this.SetHeaders();
-                guid = GetGuid(HttpContext);
+                string guid = GetGuid(HttpContext);
                 if (HttpContext.Request.Method == "GET")
                 {
                     string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}"), await _internalListener.Read(guid), guid);
+                    if (string.IsNullOrEmpty(guid))
+                    {
+                        _logContext(HttpContext);
+                    }
                     return Ok(response);
 		        }
 		        else if (HttpContext.Request.Method == "POST")
                 {
                     using StreamReader reader = new StreamReader(Request.Body, System.Text.Encoding.UTF8);
                     string body = await reader.ReadToEndAsync();
-                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}")).FirstOrDefault();
+                    string ExtractedMessage = body.ParseExact(_context.HttpProfiles.First().HttpPostRequest.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}")).FirstOrDefault();
                     string guidToRead = await _internalListener.Write(guid, ExtractedMessage);
                     string postRead = await _internalListener.Read(guidToRead);
                     string response = String.Format(_context.HttpProfiles.First().HttpPostResponse.Replace("{", "{{").Replace("}", "}}").Replace("{{DATA}}", "{0}").Replace("{{GUID}}", "{1}"), postRead, guid);
@@ -66,16 +74,31 @@ namespace Covenant.Controllers
                     return NotFound();
                 }
             }
-            catch (ControllerNotFoundException e)
+            catch (Exception)
             {
-                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
-                return NotFound(response);
+                return NotFound();
             }
-            catch (Exception e)
+        }
+
+        [AllowAnonymous]
+        public ActionResult Fallback()
+        {
+            try
             {
-                string response = String.Format(_context.HttpProfiles.First().HttpGetResponse.Replace("{DATA}", "{0}").Replace("{GUID}", "{1}"), e.Message, guid);
-                return NotFound(response);
+                string fileDir = _configuration["ListenerStaticHostDirectory"];
+                string filename = Utilities.GetSanitizedFilename(HttpContext.Request.Path.ToString().TrimStart('/'));
+                string file = Path.Combine(fileDir, filename);
+                FileInfo fInfo = new FileInfo(file);
+                if (fInfo.Exists)
+                {
+                    string ext = Common.ContentTypeMappings.ContainsKey(fInfo.Extension) ?
+                        Common.ContentTypeMappings[fInfo.Extension] : Common.DefaultContentTypeMapping;
+                    _logContext(HttpContext);
+                    return PhysicalFile(file, ext);
+                }
             }
+            catch { }
+            return NotFound();
         }
 
         private string GetGuid(HttpContext httpContext)

@@ -2,9 +2,18 @@
 @page "/template/index"
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using System.IO
+@using System.Threading
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
+@using Covenant.Components.Shared
+@inject INotificationService INotificationService
+@inject IJSRuntime IJSRuntime
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">ImplantTemplates</h1>
@@ -16,13 +25,129 @@
     <span class="fe fe-plus"></span>
     Create
 </a>
+<ButtonActivatedModal @ref="_ImportModal" class="btn btn-secondary">
+    <ButtonContent>
+        <span class="fe fe-download"></span>
+        Import
+    </ButtonContent>
+    <TitleContent>Import ImplantTemplate(s)</TitleContent>
+    <ModalBody>
+        <InputFile OnChange="OnUploadImport" />
+        @if (this.UploadInProgress)
+        {
+            <span class="fe fe-loader spin"></span>
+        }
+        @if (!string.IsNullOrEmpty(this.ErrorMessage))
+        {
+            <span class="text-danger">@ErrorMessage</span>
+        }
+    </ModalBody>
+    <ModalFooter>
+        <button type="button" class="btn btn-primary" @onclick="OnImport">
+            <span class="fe fe-download"></span>
+            Import
+        </button>
+    </ModalFooter>
+</ButtonActivatedModal>
+<button type="button" class="btn btn-secondary" @onclick="OnExport">
+    <span class="fe fe-share"></span>
+    Export All
+</button>
 
 @code {
     [Parameter]
-    public IEnumerable<ImplantTemplate> ImplantTemplates { get; set; }
+    public List<ImplantTemplate> ImplantTemplates { get; set; }
+
+    private ButtonActivatedModal _ImportModal;
 
     protected override async Task OnInitializedAsync()
     {
-        this.ImplantTemplates = this.ImplantTemplates ?? await Service.GetImplantTemplates();
+        this.ImplantTemplates = (this.ImplantTemplates ?? await Service.GetImplantTemplates()).ToList();
+        this.INotificationService.OnCreateImplantTemplate += OnCreateImplantTemplate;
+        this.INotificationService.OnDeleteImplantTemplate += OnDeleteImplantTemplate;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateImplantTemplate -= OnCreateImplantTemplate;
+        this.INotificationService.OnDeleteImplantTemplate -= OnDeleteImplantTemplate;
+    }
+
+    private void OnCreateImplantTemplate(object sender, ImplantTemplate template)
+    {
+        this.ImplantTemplates.Add(template);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteImplantTemplate(object sender, int id)
+    {
+        this.ImplantTemplates.RemoveAt(this.ImplantTemplates.FindIndex(T => T.Id == id));
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private string ErrorMessage { get; set; }
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
+    private List<ImplantTemplate> ImportedTemplates { get; set; } = null;
+    private async Task OnUploadImport(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
+                this.ImportedTemplates = YamlUtilities.FromYaml<ImplantTemplate>(yaml).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ErrorMessage = ex.Message;
+        }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
+    }
+
+    private async Task OnImport()
+    {
+        if (this.ImportedTemplates != null)
+        {
+            this.ErrorMessage = "";
+            try
+            {
+                await Service.CreateImplantTemplates(this.ImportedTemplates.ToArray());
+            }
+            catch (Exception e)
+            {
+                this.ErrorMessage += e.Message + Environment.NewLine;
+                this.StateHasChanged();
+            }
+            if (string.IsNullOrEmpty(this.ErrorMessage))
+            {
+                this.ImportedTemplates = null;
+                await _ImportModal.DismissModal();
+            }
+        }
+    }
+
+    private async Task OnExport()
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                "ImplantTemplates.yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.ImplantTemplates.ToYaml()))
+            );
+        }
+        catch (Exception)
+        {
+            //
+        }
     }
 }

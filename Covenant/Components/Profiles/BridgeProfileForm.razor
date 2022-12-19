@@ -59,10 +59,7 @@
             <div class="text-danger"><ValidationMessage For="() => Profile.BridgeMessengerCode" /></div>
         </div>
     </div>
-
-    <button type="submit" class="btn btn-primary">
-        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
-    </button>
+    @ChildContent
 </EditForm>
 
 @code {
@@ -73,10 +70,7 @@
     public EventCallback<BridgeProfile> OnSubmit { get; set; }
 
     [Parameter]
-    public string SubmitIcon { get; set; } = "edit";
-
-    [Parameter]
-    public string SubmitLabel { get; set; } = "Edit";
+    public RenderFragment ChildContent { get; set; }
 
     [CascadingParameter]
     public Theme Theme { get; set; }
@@ -85,9 +79,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
+        if (firstRender)
         {
-            await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
+            foreach (ElementReference CodeMirrorElement in CodeMirrorElements)
+            {
+                await IJSRuntime.InvokeAsync<string>("InitializeCodeMirror", CodeMirrorElement, Theme.CodeMirrorTheme.ToString());
+            }
         }
     }
 

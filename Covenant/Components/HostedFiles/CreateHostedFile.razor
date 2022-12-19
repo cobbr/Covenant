@@ -10,7 +10,12 @@
     <h1 class="h2">Create HostedFile</h1>
 </div>
 
-<HostedFileForm HostedFile="HostedFile" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+<HostedFileForm HostedFile="HostedFile" OnSubmit="OnCreate">
+    <button type="submit" class="btn btn-primary">
+        <span class="fe fe-plus"></span>
+        Create
+    </button>
+</HostedFileForm>
 
 @code {
     [Parameter]

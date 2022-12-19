@@ -2,9 +2,11 @@
 @page "/launcher/index"
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
 
 @using Covenant.Core
 @using Covenant.Models.Launchers
+@inject INotificationService INotificationService
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Launchers</h1>
@@ -12,13 +14,58 @@
 
 <LauncherTable Launchers="Launchers" />
 
+<div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownCreateLauncher" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="fe fe-plus"></span>
+        Create
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownCreateLauncher">
+        @foreach (LauncherType t in Enum.GetValues(typeof(LauncherType)))
+        {
+            <a class="dropdown-item" href="/launcher/create/@((int)t)">Create @(Enum.GetName<LauncherType>(t))Launcher</a>
+        }
+    </div>
+</div>
+
 @code {
     [Parameter]
-    public IEnumerable<Launcher> Launchers { get; set; }
+    public List<Launcher> Launchers { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        this.Launchers = this.Launchers ?? await Service.GetLaunchers();
+        this.Launchers = this.Launchers ?? (await Service.GetLaunchers()).ToList();
         this.Launchers.OrderBy(L => L.Name);
+        this.INotificationService.OnCreateLauncher += OnCreateLauncher;
+        this.INotificationService.OnEditLauncher += OnEditLauncher;
+        this.INotificationService.OnDeleteLauncher += OnDeleteLauncher;
+    }
+
+    public void Dispose()
+    {
+        this.INotificationService.OnCreateLauncher -= OnCreateLauncher;
+        this.INotificationService.OnEditLauncher -= OnEditLauncher;
+        this.INotificationService.OnDeleteLauncher -= OnDeleteLauncher;
+    }
+
+    private void OnCreateLauncher(object sender, Launcher launcher)
+    {
+        this.Launchers.Add(launcher);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnEditLauncher(object sender, Launcher launcher)
+    {
+        int index = this.Launchers.FindIndex(L => L.Id == launcher.Id);
+        if (index != -1)
+        {
+            this.Launchers[index] = launcher;
+            this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnDeleteLauncher(object sender, int id)
+    {
+        this.Launchers.RemoveAt(this.Launchers.FindIndex(L => L.Id == id));
+        this.InvokeAsync(() => this.StateHasChanged());
     }
 }

@@ -1,0 +1,70 @@
+﻿@page "/settings"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Covenant.Core
+@using Covenant.Components.Shared
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Global Settings</h1>
+</div>
+
+<label>Danger Zone</label><br />
+<div class="border-top">
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <ButtonActivatedModal @ref="_ResetModal" class="btn btn-danger">
+                <ButtonContent>
+                    <span class="fe fe-trash"></span>
+                    Reset Factory Defaults
+                </ButtonContent>
+                <TitleContent>Reset Factory Defaults</TitleContent>
+                <ModalBody>
+                    Are you absolutely sure you would like to reset Covenant to factory defaults? This will delete all active Listeners, Grunts, command history, custom GruntTasks, custom ImplantTemplates, and everything else!
+                </ModalBody>
+                <ModalFooter>
+                    <button type="button" class="btn btn-danger" @onclick="OnResetCovenant" data-dismiss="modal">
+                        <span class="fe fe-trash"></span>
+                        Reset
+                    </button>
+                </ModalFooter>
+            </ButtonActivatedModal>
+            @if (this.ResetInProgress)
+            {
+                <span class="fe fe-loader spin"></span>
+            }
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(this.DisplayError))
+    {
+        <div class="text-danger">@DisplayError</div>
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+    private bool ResetInProgress { get; set; } = false;
+    private string DisplayError { get; set; }
+
+    private ButtonActivatedModal _ResetModal;
+
+    private async Task OnResetCovenant()
+    {
+        try
+        {
+            this.ResetInProgress = true;
+            this.StateHasChanged();
+            await Service.ResetCovenantToFactoryDefault((await this.AuthenticationState).User);
+            NavigationManager.NavigateTo("/home");
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            this.DisplayError = e.Message;
+            Service.DisposeContext();
+            this.ResetInProgress = false;
+        }
+    }
+}

@@ -2,27 +2,15 @@
 @attribute [Authorize(Roles = "User, Administrator")]
 @inherits OwningComponentBase<ICovenantService>
 
-@using System.Threading
-@using System.Collections.Concurrent
-
+@using Microsoft.Rest
 @using Microsoft.JSInterop
-@using Microsoft.AspNetCore.SignalR
-@using Microsoft.AspNetCore.Identity
-@using Microsoft.Extensions.Configuration
 @using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
-@using Covenant.Hubs
-@using Covenant.Models.Covenant
 @using Covenant.Models.Listeners
 
 @inject IJSRuntime IJSRuntime
-@inject UserManager<CovenantUser> UserManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IConfiguration Configuration
 @inject CovenantAPIService CovenantAPIService
-@inject ConcurrentDictionary<int, CancellationTokenSource> ListenerCancellationTokens
-@inject IHubContext<EventHub> EventHub
 @inject NavigationManager NavigationManager
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
@@ -46,89 +34,97 @@
 
 <div class="tab-content" id="listener-tab-content">
     <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab">
-        <HttpListenerForm Listener="@(new HttpListener(GetHttpListenerType(), GetHttpProfiles().FirstOrDefault()))"
-                          Profiles="@(GetHttpProfiles())"
-                          OnSubmit="OnSubmitHttpListener"
-                          SubmitIcon="plus"
-                          SubmitLabel="Create" />
+        <HttpListenerForm Listener="@HttpListener"
+                          Profiles="@HttpProfiles"
+                          OnSubmit="OnSubmitHttpListener">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
+        </HttpListenerForm>
     </div>
     <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
-        <BridgeListenerForm Listener="@(new BridgeListener(GetBridgeListenerType(), GetHttpProfiles().FirstOrDefault()))"
-                            Profiles="@(GetBridgeProfiles())"
-                            OnSubmit="OnSubmitBridgeListener"
-                            SubmitIcon="plus"
-                            SubmitLabel="Create" />
+        <BridgeListenerForm Listener="@BridgeListener"
+                            Profiles="@BridgeProfiles"
+                            OnSubmit="OnSubmitBridgeListener">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
+        </BridgeListenerForm>
     </div>
 </div>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private HttpListener HttpListener { get; set; }
+    private BridgeListener BridgeListener { get; set; }
+    private IEnumerable<Profile> HttpProfiles { get; set; }
+    private IEnumerable<Profile> BridgeProfiles { get; set; }
+    private string DisplayError { get; set; }
+    private string Token { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.HttpProfiles = this.HttpProfiles ?? await Service.GetHttpProfiles();
+        this.BridgeProfiles = this.BridgeProfiles ?? await Service.GetBridgeProfiles();
+        this.HttpListener = this.HttpListener ?? new HttpListener(await Service.GetListenerTypeByName("HTTP"), this.HttpProfiles.FirstOrDefault());
+        this.BridgeListener = this.BridgeListener ?? new BridgeListener(await Service.GetListenerTypeByName("Bridge"), this.BridgeProfiles.FirstOrDefault());
+        this.Token = (await Service.GetUserToken((await AuthenticationState).User)).CovenantToken;
+        Service.DisposeContext();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+        }
     }
 
-    private IEnumerable<Profile> GetHttpProfiles()
-    {
-        IEnumerable<HttpProfile> profiles = Service.GetHttpProfiles().WaitResult();
-        Service.DisposeContext();
-        return profiles;
-    }
-
-    private IEnumerable<Profile> GetBridgeProfiles()
-    {
-        IEnumerable<BridgeProfile> profiles = Service.GetBridgeProfiles().WaitResult();
-        Service.DisposeContext();
-        return profiles;
-    }
-
-    private ListenerType GetHttpListenerType()
-    {
-        ListenerType type = Service.GetListenerTypeByName("HTTP").WaitResult();
-        Service.DisposeContext();
-        return type;
-    }
-
-    private ListenerType GetBridgeListenerType()
-    {
-        ListenerType type = Service.GetListenerTypeByName("Bridge").WaitResult();
-        Service.DisposeContext();
-        return type;
-    }
-
-    private void OnSubmitHttpListener(HttpListener listener)
+    private async Task OnSubmitHttpListener(HttpListener listener)
     {
         try
         {
             listener.Status = ListenerStatus.Active;
-            _ = this.InvokeAsync(async () => await CovenantAPIService.CreateHttpListener(listener));
+            await CovenantAPIService.CreateHttpListener(listener, this.Token);
             NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
+        }
+        catch (HttpOperationException e)
+        {
+            this.DisplayError = e.Response.Content;
         }
     }
 
-    private void OnSubmitBridgeListener(BridgeListener listener)
+    private async Task OnSubmitBridgeListener(BridgeListener listener)
     {
         try
         {
             listener.Status = ListenerStatus.Active;
-            _ = this.InvokeAsync(async () => await CovenantAPIService.CreateBridgeListener(listener));
+            await CovenantAPIService.CreateBridgeListener(listener, this.Token);
             NavigationManager.NavigateTo("/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create));
+            this.DisplayError = e.Message;
         }
-    }
-
-    private async Task<bool> IsAdmin()
-    {
-        AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        CovenantUser user = await UserManager.GetUserAsync(state.User);
-        return await UserManager.IsInRoleAsync(user, "Administrator");
+        catch (HttpOperationException e)
+        {
+            this.DisplayError = e.Response.Content;
+        }
     }
 }

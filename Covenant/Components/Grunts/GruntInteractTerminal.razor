@@ -3,11 +3,16 @@
 
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
 @using Covenant.Hubs
 @using Covenant.Models.Grunts
+@using Covenant.Models.Covenant
 @inject IJSRuntime IJSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<CovenantUser> UserManager
 @inject IHubContext<GruntHub> GruntHub
 @inject IHubContext<EventHub> EventHub
 @inject INotificationService INotificationService
@@ -15,7 +20,7 @@
 <GruntTaskOptionsModal @ref="OptionsModal" OnSubmit="OnTaskInteract"></GruntTaskOptionsModal>
 
 <div class="interact-style interact-border d-flex flex-column rounded-lg">
-    <div id="interact-scroll" class="grunt-interact overflow-auto">
+    <div id="@ScrollGuidId" class="grunt-interact overflow-auto">
         <div id="interact-accordion" class="accordion w-100">
             @for (int i = 0; i < this.GruntCommands.Count(); i++)
             {
@@ -53,6 +58,9 @@
     [Parameter]
     public EventCallback<Tuple<Grunt, string>> OnInteract { get; set; }
 
+    private CovenantUser CovenantUser { get; set; }
+
+    private string ScrollGuidId { get; set; } = "a" + Utilities.CreateShortGuid();
     private string GuidId { get; set; } = "a" + Utilities.CreateShortGuid();
 
     private GruntTaskOptionsModal OptionsModal { get; set; }
@@ -66,24 +74,36 @@
     protected override async Task OnInitializedAsync()
     {
         this.GruntCommands = (await Service.GetGruntCommandsForGrunt(this.Grunt.Id)).ToList();
+        AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        this.CovenantUser = await UserManager.GetUserAsync(state.User);
         this.History = this.GruntCommands.OrderBy(GC => GC.CommandTime).ToList();
         this.HistoryIndex = this.History.Count;
         this.Suggestions = await Service.GetCommandSuggestionsForGrunt(this.Grunt);
         Service.DisposeContext();
         this.INotificationService.OnCreateGruntCommand += OnCreateGruntCommand;
+        this.INotificationService.OnCreateGruntTasking += OnCreateGruntTasking;
+        this.INotificationService.OnEditGruntTasking += OnEditGruntTasking;
     }
 
+    bool scrollToBottom = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("InitializeTypeahead", $"#{GuidId}.typeahead", this.Suggestions);
         }
+        if (scrollToBottom)
+        {
+            await IJSRuntime.InvokeAsync<string>("ScrollToBottom", $"#{ScrollGuidId}");
+            scrollToBottom = false;
+        }
     }
 
     public void Dispose()
     {
         this.INotificationService.OnCreateGruntCommand -= OnCreateGruntCommand;
+        this.INotificationService.OnCreateGruntTasking -= OnCreateGruntTasking;
+        this.INotificationService.OnEditGruntTasking -= OnEditGruntTasking;
     }
 
     private async void OnCreateGruntCommand(object sender, GruntCommand gruntCommand)
@@ -94,7 +114,26 @@
             Service.DisposeContext();
             this.History = this.GruntCommands.OrderBy(GC => GC.CommandTime).ToList();
             this.HistoryIndex = this.History.Count;
+            scrollToBottom = gruntCommand.UserId == this.CovenantUser.Id;
             await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnCreateGruntTasking(object sender, GruntTasking gruntTasking)
+    {
+        if (this.Grunt.Id == gruntTasking.GruntId)
+        {
+            scrollToBottom = gruntTasking.GruntCommand.UserId == this.CovenantUser.Id;
+            _ = this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private void OnEditGruntTasking(object sender, GruntTasking gruntTasking)
+    {
+        if (this.Grunt.Id == gruntTasking.GruntId)
+        {
+            scrollToBottom = gruntTasking.GruntCommand.UserId == this.CovenantUser.Id && gruntTasking.Status == GruntTaskingStatus.Completed;
+            _ = this.InvokeAsync(() => this.StateHasChanged());
         }
     }
 
@@ -169,11 +208,14 @@
                 break;
             case "Enter":
                 string val = await IJSRuntime.InvokeAsync<string>("GetSelectedTypeaheadVal", $"#{GuidId}.typeahead");
-                if (! string.IsNullOrWhiteSpace(val))
+                if (!string.IsNullOrWhiteSpace(val))
                 {
                     this.InteractInput = val;
                 }
-                await this.OnSubmit();
+                else
+                {
+                    await this.OnSubmit();
+                }
                 break;
         }
     }

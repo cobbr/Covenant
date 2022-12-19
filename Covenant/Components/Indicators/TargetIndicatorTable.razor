@@ -1,7 +1,11 @@
-﻿@using Microsoft.JSInterop
+﻿@inherits OwningComponentBase<ICovenantService>
+
+@using Microsoft.JSInterop
+@using Covenant.Core
 @using Covenant.Models.Indicators
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
+@inject NavigationManager NavigationManager
 
 <CovenantTable TItem="TargetIndicator" Items="TargetIndicators.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -12,18 +16,32 @@
         <SortableTableHeader TItem="TargetIndicator" TItem2="string" GetSortableProperty="(indicator) => indicator.UserName">
             <HeaderContent>UserName</HeaderContent>
         </SortableTableHeader>
+        <th></th>
     </TableHeader>
     <TableRow Context="indicator">
         <tr>
             <td>@indicator.ComputerName</td>
             <td>@indicator.UserName</td>
+            <td style="text-align: right;">
+                <ActionDropdown Name="dropdownActionTargetIndicator">
+                    <DropdownActionItem Item="indicator" OnAction='(item => NavigationManager.NavigateTo($"/indicator/edit/{item.Id}"))'>
+                        <span class="fe fe-edit"></span>
+                        Edit
+                    </DropdownActionItem>
+                    <div class="dropdown-divider"></div>
+                    <DropdownActionItem Item="indicator" OnAction="(async item => await OnDeleteIndicator(item))" class="text-danger">
+                        <span class="fe fe-x"></span>
+                        Delete
+                    </DropdownActionItem>
+                </ActionDropdown>
+            </td>
         </tr>
     </TableRow>
 </CovenantTable>
 
 @code {
     [Parameter]
-    public IEnumerable<TargetIndicator> TargetIndicators { get; set; }
+    public List<TargetIndicator> TargetIndicators { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -42,5 +60,18 @@
         return SearchTerm == string.Empty ||
             indicator.ComputerName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             indicator.UserName.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private async Task OnDeleteIndicator(Indicator indicator)
+    {
+        try
+        {
+            await Service.DeleteIndicator(indicator.Id);
+            Service.DisposeContext();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+
+        }
     }
 }

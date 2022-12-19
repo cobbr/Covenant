@@ -34,31 +34,106 @@
 
 <div class="tab-content" id="listener-tab-content">
     <div class="tab-pane fade" id="http" role="tabpanel" aria-labelledby="http-tab">
-        <HttpProfileForm Profile="@(new HttpProfile())" OnSubmit="OnCreateHttpProfile" SubmitIcon="plus" SubmitLabel="Create"></HttpProfileForm>
+        @{
+            HttpProfile createdProfile = new HttpProfile
+            {
+                HttpUrls = new List<string> { "/index.html?id={GUID}" },
+                HttpRequestHeaders = new List<HttpProfileHeader>
+                {
+                    new HttpProfileHeader
+                    {
+                        Name = "User-Agent",
+                        Value = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+                    }
+                },
+                HttpResponseHeaders = new List<HttpProfileHeader>
+                {
+                    new HttpProfileHeader
+                    {
+                        Name = "Server",
+                        Value = "Microsoft-IIS/8.5"
+                    }
+                }
+            };
+        }
+        <HttpProfileForm Profile="@HttpProfile" OnSubmit="OnCreateHttpProfile">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
+        </HttpProfileForm>
     </div>
     <div class="tab-pane fade" id="bridge" role="tabpanel" aria-labelledby="bridge-tab">
-        <BridgeProfileForm Profile="@(new BridgeProfile())" OnSubmit="OnCreateBridgeProfile" SubmitIcon="plus" SubmitLabel="Create"></BridgeProfileForm>
+        <BridgeProfileForm Profile="@BridgeProfile" OnSubmit="OnCreateBridgeProfile">
+            <button type="submit" class="btn btn-primary">
+                <span class="fe fe-plus"></span>
+                Create
+            </button>
+            @if (!string.IsNullOrEmpty(this.DisplayError))
+            {
+                <div class="text-danger">@DisplayError</div>
+            }
+        </BridgeProfileForm>
     </div>
 </div>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    private HttpProfile HttpProfile { get; set; }
+    private BridgeProfile BridgeProfile { get; set; }
+    private CovenantUser CovenantUser { get; set; }
+    private string DisplayError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.HttpProfile = new HttpProfile
+        {
+            HttpUrls = new List<string> { "/index.html?id={GUID}" },
+            HttpRequestHeaders = new List<HttpProfileHeader>
+            {
+                new HttpProfileHeader
+                {
+                    Name = "User-Agent",
+                    Value = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+                }
+            },
+            HttpResponseHeaders = new List<HttpProfileHeader>
+            {
+                new HttpProfileHeader
+                {
+                    Name = "Server",
+                    Value = "Microsoft-IIS/8.5"
+                }
+            }
+        };
+        this.BridgeProfile = new BridgeProfile();
+        this.CovenantUser = await UserManager.GetUserAsync((await AuthenticationState).User);
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+        if (firstRender)
+        {
+            await IJSRuntime.InvokeAsync<object>("ShowTab", new[] { "#http-tab" });
+        }
     }
 
     private async Task OnCreateHttpProfile(HttpProfile profile)
     {
         try
         {
-            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            await Service.CreateHttpProfile(profile, await UserManager.GetUserAsync(state.User));
+            await Service.CreateHttpProfile(profile, this.CovenantUser);
             NavigationManager.NavigateTo($"/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            this.DisplayError = e.Message;
         }
     }
 
@@ -66,14 +141,12 @@
     {
         try
         {
-            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            await Service.CreateBridgeProfile(profile, await UserManager.GetUserAsync(state.User));
+            await Service.CreateBridgeProfile(profile, this.CovenantUser);
             NavigationManager.NavigateTo($"/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            // ModelState.AddModelError(string.Empty, e.Message);
-            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
+            this.DisplayError = e.Message;
         }
     }
 }

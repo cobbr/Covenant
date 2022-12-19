@@ -159,86 +159,6 @@ window.ModalCommand = (selector, command) => {
     $(selector).modal(command);
 }
 
-window.InitializeGruntDataTable = () => {
-    $('#grunt-table').DataTable({
-        "pageLength": 5,
-        "lengthChange": false,
-        "searching": false,
-        "info": false,
-        "order": [[5, "desc"]]
-    });
-}
-
-window.InitializeListenerDataTable = () => {
-    $('#listeners-table').DataTable({
-        "pageLength": 50,
-        "info": false,
-        "lengthChange": false,
-        "searching": false
-    });
-}
-
-window.InitializeProfileDataTable = () => {
-    $('#profiles-table').DataTable({
-        "pageLength": 50,
-        "info": false,
-        "lengthChange": false,
-        "searching": false
-    });
-}
-
-window.InitializeImplantTemplateDataTable = () => {
-    $('#profiles-table').DataTable({
-        "pageLength": 50,
-        "info": false,
-        "lengthChange": false,
-        "searching": false
-    });
-}
-
-window.InitializeDataTable = (selector, pagelength, info, lengthChange, searching) => {
-    if (!$.fn.dataTable.isDataTable(selector)) {
-        if (pagelength === undefined) {
-            pagelength = 50;
-        }
-        if (info === undefined) {
-            info = false;
-        }
-        if (lengthChange === undefined) {
-            lengthChange = false;
-        }
-        if (searching === undefined) {
-            searching = true;
-        }
-        var dt = $(selector).DataTable({
-            "pageLength": pagelength,
-            "info": info,
-            "lengthChange": lengthChange,
-            "searching": searching
-        });
-    }
-}
-
-window.AddDataTableRow = (selector, row) => {
-    if ($.fn.dataTable.isDataTable(selector)) {
-        $(selector).DataTable().row.add(row).draw(false);
-    }
-}
-
-window.DestroyDataTable = (selector) => {
-    if ($.fn.dataTable.isDataTable(selector)) {
-        $(selector).DataTable().destroy();
-    }
-}
-
-window.InitializeDataDataTable = (selector) => {
-    $(selector).DataTable({
-        "info": false,
-        "pageLength": 50,
-        "sDom": 'Rfrtilp'
-    });
-}
-
 window.SetWindowLocation = (location) => {
     window.location.href = location;
 }
@@ -263,57 +183,71 @@ window.InitializeDateTimePicker = (datetimeid) => {
 }
 
 // set up SVG for D3
-window.width = 600;
-window.height = 600;
-window.colors = d3.scaleOrdinal(d3.schemeCategory10);
-window.arrowColor = '#999999';
-window.nodes = [];
-window.links = [];
-window.lastNodeId = 0;
+window.graphWidth = 600;
+window.graphHeight = 600;
+window.graphColors = d3.scaleOrdinal(d3.schemeCategory10);
+window.graphArrowColor = '#999999';
+window.graphNodes = [];
+window.graphLinks = [];
+window.graphLastNodeId = 0;
+
+window.ClearGraph = (selector) => {
+    window.graphNodes = [];
+    window.graphLinks = [];
+    window.graphLastNodeId = 0;
+}
 
 window.GraphDisplayGrunt = (id, name) => {
     const node = { id: id, name: name, reflexive: false, x: 50, y: 50, color: "#007BFF" };
-    window.nodes.push(node);
-    window.GraphRestart();
+    if (!window.graphNodes.includes(node)) {
+        window.graphNodes.push(node);
+        window.GraphRestart();
+    }
 }
 
 window.GraphDisplayListener = (id, name) => {
     const node = { id: id, name: name, reflexive: false, x: 50, y: 50, color: "#D52728" };
-    window.nodes.push(node);
-    window.GraphRestart();
+    if (!window.graphNodes.includes(node)) {
+        window.graphNodes.push(node);
+        window.GraphRestart();
+    }
 }
 
 window.GraphDisplayGruntLink = (idFrom, idTo) => {
-    const fromNode = window.nodes.filter(
+    const fromNode = window.graphNodes.filter(
         function (node) { return node.id == idFrom }
     )[0];
-    const toNode = window.nodes.filter(
+    const toNode = window.graphNodes.filter(
         function (node) { return node.id == idTo }
     )[0];
     toNode.color = "#2BA02C";
     const link = { source: fromNode, target: toNode, left: true, right: false, color: "#999999" };
-    window.links.push(link);
-    window.GraphRestart();
+    if (!window.graphLinks.includes(link)) {
+        window.graphLinks.push(link);
+        window.GraphRestart();
+    }
 }
 
 window.GraphDisplayGruntListenerLink = (listenerId, gruntId) => {
-    const listenerNode = window.nodes.filter(
+    const listenerNode = window.graphNodes.filter(
         function (node) { return node.id == listenerId }
     )[0];
-    const gruntNode = window.nodes.filter(
+    const gruntNode = window.graphNodes.filter(
         function (node) { return node.id == gruntId }
     )[0];
     const link = { source: listenerNode, target: gruntNode, left: true, right: false, color: "#999999" };
-    window.links.push(link);
-    window.GraphRestart();
+    if (!window.graphLinks.includes(link)) {
+        window.graphLinks.push(link);
+        window.GraphRestart();
+    }
 }
 
 window.InitializeGraph = (selector) => {
-    window.svg = d3.select(selector)
+    window.graphsvg = d3.select(selector)
         .append('svg')
         .on('contextmenu', () => { d3.event.preventDefault(); })
-        .attr('width', window.width)
-        .attr('height', window.height)
+        .attr('width', window.graphWidth)
+        .attr('height', window.graphHeight)
         .attr('fill', '#999999');
 
     // set up initial nodes and links
@@ -322,19 +256,19 @@ window.InitializeGraph = (selector) => {
     //  - links are always source < target; edge directions are set by 'left' and 'right'.
 
     // init D3 force layout
-    window.force = d3.forceSimulation()
+    window.graphForce = d3.forceSimulation()
         .force('link', d3.forceLink().id((d) => d.id).distance(150))
         .force('charge', d3.forceManyBody().strength(-500))
-        .force('x', d3.forceX(window.width / 2))
-        .force('y', d3.forceY(window.height / 2))
+        .force('x', d3.forceX(window.graphWidth / 2))
+        .force('y', d3.forceY(window.graphHeight / 2))
         .on('tick', tick);
 
     // init D3 drag support
-    window.drag = d3.drag()
+    window.graphDrag = d3.drag()
         // Mac Firefox doesn't distinguish between left/right click when Ctrl is held... 
         .filter(() => d3.event.button === 0 || d3.event.button === 2)
         .on('start', (d) => {
-            if (!d3.event.active) window.force.alphaTarget(0.3).restart();
+            if (!d3.event.active) window.graphForce.alphaTarget(0.3).restart();
 
             d.fx = d.x;
             d.fy = d.y;
@@ -344,14 +278,14 @@ window.InitializeGraph = (selector) => {
             d.fy = d3.event.y;
         })
         .on('end', (d) => {
-            if (!d3.event.active) window.force.alphaTarget(0);
+            if (!d3.event.active) window.graphForce.alphaTarget(0);
 
             d.fx = null;
             d.fy = null;
         });
 
     // define arrow markers for graph links
-    window.svg.append('svg:defs').append('svg:marker')
+    window.graphsvg.append('svg:defs').append('svg:marker')
         .attr('id', 'end-arrow')
         .attr('viewBox', '0 -5 10 10')
         .attr('refX', 6)
@@ -360,9 +294,9 @@ window.InitializeGraph = (selector) => {
         .attr('orient', 'auto')
         .append('svg:path')
         .attr('d', 'M0,-5L10,0L0,5')
-        .attr('fill', window.arrowColor);
+        .attr('fill', window.graphArrowColor);
 
-    window.svg.append('svg:defs').append('svg:marker')
+    window.graphsvg.append('svg:defs').append('svg:marker')
         .attr('id', 'start-arrow')
         .attr('viewBox', '0 -5 10 10')
         .attr('refX', 4)
@@ -371,34 +305,34 @@ window.InitializeGraph = (selector) => {
         .attr('orient', 'auto')
         .append('svg:path')
         .attr('d', 'M10,-5L0,0L10,5')
-        .attr('fill', window.arrowColor);
+        .attr('fill', window.graphArrowColor);
 
     // line displayed when dragging new nodes
-    window.dragLine = window.svg.append('svg:path')
+    window.graphDragLine = window.graphsvg.append('svg:path')
         .attr('class', 'link dragline hidden')
         .attr('d', 'M0,0L0,0');
 
     // handles to link and node element groups
-    window.path = window.svg.append('svg:g').selectAll('path');
-    window.circle = window.svg.append('svg:g').selectAll('g');
+    window.graphPath = window.graphsvg.append('svg:g').selectAll('path');
+    window.graphCircle = window.graphsvg.append('svg:g').selectAll('g');
 
     // mouse event vars
-    window.selectedNode = null;
-    window.selectedLink = null;
-    window.mousedownLink = null;
-    window.mousedownNode = null;
-    window.mouseupNode = null;
+    window.graphSelectedNode = null;
+    window.graphSelectedLink = null;
+    window.graphMousedownLink = null;
+    window.graphMousedownNode = null;
+    window.graphMouseupNode = null;
 
     window.resetMouseVars = () => {
-        window.mousedownNode = null;
-        window.mouseupNode = null;
-        window.mousedownLink = null;
+        window.graphMousedownNode = null;
+        window.graphMouseupNode = null;
+        window.graphMousedownLink = null;
     }
 
     // update force layout (called automatically each iteration)
     function tick() {
         // draw directed edges with proper padding from node centers
-        window.path.attr('d', (d) => {
+        window.graphPath.attr('d', (d) => {
             const deltaX = d.target.x - d.source.x;
             const deltaY = d.target.y - d.source.y;
             const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -414,193 +348,191 @@ window.InitializeGraph = (selector) => {
             return `M${sourceX},${sourceY}L${targetX},${targetY}`;
         });
 
-        window.circle.attr('transform', (d) => `translate(${d.x},${d.y})`);
+        window.graphCircle.attr('transform', (d) => `translate(${d.x},${d.y})`);
     }
 
-    window.mousedown = () => {
+    window.graphMousedown = () => {
         // because :active only works in WebKit?
-        window.svg.classed('active', true);
+        window.graphsvg.classed('active', true);
 
-        if (d3.event.ctrlKey || window.mousedownNode || window.mousedownLink) return;
+        if (d3.event.ctrlKey || window.graphMousedownNode || window.graphMousedownLink) return;
 
         // insert new node at point
         const point = d3.mouse(this);
-        const node = { id: ++window.lastNodeId, reflexive: false, x: point[0], y: point[1] };
+        const node = { id: ++window.graphLastNodeId, reflexive: false, x: point[0], y: point[1] };
         // nodes.push(node);
 
         window.GraphRestart();
     }
 
-    window.mousemove = () => {
-        if (!window.mousedownNode) return;
+    window.graphMousemove = () => {
+        if (!window.graphMousedownNode) return;
 
         // update drag line
-        window.dragLine.attr('d', `M${window.mousedownNode.x},${window.mousedownNode.y}L${d3.mouse(this)[0]},${d3.mouse(this)[1]}`);
+        window.graphDragLine.attr('d', `M${window.graphMousedownNode.x},${window.graphMousedownNode.y}L${d3.mouse(this)[0]},${d3.mouse(this)[1]}`);
     }
 
-    window.mouseup = () => {
-        if (window.mousedownNode) {
+    window.graphMouseup = () => {
+        if (window.graphMousedownNode) {
             // hide drag line
-            window.dragLine
+            window.graphDragLine
                 .classed('hidden', true)
                 .style('marker-end', '');
         }
 
         // because :active only works in WebKit?
-        window.svg.classed('active', false);
+        window.graphsvg.classed('active', false);
 
         // clear mouse event vars
         window.resetMouseVars();
     }
 
-    window.spliceLinksForNode = (node) => {
-        const toSplice = window.links.filter((l) => l.source === node || l.target === node);
+    window.graphSpliceLinksForNode = (node) => {
+        const toSplice = window.graphLinks.filter((l) => l.source === node || l.target === node);
         for (const l of toSplice) {
-            window.links.splice(window.links.indexOf(l), 1);
+            window.graphLinks.splice(window.graphLinks.indexOf(l), 1);
         }
     }
 
     // only respond once per keydown
-    window.lastKeyDown = -1;
+    window.graphLastKeyDown = -1;
 
-    window.keydown = () => {
-        d3.event.preventDefault();
-
-        if (window.lastKeyDown !== -1) return;
-        window.lastKeyDown = d3.event.keyCode;
+    window.graphKeydown = () => {
+        if (window.graphLastKeyDown !== -1) return;
+        window.graphLastKeyDown = d3.event.keyCode;
 
         // ctrl
         if (d3.event.keyCode === 17) {
-            window.circle.call(window.drag);
-            window.svg.classed('ctrl', true);
+            window.graphCircle.call(window.graphDrag);
+            window.graphsvg.classed('ctrl', true);
             return;
         }
 
-        if (!window.selectedNode && !window.selectedLink) return;
+        if (!window.graphSelectedNode && !window.graphSelectedLink) return;
 
         switch (d3.event.keyCode) {
             case 8: // backspace
             case 46: // delete
-                if (window.selectedNode) {
-                    window.nodes.splice(window.nodes.indexOf(window.selectedNode), 1);
-                    window.spliceLinksForNode(window.selectedNode);
-                } else if (window.selectedLink) {
-                    window.links.splice(window.links.indexOf(window.selectedLink), 1);
+                if (window.graphSelectedNode) {
+                    window.graphNodes.splice(window.graphNodes.indexOf(window.graphSelectedNode), 1);
+                    window.graphSpliceLinksForNode(window.graphSelectedNode);
+                } else if (window.graphSelectedLink) {
+                    window.graphLinks.splice(window.graphLinks.indexOf(window.graphSelectedLink), 1);
                 }
-                window.selectedLink = null;
-                window.selectedNode = null;
+                window.graphSelectedLink = null;
+                window.graphSelectedNode = null;
                 window.GraphRestart();
                 break;
             case 66: // B
-                if (window.selectedLink) {
+                if (window.graphSelectedLink) {
                     // set link direction to both left and right
-                    window.selectedLink.left = true;
-                    window.selectedLink.right = true;
+                    window.graphSelectedLink.left = true;
+                    window.graphSelectedLink.right = true;
                 }
                 window.GraphRestart();
                 break;
             case 76: // L
-                if (window.selectedLink) {
+                if (window.graphSelectedLink) {
                     // set link direction to left only
-                    window.selectedLink.left = true;
-                    window.selectedLink.right = false;
+                    window.graphSelectedLink.left = true;
+                    window.graphSelectedLink.right = false;
                 }
                 window.GraphRestart();
                 break;
             case 82: // R
-                if (window.selectedNode) {
+                if (window.graphSelectedNode) {
                     // toggle node reflexivity
-                    window.selectedNode.reflexive = !window.selectedNode.reflexive;
-                } else if (window.selectedLink) {
+                    window.graphSelectedNode.reflexive = !window.graphSelectedNode.reflexive;
+                } else if (window.graphSelectedLink) {
                     // set link direction to right only
-                    window.selectedLink.left = false;
-                    window.selectedLink.right = true;
+                    window.graphSelectedLink.left = false;
+                    window.graphSelectedLink.right = true;
                 }
                 window.GraphRestart();
                 break;
         }
     }
 
-    window.keyup = () => {
-        window.lastKeyDown = -1;
+    window.graphKeyup = () => {
+        window.graphLastKeyDown = -1;
 
         // ctrl
         if (d3.event.keyCode === 17) {
-            window.circle.on('.drag', null);
-            window.svg.classed('ctrl', false);
+            window.graphCircle.on('.drag', null);
+            window.graphsvg.classed('ctrl', false);
         }
     }
 
     // app starts here
-    window.svg.on('mousedown', window.mousedown)
-        .on('mousemove', window.mousemove)
-        .on('mouseup', window.mouseup);
+    window.graphsvg.on('mousedown', window.graphMousedown)
+        .on('mousemove', window.graphMousemove)
+        .on('mouseup', window.graphMouseup);
     d3.select(window)
-        .on('keydown', window.keydown)
-        .on('keyup', window.keyup);
+        .on('keydown', window.graphKeydown)
+        .on('keyup', window.graphKeyup);
     window.GraphRestart();
 }
 
 window.GraphRestart = () => {
     // assignCoordinates();
     // path (link) group
-    window.path = window.path.data(window.links);
+    window.graphPath = window.graphPath.data(window.graphLinks);
 
     // update existing links
-    window.path.style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
+    window.graphPath.style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
         .style('marker-end', (d) => d.right ? 'url(#end-arrow)' : '')
-        .style('fill', (d) => (d === window.selectedLink) ? d3.rgb(window.arrowColor).brighter().toString() : window.arrowColor)
-        .style('stroke', (d) => (d === window.selectedLink) ? d3.rgb(window.arrowColor).brighter().toString() : window.arrowColor);
+        .style('fill', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor)
+        .style('stroke', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor);
 
     // remove old links
-    window.path.exit().remove();
+    window.graphPath.exit().remove();
 
     // add new links
-    window.path = window.path.enter().append('svg:path')
+    window.graphPath = window.graphPath.enter().append('svg:path')
         .attr('class', 'link')
         .style('marker-start', (d) => d.left ? 'url(#start-arrow)' : '')
         .style('marker-end', (d) => d.right ? 'url(#end-arrow)' : '')
-        .style('fill', (d) => (d === window.selectedLink) ? d3.rgb(window.arrowColor).brighter().toString() : window.arrowColor)
-        .style('stroke', (d) => (d === window.selectedLink) ? d3.rgb(window.arrowColor).brighter().toString() : window.arrowColor)
+        .style('fill', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor)
+        .style('stroke', (d) => (d === window.graphSelectedLink) ? d3.rgb(window.graphArrowColor).brighter().toString() : window.graphArrowColor)
         .on('mousedown', (d) => {
             if (d3.event.ctrlKey) return;
 
             // select link
-            window.mousedownLink = d;
-            window.selectedLink = (window.mousedownLink === window.selectedLink) ? null : window.mousedownLink;
-            window.selectedNode = null;
+            window.graphMousedownLink = d;
+            window.graphSelectedLink = (window.graphMousedownLink === window.graphSelectedLink) ? null : window.graphMousedownLink;
+            window.graphSelectedNode = null;
             window.GraphRestart();
         })
-        .merge(window.path);
+        .merge(window.graphPath);
     // circle (node) group
     // NB: the function arg is crucial here! nodes are known by id, not by index!
-    window.circle = window.circle.data(window.nodes, (d) => d.id);
+    window.graphCircle = window.graphCircle.data(window.graphNodes, (d) => d.id);
 
     // update existing nodes (reflexive & selected visual states)
-    window.circle.selectAll('circle')
-        .style('fill', (d) => (d === window.selectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
+    window.graphCircle.selectAll('circle')
+        .style('fill', (d) => (d === window.graphSelectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
         .style('stroke', (d) => d3.rgb(d.color).darker().toString())
         .classed('reflexive', (d) => d.reflexive);
 
     // remove old nodes
-    window.circle.exit().remove();
+    window.graphCircle.exit().remove();
 
     // add new nodes
-    const g = window.circle.enter().append('svg:g');
+    const g = window.graphCircle.enter().append('svg:g');
 
     g.append('svg:circle')
         .attr('class', 'node')
         .attr('r', 35)
-        .style('fill', (d) => (d === window.selectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
+        .style('fill', (d) => (d === window.graphSelectedNode) ? d3.rgb(d.color).brighter().toString() : d.color)
         .style('stroke', (d) => d3.rgb(d.color).darker().toString())
         .classed('reflexive', (d) => d.reflexive)
         .on('mouseover', function (d) {
-            if (!window.mousedownNode || d === window.mousedownNode) return;
+            if (!window.graphMousedownNode || d === window.graphMousedownNode) return;
             // enlarge target node
             d3.select(this).attr('transform', 'scale(1.1)');
         })
         .on('mouseout', function (d) {
-            if (!window.mousedownNode || d === window.mousedownNode) return;
+            if (!window.graphMousedownNode || d === window.graphMousedownNode) return;
             // unenlarge target node
             d3.select(this).attr('transform', '');
         })
@@ -608,10 +540,10 @@ window.GraphRestart = () => {
             if (d3.event.ctrlKey) return;
 
             // select node
-            window.mousedownNode = d;
-            window.selectedNode = (window.mousedownNode === window.selectedNode) ? null : window.mousedownNode;
-            window.selectedLink = null;
-            $("#" + window.mousedownNode.id + "-tab").tab('show');
+            window.graphMousedownNode = d;
+            window.graphSelectedNode = (window.graphMousedownNode === window.graphSelectedNode) ? null : window.graphMousedownNode;
+            window.graphSelectedLink = null;
+            $("#" + window.graphMousedownNode.id + "-tab").tab('show');
             // reposition drag line
             // dragLine
             //  .style('marker-end', 'url(#end-arrow)')
@@ -621,7 +553,7 @@ window.GraphRestart = () => {
             window.GraphRestart();
         })
         .on('mouseup', function (d) {
-            if (!window.mousedownNode) return;
+            if (!window.graphMousedownNode) return;
 
             // needed by FF
             // dragLine
@@ -629,8 +561,8 @@ window.GraphRestart = () => {
             //   .style('marker-end', '');
 
             // check for drag-to-self
-            window.mouseupNode = d;
-            if (window.mouseupNode === window.mousedownNode) {
+            window.graphMouseupNode = d;
+            if (window.graphMouseupNode === window.graphMousedownNode) {
                 window.resetMouseVars();
                 return;
             }
@@ -640,9 +572,9 @@ window.GraphRestart = () => {
 
             // add link to graph (update if exists)
             // NB: links are strictly source < target; arrows separately specified by booleans
-            const isRight = window.mousedownNode.id < window.mouseupNode.id;
-            const source = isRight ? window.mousedownNode : window.mouseupNode;
-            const target = isRight ? window.mouseupNode : window.mousedownNode;
+            const isRight = window.graphMousedownNode.id < window.graphMouseupNode.id;
+            const source = isRight ? window.graphMousedownNode : window.graphMouseupNode;
+            const target = isRight ? window.graphMouseupNode : window.graphMousedownNode;
 
             // const link = links.filter((l) => l.source === source && l.target === target)[0];
             // if (link) {
@@ -652,12 +584,13 @@ window.GraphRestart = () => {
             // }
 
             // select new link
-            window.selectedLink = link;
-            window.selectedNode = null;
+            window.graphSelectedLink = link;
+            window.graphSelectedNode = null;
             window.GraphRestart();
         });
 
     // show node names
+
     g.append('svg:text')
         .attr('x', 0)
         .attr('y', 4)
@@ -665,12 +598,12 @@ window.GraphRestart = () => {
         .style('fill', 'rgba(255,255,255,0.8)')
         .text((d) => d.name);
 
-    window.circle = g.merge(window.circle);
+    window.graphCircle = g.merge(window.graphCircle);
 
     // set the graph in motion
-    window.force
-        .nodes(window.nodes)
-        .force('link').links(window.links);
+    window.graphForce
+        .nodes(window.graphNodes)
+        .force('link').links(window.graphLinks);
 
-    window.force.alphaTarget(0.3).restart();
+    // window.graphForce.alphaTarget(0.3).restart();
 };

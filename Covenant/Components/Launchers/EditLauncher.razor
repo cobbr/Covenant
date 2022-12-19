@@ -1,0 +1,85 @@
+﻿@page "/launcher/edit/{LauncherId:int}"
+@attribute [Authorize(Roles = "User, Administrator")]
+@inherits OwningComponentBase<ICovenantService>
+@implements IDisposable
+
+@using Covenant.Core
+@using Covenant.Models.Launchers
+
+@using Microsoft.JSInterop
+@inject IJSRuntime IJSRuntime
+@inject INotificationService INotificationService
+@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
+    <h1 class="h2">Launcher: <span id="task-name" class="primary-color">@Launcher.Name</span></h1>
+</div>
+
+<LauncherDetail Launcher="Launcher" OnSubmit="OnEditLauncher">
+    @if (!string.IsNullOrEmpty(this.DisplayError))
+    {
+        <div class="text-danger">@DisplayError</div>
+    }
+</LauncherDetail>
+
+@code {
+    [Parameter]
+    public int LauncherId { get; set; }
+
+    [Parameter]
+    public Launcher Launcher { get; set; }
+
+    private string DisplayError { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Launcher = this.Launcher ?? await Service.GetLauncher(this.LauncherId);
+    }
+
+    public async Task OnEditLauncher(Launcher launcher)
+    {
+        try
+        {
+            switch (launcher.Type)
+            {
+                case LauncherType.Binary:
+                    BinaryLauncher binaryLauncher = (BinaryLauncher)launcher;
+                    this.Launcher = await Service.EditBinaryLauncher(binaryLauncher);
+                    break;
+                case LauncherType.ServiceBinary:
+                    ServiceBinaryLauncher serviceBinaryLauncher = (ServiceBinaryLauncher)launcher;
+                    this.Launcher = await Service.EditServiceBinaryLauncher(serviceBinaryLauncher);
+                    break;
+                case LauncherType.ShellCode:
+                    ShellCodeLauncher shellcodeLauncher = (ShellCodeLauncher)launcher;
+                    this.Launcher = await Service.EditShellCodeLauncher(shellcodeLauncher);
+                    break;
+                case LauncherType.InstallUtil:
+                    InstallUtilLauncher installUtilLauncher = (InstallUtilLauncher)launcher;
+                    this.Launcher = await Service.EditInstallUtilLauncher(installUtilLauncher);
+                    break;
+                case LauncherType.MSBuild:
+                    MSBuildLauncher msBuildLauncher = (MSBuildLauncher)launcher;
+                    this.Launcher = await Service.EditMSBuildLauncher(msBuildLauncher);
+                    break;
+                case LauncherType.Mshta:
+                    MshtaLauncher mshtaLauncher = (MshtaLauncher)launcher;
+                    this.Launcher = await Service.EditMshtaLauncher(mshtaLauncher);
+                    break;
+                case LauncherType.PowerShell:
+                    PowerShellLauncher powershellLauncher = (PowerShellLauncher)launcher;
+                    this.Launcher = await Service.EditPowerShellLauncher(powershellLauncher);
+                    break;
+                case LauncherType.Regsvr32:
+                    Regsvr32Launcher regSvr32Launcher = (Regsvr32Launcher)launcher;
+                    this.Launcher = await Service.EditRegsvr32Launcher(regSvr32Launcher);
+                    break;
+            }
+            this.StateHasChanged();
+        }
+        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
+        {
+            this.DisplayError = e.Message;
+        }
+    }
+}

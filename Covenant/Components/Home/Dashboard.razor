@@ -48,7 +48,7 @@
     protected override async Task OnInitializedAsync()
     {
         this.Grunts = this.Grunts ?? (await Service.GetGrunts())
-            .Where(G => G.Status != GruntStatus.Hidden && G.Status != GruntStatus.Uninitialized)
+            .Where(G => !G.Hidden && G.Status != GruntStatus.Uninitialized)
             .OrderByDescending(G => G.LastCheckIn)
             .ToList();
         this.Listeners = this.Listeners ?? (await Service.GetListeners()).ToList();

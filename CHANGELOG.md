@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added ability to specify custom admin port number
+- Added Covenant trace logging
+- Added ServiceBinary launcher, added PSExecCommand Task
+- Added OutputKind to LauncherForm
+- Added BypassETW task
+- Added Action button for ListenerTable, GruntTable
+- Added Listener WebLog
+- Added ability to edit and delete Indicators, Credentials
+- Added ability to delete Screenshots and Downloads
+- Added ReferenceSourceLibrary, ReferenceAssembly, and EmbeddedResource options for ImplantTemplates
+- Added global settings page, added functionality to reset Covenant to factory defaults
+- Added ability to import/export ImplantTemplates
+- Added Action bar to ImplantTemplateTable, GruntTaskTable
+- Added use of NotificationService to ImplantTemplateIndex, GruntTaskIndex
+- Added ability to delete GruntTask/GruntTaskings in UI
+- Added ability to import/export Profiles
+- Added Action bar to ProfileTable
+- Added ability to import/export Themes
+- Added Action bar to ThemeTable
+- Added systemd service file template
+- Added CreateProcessMinidump and CreateProcessSnapshotDump tasks
+- Added Inject task
+- Added ActionDropdown, DropdownActionItem components, converted tables to use
+- Added GetContent and GetFilename Launcher abstract methods
+- Added GetLauncherDownload API endpoint
+- Added Grunt FileBrowser
+- Added back missing GetNetShares task
+- Added CheckInGrunt API
 
 ### Changed
 - Disallow Administrators from changing other user's passwords
@@ -17,6 +44,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update max LauncherString length in UI
 - Changed Grunt ActivationTime and Events to not update on reconnected Lost grunt
 - Lock task execution during upload, display upload load animation
+- Updated to use net50
+- Changed terminal auto-scroll behavior, will auto-scroll a user's own commands
+- Update GruntHTTP, Brute implants to permit addtional SSL protocols
+- Update HttpListenerForm SSLCertificate upload, use InputFile component
+- Update HttpListener to allow all TLS versions
+- Updated Seatbelt,SharpDPAPI,SharpWMI,SharpSploit ReferenceSourceLibraries
+- Updated Launchers to use tracked payloads
+- Removed CScriptLauncher, WScriptLauncher, WmicLauncher
+- Updated Action dropdowns to right align inside table, use empty table header
+- Updated table pagination to only display when multiple pages available
+- Updated enter key on command completion to select command but not submit
+- Improved error handling on Listener and Launcher creation/edit pages, display errors in UI
+- Added compilation checks for Profile MessageTransforms
+- Updated to restrict MSBuildLauncher from using Net35 DotNetVersion
+- Updated to use efcore many-to-many relationships
+- Updated Task Import to use new InputFile component
+- Updated GruntTaskTable format, ImplantTemplateTable format
+- Changed all BlazorInputFile components to InputFile components
+- Updated all nuget dependencies
+- Removed ServiceUser for starting/stopping listeners
+- Updated Dockerfile for .NET 5
+- Updated DownloadEvent and ScreenshotEvent models and downloads, better handle UI large file downloads
+- Updated feather icons, switch Tasks and Credentials icons
+- Updated to simplify GruntTask YAML serialization
+- Updated to improve GruntTask import/export
+- Updated Listener deletion to use ListenerStatus.Deleted
+- Updated EFCore to use UseQuerySplittingBehavior to avoid warnings
+- Updated GhostPack and injection tasks to use compiler optimization, with the exception of Seatbelt
+- Updated SharpSploit ReferenceSourceLibrary
+- Updated Mimikatz EmbeddedResources
+- Updated ClipboardMonitor task to use streaming output
+- Removed unnecessary debugging console output on GruntTaskIndex
+- Updated GetDomainGroup, GetDomainUser, GetDomainComputer tasks with addtional options
+- Updated GruntTaskAssignForm and GruntTaskOptionsModal to autofill DefaultValues for options if none specified
+- Updated NotificationService to complete model actions
+- Updated NotificationService to add missing model actions, updated CovenantService to utilize all notifications
+- Updated and improved error handling for Listeners and Profiles creation/editing
+- Updated Covenant.API namespace to a new projectfile
+- Updated GetDownloadFile and GetScreenshotFile API endpoints to return file stream
+- Updated Download/Screenshot task output handling
+- Updated GruntTaskForm to add FileOption checkbox for GruntTaskOptions
+- Updated Download GruntTask to check memory usage and force garbage collection
+- Updated Brute ImplantTemplate to use Net50
+- Removed unnecessary remaining .task files
+- Updated DbInitializer to use YAML parsing for default ImplantTemplates
+- Updated ListDirectory ShellCmd DotNetCore tasks
+- Changed HttpListenerForm to remove Add ConnectAddress button when editting
+- Changed to add Hidden field for Grunts, separate from GruntStatus
+- Updated Covenant.API to latest model
+- Changed Grunts to allow multiple FolderRoots, adapted FileBrowser UI
+- Updated SharpSploit version to latest to fix Mimikatz issue
 
 ### Fixed
 - Fix edit roles for CovenantUser UI bug
@@ -36,6 +114,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix credential tracking missing some credentials
 - Fix credential tracking missing Kerberos tickets
 - Fixed missing DonutCore nuget package
+- Fix screenshot event table display error
+- Fix Brute implant to configure ValidateCert,UseCertPinning options
+- Fix EditHttpListener page to display accurate UseSSL value
+- Fixed HttpProfile defaults values being added via APIs
+- Fixed Covenant fails on 'bin' in working directory path
+- Fixed InternalListener HubConnection reconnect causes uninitialized Tasks bug
+- Fixed InternalListener issue causing uninitialized Tasks when starting/stopping after creation without reboot
+- Fixed unhandled exception creating Listeners with bad ConnectAddresses
+- Fixed HostedFile remains on disk after model deletion
+- Fixed WMICommand and WMIGrunt tasks from double execution
+- Fixed implants reading too many bytes from PipeStream
+- Fixed create BridgeListener via BridgeListenerForm
+- Fixed GruntInteractTerminal,GruntCommandCard service/dbcontext conflict issues
+- Fixed decouple GruntBridge template from TCPC2Bridge
+- Fixed GruntCommandCard async warning messages
+- Fixed EventApiController screenshot download route
+- Fixed ButtonActivatedModal dismiss too early
+- Fixed GraphBox preventing further user input bug
+- Fixed missing PowerShell launcher "encodedlauncher" box
+- Fixed Profile HttpPostRequest not handling curly braces correctly
+- Fixed compiler optimization to avoid unnecessary recursion, and correctly identify used interfaces, structs, and enums
+- Fixed missing author for GruntTasks
+- Fixed unhandled exception in implant TaskExecute
+- Fixed compilation errors for Tasks with multiple ReferenceSourceLibraries
+- Fixed GruntTaskAuthor error on EditGruntTask
+- Fixed HttpListenerController to capture hosted files without file extensions
+- Fixed missing PowerShell launcher "encodedlauncher" box, actually fixed this time
+- Fixed theme to apply to modal content
+- Fixed LauncherForm incorrectly changes DotNetVersion
+- Fixed missing GruntForm OperatingSystem label
+- Fixed Domain tasks null properties error
+- Fixed GruntTaskOptionsModal id issue in tabbedterminal view
+- Fixed missing DonutCore nuget package
+- Fixed Docker build Covenant.API project
+- Fixed low max file upload size for InputFile component
+- Fixed DateTimePicker for KillDate doesn't change via UI
 
 ## [v0.6] - 2020-08-04
 ### Added

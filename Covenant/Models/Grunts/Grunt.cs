@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using Newtonsoft.Json;
+
 using Covenant.Core;
 using Covenant.Models.Listeners;
 
@@ -22,8 +24,7 @@ namespace Covenant.Models.Grunts
         Active,
         Lost,
         Exited,
-        Disconnected,
-        Hidden
+        Disconnected
     }
 
     public enum IntegrityLevel
@@ -35,9 +36,8 @@ namespace Covenant.Models.Grunts
         System
     }
 
-    public class Grunt
+    public class Grunt : ILoggable
     {
-        // Information to uniquely identify this Grunt
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
@@ -84,6 +84,8 @@ namespace Covenant.Models.Grunts
         [Required]
         public GruntStatus Status { get; set; } = GruntStatus.Uninitialized;
         [Required]
+        public bool Hidden { get; set; } = false;
+        [Required]
         public IntegrityLevel Integrity { get; set; } = IntegrityLevel.Untrusted;
         public string Process { get; set; } = "";
         public string UserDomainName { get; set; } = "";
@@ -106,6 +108,11 @@ namespace Covenant.Models.Grunts
         public string PowerShellImport { get; set; } = "";
         public List<GruntCommand> GruntCommands { get; set; } = new List<GruntCommand>();
 
+        public List<Folder> FolderRoots { get; set; } = new List<Folder>();
+
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
+        public List<FolderFileNode> FolderFileNodes { get; set; }
+        
         public void AddChild(Grunt grunt)
         {
             if (!string.IsNullOrWhiteSpace(grunt.GUID))
@@ -118,5 +125,8 @@ namespace Covenant.Models.Grunts
         {
             return this.Children.Remove(grunt.GUID);
         }
+
+        // Grunt|Action|ID|Name|Hostname|Integrity|IPAddress|UserDomainName
+        public string ToLog(LogAction action) => $"Grunt|{action}|{this.Id}|{this.Name}|{this.Hostname}|{this.Integrity}|{this.IPAddress}|{this.UserDomainName}";
     }
 }
