@@ -12,22 +12,15 @@
     <h1 class="h2">Create GruntTask</h1>
 </div>
 
-<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnCreate">
-    <button type="submit" class="btn btn-primary">
-        <span class="fe fe-plus"></span>
-        Create
-    </button>
-</GruntTaskForm>
+<GruntTaskForm GruntTask="GruntTask" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
+
 @code {
     [Parameter]
     public GruntTask GruntTask { get; set; }
 
     protected override void OnInitialized()
     {
-        this.GruntTask = this.GruntTask ?? new GruntTask
-        {
-            Author = new GruntTaskAuthor()
-        };
+        this.GruntTask = this.GruntTask ?? new GruntTask();
     }
 
     private async Task OnCreate(GruntTask task)

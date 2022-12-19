@@ -102,11 +102,15 @@ namespace Covenant.Controllers
         // Append to a CommandOutput
         // </summary>
         [HttpPut("append/{id}", Name = "AppendCommandOutput")]
-        public async Task<ActionResult<CommandOutput>> AppendCommandOutput(int id, [FromBody] string append)
+        public async Task<ActionResult> AppendCommandOutput(int id, [FromBody] string append)
         {
             try
             {
-                return await _service.AppendCommandOutput(id, append);
+                CommandOutput output = await _service.GetCommandOutput(id);
+                _service.DisposeContext();
+                output.Output += append;
+                await _service.EditCommandOutput(output);
+                return Ok();
             }
             catch (ControllerNotFoundException e)
             {

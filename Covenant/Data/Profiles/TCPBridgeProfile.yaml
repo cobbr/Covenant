@@ -1,0 +1,174 @@
+﻿# Author: Ryan Cobb (@cobbr_io)
+# Project: Covenant (https://github.com/cobbr/Covenant)
+# License: GNU GPLv3
+
+Name: TCPBridgeProfile
+Description: A default BridgeProfile for a C2Bridge.
+
+MessageTransform: |-
+    public static class MessageTransform
+    {
+        public static string Transform(byte[] bytes)
+        {
+            return System.Convert.ToBase64String(bytes);
+        }
+        public static byte[] Invert(string str) {
+            return System.Convert.FromBase64String(str);
+        }
+    }
+ReadFormat: |-
+    {DATA},{GUID}
+WriteFormat: |-
+    {DATA},{GUID}
+BridgeMessengerCode: |-
+    public enum MessageType
+    {
+        Read,
+        Write
+    }
+
+    public class ProfileMessage
+    {
+        public MessageType Type { get; set; }
+        public string Message { get; set; }
+    }
+    
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
+    public interface IMessenger
+    {
+        string Hostname { get; }
+        string Identifier { get; set; }
+        string Authenticator { get; set; }
+        EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
+        ProfileMessage Read();
+        void Write(string Message);
+        void Close();
+    }
+
+    public class BridgeMessenger : IMessenger
+    {
+        public string Hostname { get; } = "";
+        private int Port { get; }
+        public string Identifier { get; set; } = "";
+        public string Authenticator { get; set; } = "";
+        public EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
+    
+        private string CovenantURI { get; }
+        private object _tcpLock = new object();
+        private string WriteFormat { get; set; }
+        public TcpClient client { get; set; }
+        public Stream stream { get; set; }
+
+        public BridgeMessenger(string CovenantURI, string Identifier, string WriteFormat)
+        {
+            this.CovenantURI = CovenantURI;
+            this.Identifier = Identifier;
+            this.Hostname = CovenantURI.Split(':')[0];
+            this.Port = int.Parse(CovenantURI.Split(':')[1]);
+            this.WriteFormat = WriteFormat;
+        }
+
+        public ProfileMessage Read()
+        {
+            byte[] read = this.ReadBytes();
+            if (read == null)
+            {
+                Thread.Sleep(5000);
+                this.Close();
+                this.Connect();
+                return new ProfileMessage { Type = MessageType.Read, Message = "" };
+            }
+            return new ProfileMessage { Type = MessageType.Read, Message = Encoding.UTF8.GetString(read) };
+        }
+
+        public void Write(string Message)
+        {
+            try
+            {
+                lock (_tcpLock)
+                {
+                    this.WriteBytes(Encoding.UTF8.GetBytes(Message));
+                    return;
+                }
+            }
+            catch
+            {
+                Thread.Sleep(5000);
+                this.Close();
+                this.Connect();
+            }
+        }
+
+        public void Close()
+        {
+            this.stream.Close();
+            this.client.Close();
+        }
+
+        public void Connect()
+        {
+            try
+            {
+                this.client = new TcpClient();
+                client.Connect(IPAddress.Parse(CovenantURI.Split(':')[0]), int.Parse(CovenantURI.Split(':')[1]));
+                client.ReceiveTimeout = 0;
+                client.SendTimeout = 0;
+                this.stream = client.GetStream();
+                this.stream.ReadTimeout = -1;
+                this.stream.WriteTimeout = -1;
+                this.Write(String.Format(this.WriteFormat, "", this.Identifier));
+                Thread.Sleep(1000);
+            }
+            catch { }
+        }
+
+        private void WriteBytes(byte[] bytes)
+        {
+            byte[] size = new byte[4];
+            size[0] = (byte)(bytes.Length >> 24);
+            size[1] = (byte)(bytes.Length >> 16);
+            size[2] = (byte)(bytes.Length >> 8);
+            size[3] = (byte)bytes.Length;
+            this.stream.Write(size, 0, size.Length);
+            var writtenBytes = 0;
+            while (writtenBytes < bytes.Length)
+            {
+                int bytesToWrite = Math.Min(bytes.Length - writtenBytes, 1024);
+                this.stream.Write(bytes, writtenBytes, bytesToWrite);
+                writtenBytes += bytesToWrite;
+            }
+        }
+
+        private byte[] ReadBytes()
+        {
+            byte[] size = new byte[4];
+            int totalReadBytes = 0;
+            int readBytes = 0;
+            do
+            {
+                readBytes = this.stream.Read(size, 0, size.Length);
+                if (readBytes == 0) { return null; }
+                totalReadBytes += readBytes;
+            } while (totalReadBytes < size.Length);
+            int len = (size[0] << 24) + (size[1] << 16) + (size[2] << 8) + size[3];
+
+            byte[] buffer = new byte[1024];
+            using (var ms = new MemoryStream())
+            {
+                totalReadBytes = 0;
+                readBytes = 0;
+                do
+                {
+                    readBytes = this.stream.Read(buffer, 0, buffer.Length);
+                    if (readBytes == 0) { return null; }
+                    ms.Write(buffer, 0, readBytes);
+                    totalReadBytes += readBytes;
+                } while (totalReadBytes < len);
+                return ms.ToArray();
+            }
+        }
+    }

@@ -1,13 +1,11 @@
 ﻿@using System.IO
-@using System.Threading
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Forms
-
-@using Covenant.Core
 @using Covenant.Models.Listeners
+@using BlazorInputFile
 @inject IJSRuntime IJSRuntime
 
-<EditForm Model="HostedFile" OnValidSubmit="(e => this.OnSubmit.InvokeAsync(this.HostedFile))">
+<EditForm Model="HostedFile" OnValidSubmit="OnFormSubmit">
     <DataAnnotationsValidator />
     <div class="form-row">
         <div class="form-group col-md-4">
@@ -19,9 +17,12 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Content">Content</label>
-            <InputFile id="Content" name="Content" class="form-control-file" OnChange="OnUpload" />
+            <InputFile id="Content" name="Content" class="form-control-file" OnChange="FileUpload" />
         </div>
     </div>
+    <button type="button" class="btn btn-primary" @onclick="(e => OnSubmit.InvokeAsync(HostedFile))">
+        <span class="fe fe-@SubmitIcon"></span> @SubmitLabel
+    </button>
     @ChildContent
 </EditForm>
 
@@ -33,30 +34,29 @@
     public EventCallback<HostedFile> OnSubmit { get; set; }
 
     [Parameter]
+    public string SubmitIcon { get; set; }
+
+    [Parameter]
+    public string SubmitLabel { get; set; }
+
+    [Parameter]
     public RenderFragment ChildContent { get; set; }
 
-    private string ErrorMessage { get; set; }
-    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
-    private bool UploadInProgress { get; set; } = false;
-    private async Task OnUpload(InputFileChangeEventArgs e)
+    private async Task FileUpload(IFileListEntry[] files)
     {
-        try
+        IFileListEntry file = files.FirstOrDefault();
+        if (file != null)
         {
-            await UploadSemaphore.WaitAsync();
-            this.UploadInProgress = true;
-            this.StateHasChanged();
             using (MemoryStream ms = new MemoryStream())
             {
-                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                await file.Data.CopyToAsync(ms);
                 HostedFile.Content = Convert.ToBase64String(ms.ToArray());
             }
         }
-        catch (Exception ex)
-        {
-            this.ErrorMessage = ex.Message;
-        }
-        this.UploadInProgress = false;
-        this.StateHasChanged();
-        UploadSemaphore.Release();
+    }
+
+    private async Task OnFormSubmit()
+    {
+        await this.OnSubmit.InvokeAsync(this.HostedFile);
     }
 }

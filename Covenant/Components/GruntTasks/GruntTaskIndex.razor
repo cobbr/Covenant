@@ -5,9 +5,10 @@
 @implements IDisposable
 
 @using System.IO
-@using System.Threading
 @using Microsoft.JSInterop
-@using Microsoft.AspNetCore.Components.Forms
+
+@using BlazorInputFile
+@using YamlDotNet.Serialization
 
 @using Covenant.Core
 @using Covenant.Models.Grunts
@@ -17,6 +18,7 @@
 @using Covenant.Components.ReferenceSourceLibraries
 @inject INotificationService INotificationService
 @inject IJSRuntime IJSRuntime
+
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3">
     <h1 class="h2">Tasks</h1>
@@ -39,7 +41,7 @@
 
 <div class="tab-content" id="grunt-tab-content">
     <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
-        <GruntTaskTable GruntTasks="GruntTasks" OnError="OnError" />
+        <GruntTaskTable GruntTasks="GruntTasks" />
         <a href="/grunttask/create" class="btn btn-primary">
             <span class="fe fe-plus"></span>
             Create
@@ -51,22 +53,14 @@
             </ButtonContent>
             <TitleContent>Import GruntTask(s)</TitleContent>
             <ModalBody>
-                <InputFile OnChange="OnUploadImport" />
-                @if (this.UploadInProgress)
+                <InputFile OnChange="OnUploadImport"></InputFile>
+                @if (string.IsNullOrEmpty(this.ErrorMessage))
                 {
-                    <span class="fe fe-loader spin"></span>
-                }
-                @if (!string.IsNullOrEmpty(this.ImportErrorMessage))
-                {
-                    <span class="text-danger">@ImportErrorMessage</span>
+                    <span class="text-danger">@ErrorMessage</span>
                 }
             </ModalBody>
             <ModalFooter>
-                @if (this.ImportInProgress)
-                {
-                    <span class="fe fe-loader spin"></span>
-                }
-                <button type="button" class="btn btn-primary" @onclick="OnImport">
+                <button type="button" class="btn btn-primary" @onclick="OnImport" data-dismiss="modal">
                     <span class="fe fe-download"></span>
                     Import
                 </button>
@@ -99,14 +93,10 @@
         </a>
     </div>
 </div>
-@if (!string.IsNullOrEmpty(this.ErrorMessage))
-{
-    <span class="text-danger">@ErrorMessage</span>
-}
 
 @code {
     [Parameter]
-    public List<GruntTask> GruntTasks { get; set; }
+    public IList<GruntTask> GruntTasks { get; set; }
 
     [Parameter]
     public IList<ReferenceSourceLibrary> ReferenceSourceLibraries { get; set; }
@@ -121,12 +111,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        this.GruntTasks = this.GruntTasks ?? (await Service.GetGruntTasks()).OrderBy(GT => GT.Name).ToList();
+        this.GruntTasks = this.GruntTasks ?? (await Service.GetGruntTasks()).ToList();
         this.ReferenceSourceLibraries = this.ReferenceSourceLibraries ?? (await Service.GetReferenceSourceLibraries()).ToList();
         this.ReferenceAssemblies = this.ReferenceAssemblies ?? (await Service.GetReferenceAssemblies()).ToList();
         this.EmbeddedResources = this.EmbeddedResources ?? (await Service.GetEmbeddedResources()).ToList();
         this.INotificationService.OnCreateGruntTask += OnCreateGruntTask;
-        this.INotificationService.OnDeleteGruntTask += OnDeleteGruntTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -148,68 +137,49 @@
         this.InvokeAsync(() => this.StateHasChanged());
     }
 
-    private void OnDeleteGruntTask(object sender, int id)
-    {
-        this.GruntTasks.RemoveAt(this.GruntTasks.FindIndex(GT => GT.Id == id));
-        this.InvokeAsync(() => this.StateHasChanged());
-    }
-
     private string ErrorMessage { get; set; }
-    private void OnError(string error)
-    {
-        this.ErrorMessage = error;
-    }
-
-    private string ImportErrorMessage { get; set; }
-    private SemaphoreSlim UploadSemaphore { get; set; } = new SemaphoreSlim(1, 1);
-    private bool UploadInProgress { get; set; } = false;
     private List<GruntTask> ImportedTasks { get; set; } = null;
-    private async Task OnUploadImport(InputFileChangeEventArgs e)
+    private async Task OnUploadImport(IFileListEntry[] files)
     {
         try
         {
-            await UploadSemaphore.WaitAsync();
-            this.UploadInProgress = true;
-            this.StateHasChanged();
-            using (MemoryStream ms = new MemoryStream())
+            IFileListEntry file = files.FirstOrDefault();
+            if (file != null)
             {
-                await e.File.OpenReadStream(Common.CovenantMaxFileSizeUpload).CopyToAsync(ms);
+                MemoryStream ms = new MemoryStream();
+                await file.Data.CopyToAsync(ms);
                 string yaml = Common.CovenantEncoding.GetString(ms.ToArray());
-                this.ImportedTasks = YamlUtilities.FromYaml<GruntTask>(yaml).ToList();
+                IDeserializer deserializer = new DeserializerBuilder().Build();
+                List<SerializedGruntTask> serialized = deserializer.Deserialize<List<SerializedGruntTask>>(yaml);
+                this.ImportedTasks = serialized.Select(S => new GruntTask().FromSerializedGruntTask(S)).ToList();
             }
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            this.ImportErrorMessage = ex.Message;
+            this.ErrorMessage = e.Message;
+            this.StateHasChanged();
         }
-        this.UploadInProgress = false;
-        UploadSemaphore.Release();
-        this.StateHasChanged();
     }
 
-    private SemaphoreSlim ImportSemaphore { get; set; } = new SemaphoreSlim(1, 1);
-    private bool ImportInProgress { get; set; } = false;
     private async Task OnImport()
     {
         if (this.ImportedTasks != null)
         {
-            this.ImportErrorMessage = "";
-            try
+            this.ErrorMessage = "";
+            foreach (GruntTask importedTask in this.ImportedTasks)
             {
-                await ImportSemaphore.WaitAsync();
-                this.ImportInProgress = true;
-                this.StateHasChanged();
-                await Service.CreateGruntTasks(this.ImportedTasks.ToArray());
-                this.ImportedTasks = null;
-                await _ImportModal.DismissModal();
+                try
+                {
+                    await Service.CreateGruntTask(importedTask);
+                }
+                catch (Exception e)
+                {
+                    this.ErrorMessage += e.Message + Environment.NewLine;
+                    this.StateHasChanged();
+                }
             }
-            catch (Exception e)
-            {
-                this.ImportErrorMessage += e.Message + Environment.NewLine;
-            }
-            this.ImportInProgress = false;
-            ImportSemaphore.Release();
-            this.StateHasChanged();
+            this.ImportedTasks = null;
+            await _ImportModal.DismissModal();
         }
     }
 
@@ -217,12 +187,10 @@
     {
         try
         {
-            await IJSRuntime.InvokeAsync<string>(
-                "DownloadFile",
-                "GruntTasks.yaml",
-                Common.ContentTypeMappings[".yaml"],
-                Convert.ToBase64String(Common.CovenantEncoding.GetBytes(this.GruntTasks.ToYaml()))
-            );
+            List<SerializedGruntTask> tasks = this.GruntTasks.Select(GT => GT.ToSerializedGruntTask()).ToList();
+            ISerializer serializer = new SerializerBuilder().Build();
+            string yaml = serializer.Serialize(tasks);
+            await IJSRuntime.InvokeAsync<string>("DownloadFile", "GruntTasks.yaml", "application/x-yaml", Convert.ToBase64String(Common.CovenantEncoding.GetBytes(yaml)));
         }
         catch (Exception)
         {

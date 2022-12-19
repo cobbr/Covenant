@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -48,8 +47,6 @@ namespace Covenant.Models
         public DbSet<Indicator> Indicators { get; set; }
         public DbSet<Theme> Themes { get; set; }
 
-        public DbSet<FolderFileNode> FolderFileNodes { get; set; }
-
         public CovenantContext(DbContextOptions<CovenantContext> options) : base(options)
         {
             // this.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
@@ -59,45 +56,40 @@ namespace Covenant.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             => optionsBuilder
-                .UseSqlite(
-                    "Data Source=" + Common.CovenantDatabaseFile,
-                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                );
+                .UseSqlite("Data Source=" + Common.CovenantDatabaseFile);
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<GruntTaskOption>().ToTable("GruntTaskOption");
 
-            builder.Entity<Folder>().HasBaseType<FolderFileNode>();
-            builder.Entity<Folder>().ToTable("Folders");
-            builder.Entity<FolderFile>().HasBaseType<FolderFileNode>();
-            builder.Entity<FolderFile>().ToTable("FolderFiles");
-
-            builder.Entity<HttpListener>().HasBaseType<Listener>();
+            builder.Entity<HttpListener>();
             builder.Entity<HttpProfile>().HasBaseType<Profile>();
-            builder.Entity<BridgeListener>().HasBaseType<Listener>();
+            builder.Entity<BridgeListener>();
             builder.Entity<BridgeProfile>().HasBaseType<Profile>();
 
-            builder.Entity<Regsvr32Launcher>().HasBaseType<Launcher>();
-            builder.Entity<MshtaLauncher>().HasBaseType<Launcher>();
-            builder.Entity<InstallUtilLauncher>().HasBaseType<Launcher>();
-            builder.Entity<MSBuildLauncher>().HasBaseType<Launcher>();
-            builder.Entity<PowerShellLauncher>().HasBaseType<Launcher>();
-            builder.Entity<BinaryLauncher>().HasBaseType<Launcher>();
-            builder.Entity<ServiceBinaryLauncher>().HasBaseType<Launcher>();
-            builder.Entity<ShellCodeLauncher>().HasBaseType<Launcher>();
+            builder.Entity<WmicLauncher>();
+            builder.Entity<Regsvr32Launcher>();
+            builder.Entity<MshtaLauncher>();
+            builder.Entity<CscriptLauncher>();
+            builder.Entity<WscriptLauncher>();
+            builder.Entity<InstallUtilLauncher>();
+            builder.Entity<MSBuildLauncher>();
+            builder.Entity<PowerShellLauncher>();
+            builder.Entity<BinaryLauncher>();
+            builder.Entity<ShellCodeLauncher>();
 
-            builder.Entity<CapturedPasswordCredential>().HasBaseType<CapturedCredential>();
-            builder.Entity<CapturedHashCredential>().HasBaseType<CapturedCredential>();
-            builder.Entity<CapturedTicketCredential>().HasBaseType<CapturedCredential>();
+            builder.Entity<CapturedPasswordCredential>();
+            builder.Entity<CapturedHashCredential>();
+            builder.Entity<CapturedTicketCredential>();
 
-            builder.Entity<DownloadEvent>().HasBaseType<Event>();
-            builder.Entity<ScreenshotEvent>().HasBaseType<DownloadEvent>();
+            builder.Entity<DownloadEvent>();
+            builder.Entity<ScreenshotEvent>();
 
             builder.Entity<DecryptEvent>();
-            builder.Entity<FileIndicator>().HasBaseType<Indicator>();
-            builder.Entity<NetworkIndicator>().HasBaseType<Indicator>();
-            builder.Entity<TargetIndicator>().HasBaseType<Indicator>();
+
+            builder.Entity<FileIndicator>();
+            builder.Entity<NetworkIndicator>();
+            builder.Entity<TargetIndicator>();
 
             builder.Entity<Theme>();
 
@@ -105,20 +97,6 @@ namespace Covenant.Models
                 .HasOne(G => G.ImplantTemplate)
                 .WithMany(IT => IT.Grunts)
                 .HasForeignKey(G => G.ImplantTemplateId);
-
-            builder.Entity<Grunt>()
-                .HasMany(G => G.FolderRoots)
-                .WithOne(F => F.RootGrunt);
-            
-            builder.Entity<FolderFileNode>()
-                .HasOne(N => N.Grunt)
-                .WithMany(G => G.FolderFileNodes)
-                .HasForeignKey(N => N.GruntId);
-
-            builder.Entity<Folder>()
-                .HasMany(F => F.Nodes)
-                .WithOne()
-                .HasForeignKey(N => N.ParentId);
 
             builder.Entity<GruntTask>()
                 .HasOne(GT => GT.Author)
@@ -135,6 +113,60 @@ namespace Covenant.Models
                 .HasOne(GC => GC.CommandOutput)
                 .WithOne(CO => CO.GruntCommand)
                 .HasForeignKey<GruntCommand>(GC => GC.CommandOutputId);
+
+            builder.Entity<ListenerTypeImplantTemplate>()
+                .HasKey(ltit => new { ltit.ListenerTypeId, ltit.ImplantTemplateId });
+            builder.Entity<ListenerTypeImplantTemplate>()
+                .HasOne(ltit => ltit.ImplantTemplate)
+                .WithMany("ListenerTypeImplantTemplates");
+            builder.Entity<ListenerTypeImplantTemplate>()
+                .HasOne(ltit => ltit.ListenerType);
+
+            builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
+                .HasKey(t => new { t.ReferenceSourceLibraryId, t.ReferenceAssemblyId });
+            builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
+                .HasOne(rslra => rslra.ReferenceSourceLibrary)
+                .WithMany("ReferenceSourceLibraryReferenceAssemblies");
+            builder.Entity<ReferenceSourceLibraryReferenceAssembly>()
+                .HasOne(rslra => rslra.ReferenceAssembly)
+                .WithMany("ReferenceSourceLibraryReferenceAssemblies");
+                
+            builder.Entity<ReferenceSourceLibraryEmbeddedResource>()
+                .HasKey(t => new { t.ReferenceSourceLibraryId, t.EmbeddedResourceId });
+            builder.Entity<ReferenceSourceLibraryEmbeddedResource>()
+                .HasOne(rslra => rslra.ReferenceSourceLibrary)
+                .WithMany("ReferenceSourceLibraryEmbeddedResources");
+            builder.Entity<ReferenceSourceLibraryEmbeddedResource>()
+                .HasOne(rslra => rslra.EmbeddedResource)
+                .WithMany("ReferenceSourceLibraryEmbeddedResources");
+
+
+            builder.Entity<GruntTaskReferenceAssembly>()
+                .HasKey(t => new { t.GruntTaskId, t.ReferenceAssemblyId });
+            builder.Entity<GruntTaskReferenceAssembly>()
+                .HasOne(gtra => gtra.GruntTask)
+                .WithMany("GruntTaskReferenceAssemblies");
+            builder.Entity<GruntTaskReferenceAssembly>()
+                .HasOne(gtra => gtra.ReferenceAssembly)
+                .WithMany("GruntTaskReferenceAssemblies");
+
+            builder.Entity<GruntTaskEmbeddedResource>()
+                .HasKey(t => new { t.GruntTaskId, t.EmbeddedResourceId });
+            builder.Entity<GruntTaskEmbeddedResource>()
+                .HasOne(gter => gter.GruntTask)
+                .WithMany("GruntTaskEmbeddedResources");
+            builder.Entity<GruntTaskEmbeddedResource>()
+                .HasOne(gter => gter.EmbeddedResource)
+                .WithMany("GruntTaskEmbeddedResources");
+
+            builder.Entity<GruntTaskReferenceSourceLibrary>()
+                .HasKey(t => new { t.GruntTaskId, t.ReferenceSourceLibraryId });
+            builder.Entity<GruntTaskReferenceSourceLibrary>()
+                .HasOne(gtrsl => gtrsl.GruntTask)
+                .WithMany("GruntTaskReferenceSourceLibraries");
+            builder.Entity<GruntTaskReferenceSourceLibrary>()
+                .HasOne(gtrsl => gtrsl.ReferenceSourceLibrary)
+                .WithMany("GruntTaskReferenceSourceLibraries");
 
             ValueComparer<List<string>> stringListComparer = new ValueComparer<List<string>>(
                 (c1, c2) => c1.SequenceEqual(c1),

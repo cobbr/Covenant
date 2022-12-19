@@ -1,0 +1,80 @@
+﻿# Author: Ryan Cobb (@cobbr_io)
+# Project: Covenant (https://github.com/cobbr/Covenant)
+# License: GNU GPLv3
+
+Name: DefaultBridgeProfile
+Description: A default BridgeProfile for a C2Bridge.
+
+MessageTransform: |-
+    public static class MessageTransform
+    {
+        public static string Transform(byte[] bytes)
+        {
+            return System.Convert.ToBase64String(bytes);
+        }
+        public static byte[] Invert(string str) {
+            return System.Convert.FromBase64String(str);
+        }
+    }
+ReadFormat: |-
+    {DATA},{GUID}
+WriteFormat: |-
+    {DATA},{GUID}
+BridgeMessengerCode: |-
+    public enum MessageType
+    {
+        Read,
+        Write
+    }
+
+    public class ProfileMessage
+    {
+        public MessageType Type { get; set; }
+        public string Message { get; set; }
+    }
+    
+    public class MessageEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
+    public interface IMessenger
+    {
+        string Hostname { get; }
+        string Identifier { get; set; }
+        string Authenticator { get; set; }
+        EventHandler<MessageEventArgs> UpstreamEventHandler { get; set; }
+        ProfileMessage Read();
+        void Write(string Message);
+        void Close();
+    }
+    
+    public class BridgeMessenger : IMessenger
+    {
+        public string Hostname { get; } = "";
+        public string Identifier { get; set; } = "";
+        public string Authenticator { get; set; } = "";
+
+        public BridgeMessenger(string CovenantURI, string Identifier, string WriteFormat)
+        {
+            this.CovenantURI = CovenantURI;
+            this.Identifier = Identifier;
+            // TODO
+        }
+
+        public ProfileMessage Read()
+        {
+            // TODO
+            return null;
+        }
+
+        public void Write(string Message)
+        {
+            // TODO
+        }
+
+        public void Close()
+        {
+            // TODO
+        }
+    }

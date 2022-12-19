@@ -12,20 +12,10 @@
     <h1 class="h2">Create Implant Template</h1>
 </div>
 
-<ImplantTemplateForm ImplantTemplate="ImplantTemplate" OnSubmit="OnCreate">
-    <button type="submit" class="btn btn-primary">
-        <span class="fe fe-plus"></span>
-        Create
-    </button>
-    @if (!string.IsNullOrEmpty(this.DisplayError))
-    {
-        <div class="text-danger">@DisplayError</div>
-    }
-</ImplantTemplateForm>
+<ImplantTemplateForm ImplantTemplate="ImplantTemplate" OnSubmit="OnCreate" SubmitIcon="plus" SubmitLabel="Create" />
 
 @code {
     public ImplantTemplate ImplantTemplate { get; set; } = new ImplantTemplate();
-    private string DisplayError { get; set; }
 
     private async Task OnCreate(ImplantTemplate template)
     {
@@ -36,8 +26,7 @@
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            this.DisplayError = e.Message;
-            Service.DisposeContext();
+            // return RedirectToAction(nameof(Index));
         }
     }
 }

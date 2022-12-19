@@ -4,8 +4,6 @@
 
 using System;
 using System.IO;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 using Covenant.Core;
 using System.Security.Cryptography;
@@ -36,21 +34,15 @@ namespace Covenant.Models.Covenant
         Decrypt
     }
 
-    public class Event : ILoggable
+    public class Event
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        [Required]
-        public string Name { get; set; } = Utilities.CreateShortGuid();
         public DateTime Time { get; set; } = DateTime.UtcNow;
         public string MessageHeader { get; set; }
         public string MessageBody { get; set; }
         public EventLevel Level { get; set; } = EventLevel.Highlight;
         public EventType Type { get; set; } = EventType.Normal;
 		public string Context { get; set; } = "*";
-
-        // Event|Action|ID|Time|Level|Type|Context|MessageHeader
-        public string ToLog(LogAction action) => $"Event|{action}|{this.Id}|{this.Time}|{this.Level}|{this.Type}|{this.Context}|{this.MessageHeader}";
     }
 
     public class DecryptEvent : Event
@@ -149,50 +141,40 @@ namespace Covenant.Models.Covenant
             Complete
         }
 
-        public int GruntCommandId { get; set; }
-        public DownloadProgress Progress { get; set; } = DownloadProgress.Portion;
         public string FileName { get; set; } = "";
-        public long FileLength
-        {
-            get
-            {
-                return File.Exists(FileLocation) ? new FileInfo(this.FileLocation).Length : 0;
-            }
-        }
-        private string FileLocation
-        {
-            get
-            {
-                return Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.Name));
-            }
-        }
+        public string FileContents { get; set; } = "";
+        public DownloadProgress Progress { get; set; } = DownloadProgress.Portion;
 
         public DownloadEvent()
         {
             this.Type = EventType.Download;
         }
 
-        public bool WriteDownload(byte[] contents)
+        public bool WriteToDisk()
         {
             try
             {
-                using FileStream stream = new FileStream(this.FileLocation, FileMode.Append);
-                stream.Write(contents, 0, contents.Length);
+                byte[] contents = Convert.FromBase64String(this.FileContents);
+                if (this.Progress == DownloadProgress.Complete)
+                {
+                    File.WriteAllBytes(
+                        Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.FileName)),
+                        contents
+                    );
+                }
+                else
+                {
+                    using (var stream = new FileStream(Path.Combine(Common.CovenantDownloadDirectory, Utilities.GetSanitizedFilename(this.FileName)), FileMode.Append))
+                    {
+                        stream.Write(contents, 0, contents.Length);
+                    }
+                }
                 return true;
             }
-            catch
+            catch (FormatException)
             {
                 return false;
             }
-        }
-
-        public FileStream ReadDownload()
-        {
-            if (File.Exists(this.FileLocation))
-            {
-                return new FileStream(this.FileLocation, FileMode.Open);
-            }
-            return null;
         }
     }
 
@@ -202,15 +184,5 @@ namespace Covenant.Models.Covenant
         {
             this.Type = EventType.Screenshot;
         }
-    }
-
-    public class DownloadEventContent : DownloadEvent
-    {
-        public byte[] FileContents { get; set; }
-    }
-
-    public class ScreenshotEventContent : ScreenshotEvent
-    {
-        public byte[] FileContents { get; set; }
     }
 }

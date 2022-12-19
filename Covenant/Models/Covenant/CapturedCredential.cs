@@ -6,9 +6,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Covenant.Core;
-using NLog;
-using System.Threading.Tasks;
 
 namespace Covenant.Models.Covenant
 {
@@ -65,7 +62,7 @@ namespace Covenant.Models.Covenant
         }
     }
 
-    public class CapturedCredential : ILoggable
+    public class CapturedCredential
     {
         public int Id { get; set; }
         public CredentialType Type { get; set; }
@@ -287,8 +284,5 @@ namespace Covenant.Models.Covenant
         {
             return Regex.IsMatch(input, "^[0-9a-f]{32}", RegexOptions.IgnoreCase);
         }
-
-        // CapturedCredential|Action|ID|Type|Domain|Username
-        public string ToLog(LogAction action) => $"CapturedCredential|{action}|{this.Id}|{this.Type}|{this.Domain}|{this.Username}";
     }
 }

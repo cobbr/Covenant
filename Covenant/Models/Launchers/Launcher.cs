@@ -3,7 +3,6 @@
 // License: GNU GPLv3
 
 using System;
-using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -20,24 +19,26 @@ namespace Covenant.Models.Launchers
 {
     public enum LauncherType
     {
-        Binary,
-        ServiceBinary,
-        ShellCode,
+        Wmic,
+        Regsvr32,
+        Mshta,
+        Cscript,
+        Wscript,
         PowerShell,
+        Binary,
         MSBuild,
         InstallUtil,
-        Regsvr32,
-        Mshta
+        ShellCode
     }
 
-    public abstract class Launcher : ILoggable
+    public class Launcher
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public int ListenerId { get; set; }
         public int ImplantTemplateId { get; set; }
 
-        public string Name { get; set; } = Utilities.CreateShortGuid();
+        public string Name { get; set; } = "";
         public string Description { get; set; } = "";
         public LauncherType Type { get; set; } = LauncherType.Binary;
         public Common.DotNetVersion DotNetVersion { get; set; } = Common.DotNetVersion.Net35;
@@ -60,50 +61,35 @@ namespace Covenant.Models.Launchers
         public string StagerCode { get; set; } = "";
 
         [NotMapped, JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
-        public byte[] LauncherILBytes
+        public string Base64ILByteString
         {
             get
             {
                 try
                 {
-                    return File.ReadAllBytes(
-                        Common.CovenantLauncherDirectory +
-                        Utilities.GetSanitizedFilename(Name)
-                    );
+                    return Convert.ToBase64String(System.IO.File.ReadAllBytes(Common.CovenantLauncherDirectory + Name));
                 }
-                catch { return new byte[] { }; }
+                catch
+                {
+                    return "";
+                }
             }
             set
             {
-                File.WriteAllBytes(
-                    Common.CovenantLauncherDirectory +
-                    Utilities.GetSanitizedFilename(Name),
-                    value
-                ); 
+                System.IO.File.WriteAllBytes(Common.CovenantLauncherDirectory + Name, Convert.FromBase64String(value)); 
             }
         }
 
-        public virtual byte[] GetContent() => this.LauncherILBytes;
-        public virtual string GetFilename()
-        {
-            string extension = this.OutputKind == OutputKind.DynamicallyLinkedLibrary ? ".dll" : ".exe";
-            return Utilities.GetSanitizedFilename(this.Name) + extension;
-        }
-        public abstract string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template);
-        public abstract string GetHostedLauncherString(Listener listener, HostedFile hostedFile);
+        public virtual string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template) { return ""; }
+        public virtual string GetHostedLauncher(Listener listener, HostedFile hostedFile) { return ""; }
 
         public OutputKind OutputKind { get; set; } = OutputKind.DynamicallyLinkedLibrary;
         public bool CompressStager { get; set; } = false;
-
-        // Launcher|Action|ID|Name|LauncherString|ScriptType|OutputKind|CompressStager
-        public string ToLog(LogAction action) => $"Launcher|{action}|{this.Id}|{this.Name}|{this.LauncherString}|{this.OutputKind}";
     }
 
     public abstract class DiskLauncher : Launcher
     {
-        public byte[] DiskCode { get; set; }
-
-        public override byte[] GetContent() => this.DiskCode;
+        public string DiskCode { get; set; }
     }
 
     public enum ScriptingLanguage
@@ -127,10 +113,10 @@ namespace Covenant.Models.Launchers
 
         protected ScriptletType ScriptType { get; set; } = ScriptletType.Scriptlet;
 
-        public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.LauncherILBytes = StagerAssembly;
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
 
             // Credit DotNetToJscript (tyranid - James Forshaw)
             byte[] serializedDelegate = Convert.FromBase64String(FrontBinaryFormattedDelegate).Concat(StagerAssembly).Concat(Convert.FromBase64String(EndBinaryFormattedDelegate)).ToArray();
@@ -150,7 +136,6 @@ namespace Covenant.Models.Launchers
 
             string language = "";
 			string code = "";
-            string tempDiskCode = "";
             if (this.ScriptLanguage == ScriptingLanguage.JScript)
             {
 				string DelegateBlock = String.Join("\"+\r\n\"", splitString.ToArray());
@@ -170,7 +155,7 @@ namespace Covenant.Models.Launchers
 
             if (this.ScriptType == ScriptletType.Plain)
             {
-                tempDiskCode = code;
+                this.DiskCode = code;
             }
             else if (this.ScriptType == ScriptletType.Scriptlet || this.ScriptType == ScriptletType.TaggedScript)
             {
@@ -178,28 +163,27 @@ namespace Covenant.Models.Launchers
 				TaggedScript = TaggedScript.Replace("{{REPLACE_SCRIPT}}", code);
                 if (this.ScriptType == ScriptletType.TaggedScript)
                 {
-                    tempDiskCode = TaggedScript;
+                    this.DiskCode = TaggedScript;
                 }
                 else
                 {
-                    tempDiskCode = ScriptletCodeTemplate.Replace(Environment.NewLine, "\r\n").Replace("{{REPLACE_TAGGED_SCRIPT}}", TaggedScript).Replace("{{REPLACE_PROGID}}", this.ProgId);
+                    this.DiskCode = ScriptletCodeTemplate.Replace(Environment.NewLine, "\r\n").Replace("{{REPLACE_TAGGED_SCRIPT}}", TaggedScript).Replace("{{REPLACE_PROGID}}", this.ProgId);
                 }
             }
             else if (this.ScriptType == ScriptletType.Stylesheet)
             {
-                tempDiskCode = StylesheetCodeTemplate.Replace(Environment.NewLine, "\r\n").Replace("{{REPLACE_SCRIPT_LANGUAGE}}", language);
-                tempDiskCode = tempDiskCode.Replace("{{REPLACE_SCRIPT}}", code);
+				this.DiskCode = StylesheetCodeTemplate.Replace(Environment.NewLine, "\r\n").Replace("{{REPLACE_SCRIPT_LANGUAGE}}", language);
+                this.DiskCode = DiskCode.Replace("{{REPLACE_SCRIPT}}", code);
             }
 
             if (this.DotNetVersion == Common.DotNetVersion.Net35)
             {
-                tempDiskCode = tempDiskCode.Replace("{{REPLACE_VERSION_SETTER}}", "");
+                this.DiskCode = this.DiskCode.Replace("{{REPLACE_VERSION_SETTER}}", "");
             }
             else if (this.DotNetVersion == Common.DotNetVersion.Net40)
             {
-                tempDiskCode = tempDiskCode.Replace("{{REPLACE_VERSION_SETTER}}", JScriptNet40VersionSetter);
+                this.DiskCode = this.DiskCode.Replace("{{REPLACE_VERSION_SETTER}}", JScriptNet40VersionSetter);
             }
-            this.DiskCode = Common.CovenantEncoding.GetBytes(tempDiskCode);
             return GetLauncher();
         }
 

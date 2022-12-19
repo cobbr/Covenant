@@ -17,19 +17,20 @@ namespace Covenant.Models.Launchers
         {
             this.Type = LauncherType.Binary;
             this.Description = "Uses a generated .NET Framework binary to launch a Grunt.";
+            this.Name = "Binary";
             this.OutputKind = OutputKind.ConsoleApplication;
             this.CompressStager = false;
         }
 
-        public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.LauncherILBytes = StagerAssembly;
-            this.LauncherString = this.GetFilename();
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
+            this.LauncherString = template.Name + ".exe";
             return this.LauncherString;
         }
 
-        public override string GetHostedLauncherString(Listener listener, HostedFile hostedFile)
+        public override string GetHostedLauncher(Listener listener, HostedFile hostedFile)
         {
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)

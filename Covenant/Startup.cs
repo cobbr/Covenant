@@ -3,7 +3,6 @@
 // License: GNU GPLv3
 
 using System;
-using System.IO;
 using System.Net;
 using System.Threading;
 using System.Collections.Concurrent;
@@ -147,10 +146,7 @@ namespace Covenant
             }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
             services.AddServerSideBlazor();
 
-            services.AddRouting(options => {
-                options.LowercaseUrls = true;
-            });
-
+            services.AddRouting(options => options.LowercaseUrls = true);
             services.AddSwaggerGen(c =>
             {
                 c.DocInclusionPredicate((version, desc) =>
@@ -184,8 +180,7 @@ namespace Covenant
                         new string[] { }
                     }
                 });
-
-                c.MapType<Stream>(() => new OpenApiSchema { Type = "file" });
+                
                 c.SchemaFilter<AutoRestSchemaFilter>();
             });
 
@@ -193,9 +188,9 @@ namespace Covenant
             {
                 opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
+
             services.AddSingleton<ConcurrentDictionary<int, CancellationTokenSource>>();
             services.AddSingleton<INotificationService, NotificationService>();
-            //services.AddSingleton<ILoggingService, LoggingService>();
             services.AddSingleton<CovenantAPIService, CovenantAPIService>();
             services.AddTransient<ICovenantService, CovenantService>();
             // services.AddTransient<IRemoteCovenantService, CovenantHubService>();

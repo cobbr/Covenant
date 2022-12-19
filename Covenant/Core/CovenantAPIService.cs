@@ -13,60 +13,33 @@ namespace Covenant.Core
 {
     public class CovenantAPIService
     {
-        private readonly HttpClientHandler _handler;
-        private readonly IConfiguration _configuration;
+        private readonly CovenantAPI _client;
 
         public CovenantAPIService(IConfiguration configuration)
         {
-            _configuration = configuration;
             X509Certificate2 covenantCert = new X509Certificate2(Common.CovenantPublicCertFile);
-            _handler = new HttpClientHandler
+            HttpClientHandler clientHandler = new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) =>
                 {
                     return cert.GetCertHashString() == covenantCert.GetCertHashString();
                 }
             };
+            _client = new CovenantAPI(
+                new Uri("https://localhost:" + configuration["CovenantPort"]),
+                new TokenCredentials(configuration["ServiceUserToken"]),
+                clientHandler
+            );
         }
 
-        public async Task CreateHttpListener(HttpListener listener, string token)
+        public async Task CreateHttpListener(HttpListener listener)
         {
-            CovenantAPI client = new CovenantAPI(
-                new Uri("https://localhost:" + _configuration["CovenantPort"]),
-                new TokenCredentials(token),
-                _handler
-            );
-            await client.CreateHttpListenerAsync(ToAPIListener(listener));
+            await _client.CreateHttpListenerAsync(ToAPIListener(listener));
         }
 
-        public async Task CreateBridgeListener(BridgeListener listener, string token)
+        public async Task CreateBridgeListener(BridgeListener listener)
         {
-            CovenantAPI client = new CovenantAPI(
-                new Uri("https://localhost:" + _configuration["CovenantPort"]),
-                new TokenCredentials(token),
-                _handler
-            );
-            await client.CreateBridgeListenerAsync(ToAPIListener(listener));
-        }
-
-        public async Task EditHttpListener(HttpListener listener, string token)
-        {
-            CovenantAPI client = new CovenantAPI(
-                new Uri("https://localhost:" + _configuration["CovenantPort"]),
-                new TokenCredentials(token),
-                _handler
-            );
-            await client.EditHttpListenerAsync(ToAPIListener(listener));
-        }
-
-        public async Task EditBridgeListener(BridgeListener listener, string token)
-        {
-            CovenantAPI client = new CovenantAPI(
-                new Uri("https://localhost:" + _configuration["CovenantPort"]),
-                new TokenCredentials(token),
-                _handler
-            );
-            await client.EditBridgeListenerAsync(ToAPIListener(listener));
+            await _client.CreateBridgeListenerAsync(ToAPIListener(listener));
         }
 
         public static Covenant.API.Models.HttpListener ToAPIListener(HttpListener listener)

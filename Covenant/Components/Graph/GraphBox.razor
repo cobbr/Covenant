@@ -118,7 +118,6 @@
         if (firstRender)
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "start-tab");
-            await IJSRuntime.InvokeAsync<string>("ClearGraph", ".graph-box");
             await IJSRuntime.InvokeAsync<string>("InitializeGraph", ".graph-box");
             foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized))
             {
@@ -143,10 +142,7 @@
             foreach (Grunt grunt in grunts)
             {
                 Listener listener = await Service.GetListener(grunt.ListenerId);
-                if (listener.Status == ListenerStatus.Active)
-                {
-                    await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntListenerLink", listener.GUID, grunt.GUID);
-                }
+                await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntListenerLink", listener.GUID, grunt.GUID);
             }
         }
     }

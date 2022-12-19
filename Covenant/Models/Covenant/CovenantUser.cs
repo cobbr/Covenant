@@ -4,11 +4,12 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+
 using Microsoft.AspNetCore.Identity;
 
 namespace Covenant.Models.Covenant
 {
-    public class CovenantUser : IdentityUser, ILoggable
+    public class CovenantUser : IdentityUser
     {
         public CovenantUser() : base()
         {
@@ -21,9 +22,6 @@ namespace Covenant.Models.Covenant
 
         public int ThemeId { get; set; }
         public Theme Theme { get; set; }
-
-        // CovenantUser|Action|ID|UserName
-        public string ToLog(LogAction action) => $"CovenantUser|{action}|{this.Id}|{this.NormalizedUserName}";
     }
 
     public class CovenantUserLogin

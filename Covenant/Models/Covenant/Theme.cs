@@ -5,8 +5,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-using YamlDotNet.Serialization;
-
 namespace Covenant.Models.Covenant
 {
     public enum CodeMirrorTheme
@@ -15,11 +13,11 @@ namespace Covenant.Models.Covenant
         night
     }
 
-    public class Theme : IYamlSerializable<Theme>
+    public class Theme
     {
         private const string ColorRegExp = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$";
 
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity), YamlIgnore]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; } = "";

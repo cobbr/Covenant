@@ -45,7 +45,7 @@ namespace Covenant.Models.Listeners
                         .ToString()
                 };
             }
-            catch (Exception)
+            catch (SocketException)
             {
                 this.ConnectAddresses = new List<string> { "" };
             }

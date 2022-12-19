@@ -4,37 +4,22 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 using Covenant.Core;
-using YamlDotNet.Serialization;
 
 namespace Covenant.Models
 {
-    public interface ILoggable
-    {
-        public string ToLog(LogAction action);
-    }
-
-    public enum LogAction
-    {
-        Create,
-        Edit,
-        Delete
-    }
-
     public interface IYamlSerializable<T>
     {
-        public string ToYaml() => new SerializerBuilder().Build().Serialize(this);
-        public static T FromYaml(string yaml) => new DeserializerBuilder().Build().Deserialize<T>(yaml);
-        public static IEnumerable<T> FromYamlEnumerable(string yaml) => new DeserializerBuilder().Build().Deserialize<IEnumerable<T>>(yaml);
-        public static string ToYamlEnumerable(IEnumerable<T> enumerable) => new SerializerBuilder().Build().Serialize(enumerable);
+        public string ToYaml();
+        public T FromYaml(string yaml);
     }
 
-    public static class YamlUtilities
+    public interface IJsonSerializable<T>
     {
-        public static string ToYaml<T>(this IYamlSerializable<T> myInterface) => myInterface.ToYaml();
-        public static T FromYaml<T>(this IYamlSerializable<T> myInterface, string yaml) => myInterface.FromYaml(yaml);
-        public static string ToYaml<T>(this IEnumerable<T> myEnumerable) => IYamlSerializable<T>.ToYamlEnumerable(myEnumerable);
-        public static IEnumerable<T> FromYaml<T>(string yaml) => IYamlSerializable<T>.FromYamlEnumerable(yaml);
+        public string ToJson();
+        public T FromJson(string json);
     }
+
+    public interface ISerializable<T> : IYamlSerializable<T>, IJsonSerializable<T> { }
 
     public class ParsedParameter
     {

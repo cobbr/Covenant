@@ -19,29 +19,11 @@
 
 @if (Profile.Type == ProfileType.HTTP)
 {
-    <HttpProfileForm Profile=@((HttpProfile)Profile) OnSubmit="OnEditHttpProfile">
-        <button type="submit" class="btn btn-primary">
-            <span class="fe fe-edit"></span>
-            Edit
-        </button>
-        @if (!string.IsNullOrEmpty(this.DisplayError))
-        {
-            <div class="text-danger">@DisplayError</div>
-        }
-    </HttpProfileForm>
+    <HttpProfileForm Profile=@((HttpProfile)Profile) OnSubmit="OnEditHttpProfile"></HttpProfileForm>
 }
 else if (Profile.Type == ProfileType.Bridge)
 {
-    <BridgeProfileForm Profile=@((BridgeProfile)Profile) OnSubmit="OnEditBridgeProfile">
-        <button type="submit" class="btn btn-primary">
-            <span class="fe fe-edit"></span>
-            Edit
-        </button>
-        @if (!string.IsNullOrEmpty(this.DisplayError))
-        {
-            <div class="text-danger">@DisplayError</div>
-        }
-    </BridgeProfileForm>
+    <BridgeProfileForm Profile=@((BridgeProfile)Profile) OnSubmit="OnEditBridgeProfile"></BridgeProfileForm>
 }
 
 @code {
@@ -51,29 +33,23 @@ else if (Profile.Type == ProfileType.Bridge)
     [Parameter]
     public Profile Profile { get; set; }
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; }
-
-    private CovenantUser CovenantUser { get; set; }
-    private string DisplayError { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
         this.Profile = this.Profile ?? await Service.GetProfile(this.ProfileId);
-        this.CovenantUser = await UserManager.GetUserAsync((await AuthenticationState).User);
-        Service.DisposeContext();
     }
 
     private async Task OnEditHttpProfile(HttpProfile profile)
     {
         try
         {
-            await Service.EditHttpProfile(profile, this.CovenantUser);
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditHttpProfile(profile, await UserManager.GetUserAsync(state.User));
             NavigationManager.NavigateTo($"/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            this.DisplayError = e.Message;
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
         }
     }
 
@@ -81,12 +57,14 @@ else if (Profile.Type == ProfileType.Bridge)
     {
         try
         {
-            await Service.EditBridgeProfile(profile, this.CovenantUser);
+            AuthenticationState state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            await Service.EditBridgeProfile(profile, await UserManager.GetUserAsync(state.User));
             NavigationManager.NavigateTo($"/listener");
         }
         catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
         {
-            this.DisplayError = e.Message;
+            // ModelState.AddModelError(string.Empty, e.Message);
+            // return RedirectToAction(nameof(Create), new { id = launcher.Name });
         }
     }
 }

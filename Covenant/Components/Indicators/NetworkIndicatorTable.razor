@@ -1,11 +1,7 @@
-﻿@inherits OwningComponentBase<ICovenantService>
-
-@using Microsoft.JSInterop
-@using Covenant.Core
+﻿@using Microsoft.JSInterop
 @using Covenant.Models.Indicators
 @using Covenant.Components.Shared
 @inject IJSRuntime IJSRuntime
-@inject NavigationManager NavigationManager
 
 <CovenantTable TItem="NetworkIndicator" Items="NetworkIndicators.ToList()" SearchRow="IsRowDisplayed"
                IsSearchable="IsSearchable" IsSortable="IsSortable" IsPaginated="IsPaginated" PageLength="PageLength" class="table table-hover">
@@ -25,7 +21,6 @@
         <SortableTableHeader TItem="NetworkIndicator" TItem2="string" GetSortableProperty="(indicator) => indicator.URI">
             <HeaderContent>URI</HeaderContent>
         </SortableTableHeader>
-        <th></th>
     </TableHeader>
     <TableRow Context="indicator">
         <tr>
@@ -34,26 +29,13 @@
             <td>@indicator.IPAddress</td>
             <td>@indicator.Port</td>
             <td>@indicator.URI</td>
-            <td style="text-align: right;">
-                <ActionDropdown Name="dropdownActionNetworkIndicator">
-                    <DropdownActionItem Item="indicator" OnAction='(item => NavigationManager.NavigateTo($"/indicator/edit/{item.Id}"))'>
-                        <span class="fe fe-edit"></span>
-                        Edit
-                    </DropdownActionItem>
-                    <div class="dropdown-divider"></div>
-                    <DropdownActionItem Item="indicator" OnAction="(async item => await OnDeleteIndicator(item))" class="text-danger">
-                        <span class="fe fe-x"></span>
-                        Delete
-                    </DropdownActionItem>
-                </ActionDropdown>
-            </td>
         </tr>
     </TableRow>
 </CovenantTable>
 
 @code {
     [Parameter]
-    public List<NetworkIndicator> NetworkIndicators { get; set; }
+    public IEnumerable<NetworkIndicator> NetworkIndicators { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
@@ -75,18 +57,5 @@
             indicator.IPAddress.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             indicator.Port.ToString().Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase) ||
             indicator.URI.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
-    }
-
-    private async Task OnDeleteIndicator(Indicator indicator)
-    {
-        try
-        {
-            await Service.DeleteIndicator(indicator.Id);
-            Service.DisposeContext();
-        }
-        catch (Exception e) when (e is ControllerNotFoundException || e is ControllerBadRequestException || e is ControllerUnauthorizedException)
-        {
-
-        }
     }
 }

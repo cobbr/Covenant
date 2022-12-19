@@ -2,8 +2,8 @@
 @implements IDisposable
 
 @using System.IO
+@using System.Linq
 @using Microsoft.JSInterop
-
 @using Covenant.Core
 @using Covenant.Models.Grunts
 @using Covenant.Models.Covenant
@@ -40,24 +40,24 @@
     @if (!this.IsMinimized)
     {
         <div class="card-body interact-style">
-            @if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
+            @if (GruntCommand.CommandOutput != null)
             {
-                ScreenshotEvent screenshot = GetScreenshotEvent(GruntCommand);
-                string content = screenshot != null ? GetScreenshotContent(screenshot) : string.Empty;
-                if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
-                {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading screenshot... @screenshot.FileLength bytes</p>}
-                else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
-                {<img style="max-width: 100%" src="data:image/png;base64, @content" />}
-            }
-            else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Download")
-            {
-                DownloadEvent download = GetDownloadEvent(GruntCommand);
-                if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
-                {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading... @download.FileLength bytes</p>}
-                else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
-                {<p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if (download != null){<a type="button" class="btn btn-link text-white task-text-body" download href="/api/events/download/@download.Id/download">@download.FileName</a>}</p>}
-            }
-            else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Chrome_passwords")
+                if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "ScreenShot")
+                {
+                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                    {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading screenshot... @GruntCommand.CommandOutput.Output.Length bytes</p>}
+                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                    {<img style="max-width: 100%" src="data:image/png;base64, @GruntCommand.CommandOutput.Output" />}
+                }
+                else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Download")
+                {
+                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                    {<p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Downloading... @GruntCommand.CommandOutput.Output.Length bytes</p>}
+                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                    {DownloadEvent downloadEvent = GetDownloadEvent(GruntCommand).WaitResult();<p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if (downloadEvent != null){<button type="button" class="btn btn-link text-white task-text-body" @onclick="(e => OnDownload(downloadEvent))">@downloadEvent.FileName</button>}</p>}
+                }
+
+                else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Chrome_passwords")
                 {
                     if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
                     {
@@ -73,9 +73,11 @@
                          </p>
                     }
                 }
-            else if (GruntCommand.CommandOutput != null)
-            {
-                <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">@GruntCommand.CommandOutput.Output</p>
+                
+                else
+                {
+                    <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">@GruntCommand.CommandOutput.Output</p>
+                }
             }
             else
             {
@@ -93,16 +95,11 @@
     [Parameter]
     public bool IsMinimized { get; set; } = true;
 
-    private object _serviceLock = new object();
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        lock (_serviceLock)
-        {
-            this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
-            this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
-            Service.DisposeContext();
-        }
+        this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+        this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
+        Service.DisposeContext();
         this.INotificationService.OnEditGruntCommand += OnEditGruntCommand;
         this.INotificationService.OnEditCommandOutput += OnEditCommandOutput;
         this.INotificationService.OnEditGruntTasking += OnEditGruntTasking;
@@ -119,13 +116,10 @@
     {
         if (this.GruntCommand.CommandOutput != null && this.GruntCommand.CommandOutput.Id == commandOutput.Id)
         {
-            lock (_serviceLock)
-            {
-                this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
-                Service.DisposeContext();
-                this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
-                Service.DisposeContext();
-            }
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
+            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
+            Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
@@ -134,13 +128,10 @@
     {
         if (this.GruntCommandId == gruntCommand.Id)
         {
-            lock (_serviceLock)
-            {
-                this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
-                Service.DisposeContext();
-                this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
-                Service.DisposeContext();
-            }
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            Service.DisposeContext();
+            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
+            Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
@@ -149,42 +140,37 @@
     {
         if (this.GruntCommand.GruntTasking != null && this.GruntCommand.GruntTasking.Id == gruntTasking.Id)
         {
-            lock (_serviceLock)
-            {
-                this.GruntCommand = Service.GetGruntCommand(this.GruntCommandId).WaitResult();
-                Service.DisposeContext();
-                this.GruntCommand.CommandOutput ??= Service.GetCommandOutput(this.GruntCommand.CommandOutputId).WaitResult();
-                Service.DisposeContext();
-            }
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommandId);
+            this.GruntCommand.CommandOutput ??= await Service.GetCommandOutput(this.GruntCommand.CommandOutputId);
+            Service.DisposeContext();
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
 
-    private void OnToggle()
+    private async Task OnToggle()
     {
         if (this.IsMinimized && this.GruntCommand.CommandOutput == null)
         {
-            lock (_serviceLock)
-            {
-                this.GruntCommand = Service.GetGruntCommand(this.GruntCommand.Id).WaitResult();
-                Service.DisposeContext();
-            }
+            this.GruntCommand = await Service.GetGruntCommand(this.GruntCommand.Id);
+            Service.DisposeContext();
         }
         this.IsMinimized = !IsMinimized;
     }
 
-    private DownloadEvent GetDownloadEvent(GruntCommand command)
+    private async Task<DownloadEvent> GetDownloadEvent(GruntCommand command)
     {
-        try
+        if (GruntCommand.GruntTasking != null && GruntCommand.CommandOutput != null)
         {
-            lock (_serviceLock)
-            {
-                DownloadEvent ev = Service.GetDownloadEventByGruntCommand(command.Id).WaitResult();
-                Service.DisposeContext();
-                return ev;
-            }
-            catch { return null; }
+            IEnumerable<DownloadEvent> downloadEvents = await Service.GetDownloadEvents();
+            Service.DisposeContext();
+            return downloadEvents
+            .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.FileContents == command.CommandOutput.Output);
+
+        }
+        return null;
+
     }
+
     private async Task<DecryptEvent> GetDecryptEvent(GruntCommand command)
     {
         if (GruntCommand.GruntTasking != null && GruntCommand.CommandOutput != null)
@@ -195,35 +181,20 @@
             .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.EncryptedOutput == command.CommandOutput.Output);
 
         }
-        }
         return null;
-
-    }
-        
-
-    private ScreenshotEvent GetScreenshotEvent(GruntCommand command)
-    {
-        try
-        {
-            lock (_serviceLock)
-            {
-                ScreenshotEvent ev = Service.GetScreenshotEventByGruntCommand(command.Id).WaitResult();
-                Service.DisposeContext();
-                return ev;
-            }
-        }
-        catch { return null; }
     }
 
-    private string GetScreenshotContent(ScreenshotEvent ev)
+    private async Task OnDownload(DownloadEvent downloadEvent)
     {
-        using FileStream fs = ev.ReadDownload();
-        if (fs != null)
+        if (!Common.ContentTypeMappings.TryGetValue(Path.GetExtension(downloadEvent.FileName), out string contentType))
         {
-            using MemoryStream ms = new MemoryStream();
-            fs.CopyTo(ms);
-            return Convert.ToBase64String(ms.ToArray());
+            contentType = Common.DefaultContentTypeMapping;
         }
-        return "";
+        await IJSRuntime.InvokeAsync<string>(
+            "DownloadFile",
+            Path.GetFileName(downloadEvent.FileName),
+            contentType,
+            downloadEvent.FileContents
+        );
     }
 }

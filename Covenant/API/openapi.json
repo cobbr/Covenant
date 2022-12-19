@@ -1,0 +1,7873 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Covenant API",
+    "version": "v0.1"
+  },
+  "paths": {
+    "/api/commandoutputs": {
+      "get": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "GetCommandOutputs",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommandOutput"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "CreateCommandOutput",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "EditCommandOutput",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        }
+      }
+    },
+    "/api/commandoutputs/{id}": {
+      "get": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "GetCommandOutput",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CommandOutput"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "DeleteCommandOutput",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/commandoutputs/append/{id}": {
+      "put": {
+        "tags": [
+          "CommandOutputApi"
+        ],
+        "operationId": "AppendCommandOutput",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetUsers",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CovenantUser"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "CreateUser",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CovenantUserRegister"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CovenantUser"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "EditUser",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CovenantUser"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CovenantUser"
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetUser",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CovenantUser"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "DeleteUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/users/current": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetCurrentUser",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CovenantUser"
+            }
+          }
+        }
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "Login",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CovenantUserLogin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CovenantUserLoginResult"
+            }
+          }
+        }
+      }
+    },
+    "/api/users/logon": {
+      "put": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "EditUserPassword",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CovenantUserLogin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CovenantUser"
+            }
+          }
+        }
+      }
+    },
+    "/api/users/roles": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetUsersRoles",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StringIdentityUserRole"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}/roles": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetUserRoles",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StringIdentityUserRole"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}/roles/{rid}": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetUserRole",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/StringIdentityUserRole"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "CreateUserRole",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/StringIdentityUserRole"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "DeleteUserRole",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetRoles",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IdentityRole"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles/{rid}": {
+      "get": {
+        "tags": [
+          "CovenantUserApi"
+        ],
+        "operationId": "GetRole",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rid",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/IdentityRole"
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetCredentials",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CapturedCredential"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials/passwords": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetPasswordCredentials",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CapturedPasswordCredential"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "CreatePasswordCredential",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CapturedPasswordCredential"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedPasswordCredential"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "EditPasswordCredential",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CapturedPasswordCredential"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedPasswordCredential"
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials/hashes": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetHashCredentials",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CapturedHashCredential"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "CreateHashCredential",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CapturedHashCredential"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedHashCredential"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "EditHashCredential",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CapturedHashCredential"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedHashCredential"
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials/tickets": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetTicketCredentials",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CapturedTicketCredential"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "CreateTicketCredential",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CapturedTicketCredential"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedTicketCredential"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "EditTicketCredential",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CapturedTicketCredential"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedTicketCredential"
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials/{id}": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetCredential",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedCredential"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "DeleteCredential",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/credentials/passwords/{id}": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetPasswordCredential",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedPasswordCredential"
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials/hashes/{id}": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetHashCredential",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedHashCredential"
+            }
+          }
+        }
+      }
+    },
+    "/api/credentials/tickets/{id}": {
+      "get": {
+        "tags": [
+          "CredentialApi"
+        ],
+        "operationId": "GetTicketCredential",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CapturedTicketCredential"
+            }
+          }
+        }
+      }
+    },
+    "/api/embeddedresources": {
+      "get": {
+        "tags": [
+          "EmbeddedResourceApi"
+        ],
+        "operationId": "GetEmbeddedResources",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EmbeddedResource"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "EmbeddedResourceApi"
+        ],
+        "operationId": "CreateEmbeddedResource",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/EmbeddedResource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/EmbeddedResource"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "EmbeddedResourceApi"
+        ],
+        "operationId": "EditEmbeddedResource",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/EmbeddedResource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/EmbeddedResource"
+            }
+          }
+        }
+      }
+    },
+    "/api/embeddedresources/{id}": {
+      "get": {
+        "tags": [
+          "EmbeddedResourceApi"
+        ],
+        "operationId": "GetEmbeddedResource",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/EmbeddedResource"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "EmbeddedResourceApi"
+        ],
+        "operationId": "DeleteEmbeddedResource",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetEvents",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Event"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "CreateEvent",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{id}": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetEvent",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          }
+        }
+      }
+    },
+    "/api/events/time": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetEventTime",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "/api/events/range/{fromdate}": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetEventsAfter",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fromdate",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Event"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/range/{fromdate}/{todate}": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetEventsRange",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fromdate",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "path",
+            "name": "todate",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Event"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/download/{id}": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetDownloadEvent",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/DownloadEvent"
+            }
+          }
+        }
+      }
+    },
+    "/api/events/download/{id}/content": {
+      "get": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "GetDownloadContent",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/events/download": {
+      "post": {
+        "tags": [
+          "EventApi"
+        ],
+        "operationId": "CreateDownloadEvent",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/DownloadEvent"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetGrunts",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Grunt"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "CreateGrunt",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "EditGrunt",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetGrunt",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "DeleteGrunt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/grunts/{name}": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetGruntByName",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/guid/{guid}": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetGruntByGUID",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "guid",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/originalguid/{serverguid}": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetGruntByOriginalServerGUID",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverguid",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/path/{cid}": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetPathToChildGrunt",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "path",
+            "name": "cid",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/outbound": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "GetOutboundGrunt",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Grunt"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/interact": {
+      "post": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "InteractGrunt",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntCommand"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/compileexecutor": {
+      "get": {
+        "tags": [
+          "GruntApi"
+        ],
+        "operationId": "CompileGruntExecutor",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "format": "byte",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/commands": {
+      "get": {
+        "tags": [
+          "GruntCommandApi"
+        ],
+        "operationId": "GetGruntCommands",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntCommand"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GruntCommandApi"
+        ],
+        "operationId": "CreateGruntCommand",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GruntCommand"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntCommand"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "GruntCommandApi"
+        ],
+        "operationId": "EditGruntCommand",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GruntCommand"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntCommand"
+            }
+          }
+        }
+      }
+    },
+    "/api/commands/{id}": {
+      "get": {
+        "tags": [
+          "GruntCommandApi"
+        ],
+        "operationId": "GetGruntCommand",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntCommand"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "GruntCommandApi"
+        ],
+        "operationId": "DeleteGruntCommand",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/grunttasks": {
+      "get": {
+        "tags": [
+          "GruntTaskApi"
+        ],
+        "operationId": "GetGruntTasks",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntTask"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GruntTaskApi"
+        ],
+        "operationId": "CreateGruntTask",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GruntTask"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTask"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "GruntTaskApi"
+        ],
+        "operationId": "EditGruntTask",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GruntTask"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTask"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunttasks/{id}": {
+      "get": {
+        "tags": [
+          "GruntTaskApi"
+        ],
+        "operationId": "GetGruntTask",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTask"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "GruntTaskApi"
+        ],
+        "operationId": "DeleteGruntTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/taskings": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetAllGruntTaskings",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntTasking"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "CreateGruntTasking",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GruntTasking"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTasking"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "EditGruntTasking",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GruntTasking"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTasking"
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/taskings": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetGruntTaskings",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntTasking"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/taskings/search": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetSearchGruntTaskings",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntTasking"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/taskings/uninitialized": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetUninitializedGruntTaskings",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntTasking"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/grunts/{id}/taskings/search/uninitialized": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetSearchUninitializedGruntTaskings",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GruntTasking"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/taskings/{tid}": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetGruntTasking",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTasking"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "DeleteGruntTasking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/grunts/taskings/{taskingname}": {
+      "get": {
+        "tags": [
+          "GruntTaskingApi"
+        ],
+        "operationId": "GetGruntTaskingByName",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskingname",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/GruntTasking"
+            }
+          }
+        }
+      }
+    },
+    "/api/implanttemplates": {
+      "get": {
+        "tags": [
+          "ImplantTemplateApi"
+        ],
+        "operationId": "GetImplantTemplates",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ImplantTemplate"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ImplantTemplateApi"
+        ],
+        "operationId": "CreateImplantTemplate",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ImplantTemplate"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ImplantTemplate"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ImplantTemplateApi"
+        ],
+        "operationId": "EditImplantTemplate",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ImplantTemplate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ImplantTemplate"
+            }
+          }
+        }
+      }
+    },
+    "/api/implanttemplates/{id}": {
+      "get": {
+        "tags": [
+          "ImplantTemplateApi"
+        ],
+        "operationId": "GetImplantTemplate",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ImplantTemplate"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ImplantTemplateApi"
+        ],
+        "operationId": "DeleteImplantTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/implanttemplates/{name}": {
+      "get": {
+        "tags": [
+          "ImplantTemplateApi"
+        ],
+        "operationId": "GetImplantTemplateByName",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ImplantTemplate"
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/results": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetReport",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetIndicators",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Indicator"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "CreateIndicator",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Indicator"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Indicator"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "EditIndicator",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Indicator"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Indicator"
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/files": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetFileIndicators",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FileIndicator"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/networks": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetNetworkIndicators",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NetworkIndicator"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/targets": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetTargetIndicators",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TargetIndicator"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/{id}": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetIndicator",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Indicator"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "DeleteIndicator",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/indicators/files/{id}": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetFileIndicator",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/FileIndicator"
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/networks/{id}": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetNetworkIndicator",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/NetworkIndicator"
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators/targets/{id}": {
+      "get": {
+        "tags": [
+          "IndicatorApi"
+        ],
+        "operationId": "GetTargetIndicator",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/TargetIndicator"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetLaunchers",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Launcher"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/binary": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetBinaryLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BinaryLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateBinaryLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BinaryLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditBinaryLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BinaryLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BinaryLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/binary/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateBinaryHostedLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BinaryLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/shellcode": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetShellCodeLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateShellCodeLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditShellCodeLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/shellcode/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateShellCodeHostedLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ShellCodeLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/powershell": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetPowerShellLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PowerShellLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GeneratePowerShellLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PowerShellLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditPowerShellLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/PowerShellLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PowerShellLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/powershell/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GeneratePowerShellHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PowerShellLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/msbuild": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetMSBuildLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MSBuildLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateMSBuildLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MSBuildLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditMSBuildLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/MSBuildLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MSBuildLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/msbuild/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateMSBuildHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MSBuildLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/installutil": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetInstallUtilLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/InstallUtilLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateInstallUtilLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/InstallUtilLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditInstallUtilLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/InstallUtilLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/InstallUtilLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/installutil/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateInstallUtilHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/InstallUtilLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/wmic": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetWmicLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WmicLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateWmicLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WmicLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditWmicLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/WmicLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WmicLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/wmic/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateWmicHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WmicLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/regsvr32": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetRegsvr32Launcher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Regsvr32Launcher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateRegsvr32Launcher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Regsvr32Launcher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditRegsvr32Launcher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Regsvr32Launcher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Regsvr32Launcher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/regsvr32/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateRegsvr32HostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Regsvr32Launcher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/mshta": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetMshtaLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MshtaLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateMshtaLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MshtaLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditMshtaLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/MshtaLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MshtaLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/mshta/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateMshtaHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/MshtaLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/cscript": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetCscriptLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CscriptLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateCscriptLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CscriptLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditCscriptLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CscriptLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CscriptLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/cscript/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateCscriptHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/CscriptLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/wscript": {
+      "get": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GetWscriptLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WscriptLauncher"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateWscriptLauncher",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WscriptLauncher"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "EditWscriptLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/WscriptLauncher"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WscriptLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/launchers/wscript/hosted": {
+      "post": {
+        "tags": [
+          "LauncherApi"
+        ],
+        "operationId": "GenerateWscriptHostedFileLauncher",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WscriptLauncher"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/types": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetListenerTypes",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ListenerType"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/types/{id}": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetListenerType",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ListenerType"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetListeners",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Listener"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "EditListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Listener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Listener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/{id}": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetListener",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Listener"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "DeleteListener",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/listeners/http/{id}": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetHttpListener",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HttpListener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/http": {
+      "post": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "CreateHttpListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HttpListener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HttpListener"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "EditHttpListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HttpListener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HttpListener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/bridge/{id}": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetBridgeListener",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/bridge": {
+      "post": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "CreateBridgeListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "EditBridgeListener",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/BridgeListener"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/{id}/hostedfiles": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetHostedFiles",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HostedFile"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "CreateHostedFile",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "EditHostedFile",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        }
+      }
+    },
+    "/api/listeners/{id}/hostedfiles/{hfid}": {
+      "get": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "GetHostedFile",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "path",
+            "name": "hfid",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HostedFile"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ListenerApi"
+        ],
+        "operationId": "DeleteHostedFile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "path",
+            "name": "hfid",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/profiles": {
+      "get": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "GetProfiles",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Profile"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "CreateProfile",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "EditProfile",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles/{id}": {
+      "get": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "GetProfile",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "DeleteProfile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/profiles/http": {
+      "get": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "GetHttpProfiles",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HttpProfile"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "CreateHttpProfile",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HttpProfile"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HttpProfile"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "EditHttpProfile",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/HttpProfile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles/http/{id}": {
+      "get": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "GetHttpProfile",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HttpProfile"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ProfileApi"
+        ],
+        "operationId": "DeleteHttpProfile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/referenceassemblies": {
+      "get": {
+        "tags": [
+          "ReferenceAssemblyApi"
+        ],
+        "operationId": "GetReferenceAssemblies",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ReferenceAssembly"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ReferenceAssemblyApi"
+        ],
+        "operationId": "CreateReferenceAssembly",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ReferenceAssembly"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ReferenceAssembly"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ReferenceAssemblyApi"
+        ],
+        "operationId": "EditReferenceAssembly",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ReferenceAssembly"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ReferenceAssembly"
+            }
+          }
+        }
+      }
+    },
+    "/api/referenceassemblies/{id}": {
+      "get": {
+        "tags": [
+          "ReferenceAssemblyApi"
+        ],
+        "operationId": "GetReferenceAssembly",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ReferenceAssembly"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ReferenceAssemblyApi"
+        ],
+        "operationId": "DeleteReferenceAssembly",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/referencesourcelibraries": {
+      "get": {
+        "tags": [
+          "ReferenceSourceLibraryApi"
+        ],
+        "operationId": "GetReferenceSourceLibraries",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ReferenceSourceLibrary"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ReferenceSourceLibraryApi"
+        ],
+        "operationId": "CreateReferenceSourceLibrary",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ReferenceSourceLibrary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ReferenceSourceLibrary"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ReferenceSourceLibraryApi"
+        ],
+        "operationId": "EditReferenceSourceLibrary",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ReferenceSourceLibrary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ReferenceSourceLibrary"
+            }
+          }
+        }
+      }
+    },
+    "/api/referencesourcelibraries/{id}": {
+      "get": {
+        "tags": [
+          "ReferenceSourceLibraryApi"
+        ],
+        "operationId": "GetReferenceSourceLibrary",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ReferenceSourceLibrary"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ReferenceSourceLibraryApi"
+        ],
+        "operationId": "DeleteReferenceSourceLibrary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/themes": {
+      "get": {
+        "tags": [
+          "ThemeApi"
+        ],
+        "operationId": "GetThemes",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Theme"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ThemeApi"
+        ],
+        "operationId": "CreateTheme",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Theme"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Theme"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ThemeApi"
+        ],
+        "operationId": "EditTheme",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Theme"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Theme"
+            }
+          }
+        }
+      }
+    },
+    "/api/themes/{id}": {
+      "get": {
+        "tags": [
+          "ThemeApi"
+        ],
+        "operationId": "GetTheme",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Theme"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ThemeApi"
+        ],
+        "operationId": "DeleteTheme",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CommandOutput": {
+      "required": [
+        "gruntCommandId"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "output": {
+          "type": "string"
+        },
+        "gruntCommandId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "CodeMirrorTheme": {
+      "enum": [
+        "default",
+        "night"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "CodeMirrorTheme",
+        "modelAsString": false
+      }
+    },
+    "Theme": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "backgroundColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "backgroundTextColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "primaryColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "primaryTextColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "primaryHighlightColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "secondaryColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "secondaryTextColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "secondaryHighlightColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "terminalColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "terminalTextColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "terminalHighlightColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "terminalBorderColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "navbarColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "sidebarColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "inputColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "inputDisabledColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "inputTextColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "inputHighlightColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "textLinksColor": {
+          "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+          "type": "string"
+        },
+        "codeMirrorTheme": {
+          "$ref": "#/definitions/CodeMirrorTheme"
+        }
+      }
+    },
+    "CovenantUser": {
+      "type": "object",
+      "properties": {
+        "themeId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "theme": {
+          "$ref": "#/definitions/Theme"
+        },
+        "id": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "normalizedUserName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "normalizedEmail": {
+          "type": "string"
+        },
+        "emailConfirmed": {
+          "type": "boolean"
+        },
+        "passwordHash": {
+          "type": "string"
+        },
+        "securityStamp": {
+          "type": "string"
+        },
+        "concurrencyStamp": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "phoneNumberConfirmed": {
+          "type": "boolean"
+        },
+        "twoFactorEnabled": {
+          "type": "boolean"
+        },
+        "lockoutEnd": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "lockoutEnabled": {
+          "type": "boolean"
+        },
+        "accessFailedCount": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "CovenantUserRegister": {
+      "required": [
+        "confirmPassword",
+        "password",
+        "userName"
+      ],
+      "type": "object",
+      "properties": {
+        "confirmPassword": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "CovenantUserLogin": {
+      "required": [
+        "password",
+        "userName"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "CovenantUserLoginResult": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "covenantToken": {
+          "type": "string"
+        }
+      }
+    },
+    "StringIdentityUserRole": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "roleId": {
+          "type": "string"
+        }
+      }
+    },
+    "IdentityRole": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "normalizedName": {
+          "type": "string"
+        },
+        "concurrencyStamp": {
+          "type": "string"
+        }
+      }
+    },
+    "CredentialType": {
+      "enum": [
+        "Password",
+        "Hash",
+        "Ticket"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "CredentialType",
+        "modelAsString": false
+      }
+    },
+    "CapturedCredential": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/CredentialType"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "CapturedPasswordCredential": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/CredentialType"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "HashType": {
+      "enum": [
+        "NTLM",
+        "LM",
+        "SHA1"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "HashType",
+        "modelAsString": false
+      }
+    },
+    "CapturedHashCredential": {
+      "type": "object",
+      "properties": {
+        "hashCredentialType": {
+          "$ref": "#/definitions/HashType"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/CredentialType"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "TicketType": {
+      "enum": [
+        "RC4",
+        "AES"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "TicketType",
+        "modelAsString": false
+      }
+    },
+    "CapturedTicketCredential": {
+      "type": "object",
+      "properties": {
+        "ticketCredentialType": {
+          "$ref": "#/definitions/TicketType"
+        },
+        "serviceName": {
+          "type": "string"
+        },
+        "ticket": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/CredentialType"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "EmbeddedResource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        }
+      }
+    },
+    "EventLevel": {
+      "enum": [
+        "Silent",
+        "Info",
+        "Warning",
+        "Highlight",
+        "Error"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "EventLevel",
+        "modelAsString": false
+      }
+    },
+    "EventType": {
+      "enum": [
+        "Normal",
+        "Download",
+        "Screenshot"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "EventType",
+        "modelAsString": false
+      }
+    },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "time": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "messageHeader": {
+          "type": "string"
+        },
+        "messageBody": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/definitions/EventLevel"
+        },
+        "type": {
+          "$ref": "#/definitions/EventType"
+        },
+        "context": {
+          "type": "string"
+        }
+      }
+    },
+    "DownloadProgress": {
+      "enum": [
+        "Portion",
+        "Complete"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "DownloadProgress",
+        "modelAsString": false
+      }
+    },
+    "DownloadEvent": {
+      "type": "object",
+      "properties": {
+        "fileName": {
+          "type": "string"
+        },
+        "fileContents": {
+          "type": "string"
+        },
+        "progress": {
+          "$ref": "#/definitions/DownloadProgress"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "time": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "messageHeader": {
+          "type": "string"
+        },
+        "messageBody": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/definitions/EventLevel"
+        },
+        "type": {
+          "$ref": "#/definitions/EventType"
+        },
+        "context": {
+          "type": "string"
+        }
+      }
+    },
+    "ImplantLanguage": {
+      "enum": [
+        "CSharp"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "ImplantLanguage",
+        "modelAsString": false
+      }
+    },
+    "CommunicationType": {
+      "enum": [
+        "HTTP",
+        "SMB",
+        "Bridge"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "CommunicationType",
+        "modelAsString": false
+      }
+    },
+    "ImplantDirection": {
+      "enum": [
+        "Push",
+        "Pull"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "ImplantDirection",
+        "modelAsString": false
+      }
+    },
+    "ListenerType": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "DotNetVersion": {
+      "enum": [
+        "Net35",
+        "Net40",
+        "NetCore31"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "DotNetVersion",
+        "modelAsString": false
+      }
+    },
+    "ImplantTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/ImplantLanguage"
+        },
+        "commType": {
+          "$ref": "#/definitions/CommunicationType"
+        },
+        "implantDirection": {
+          "$ref": "#/definitions/ImplantDirection"
+        },
+        "compatibleListenerTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListenerType"
+          },
+          "readOnly": true
+        },
+        "compatibleDotNetVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DotNetVersion"
+          }
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "executorCode": {
+          "type": "string"
+        }
+      }
+    },
+    "ProfileType": {
+      "enum": [
+        "HTTP",
+        "Bridge"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "ProfileType",
+        "modelAsString": false
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/ProfileType"
+        },
+        "messageTransform": {
+          "type": "string"
+        }
+      }
+    },
+    "ListenerStatus": {
+      "enum": [
+        "Uninitialized",
+        "Active",
+        "Stopped"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "ListenerStatus",
+        "modelAsString": false
+      }
+    },
+    "Listener": {
+      "required": [
+        "bindAddress",
+        "bindPort",
+        "connectAddresses",
+        "connectPort",
+        "description",
+        "guid",
+        "listenerTypeId",
+        "name",
+        "profileId",
+        "status"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 0,
+          "type": "string"
+        },
+        "guid": {
+          "maxLength": 100,
+          "minLength": 0,
+          "pattern": "^[a-zA-Z0-9]*$",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "bindAddress": {
+          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+          "type": "string"
+        },
+        "bindPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "connectAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "profileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "profile": {
+          "$ref": "#/definitions/Profile"
+        },
+        "listenerTypeId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerType": {
+          "$ref": "#/definitions/ListenerType"
+        },
+        "status": {
+          "$ref": "#/definitions/ListenerStatus"
+        },
+        "covenantUrl": {
+          "type": "string"
+        },
+        "covenantToken": {
+          "type": "string"
+        },
+        "startTime": {
+          "format": "date-time",
+          "type": "string"
+        }
+      }
+    },
+    "RuntimeIdentifier": {
+      "enum": [
+        "win_x64",
+        "win_x86",
+        "win_arm",
+        "win_arm64",
+        "win7_x64",
+        "win7_x86",
+        "win81_x64",
+        "win81_x86",
+        "win81_arm",
+        "win10_x64",
+        "win10_x86",
+        "win10_arm",
+        "win10_arm64",
+        "linux_x64",
+        "linux_musl_x64",
+        "linux_arm",
+        "linux_arm64",
+        "rhel_x64",
+        "rhel_6_x64",
+        "tizen",
+        "tizen_4_0_0",
+        "tizen_5_0_0",
+        "osx_x64",
+        "osx_10_10_x64",
+        "osx_10_11_x64",
+        "osx_10_12_x64",
+        "osx_10_13_x64",
+        "osx_10_14_x64",
+        "osx_10_15_x64"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "RuntimeIdentifier",
+        "modelAsString": false
+      }
+    },
+    "GruntStatus": {
+      "enum": [
+        "Uninitialized",
+        "Stage0",
+        "Stage1",
+        "Stage2",
+        "Active",
+        "Lost",
+        "Exited",
+        "Disconnected",
+        "Hidden"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "GruntStatus",
+        "modelAsString": false
+      }
+    },
+    "IntegrityLevel": {
+      "enum": [
+        "Untrusted",
+        "Low",
+        "Medium",
+        "High",
+        "System"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "IntegrityLevel",
+        "modelAsString": false
+      }
+    },
+    "GruntTaskAuthor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "handle": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "gruntTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GruntTask"
+          }
+        }
+      }
+    },
+    "GruntTaskingType": {
+      "enum": [
+        "Assembly",
+        "SetDelay",
+        "SetJitter",
+        "SetConnectAttempts",
+        "SetKillDate",
+        "Exit",
+        "Connect",
+        "Disconnect",
+        "Tasks",
+        "TaskKill"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "GruntTaskingType",
+        "modelAsString": false
+      }
+    },
+    "ReferenceAssembly": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        }
+      }
+    },
+    "ReferenceSourceLibrary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/ImplantLanguage"
+        },
+        "compatibleDotNetVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DotNetVersion"
+          }
+        },
+        "referenceAssemblies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceAssembly"
+          },
+          "readOnly": true
+        },
+        "embeddedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EmbeddedResource"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "GruntTaskOption": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "suggestedValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "displayInCommand": {
+          "type": "boolean"
+        },
+        "fileOption": {
+          "type": "boolean"
+        },
+        "gruntTaskId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "GruntTask": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "authorId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "author": {
+          "$ref": "#/definitions/GruntTaskAuthor"
+        },
+        "name": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "help": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/definitions/ImplantLanguage"
+        },
+        "compatibleDotNetVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DotNetVersion"
+          }
+        },
+        "code": {
+          "type": "string"
+        },
+        "compiled": {
+          "type": "boolean"
+        },
+        "taskingType": {
+          "$ref": "#/definitions/GruntTaskingType"
+        },
+        "referenceSourceLibraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceSourceLibrary"
+          },
+          "readOnly": true
+        },
+        "referenceAssemblies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReferenceAssembly"
+          },
+          "readOnly": true
+        },
+        "embeddedResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EmbeddedResource"
+          },
+          "readOnly": true
+        },
+        "unsafeCompile": {
+          "type": "boolean"
+        },
+        "tokenTask": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GruntTaskOption"
+          }
+        }
+      }
+    },
+    "GruntTaskingStatus": {
+      "enum": [
+        "Uninitialized",
+        "Tasked",
+        "Progressed",
+        "Completed",
+        "Aborted"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "GruntTaskingStatus",
+        "modelAsString": false
+      }
+    },
+    "GruntTasking": {
+      "required": [
+        "gruntId",
+        "gruntTaskId",
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "gruntId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "grunt": {
+          "$ref": "#/definitions/Grunt"
+        },
+        "gruntTaskId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "gruntTask": {
+          "$ref": "#/definitions/GruntTask"
+        },
+        "type": {
+          "$ref": "#/definitions/GruntTaskingType"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "$ref": "#/definitions/GruntTaskingStatus"
+        },
+        "taskingTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "completionTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "gruntCommandId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "GruntCommand": {
+      "required": [
+        "command",
+        "commandOutputId",
+        "commandTime",
+        "userId"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "command": {
+          "type": "string"
+        },
+        "commandTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "commandOutputId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "commandOutput": {
+          "$ref": "#/definitions/CommandOutput"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/definitions/CovenantUser"
+        },
+        "gruntTaskingId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "gruntTasking": {
+          "$ref": "#/definitions/GruntTasking"
+        },
+        "gruntId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "Grunt": {
+      "required": [
+        "connectAttempts",
+        "delay",
+        "dotNetVersion",
+        "implantTemplateId",
+        "integrity",
+        "jitterPercent",
+        "killDate",
+        "name",
+        "originalServerGuid",
+        "runtimeIdentifier",
+        "smbPipeName",
+        "status",
+        "useCertPinning",
+        "validateCert"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "originalServerGuid": {
+          "type": "string"
+        },
+        "guid": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplate": {
+          "$ref": "#/definitions/ImplantTemplate"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listener": {
+          "$ref": "#/definitions/Listener"
+        },
+        "note": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "maximum": 2147483647,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "maximum": 2147483647,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "status": {
+          "$ref": "#/definitions/GruntStatus"
+        },
+        "integrity": {
+          "$ref": "#/definitions/IntegrityLevel"
+        },
+        "process": {
+          "type": "string"
+        },
+        "userDomainName": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "operatingSystem": {
+          "type": "string"
+        },
+        "gruntSharedSecretPassword": {
+          "type": "string"
+        },
+        "gruntRSAPublicKey": {
+          "type": "string"
+        },
+        "gruntNegotiatedSessionKey": {
+          "type": "string"
+        },
+        "gruntChallenge": {
+          "type": "string"
+        },
+        "activationTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "lastCheckIn": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "powerShellImport": {
+          "type": "string"
+        },
+        "gruntCommands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GruntCommand"
+          }
+        }
+      }
+    },
+    "IndicatorType": {
+      "enum": [
+        "FileIndicator",
+        "NetworkIndicator",
+        "TargetIndicator"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "IndicatorType",
+        "modelAsString": false
+      }
+    },
+    "Indicator": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/IndicatorType"
+        }
+      }
+    },
+    "FileIndicator": {
+      "type": "object",
+      "properties": {
+        "fileName": {
+          "type": "string"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "shA2": {
+          "type": "string"
+        },
+        "shA1": {
+          "type": "string"
+        },
+        "mD5": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/IndicatorType"
+        }
+      }
+    },
+    "NetworkIndicator": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "port": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/IndicatorType"
+        }
+      }
+    },
+    "TargetIndicator": {
+      "type": "object",
+      "properties": {
+        "computerName": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/definitions/IndicatorType"
+        }
+      }
+    },
+    "LauncherType": {
+      "enum": [
+        "Wmic",
+        "Regsvr32",
+        "Mshta",
+        "Cscript",
+        "Wscript",
+        "PowerShell",
+        "Binary",
+        "MSBuild",
+        "InstallUtil",
+        "ShellCode"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "LauncherType",
+        "modelAsString": false
+      }
+    },
+    "OutputKind": {
+      "enum": [
+        "ConsoleApplication",
+        "WindowsApplication",
+        "DynamicallyLinkedLibrary",
+        "NetModule",
+        "WindowsRuntimeMetadata",
+        "WindowsRuntimeApplication"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "OutputKind",
+        "modelAsString": false
+      }
+    },
+    "Launcher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BinaryLauncher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "HostedFile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "ShellCodeLauncher": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PowerShellLauncher": {
+      "type": "object",
+      "properties": {
+        "parameterString": {
+          "type": "string"
+        },
+        "powerShellCode": {
+          "type": "string"
+        },
+        "encodedLauncherString": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MSBuildLauncher": {
+      "type": "object",
+      "properties": {
+        "targetName": {
+          "type": "string"
+        },
+        "taskName": {
+          "type": "string"
+        },
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "InstallUtilLauncher": {
+      "type": "object",
+      "properties": {
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ScriptingLanguage": {
+      "enum": [
+        "JScript",
+        "VBScript"
+      ],
+      "type": "string",
+      "x-ms-enum": {
+        "name": "ScriptingLanguage",
+        "modelAsString": false
+      }
+    },
+    "WmicLauncher": {
+      "type": "object",
+      "properties": {
+        "scriptLanguage": {
+          "$ref": "#/definitions/ScriptingLanguage"
+        },
+        "progId": {
+          "type": "string"
+        },
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Regsvr32Launcher": {
+      "type": "object",
+      "properties": {
+        "parameterString": {
+          "type": "string"
+        },
+        "dllName": {
+          "type": "string"
+        },
+        "scriptLanguage": {
+          "$ref": "#/definitions/ScriptingLanguage"
+        },
+        "progId": {
+          "type": "string"
+        },
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MshtaLauncher": {
+      "type": "object",
+      "properties": {
+        "scriptLanguage": {
+          "$ref": "#/definitions/ScriptingLanguage"
+        },
+        "progId": {
+          "type": "string"
+        },
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CscriptLauncher": {
+      "type": "object",
+      "properties": {
+        "scriptLanguage": {
+          "$ref": "#/definitions/ScriptingLanguage"
+        },
+        "progId": {
+          "type": "string"
+        },
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "WscriptLauncher": {
+      "type": "object",
+      "properties": {
+        "scriptLanguage": {
+          "$ref": "#/definitions/ScriptingLanguage"
+        },
+        "progId": {
+          "type": "string"
+        },
+        "diskCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "implantTemplateId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/LauncherType"
+        },
+        "dotNetVersion": {
+          "$ref": "#/definitions/DotNetVersion"
+        },
+        "runtimeIdentifier": {
+          "$ref": "#/definitions/RuntimeIdentifier"
+        },
+        "validateCert": {
+          "type": "boolean"
+        },
+        "useCertPinning": {
+          "type": "boolean"
+        },
+        "smbPipeName": {
+          "type": "string"
+        },
+        "delay": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "jitterPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "connectAttempts": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "killDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "launcherString": {
+          "type": "string"
+        },
+        "stagerCode": {
+          "type": "string"
+        },
+        "outputKind": {
+          "$ref": "#/definitions/OutputKind"
+        },
+        "compressStager": {
+          "type": "boolean"
+        }
+      }
+    },
+    "HttpListener": {
+      "required": [
+        "bindAddress",
+        "bindPort",
+        "connectAddresses",
+        "connectPort",
+        "description",
+        "guid",
+        "listenerTypeId",
+        "name",
+        "profileId",
+        "status",
+        "urls",
+        "useSSL"
+      ],
+      "type": "object",
+      "properties": {
+        "useSSL": {
+          "type": "boolean"
+        },
+        "sslCertificate": {
+          "type": "string"
+        },
+        "sslCertificatePassword": {
+          "type": "string"
+        },
+        "sslCertHash": {
+          "type": "string"
+        },
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 0,
+          "type": "string"
+        },
+        "guid": {
+          "maxLength": 100,
+          "minLength": 0,
+          "pattern": "^[a-zA-Z0-9]*$",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "bindAddress": {
+          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+          "type": "string"
+        },
+        "bindPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "connectAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "profileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "profile": {
+          "$ref": "#/definitions/Profile"
+        },
+        "listenerTypeId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerType": {
+          "$ref": "#/definitions/ListenerType"
+        },
+        "status": {
+          "$ref": "#/definitions/ListenerStatus"
+        },
+        "covenantUrl": {
+          "type": "string"
+        },
+        "covenantToken": {
+          "type": "string"
+        },
+        "startTime": {
+          "format": "date-time",
+          "type": "string"
+        }
+      }
+    },
+    "BridgeListener": {
+      "required": [
+        "bindAddress",
+        "bindPort",
+        "connectAddresses",
+        "connectPort",
+        "description",
+        "guid",
+        "listenerTypeId",
+        "name",
+        "profileId",
+        "status"
+      ],
+      "type": "object",
+      "properties": {
+        "isBridgeConnected": {
+          "type": "boolean"
+        },
+        "implantReadCode": {
+          "type": "string"
+        },
+        "implantWriteCode": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 0,
+          "type": "string"
+        },
+        "guid": {
+          "maxLength": 100,
+          "minLength": 0,
+          "pattern": "^[a-zA-Z0-9]*$",
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "bindAddress": {
+          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+          "type": "string"
+        },
+        "bindPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "connectAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectPort": {
+          "format": "int32",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "profileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "profile": {
+          "$ref": "#/definitions/Profile"
+        },
+        "listenerTypeId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "listenerType": {
+          "$ref": "#/definitions/ListenerType"
+        },
+        "status": {
+          "$ref": "#/definitions/ListenerStatus"
+        },
+        "covenantUrl": {
+          "type": "string"
+        },
+        "covenantToken": {
+          "type": "string"
+        },
+        "startTime": {
+          "format": "date-time",
+          "type": "string"
+        }
+      }
+    },
+    "HttpProfileHeader": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "HttpProfile": {
+      "type": "object",
+      "properties": {
+        "httpUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "httpRequestHeaders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HttpProfileHeader"
+          }
+        },
+        "httpResponseHeaders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HttpProfileHeader"
+          }
+        },
+        "httpPostRequest": {
+          "type": "string"
+        },
+        "httpGetResponse": {
+          "type": "string"
+        },
+        "httpPostResponse": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/ProfileType"
+        },
+        "messageTransform": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

@@ -11,12 +11,10 @@ using Newtonsoft.Json;
 
 using Covenant.Core;
 using Covenant.Models.Covenant;
-using NLog;
-using System.Threading.Tasks;
 
 namespace Covenant.Models.Grunts
 {
-    public class CommandOutput : ILoggable
+    public class CommandOutput
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -27,12 +25,9 @@ namespace Covenant.Models.Grunts
         public int GruntCommandId { get; set; }
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public GruntCommand GruntCommand { get; set; }
-
-        // GruntTask|Action|ID|Name|Author|Aliases|Description|TaskingType|UnsafeCompile
-        public string ToLog(LogAction action) => $"CommandOutput|{action}|{this.Id}|{this.GruntCommandId}|{this.Output}";
     }
 
-    public class GruntCommand : ILoggable
+    public class GruntCommand
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -54,9 +49,6 @@ namespace Covenant.Models.Grunts
         public int GruntId { get; set; }
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public Grunt Grunt { get; set; }
-
-        // GruntCommand|Action|User|UserId|GruntId|Id|Command
-        public string ToLog(LogAction action) => $"GruntCommand|{action}|{this.User}|{this.UserId}|{this.GruntId}|{this.Id}|{this.Command}";
     }
 
     public enum GruntTaskingStatus
@@ -82,7 +74,7 @@ namespace Covenant.Models.Grunts
         TaskKill
     }
 
-    public class GruntTasking : ILoggable
+    public class GruntTasking
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -105,8 +97,5 @@ namespace Covenant.Models.Grunts
         public int GruntCommandId { get; set; }
         [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public GruntCommand GruntCommand { get; set; }
-
-        // GruntTasking|Action|Id|Name|GruntId|GruntTaskId|GruntCommand|Status
-        public string ToLog(LogAction action) => $"GruntTasking|{action}|{this.Id}|{this.Name}|{this.GruntId}|{this.GruntTaskId}|{this.Status}";
     }
 }
