@@ -87,6 +87,9 @@ namespace Covenant.Core
         Task<ScreenshotEvent> GetScreenshotEventByGruntCommand(int id);
         Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent);
         Task DeleteEvent(int id);
+        Task<IEnumerable<DecryptEvent>> GetDecryptEvents();
+        Task<DecryptEvent> GetDecryptEvent(int eventId);
+        Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent);
     }
 
     public interface IImplantTemplateService
@@ -1014,6 +1017,33 @@ namespace Covenant.Core
             return await this.GetScreenshotEvent(screenshotEvent.Id);
         }
 
+        public async Task<IEnumerable<DecryptEvent>> GetDecryptEvents()
+        {
+            
+            return await _context.Events.Where(E => E.Type == EventType.Decrypt).Select(E => (DecryptEvent)E).ToListAsync();
+        }
+
+        public async Task<DecryptEvent> GetDecryptEvent(int eventId)
+        {
+            DecryptEvent anEvent = (DecryptEvent)await _context.Events.FirstOrDefaultAsync(E => E.Id == eventId && E.Type == EventType.Decrypt);
+            if (anEvent == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - DecryptEvent with id: {eventId}");
+            }
+            return anEvent;
+        }
+
+
+        public async Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent)
+        {
+            decryptEvent.Time = DateTime.UtcNow;
+            decryptEvent.Decrypt();
+            await _context.Events.AddAsync(decryptEvent);
+            await _context.SaveChangesAsync();
+            await _notifier.NotifyCreateEvent(this, decryptEvent);
+            return await this.GetDecryptEvent(decryptEvent.Id);
+        }
+        
         public async Task DeleteEvent(int id)
         {
             Event e = await this.GetEvent(id);

@@ -259,6 +259,10 @@ namespace Covenant.Core
         {
             return _connection.InvokeAsync<ScreenshotEvent>("CreateScreenshotEvent", screenshotEvent);
         }
+        public Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent)
+        {
+            return _connection.InvokeAsync<DecryptEvent>("CreateDecryptEvent", decryptEvent);
+        }
 
         public Task<CapturedTicketCredential> CreateTicketCredential(CapturedTicketCredential credential)
         {
@@ -1083,6 +1087,15 @@ namespace Covenant.Core
         public Task<IEnumerable<ScreenshotEvent>> GetScreenshotEvents()
         {
             return _connection.InvokeAsync<IEnumerable<ScreenshotEvent>>("GetScreenshotEvents");
+        }
+
+        public Task<DecryptEvent> GetDecryptEvent(int eventId)
+        {
+            return _connection.InvokeAsync<DecryptEvent>("GetDecryptEvent", eventId);
+        }
+        public Task<IEnumerable<DecryptEvent>> GetDecryptEvents()
+        {
+            return _connection.InvokeAsync<IEnumerable<DecryptEvent>>("GetDecryptEvents");
         }
 
         public Task<ShellCodeLauncher> GetShellCodeLauncher()
