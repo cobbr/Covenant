@@ -16,7 +16,7 @@
     using System.Reflection;
     using System.Threading;
 
-    using NET-scan;
+    using NET_scan;
 
     public static class Task
     {

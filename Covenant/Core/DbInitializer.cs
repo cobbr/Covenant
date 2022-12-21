@@ -337,7 +337,7 @@ namespace Covenant.Core
                             await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40)
                         },
                         EmbeddedResources = new List<EmbeddedResource>()
-                    }
+                    },
                     new ReferenceSourceLibrary
                     {
                         Name = "NET-scan", Description = "network host and port scanner ",
@@ -350,12 +350,10 @@ namespace Covenant.Core
                             await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
                             await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
                             await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
-                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
-                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35),
-                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40)
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40)
                         },
                         EmbeddedResources = new List<EmbeddedResource>()
-                    }
+                    },
                     new ReferenceSourceLibrary
                     {
                         Name = "ChromeDecryptor", Description = "Chrome password extrating tool ",
@@ -368,9 +366,7 @@ namespace Covenant.Core
                             await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
                             await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
                             await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
-                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
-                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35),
-                            await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40)
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40)
                         },
                         EmbeddedResources = new List<EmbeddedResource>()
                     }

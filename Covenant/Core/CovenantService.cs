@@ -25,6 +25,7 @@ using Covenant.Models.Launchers;
 using Covenant.Models.Grunts;
 using Covenant.Models.Indicators;
 using NLog;
+using Org.BouncyCastle.Crypto;
 
 namespace Covenant.Core
 {
@@ -88,8 +89,9 @@ namespace Covenant.Core
         Task<ScreenshotEvent> CreateScreenshotEvent(ScreenshotEventContent screenshotEvent);
         Task DeleteEvent(int id);
         Task<IEnumerable<DecryptEvent>> GetDecryptEvents();
+        Task<DecryptEvent> GetDecryptEventByGruntCommand(int id);
         Task<DecryptEvent> GetDecryptEvent(int eventId);
-        Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent);
+        Task<DecryptEvent> CreateDecryptEvent(DecryptEventContent decryptEvent);
     }
 
     public interface IImplantTemplateService
@@ -1033,10 +1035,38 @@ namespace Covenant.Core
             return anEvent;
         }
 
+        public async Task<DecryptEvent> GetDecryptEventByGruntCommand(int id)
+        {
+            DecryptEvent anEvent = await _context.Events
+                .Where(E => E.Type == EventType.Decrypt)
+                .Select(E => (DecryptEvent)E)
+                .FirstOrDefaultAsync(E => E.GruntCommandId == id);
+            if (anEvent == null)
+            {
+                throw new ControllerNotFoundException($"NotFound - DecryptEvent with GruntCommandId: {id}");
+            }
+            return anEvent;
+        }
 
-        public async Task<DecryptEvent> CreateDecryptEvent(DecryptEvent decryptEvent)
+        private async Task<DecryptEvent> CreateDecryptEvent(DecryptEvent DecryptEvent, string contents)
+        {
+            return await this.CreateDecryptEvent(new DecryptEventContent
+            {
+                Name = DecryptEvent.Name,
+                GruntCommandId = DecryptEvent.GruntCommandId,
+                Time = DecryptEvent.Time,
+                MessageHeader = DecryptEvent.MessageHeader,
+                MessageBody = DecryptEvent.MessageBody,
+                Level = DecryptEvent.Level,
+                Context = DecryptEvent.Context,
+                EncryptedOutput = contents
+            });
+        }
+
+        public async Task<DecryptEvent> CreateDecryptEvent(DecryptEventContent decryptEvent)
         {
             decryptEvent.Time = DateTime.UtcNow;
+            
             decryptEvent.Decrypt();
             await _context.Events.AddAsync(decryptEvent);
             await _context.SaveChangesAsync();
@@ -3216,6 +3246,21 @@ public static class Task
                     FileName = FileName,
                     Progress = DownloadEvent.DownloadProgress.Portion
                 }, new byte[] { });
+            }
+            else if (tasking.GruntTask.Name.Equals("Chrome_passwords", StringComparison.CurrentCultureIgnoreCase))
+            {
+
+                DecryptEvent Decrypt = await this.CreateDecryptEvent(new DecryptEvent
+                {
+                    GruntCommandId = tasking.GruntCommandId,
+                    // Time = updatingGruntTasking.CompletionTime,
+                    MessageHeader = "Getting saved passwords",
+                    MessageBody = "Decrypted passwords: " + tasking.GruntCommand.CommandOutput.Output,
+                    EncryptedOutput = tasking.GruntCommand.CommandOutput.Output,
+                    Level = EventLevel.Info,
+                    Context = tasking.Grunt.Name,
+
+                }, "") ;
             }
 
             tasking.Parameters = parameters;

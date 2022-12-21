@@ -59,6 +59,7 @@ namespace Covenant.Models.Covenant
         public string EncryptedOutput { get; set; } = "";
         public string DecryptedOutput { get; set; } = "";
 
+        public int GruntCommandId { get; set; }
         public DecryptEvent()
         {
             this.Type = EventType.Decrypt;
@@ -103,12 +104,10 @@ namespace Covenant.Models.Covenant
                         }
                         catch (Exception)
                         {
-
+                            
                         }
-
-
                     }
-                }
+            }
                 catch (Exception x)
                 {
 
@@ -122,7 +121,7 @@ namespace Covenant.Models.Covenant
         {
             
             byte[] nonce = payload.Skip(3).Take(12).ToArray();
-            byte[] realPayload = payload.Skip(15).ToArray(); // from 15 to end
+            byte[] realPayload = payload.Skip(15).ToArray(); 
 
 
             return AesGcmDecrypt(realPayload, key, nonce);
@@ -212,5 +211,10 @@ namespace Covenant.Models.Covenant
     public class ScreenshotEventContent : ScreenshotEvent
     {
         public byte[] FileContents { get; set; }
+    } 
+
+    public class DecryptEventContent : DecryptEvent
+    {
+        public string EncryptedOutput { get; set; }
     }
 }

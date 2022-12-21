@@ -190,16 +190,23 @@
 
     private async Task<DecryptEvent> GetDecryptEvent(GruntCommand command)
     {
-        if (GruntCommand.GruntTasking != null && GruntCommand.CommandOutput != null)
-        {
-            IEnumerable<DecryptEvent> decryptEvent = await Service.GetDecryptEvents();
-            Service.DisposeContext();
-            return decryptEvent
-            .FirstOrDefault(DE => DE.Time == command.GruntTasking.CompletionTime && DE.EncryptedOutput == command.CommandOutput.Output);
 
-        }
-        
-        return null;
+        //try
+        //{
+        //    lock (_serviceLock)
+        //    {
+        //        DecryptEvent ev = Service.GetDecryptEventByGruntCommand(command.Id).WaitResult();
+        //        Service.DisposeContext();
+        //        return ev;
+        //    }
+        //}
+        //catch { return null; }
+
+        DecryptEvent dec = new DecryptEvent();
+
+        dec.EncryptedOutput = command.CommandOutput.Output;
+        dec.Decrypt();
+        return dec;
     }
 
     private ScreenshotEvent GetScreenshotEvent(GruntCommand command)
