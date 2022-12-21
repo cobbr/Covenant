@@ -68,7 +68,11 @@ namespace Covenant.Models.Covenant
         public bool Decrypt()
         {
            
+                try
+                {
+
                 string[] lines = EncryptedOutput.Split(Environment.NewLine);
+
 
                 byte[] key = Convert.FromBase64String(lines[0]);
 
@@ -78,9 +82,8 @@ namespace Covenant.Models.Covenant
                 DecryptedOutput += "username       :         password       :         url" + Environment.NewLine;
                 DecryptedOutput += "______________________________________________________" + Environment.NewLine;
 
-                try
-                {
-                    foreach (string line in lines)
+
+                foreach (string line in lines)
                     {
                         try
                         {
