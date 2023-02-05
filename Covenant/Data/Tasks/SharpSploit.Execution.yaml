@@ -540,6 +540,7 @@
   - Net40
   Code: |
     using System;
+    using System.Text;
 
     using SharpSploit.Execution;
 
@@ -549,11 +550,22 @@
         {
             try
             {
-                return Shell.PowerShellExecute(PowerShellCommand, true);
+                try
+                {
+                    byte[] ByteFromStr = Convert.FromBase64String(PowerShellCommand);
+                    PowerShellCommand = Encoding.Unicode.GetString(ByteFromStr);
+                    return Shell.PowerShellExecute(PowerShellCommand);
+                }
+                catch(Exception e)
+                {
+                    return Shell.PowerShellExecute(PowerShellCommand, true);
+                }
+                
             }
             catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
         }
     }
+
   TaskingType: Assembly
   UnsafeCompile: false
   TokenTask: false
