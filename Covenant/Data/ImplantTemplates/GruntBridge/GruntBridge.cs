@@ -1132,11 +1132,11 @@ namespace GruntExecutor
             for (int i = 0; i < len; i++)
             {
                 c = value[i];
-                if (c >= 0 && c <= 7 || c == 11 || c >= 14 && c <= 31 || c == 39 || c == 60 || c == 62)
+                if (c >= 1 && c <= 7 || c == 11 || c >= 14 && c <= 31 || c == 39 || c == 60 || c == 62)
                 {
                     sb.AppendFormat("\\u{0:x4}", (int)c);
                 }
-                else
+                else if (c != 0)
                 {
                     switch ((int)c)
                     {
