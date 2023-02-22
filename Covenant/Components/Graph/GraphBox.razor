@@ -51,27 +51,22 @@
                 @foreach (Grunt g in Grunts)
                 {
                     <div class="tab-pane fade" id="node-@g.GUID" role="tabpanel" aria-labelledby="@g.GUID-tab">
-                        <h5 class="h5">Grunt</h5>
+                        <h5 class="h5">Grunt: @g.Name</h5>
                         <div class="form-group">
-                            <label for="Name">Name</label>
-                            <a id="Name" name="Name" href="/grunt/interact/@g.Id" class="btn btn-secondary text-left w-100">@g.Name</a>
+                            <a id="Interact" name="Interact" href="/grunt/interact/@g.Id" class="btn btn-secondary text-left"><span class="fe fe-terminal"></span> Interact</a>
+                        </div>
+                        <div class="form-group">
+                            <pre style="font-size: 100%; color: var(--background-text-color);">Status:   @g.Status
+CommType: @g.ImplantTemplate.CommType
+User:     @g.UserName
+Domain:   @g.UserDomainName
+Hostname: @g.Hostname
+IP:       @g.IPAddress
+OS:       @g.OperatingSystem</pre>
                         </div>
                         <div class="form-group">
                             <label for="Note">Note</label>
                             <input id="Note" name="Note" @bind="@g.Note" class="form-control" readonly disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="ImplantTemplate.CommType">CommType</label>
-                            <input id="ImplantTemplate.CommType" name="ImplantTemplate.CommType" @bind="g.ImplantTemplate.CommType" class="form-control" readonly disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="Children">Children</label><br />
-                            <select id="Children" name="Children" readonly disabled class="selectpicker show-menu-arrow" multiple data-dropup-auto="false" data-selected-text-format="count > 4">
-                                @foreach (string c in g.Children)
-                                {
-                                    <option selected value="@c">@c</option>
-                                }
-                            </select>
                         </div>
                     </div>
                 }
@@ -90,7 +85,7 @@
                         @if (l.ListenerType.Name == "HTTP")
                         {
                             <div class="form-group">
-                                <label for="Urls">Urls</label>
+                                <label for="Urls">URLs</label>
                                 @{ string urls = string.Join(",", ((HttpListener)l).Urls); }
                                 <input id="Urls" name="Urls" value="@urls" class="form-control" readonly disabled>
                             </div>
@@ -119,35 +114,51 @@
         {
             await IJSRuntime.InvokeAsync<string>("ShowTab", "start-tab");
             await IJSRuntime.InvokeAsync<string>("ClearGraph", ".graph-box");
-            await IJSRuntime.InvokeAsync<string>("InitializeGraph", ".graph-box");
-            foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized))
-            {
-                await IJSRuntime.InvokeAsync<string>("GraphDisplayGrunt", grunt.GUID, grunt.Name);
-            }
+            
             foreach (Listener listener in this.Listeners.Where(L => L.Status == ListenerStatus.Active))
             {
-                await IJSRuntime.InvokeAsync<string>("GraphDisplayListener", listener.GUID, listener.Name);
+                await IJSRuntime.InvokeAsync<string>("HierarchyAddListener", listener.GUID, listener.Name);
+                
+                List<Grunt> grunts = this.Grunts
+                    .Where(G => G.Status != GruntStatus.Uninitialized)
+                    .Where(G => G.Hidden != true)
+                    .Where(G => !this.Grunts.Any(AG => AG.Children.Contains(G.GUID)))
+                    .ToList();
+                
+                foreach (Grunt grunt in grunts)
+                {
+                    Listener gruntListener = await Service.GetListener(grunt.ListenerId);
+                    if (listener.GUID == gruntListener.GUID)
+                    {
+                        if (grunt.Status == GruntStatus.Active)
+                        {
+                            await IJSRuntime.InvokeAsync<string>("HierarchyAddGruntToListener", listener.GUID, grunt.GUID, grunt.Name);
+                        }
+                        else
+                        {
+                            await IJSRuntime.InvokeAsync<string>("HierarchyAddGruntToListener_Inactive", listener.GUID, grunt.GUID, grunt.Name);
+                        }
+                    }
+                }
             }
-            foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized))
+            
+            foreach (Grunt grunt in this.Grunts.Where(G => G.Status != GruntStatus.Uninitialized && G.Hidden != true))
             {
                 foreach (string child in grunt.Children)
                 {
                     Grunt childGrunt = await Service.GetGruntByGUID(child);
-                    await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntLink", grunt.GUID, childGrunt.GUID);
+                    if (childGrunt.Status == GruntStatus.Active)
+                    {
+                         await IJSRuntime.InvokeAsync<string>("HierarchyAddGruntToGrunt", grunt.GUID, childGrunt.GUID, childGrunt.Name);
+                     }
+                     else
+                     {
+                        await IJSRuntime.InvokeAsync<string>("HierarchyAddGruntToGrunt_Inactive", grunt.GUID, childGrunt.GUID, childGrunt.Name);
+                     }
                 }
             }
-            List<Grunt> grunts = this.Grunts
-                    .Where(G => G.Status != GruntStatus.Uninitialized)
-                    .Where(G => !this.Grunts.Any(AG => AG.Children.Contains(G.GUID)))
-                    .ToList();
-            foreach (Grunt grunt in grunts)
-            {
-                Listener listener = await Service.GetListener(grunt.ListenerId);
-                if (listener.Status == ListenerStatus.Active)
-                {
-                    await IJSRuntime.InvokeAsync<string>("GraphDisplayGruntListenerLink", listener.GUID, grunt.GUID);
-                }
-            }
+            
+            await IJSRuntime.InvokeAsync<string>("InitializeGraph", ".graph-box");
         }
     }
 }
