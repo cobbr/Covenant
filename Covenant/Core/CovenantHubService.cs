@@ -259,6 +259,10 @@ namespace Covenant.Core
         {
             return _connection.InvokeAsync<ScreenshotEvent>("CreateScreenshotEvent", screenshotEvent);
         }
+        public Task<DecryptEvent> CreateDecryptEvent(DecryptEventContent decryptEvent)
+        {
+            return _connection.InvokeAsync<DecryptEvent>("CreateDecryptEvent", decryptEvent);
+        }
 
         public Task<CapturedTicketCredential> CreateTicketCredential(CapturedTicketCredential credential)
         {
@@ -1085,6 +1089,18 @@ namespace Covenant.Core
             return _connection.InvokeAsync<IEnumerable<ScreenshotEvent>>("GetScreenshotEvents");
         }
 
+        public Task<DecryptEvent> GetDecryptEvent(int eventId)
+        {
+            return _connection.InvokeAsync<DecryptEvent>("GetDecryptEvent", eventId);
+        }
+
+       
+
+        public Task<IEnumerable<DecryptEvent>> GetDecryptEvents()
+        {
+            return _connection.InvokeAsync<IEnumerable<DecryptEvent>>("GetDecryptEvents");
+        }
+
         public Task<ShellCodeLauncher> GetShellCodeLauncher()
         {
             return _connection.InvokeAsync<ShellCodeLauncher>("GetShellCodeLauncher");
@@ -1233,6 +1249,11 @@ namespace Covenant.Core
         public Task ResetCovenantToFactoryDefault(ClaimsPrincipal principal)
         {
             return _connection.InvokeAsync("ResetCovenantToFactoryDefault", principal);
+        }
+
+         public Task<DecryptEvent> GetDecryptEventByGruntCommand(int id)
+        {
+            return _connection.InvokeAsync<DecryptEvent>("GetDecryptEventByGruntCommand", id);
         }
     }
 }

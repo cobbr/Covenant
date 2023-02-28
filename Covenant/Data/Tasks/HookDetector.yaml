@@ -1,0 +1,51 @@
+- Author:
+    Name: amine brahmi
+    Handle: khraoverflow
+    Link: https://twitter.com/dr_whoami_
+  Name: HookDetector
+  Aliases: []
+  Description: gets list of hooked functions
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Diagnostics;\nusing System.Runtime.InteropServices;\nusing System.Linq;\nusing System.Collections.Generic;\n\nclass Task\n{\n    static string[] functions =\n    {\n            \"NtClose\",\n            \"NtAllocateVirtualMemory\",\n            \"NtAllocateVirtualMemoryEx\",\n            \"NtCreateThread\",\n            \"NtCreateThreadEx\",\n            \"NtCreateUserProcess\",\n            \"NtFreeVirtualMemory\",\n            \"NtLoadDriver\",\n            \"NtMapViewOfSection\",\n            \"NtOpenProcess\",\n            \"NtProtectVirtualMemory\",\n            \"NtQueueApcThread\",\n            \"NtQueueApcThreadEx\",\n            \"NtResumeThread\",\n            \"NtSetContextThread\",\n            \"NtSetInformationProcess\",\n            \"NtSuspendThread\",\n            \"NtUnloadDriver\",\n            \"NtWriteVirtualMemory\"\n        };\n    static byte[] safeBytes = {\n            0x4c, 0x8b, 0xd1, // mov r10, rcx\n            0xb8              // mov eax, ??\n        };\n\n    static string output = \"\";\n    public static string Execute()\n    {\n       \n        if (!GetProcessArch())\n        {\n\n            output += Environment.NewLine + \"[-] It looks like you're not running x64.\";\n            return output;;\n        }\n        // Get the base address of ntdll.dll in our own process\n        IntPtr ntdllBase = GetNTDLLBase();\n        if (ntdllBase == IntPtr.Zero)\n        {\n            output += Environment.NewLine + \"[-] Couldn't get find ntdll.dll\";\n            return output;;\n\n        }\n        else { output += Environment.NewLine + \"NTDLL Base Address: 0x{0:X}\" + ntdllBase.ToInt64(); }\n\n        // Get the address of each of the target functions in ntdll.dll\n        IDictionary<string, IntPtr> funcAddresses = GetFuncAddress(ntdllBase, functions);\n\n        // Check the first DWORD at each function's address for proper SYSCALL setup\n        int i = 0; // Used for populating the results array\n        bool safe;\n        foreach (KeyValuePair<string, IntPtr> func in funcAddresses)\n        {\n            byte[] instructions = new byte[4];\n            Marshal.Copy(func.Value, instructions, 0, 4);\n\n            string fmtFunc = string.Format(\"    {0,-25} 0x{1:X} \", func.Key, func.Value.ToInt64());\n            safe = instructions.SequenceEqual(safeBytes);\n\n            if (safe)\n            {\n                output += Environment.NewLine + fmtFunc + \"- SAFE\";\n            }\n            else\n            {\n                byte[] hookInstructions = new byte[32];\n                Marshal.Copy(func.Value, hookInstructions, 0, 32);\n                output += Environment.NewLine + fmtFunc + \" - HOOK DETECTED\";\n                output += Environment.NewLine + \"    {0,-25} {1}\" + \"Instructions: \" + BitConverter.ToString(hookInstructions).Replace(\"-\", \" \");\n            }\n\n            i++;\n        }\n        return output;\n    }\n\n    static IntPtr GetNTDLLBase()\n    {\n        Process hProc = Process.GetCurrentProcess();\n        ProcessModule module = hProc.Modules.Cast<ProcessModule>().SingleOrDefault(m => string.Equals(m.ModuleName, \"ntdll.dll\", StringComparison.OrdinalIgnoreCase));\n        return module?.BaseAddress ?? IntPtr.Zero;\n    }\n\n    static IDictionary<string, IntPtr> GetFuncAddress(IntPtr hModule, string[] functions)\n    {\n        IDictionary<string, IntPtr> funcAddresses = new Dictionary<string, IntPtr>();\n        foreach (string function in functions)\n        {\n            IntPtr funcPtr = Win32.GetProcAddress(hModule, function);\n            if (funcPtr != IntPtr.Zero)\n            {\n                funcAddresses.Add(function, funcPtr);\n            }\n            else\n            {\n                output += Environment.NewLine + \"[-] Couldn't locate the address for {0}! (Error: {1})\"+ function+ Marshal.GetLastWin32Error();\n            }\n        }\n\n        return funcAddresses;\n    }\n\n    static bool GetProcessArch()\n    {\n        // Make sure that we're running x64 on x64\n        bool wow64;\n        Win32.IsWow64Process(Process.GetCurrentProcess().Handle, out wow64);\n\n        //if (Environment.Is64BitProcess && !wow64)\n        //{\n        //    return true;\n        //}\n        //else\n        //{\n        //    return false;\n        //}\n        return true;\n\n    }\n}\n\nclass Win32\n{\n    [DllImport(\"kernel32\", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n    public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);\n\n    [DllImport(\"kernel32.dll\", SetLastError = true, CallingConvention = CallingConvention.Winapi)]\n    public static extern bool IsWow64Process(IntPtr hProcess, out bool Wow64Process);\n}\n"
+  Compiled: false
+  TaskingType: Assembly
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: mscorlib.dll
+    Location: net35\mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35\System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35\System.dll
+    DotNetVersion: Net35
+  - Name: System.Drawing.dll
+    Location: net35\System.Drawing.dll
+    DotNetVersion: Net35
+  - Name: System.Windows.Forms.dll
+    Location: net35\System.Windows.Forms.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net40\mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40\System.Core.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40\System.dll
+    DotNetVersion: Net40
+  - Name: System.Drawing.dll
+    Location: net40\System.Drawing.dll
+    DotNetVersion: Net40
+  - Name: System.Windows.Forms.dll
+    Location: net40\System.Windows.Forms.dll
+    DotNetVersion: Net40
+  EmbeddedResources: []
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []

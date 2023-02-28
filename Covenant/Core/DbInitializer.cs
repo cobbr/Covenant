@@ -18,6 +18,8 @@ using Covenant.Models;
 using Covenant.Models.Covenant;
 using Covenant.Models.Listeners;
 using Covenant.Models.Grunts;
+using YamlDotNet.Core;
+using Microsoft.AspNetCore.Mvc.ViewComponents;
 
 namespace Covenant.Core
 {
@@ -333,6 +335,38 @@ namespace Covenant.Core
                             await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40),
                             await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net35),
                             await service.GetReferenceAssemblyByName("System.ServiceProcess.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "NET-scan", Description = "network host and port scanner ",
+                        Location = "NET-scan" + Path.DirectorySeparatorChar,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion>{Common.DotNetVersion.Net40,Common.DotNetVersion.Net35},
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40)
+                        },
+                        EmbeddedResources = new List<EmbeddedResource>()
+                    },
+                    new ReferenceSourceLibrary
+                    {
+                        Name = "ChromeDecryptor", Description = "Chrome password extrating tool ",
+                        Location = "ChromeDecryptor" + Path.DirectorySeparatorChar,
+                        CompatibleDotNetVersions = new List<Common.DotNetVersion>{Common.DotNetVersion.Net40,Common.DotNetVersion.Net35},
+                        ReferenceAssemblies = new List<ReferenceAssembly>
+                        {
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("mscorlib.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.dll", Common.DotNetVersion.Net40),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net35),
+                            await service.GetReferenceAssemblyByName("System.Core.dll", Common.DotNetVersion.Net40)
                         },
                         EmbeddedResources = new List<EmbeddedResource>()
                     }

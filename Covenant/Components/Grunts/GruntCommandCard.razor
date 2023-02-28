@@ -57,6 +57,23 @@
                 else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
                 {<p class="text-white task-text-body" style="white-space:pre-wrap">Download completed: @if (download != null){<a type="button" class="btn btn-link text-white task-text-body" download href="/api/events/download/@download.Id/download">@download.FileName</a>}</p>}
             }
+             else if (GruntCommand.GruntTasking != null && GruntCommand.GruntTasking.GruntTask != null && GruntCommand.GruntTasking.GruntTask.Name == "Chrome_passwords")
+                {
+                    if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Progressed)
+                    {
+                        <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">Decrypting... </p>
+                    }
+                    else if (GruntCommand.GruntTasking.Status == GruntTaskingStatus.Completed)
+                    {
+                        DecryptEvent decryptEvent = GetDecryptEvent(GruntCommand).WaitResult();
+                        <p class="text-white task-text-body" style="white-space:pre-wrap">Decrypted : @if (decryptEvent != null)
+                            {
+                                 <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">@decryptEvent.DecryptedOutput</p>
+                            }
+                         </p>
+                    }
+                }
+                
             else if (GruntCommand.CommandOutput != null)
             {
                 <p class="terminal-text-color task-text-body" style="white-space:pre-wrap">@GruntCommand.CommandOutput.Output</p>
@@ -168,7 +185,28 @@
                 return ev;
             }
         }
-        catch { return null; }
+       catch { return null; }
+    }
+
+    private async Task<DecryptEvent> GetDecryptEvent(GruntCommand command)
+    {
+
+        //try
+        //{
+        //    lock (_serviceLock)
+        //    {
+        //        DecryptEvent ev = Service.GetDecryptEventByGruntCommand(command.Id).WaitResult();
+        //        Service.DisposeContext();
+        //        return ev;
+        //    }
+        //}
+        //catch { return null; }
+
+        DecryptEvent dec = new DecryptEvent();
+
+        dec.EncryptedOutput = command.CommandOutput.Output;
+        dec.Decrypt();
+        return dec;
     }
 
     private ScreenshotEvent GetScreenshotEvent(GruntCommand command)

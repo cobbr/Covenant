@@ -98,6 +98,8 @@ namespace Covenant.Models
             builder.Entity<NetworkIndicator>().HasBaseType<Indicator>();
             builder.Entity<TargetIndicator>().HasBaseType<Indicator>();
 
+            builder.Entity<DecryptEvent>().HasBaseType<Event>();
+
             builder.Entity<Theme>();
 
             builder.Entity<Grunt>()
