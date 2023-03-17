@@ -100,7 +100,14 @@ namespace Covenant.Core
 
             foreach (Listener l in listeners)
             {
-                await service.StartListener(l.Id);
+                try {
+                    await service.StartListener(l.Id);
+                }
+                catch {
+                    Console.WriteLine("Listener " + l.Id + " failed to start and has been stopped.");
+                    l.Status = ListenerStatus.Stopped;
+                    await service.EditListener(l);
+                }
             }
         }
 
