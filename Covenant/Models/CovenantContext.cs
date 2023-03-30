@@ -107,7 +107,9 @@ namespace Covenant.Models
 
             builder.Entity<Grunt>()
                 .HasMany(G => G.FolderRoots)
-                .WithOne(F => F.RootGrunt);
+                //.WithOne(F => F.RootGrunt);
+                .WithOne(F => F.RootGrunt)
+                .OnDelete(DeleteBehavior.Cascade);
             
             builder.Entity<FolderFileNode>()
                 .HasOne(N => N.Grunt)
@@ -117,7 +119,9 @@ namespace Covenant.Models
             builder.Entity<Folder>()
                 .HasMany(F => F.Nodes)
                 .WithOne()
-                .HasForeignKey(N => N.ParentId);
+                //.HasForeignKey(N => N.ParentId);
+                .HasForeignKey(N => N.ParentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<GruntTask>()
                 .HasOne(GT => GT.Author)
