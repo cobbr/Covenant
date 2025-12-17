@@ -81,7 +81,7 @@
 
         <div class="form-group col-md-3 cert-div" hidden="@(!Listener.UseSSL)">
             <label for="SSLCertificateFile">SSLCertificate</label>
-            <InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
+            <BlazorInputFile.InputFile id="SSLCertificateFile" name="SSLCertificateFile" class="form-control-file"
                         disabled="@Disabled"
                         OnChange="FileUpload" />
         </div>

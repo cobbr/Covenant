@@ -42,7 +42,8 @@ namespace Covenant.Core
 			{
 				new Claim(JwtRegisteredClaimNames.Sub, UserName),
 				new Claim(JwtRegisteredClaimNames.Jti, CreateSecureGuid().ToString()),
-				new Claim(ClaimTypes.NameIdentifier, UserId)
+				//new Claim(ClaimTypes.NameIdentifier, UserId),
+				new Claim("uid", UserId)
 			};
             foreach (string role in Roles)
 			{

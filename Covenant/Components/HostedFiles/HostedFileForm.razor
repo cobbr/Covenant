@@ -17,7 +17,7 @@
     <div class="form-row">
         <div class="form-group col-md-4">
             <label for="Content">Content</label>
-            <InputFile id="Content" name="Content" class="form-control-file" OnChange="FileUpload" />
+            <BlazorInputFile.InputFile id="Content" name="Content" class="form-control-file" OnChange="FileUpload" />
         </div>
     </div>
     <button type="button" class="btn btn-primary" @onclick="(e => OnSubmit.InvokeAsync(HostedFile))">
